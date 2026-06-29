@@ -2032,17 +2032,17 @@
 }
 
 /* =============================================================
-   Page swap — Database view OR info page (Settings / About / Help / Feedback)
-   The Database view (#dbView) is the default product view.
-   When the user opens an info page, body.is-info-page hides dbView and the
-   info content (rendered into #content) takes the main viewport. Returning to
-   Products restores dbView.
+   Page swap — product grid OR info page (Settings / About / Help / Feedback)
+   The product grid (#productGrid, mounted by the Phase 2 grid) is the
+   default view. When the user opens an info page, body.is-info-page
+   hides the grid and the info content (rendered into #content) takes
+   the main viewport. Returning to Products restores the grid.
    ============================================================= */
 /* #content is hidden by default. Product detail / AI results pages
    toggle display inline; info pages (About, Help, Export) flip
    body.is-info-page to show #content as a padded pane. */
 .content { display: none; }
-body.is-info-page #dbView { display: none; }
+body.is-info-page #productGrid { display: none; }
 body.is-info-page .content { display: block; padding: 18px 22px 48px; }
 
 /* =============================================================

@@ -818,11 +818,12 @@ function activateRibbonTab(target) {
 }
 
 /* Page-swap helpers — the main viewport hosts EXACTLY ONE of:
-   - The Database view (default, when browsing products)
+   - The product grid (default; mounted at #productGrid by the new
+     grid layer in Phase 2)
    - An info page (Settings / About / Help / Suggest / Report)
    - The AI results page
    - The product detail page
-   The body class is-info-page hides #dbView and reveals #content via CSS. */
+   body.is-info-page hides #productGrid and reveals #content via CSS. */
 function restoreProductListChrome() {
   document.getElementById('productDetail')?.classList.remove('active');
   if (document.getElementById('productDetail')) document.getElementById('productDetail').style.display = 'none';
@@ -835,8 +836,6 @@ function restoreProductListChrome() {
   document.body.classList.remove('is-info-page');
   const productGrid = document.getElementById('productGrid');
   if (productGrid) productGrid.hidden = false;
-  /* Task 11 Phase 1: SSDatabaseView is gone. The new grid (Phase 2)
-     will get a re-render cue here when it lands. */
   renderAll();
 }
 
@@ -849,8 +848,8 @@ function prepareMainContentPage() {
   document.getElementById('filterBar').style.display = 'none';
   document.querySelector('.controls').style.display = 'none';
   document.body.classList.add('is-info-page');
-  const dbView = document.getElementById('dbView');
-  if (dbView) dbView.hidden = true;
+  const productGrid = document.getElementById('productGrid');
+  if (productGrid) productGrid.hidden = true;
   const content = document.getElementById('content');
   /* body.is-info-page (set above) lets .content show as the
      padded info pane; nothing more is needed here. */
