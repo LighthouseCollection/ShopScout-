@@ -12,7 +12,8 @@
     adapter: null,
     store: null,
     bound: false,
-    lastProducts: []
+    lastProducts: [],
+    lastProjection: null
   };
 
   function ensureStore() {
@@ -21,7 +22,17 @@
     state.store = State && typeof State.createStore === 'function'
       ? State.createStore({})
       : {
-        _state: { mode: 'rows', matrixMode: 'basic', search: '', sort: [], columnOrder: [], columnWidths: {} },
+        _state: {
+          mode: 'rows',
+          matrixMode: 'basic',
+          search: '',
+          filters: [],
+          sort: [],
+          group: null,
+          columnVisibility: {},
+          columnOrder: [],
+          columnWidths: {}
+        },
         getState() { return this._state; },
         dispatch(patch) { this._state = Object.assign({}, this._state, patch || {}); return this._state; }
       };
@@ -168,6 +179,52 @@
     return projections.buildProductsRowsProjection(products, { visibleSpecKeys: specKeys, viewState });
   }
 
+  function usableColumns(projection) {
+    const columns = projection?.allColumns || projection?.columns || state.lastProjection?.allColumns || [];
+    return columns.filter(column => column && !['selection', 'image', 'actions'].includes(column.type));
+  }
+
+  function optionSignature(columns, placeholder) {
+    return JSON.stringify({
+      placeholder: placeholder || 'None',
+      options: columns.map(column => [column.field || column.id, column.name || column.id])
+    });
+  }
+
+  function appendOption(select, value, label) {
+    const option = (select.ownerDocument || root.document).createElement('option');
+    option.value = String(value ?? '');
+    option.textContent = String(label ?? '');
+    select.appendChild(option);
+  }
+
+  function setSelectOptions(select, columns, placeholder, value) {
+    if (!select) return;
+    const signature = optionSignature(columns, placeholder);
+    if (select.dataset.optionsSignature !== signature) {
+      select.replaceChildren();
+      appendOption(select, '', placeholder || 'None');
+      columns.forEach(column => appendOption(select, column.field || column.id, column.name || column.id));
+      select.dataset.optionsSignature = signature;
+    }
+    select.value = value || '';
+  }
+
+  function updateRibbonControls(projection) {
+    const viewState = ensureStore().getState();
+    const columns = usableColumns(projection);
+    setSelectOptions(root.document?.querySelector('[data-ss-grid-sort-field]'), columns, 'No sort', viewState.sort?.[0]?.field || '');
+    setSelectOptions(root.document?.querySelector('[data-ss-grid-group-field]'), columns, 'No grouping', viewState.group || '');
+    root.document?.querySelectorAll('[data-ss-grid-command="mode-rows"]').forEach(button => {
+      button.classList.toggle('active', viewState.mode !== 'matrix');
+      button.setAttribute('aria-pressed', viewState.mode !== 'matrix' ? 'true' : 'false');
+    });
+    root.document?.querySelectorAll('[data-ss-grid-command="mode-matrix"]').forEach(button => {
+      button.classList.toggle('active', viewState.mode === 'matrix');
+      button.setAttribute('aria-pressed', viewState.mode === 'matrix' ? 'true' : 'false');
+    });
+  }
+
   function updateModeButtons() {
     const viewState = ensureStore().getState();
     root.document?.querySelectorAll('[data-ss-grid-mode]').forEach(button => {
@@ -203,12 +260,227 @@
         render();
       }
     });
+    root.document?.addEventListener('click', event => {
+      const commandButton = event.target?.closest?.('[data-ss-grid-command]');
+      if (!commandButton || commandButton.disabled) return;
+      const command = commandButton.dataset.ssGridCommand;
+      if (!command) return;
+      event.preventDefault();
+      handleGridCommand(command);
+    });
+    root.document?.addEventListener('change', event => {
+      const sortSelect = event.target?.closest?.('[data-ss-grid-sort-field]');
+      if (sortSelect) {
+        const field = sortSelect.value || '';
+        const current = ensureStore().getState().sort?.[0];
+        ensureStore().dispatch({ sort: field ? [{ field, dir: current?.dir || 'asc' }] : [] });
+        render();
+        return;
+      }
+      const groupSelect = event.target?.closest?.('[data-ss-grid-group-field]');
+      if (groupSelect) {
+        ensureStore().dispatch({ group: groupSelect.value || null });
+        render();
+      }
+    });
     const searchInput = root.document?.getElementById('productSearchInput');
     if (searchInput) {
       searchInput.addEventListener('input', () => {
         ensureStore().dispatch({ search: searchInput.value || '' });
       });
     }
+  }
+
+  function currentSortField() {
+    return root.document?.querySelector('[data-ss-grid-sort-field]')?.value
+      || ensureStore().getState().sort?.[0]?.field
+      || '';
+  }
+
+  function handleGridCommand(command) {
+    if (command === 'mode-rows') {
+      ensureStore().dispatch({ mode: 'rows' });
+      render();
+    } else if (command === 'mode-matrix') {
+      ensureStore().dispatch({ mode: 'matrix' });
+      render();
+    } else if (command === 'sort-asc' || command === 'sort-desc') {
+      const field = currentSortField();
+      if (!field) {
+        root.SS?.toast?.show?.('Choose a field to sort by first.', 'error');
+        return;
+      }
+      ensureStore().dispatch({ sort: [{ field, dir: command === 'sort-desc' ? 'desc' : 'asc' }] });
+      render();
+    } else if (command === 'clear-sort') {
+      ensureStore().dispatch({ sort: [] });
+      render();
+    } else if (command === 'open-filters') {
+      openFiltersModal();
+    } else if (command === 'clear-filters') {
+      ensureStore().dispatch({ filters: [] });
+      render();
+    } else if (command === 'open-columns') {
+      openColumnsModal();
+    } else if (command === 'reset-columns') {
+      ensureStore().dispatch({ columnVisibility: {}, columnOrder: [], columnWidths: {}, pinnedColumns: [] });
+      render();
+    } else if (command === 'clear-group') {
+      ensureStore().dispatch({ group: null });
+      render();
+    }
+  }
+
+  function fieldLabel(field) {
+    const columns = usableColumns(state.lastProjection);
+    const match = columns.find(column => (column.field || column.id) === field);
+    return match?.name || field;
+  }
+
+  function openFallbackModal(title, text) {
+    root.alert?.(`${title}\n\n${text}`);
+  }
+
+  function openFiltersModal() {
+    const ui = root.ShopScoutUI;
+    const dom = ui?.dom;
+    if (!ui?.modal || !dom) {
+      openFallbackModal('Filters', 'The themed modal system is not available.');
+      return;
+    }
+    const viewState = ensureStore().getState();
+    let localFilters = Array.isArray(viewState.filters) ? viewState.filters.slice() : [];
+    const columns = usableColumns(state.lastProjection);
+    const body = dom.elem('div', { class: 'ss-grid-modal-body' });
+    const list = dom.elem('div', { class: 'ss-grid-filter-list' });
+    const field = dom.elem('select', { class: 'ss-grid-modal-select' });
+    setSelectOptions(field, columns, 'Choose field', '');
+    const op = dom.elem('select', { class: 'ss-grid-modal-select' });
+    [
+      ['contains', 'contains'],
+      ['equals', 'equals'],
+      ['starts', 'starts with'],
+      ['notEmpty', 'is not empty'],
+      ['empty', 'is empty'],
+      ['gt', 'greater than'],
+      ['lt', 'less than']
+    ].forEach(([optionValue, label]) => appendOption(op, optionValue, label));
+    const value = dom.elem('input', {
+      class: 'ss-grid-modal-input',
+      attrs: { type: 'text', placeholder: 'Value' }
+    });
+    const add = dom.elem('button', {
+      class: 'ssui-btn ssui-btn--primary',
+      text: 'Add Filter',
+      attrs: { type: 'button' },
+      on: {
+        click() {
+          if (!field.value) return;
+          localFilters.push({ field: field.value, op: op.value, value: value.value || '' });
+          value.value = '';
+          renderFilterList();
+        }
+      }
+    });
+    const row = dom.elem('div', { class: 'ss-grid-modal-row', children: [field, op, value, add] });
+    dom.append(body, row);
+    dom.append(body, list);
+    function renderFilterList() {
+      dom.empty(list);
+      if (!localFilters.length) {
+        dom.append(list, dom.elem('p', { class: 'ss-grid-modal-muted', text: 'No active filters.' }));
+        return;
+      }
+      localFilters.forEach((filter, index) => {
+        const item = dom.elem('div', {
+          class: 'ss-grid-filter-item',
+          children: [
+            dom.elem('span', { text: `${fieldLabel(filter.field)} ${filter.op || 'contains'} ${filter.value || ''}` }),
+            dom.elem('button', {
+              text: 'Remove',
+              attrs: { type: 'button' },
+              on: { click() { localFilters.splice(index, 1); renderFilterList(); } }
+            })
+          ]
+        });
+        dom.append(list, item);
+      });
+    }
+    renderFilterList();
+    ui.modal.open({
+      title: 'Filters',
+      body,
+      width: 'min(760px, 94vw)',
+      actions: [
+        { label: 'Cancel', value: false },
+        { label: 'Apply Filters', kind: 'primary', value: true, isDefault: true,
+          onClick: () => {
+            ensureStore().dispatch({ filters: localFilters });
+            render();
+          } }
+      ]
+    });
+  }
+
+  function openColumnsModal() {
+    const ui = root.ShopScoutUI;
+    const dom = ui?.dom;
+    if (!ui?.modal || !dom) {
+      openFallbackModal('Columns', 'The themed modal system is not available.');
+      return;
+    }
+    const viewState = ensureStore().getState();
+    const columns = state.lastProjection?.allColumns || state.lastProjection?.columns || [];
+    const body = dom.elem('div', { class: 'ss-grid-modal-body' });
+    const search = dom.elem('input', {
+      class: 'ss-grid-modal-input',
+      attrs: { type: 'search', placeholder: 'Search columns' }
+    });
+    const list = dom.elem('div', { class: 'ss-grid-column-list' });
+    const localVisibility = Object.assign({}, viewState.columnVisibility || {});
+    dom.append(body, search);
+    dom.append(body, list);
+    function renderColumnList() {
+      const q = search.value.trim().toLowerCase();
+      dom.empty(list);
+      columns
+        .filter(column => !q || String(column.name || column.id).toLowerCase().includes(q))
+        .forEach(column => {
+          const field = column.id;
+          const required = !!column.required;
+          const checked = required || localVisibility[field] !== false;
+          const input = dom.elem('input', {
+            attrs: { type: 'checkbox', value: field }
+          });
+          input.checked = checked;
+          input.disabled = required;
+          input.addEventListener('change', () => {
+            localVisibility[field] = input.checked;
+          });
+          dom.append(list, dom.elem('label', {
+            class: 'ss-grid-column-option',
+            children: [
+              input,
+              dom.elem('span', { text: `${column.name || column.id}${required ? ' (required)' : ''}` })
+            ]
+          }));
+        });
+    }
+    search.addEventListener('input', renderColumnList);
+    renderColumnList();
+    ui.modal.open({
+      title: 'Columns',
+      body,
+      width: 'min(760px, 94vw)',
+      actions: [
+        { label: 'Cancel', value: false },
+        { label: 'Apply Columns', kind: 'primary', value: true, isDefault: true,
+          onClick: () => {
+            ensureStore().dispatch({ columnVisibility: localVisibility });
+            render();
+          } }
+      ]
+    });
   }
 
   async function mirrorLegacy(product) {
@@ -256,8 +528,11 @@
     const products = applySearch(await loadProducts(), viewState);
     state.lastProducts = products;
     const projection = buildProjection(products);
+    state.lastProjection = projection;
+    updateRibbonControls(projection);
     if (state.adapter?.update) state.adapter.update(projection);
-    setStatus(`${products.length} product${products.length === 1 ? '' : 's'} loaded`);
+    const count = projection.productRowCount ?? products.length;
+    setStatus(`${count} product${count === 1 ? '' : 's'} loaded`);
   }
 
   async function handleAction(action, row) {
@@ -268,6 +543,9 @@
     }
     if (action === 'rescan' && typeof root.rescanProductById === 'function') {
       await root.rescanProductById({ id, url: row._shopScout?.url || row.url });
+    }
+    if (action === 'delete' && typeof root.deleteProductById === 'function') {
+      await root.deleteProductById({ id, url: row._shopScout?.url || row.url });
     }
   }
 
@@ -287,6 +565,8 @@
       const products = applySearch(await loadProducts(), store.getState());
       state.lastProducts = products;
       const projection = buildProjection(products);
+      state.lastProjection = projection;
+      updateRibbonControls(projection);
       if (!products.length) {
         setHostMessage(host, 'No products in this view.');
         setStatus('No products');
@@ -322,7 +602,11 @@
         onCellCommit: commitCellEdit,
         onAction: handleAction
       });
-      setStatus(`${products.length} product${products.length === 1 ? '' : 's'} loaded`);
+      const count = projection.productRowCount ?? products.length;
+      const total = projection.totalProductRowCount ?? products.length;
+      setStatus(count === total
+        ? `${count} product${count === 1 ? '' : 's'} loaded`
+        : `${count} of ${total} products shown`);
     } catch (err) {
       console.error('ShopScoutGrid render failed', err);
       setHostMessage(host, 'Could not render product grid.');
@@ -345,6 +629,20 @@
     },
     getState() {
       return ensureStore().getState();
-    }
+    },
+    setSort(field, dir) {
+      ensureStore().dispatch({ sort: field ? [{ field, dir: dir === 'desc' ? 'desc' : 'asc' }] : [] });
+      return render();
+    },
+    setFilters(filters) {
+      ensureStore().dispatch({ filters: Array.isArray(filters) ? filters : [] });
+      return render();
+    },
+    setGroup(field) {
+      ensureStore().dispatch({ group: field || null });
+      return render();
+    },
+    openFiltersModal,
+    openColumnsModal
   });
 })(globalThis);

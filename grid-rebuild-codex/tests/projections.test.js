@@ -117,6 +117,47 @@ assert.equal(rowsProjection.rows[0]['spec:battery life'], '2 hours');
 assert.equal(rowsProjection.rows[0]['spec:dpi'], '800 DPI');
 assert.equal(rowsProjection.rows[1]['spec:battery life'], '90 minutes');
 
+const filteredProjection = projections.buildProductsRowsProjection(products, {
+  visibleSpecKeys: ['battery life'],
+  viewState: {
+    filters: [{ field: 'brand', op: 'contains', value: 'acme' }]
+  }
+});
+assert.deepEqual(
+  filteredProjection.rows.map(row => row.id),
+  ['p1'],
+  'contains filters reduce the product rows before rendering'
+);
+
+const sortedProjection = projections.buildProductsRowsProjection(products, {
+  visibleSpecKeys: ['battery life'],
+  viewState: {
+    sort: [{ field: 'newPrice', dir: 'asc' }]
+  }
+});
+assert.deepEqual(
+  sortedProjection.rows.map(row => row.id),
+  ['p2', 'p1'],
+  'numeric-like price fields sort by value, not string order'
+);
+
+const groupedProjection = projections.buildProductsRowsProjection(products, {
+  visibleSpecKeys: ['battery life'],
+  viewState: {
+    group: 'source',
+    sort: [{ field: 'newPrice', dir: 'asc' }]
+  }
+});
+assert.equal(groupedProjection.rows[0]._isGroup, true, 'grouping inserts visible group header rows');
+assert.equal(groupedProjection.rows[0]._group.field, 'source');
+assert.equal(groupedProjection.rows[0]._group.value, 'Amazon');
+assert.equal(groupedProjection.rows[0].title, 'Source: Amazon (1)');
+assert.deepEqual(
+  groupedProjection.rows.map(row => row.id),
+  ['group:source:Amazon', 'p1', 'group:source:Walmart', 'p2'],
+  'group headers wrap the rows for each grouped value'
+);
+
 const matrix = projections.buildComparisonMatrixProjection(products, {
   matrixMode: 'detailed',
   fields: ['newPrice', 'rating', 'spec:battery life', 'spec:dpi']

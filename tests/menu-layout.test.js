@@ -60,13 +60,22 @@ assertIncludes('<div class="rb-group-label">Settings</div>', 'Analyze tab includ
 assertNotIncludes('data-stage-option="finalRecommendation"', 'Analyze ribbon no longer owns stage option checkboxes');
 assertNotIncludes('data-stage-option="secondOpinion"', 'Second opinion stage selection stays inside the AI modal only');
 
-/* Task 11 Phase 1 removed the View ribbon's grid-specific groups
-   (Layout / Table / Saved views) along with the Tabulator grid.
-   The View pane now only carries the Active-list mirror; the
-   Phase 2 grid will re-add its own controls. */
+/* Task 11 Phase 2 restores View ribbon grid controls for the new
+   SlickGrid-backed product grid. These controls must use the
+   data-ss-grid-* command surface, not the retired Tabulator ids. */
 assertIncludes('class="ribbon-pane" data-pane="view"',  'View ribbon pane still exists');
 assertIncludes('data-list-mirror="view"',               'View pane keeps the Active-list mirror');
-assertNotIncludes('<div class="rb-group-label">Layout</div>',  'Old Layout group removed');
+assertIncludes('<div class="rb-group-label">Layout</div>',     'View pane exposes the new Layout group');
+assertIncludes('<div class="rb-group-label">Sort</div>',       'View pane exposes the new Sort group');
+assertIncludes('<div class="rb-group-label">Filter</div>',     'View pane exposes the new Filter group');
+assertIncludes('<div class="rb-group-label">Columns</div>',    'View pane exposes the new Columns group');
+assertIncludes('<div class="rb-group-label">Grouping</div>',   'View pane exposes the new Grouping group');
+assertIncludes('data-ss-grid-command="mode-rows"',             'New products-as-rows command exists');
+assertIncludes('data-ss-grid-command="mode-matrix"',           'New compare command exists');
+assertIncludes('data-ss-grid-sort-field',                      'New sort field picker exists');
+assertIncludes('data-ss-grid-command="open-filters"',          'New filter command exists');
+assertIncludes('data-ss-grid-command="open-columns"',          'New columns command exists');
+assertIncludes('data-ss-grid-group-field',                     'New grouping field picker exists');
 assertNotIncludes('<div class="rb-group-label">Table</div>',   'Old Table group removed');
 assertNotIncludes('<div class="rb-group-label">Saved views</div>', 'Old Saved views group removed');
 assertNotIncludes('data-db-mode="grid"',                       'Old Grid mode toggle removed');
@@ -75,10 +84,6 @@ assertNotIncludes('id="dbGroupBy"',                            'Old Group-by sel
 assertNotIncludes('id="dbColumnsBtn"',                         'Old Columns trigger removed');
 assertNotIncludes('id="dbClearFiltersBtn"',                    'Old Clear-filters button removed');
 assertNotIncludes('id="savedViewSelect"',                      'Old Saved-view select removed');
-assertNotIncludes('<div class="rb-group-label">Sort</div>',    'Old Sort group still absent');
-assertNotIncludes('<div class="rb-group-label">Filter</div>',  'Old Filter group still absent');
-assertNotIncludes('<div class="rb-group-label">Columns</div>', 'Old Columns group still absent');
-assertNotIncludes('<div class="rb-group-label">Grouping</div>','Old Grouping group still absent');
 assertNotIncludes('data-command="show-columns"',               'Old show-columns ribbon dispatch still absent');
 assertNotIncludes('data-command="open-freeze-modal"',          'Old freeze-modal ribbon dispatch still absent');
 assertNotIncludes('data-command="open-column-order-modal"',    'Old column-order ribbon dispatch still absent');

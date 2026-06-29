@@ -17,6 +17,18 @@ assert.ok(!html.includes('data-ss-grid-mode'),
   'developer grid mode toggles are not exposed in the dashboard body');
 assert.ok(!html.includes('data-ss-grid-matrix'),
   'developer matrix depth toggles are not exposed in the dashboard body');
+assert.ok(html.includes('data-ss-grid-command="mode-rows"'),
+  'View ribbon exposes products-as-rows layout control');
+assert.ok(html.includes('data-ss-grid-command="mode-matrix"'),
+  'View ribbon exposes compare matrix layout control');
+assert.ok(html.includes('data-ss-grid-sort-field'),
+  'View ribbon exposes grid sorting field picker');
+assert.ok(html.includes('data-ss-grid-command="open-filters"'),
+  'View ribbon exposes filter modal command');
+assert.ok(html.includes('data-ss-grid-group-field'),
+  'View ribbon exposes grouping field picker');
+assert.ok(html.includes('data-ss-grid-command="open-columns"'),
+  'View ribbon exposes columns chooser command');
 
 const cssIndex = indexOfRequired('vendor/slickgrid/slick.grid.css', 'SlickGrid core CSS');
 const themeIndex = indexOfRequired('vendor/slickgrid/slick-default-theme.css', 'SlickGrid default theme CSS');

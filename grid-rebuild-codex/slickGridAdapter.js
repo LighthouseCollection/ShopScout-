@@ -66,16 +66,21 @@
   }
 
   function htmlForSelection(item) {
+    if (item?._isGroup) return '';
     const id = escAttr(item?.id || '');
     const checked = item?._selected ? ' checked' : '';
     return `<input class="ss-grid-select" type="checkbox" data-row-id="${id}"${checked} aria-label="Select product">`;
   }
 
   function htmlForActions() {
-    return `<div class="ss-grid-actions">
-      <button type="button" data-ss-grid-action="open" title="Open details">Open</button>
-      <button type="button" data-ss-grid-action="rescan" title="Rescan product">Rescan</button>
-    </div>`;
+    return `<details class="ss-grid-action-menu">
+      <summary aria-label="Actions" title="Actions">⋮</summary>
+      <div class="ss-grid-action-panel">
+        <button type="button" data-ss-grid-action="open">Open</button>
+        <button type="button" data-ss-grid-action="rescan">Rescan</button>
+        <button type="button" data-ss-grid-action="delete">Delete</button>
+      </div>
+    </details>`;
   }
 
   function htmlForMatrixCell(value) {
@@ -104,6 +109,12 @@
   }
 
   function cellFormatter(row, cell, value, column, item) {
+    if (item?._isGroup) {
+      if (column.id === 'title' || column.id === 'attribute') {
+        return `<span class="ss-grid-group-label">${esc(item.title || item._group?.value || 'Group')}</span>`;
+      }
+      return '';
+    }
     switch (column.type) {
       case 'selection': return htmlForSelection(item);
       case 'image':     return htmlForImage(value, item);
@@ -154,7 +165,7 @@
       selectable: column.type !== 'selection' && column.type !== 'actions',
       editor: column.editable && TextEditor ? TextEditor : undefined,
       formatter: cellFormatter,
-      cssClass: `ss-grid-cell ss-grid-cell-${column.type || 'text'}`,
+      cssClass: `ss-grid-cell ss-grid-cell-${column.type || 'text'}${column.type === 'actions' ? ' ss-grid-cell-actions' : ''}`,
       headerCssClass: 'ss-grid-header'
     }));
   }
@@ -271,7 +282,7 @@
         return;
       }
       const checkbox = target?.closest?.('.ss-grid-select');
-      if (checkbox) {
+      if (checkbox && !dataView.getItem(args.row)?._isGroup) {
         event.stopImmediatePropagation();
         const selected = new Set(grid.getSelectedRows ? grid.getSelectedRows() : []);
         if (checkbox.checked) selected.add(args.row);
@@ -300,8 +311,8 @@
       },
       flashCell(itemId, field) {
         if (!itemId || !field || !grid.getColumns || !dataView.getRowById) return;
-        const row = dataView.getRowById(itemId);
-        const cell = grid.getColumns().findIndex(column => column.field === field);
+      const row = dataView.getRowById(itemId);
+      const cell = grid.getColumns().findIndex(column => column.field === field);
         if (row == null || cell < 0) return;
         const node = grid.getCellNode(row, cell);
         if (!node?.classList) return;

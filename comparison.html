@@ -210,11 +210,86 @@
         </div>
         <div class="rb-group-label">Lists</div>
       </div>
-      <!-- The Layout / Table / Saved views groups owned the Tabulator grid
-           (Grid / Compare / Pivot toggles, Group-by select, Columns menu,
-           Clear-filters, Selected-only, Saved-view dropdown). Removed in
-           Task 11 Phase 1. The new grid rebuild (Phase 2) will re-add its
-           own controls here. -->
+      <div class="rb-divider" aria-hidden="true"></div>
+
+      <div class="rb-group" aria-label="Layout">
+        <div class="rb-group-content">
+          <button class="rb-btn-lg" type="button" data-ss-grid-command="mode-rows" title="Show products as rows">
+            <span class="rb-icon-lg"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="4" rx="1"/><rect x="3" y="10" width="18" height="4" rx="1"/><rect x="3" y="16" width="18" height="4" rx="1"/></svg></span>
+            <span class="rb-btn-lg-label">Products</span>
+          </button>
+          <button class="rb-btn-lg" type="button" data-ss-grid-command="mode-matrix" title="Compare products as columns">
+            <span class="rb-icon-lg"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="7" height="16" rx="1"/><rect x="14" y="4" width="7" height="16" rx="1"/><path d="M10 8h4M10 16h4"/></svg></span>
+            <span class="rb-btn-lg-label">Compare</span>
+          </button>
+        </div>
+        <div class="rb-group-label">Layout</div>
+      </div>
+
+      <div class="rb-divider" aria-hidden="true"></div>
+
+      <div class="rb-group" aria-label="Sort">
+        <div class="rb-group-content">
+          <div class="rb-stack">
+            <label class="rb-mini-label" for="gridSortField">Sort by</label>
+            <select class="rb-select" id="gridSortField" data-ss-grid-sort-field></select>
+          </div>
+          <div class="rb-stack">
+            <button class="rb-btn-sm" type="button" data-ss-grid-command="sort-asc"><span class="rb-btn-sm-icon">↑</span><span class="rb-btn-sm-label">Asc</span></button>
+            <button class="rb-btn-sm" type="button" data-ss-grid-command="sort-desc"><span class="rb-btn-sm-icon">↓</span><span class="rb-btn-sm-label">Desc</span></button>
+            <button class="rb-btn-sm" type="button" data-ss-grid-command="clear-sort"><span class="rb-btn-sm-icon">×</span><span class="rb-btn-sm-label">Reset</span></button>
+          </div>
+        </div>
+        <div class="rb-group-label">Sort</div>
+      </div>
+
+      <div class="rb-divider" aria-hidden="true"></div>
+
+      <div class="rb-group" aria-label="Filter">
+        <div class="rb-group-content">
+          <button class="rb-btn-lg" type="button" data-ss-grid-command="open-filters" title="Add or edit filters">
+            <span class="rb-icon-lg"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 5h18"/><path d="M6 12h12"/><path d="M10 19h4"/></svg></span>
+            <span class="rb-btn-lg-label">Filters</span>
+          </button>
+          <button class="rb-btn-lg" type="button" data-ss-grid-command="clear-filters" title="Clear active filters">
+            <span class="rb-icon-lg"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 5h18"/><path d="M8 12h8"/><path d="M10 19h4"/><path d="M18 6 6 18"/></svg></span>
+            <span class="rb-btn-lg-label">Clear</span>
+          </button>
+        </div>
+        <div class="rb-group-label">Filter</div>
+      </div>
+
+      <div class="rb-divider" aria-hidden="true"></div>
+
+      <div class="rb-group" aria-label="Columns">
+        <div class="rb-group-content">
+          <button class="rb-btn-lg" type="button" data-ss-grid-command="open-columns" title="Show or hide columns">
+            <span class="rb-icon-lg"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="4" height="16"/><rect x="10" y="4" width="4" height="16"/><rect x="16" y="4" width="4" height="16"/></svg></span>
+            <span class="rb-btn-lg-label">Columns</span>
+          </button>
+          <button class="rb-btn-lg" type="button" data-ss-grid-command="reset-columns" title="Reset visible columns">
+            <span class="rb-icon-lg"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 3v6h6"/></svg></span>
+            <span class="rb-btn-lg-label">Reset</span>
+          </button>
+        </div>
+        <div class="rb-group-label">Columns</div>
+      </div>
+
+      <div class="rb-divider" aria-hidden="true"></div>
+
+      <div class="rb-group" aria-label="Grouping">
+        <div class="rb-group-content">
+          <div class="rb-stack">
+            <label class="rb-mini-label" for="gridGroupField">Group by</label>
+            <select class="rb-select" id="gridGroupField" data-ss-grid-group-field></select>
+          </div>
+          <button class="rb-btn-lg" type="button" data-ss-grid-command="clear-group" title="Remove grouping">
+            <span class="rb-icon-lg"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h16"/><path d="M7 12h10"/><path d="M10 18h4"/><path d="M18 6 6 18"/></svg></span>
+            <span class="rb-btn-lg-label">Ungroup</span>
+          </button>
+        </div>
+        <div class="rb-group-label">Grouping</div>
+      </div>
     </div>
 
     <div class="ribbon-pane" data-pane="search">

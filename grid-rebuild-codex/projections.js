@@ -98,6 +98,118 @@
     return [...keys].sort((a, b) => fieldLabel(a).localeCompare(fieldLabel(b)));
   }
 
+  function parseNumeric(value) {
+    const values = root.ShopScoutValues || {};
+    if (typeof values.parseNumeric === 'function') {
+      const parsed = values.parseNumeric(value);
+      if (Number.isFinite(parsed)) return parsed;
+    }
+    const n = Number(String(value ?? '').replace(/[^0-9.-]/g, ''));
+    return Number.isFinite(n) ? n : null;
+  }
+
+  function cellText(row, field) {
+    if (!row || !field) return '';
+    const value = row[field];
+    if (value == null) return '';
+    if (typeof value === 'object') return String(value.value ?? value.raw ?? '');
+    return String(value);
+  }
+
+  function compareRows(field, dir) {
+    const direction = dir === 'desc' ? -1 : 1;
+    return (a, b) => {
+      const av = cellText(a, field);
+      const bv = cellText(b, field);
+      const an = parseNumeric(av);
+      const bn = parseNumeric(bv);
+      let cmp;
+      if (an != null || bn != null) cmp = (an ?? Number.NEGATIVE_INFINITY) - (bn ?? Number.NEGATIVE_INFINITY);
+      else cmp = av.localeCompare(bv, undefined, { numeric: true, sensitivity: 'base' });
+      return cmp * direction;
+    };
+  }
+
+  function normalizeFilter(filter, scope) {
+    if (!filter || typeof filter !== 'object') return null;
+    const field = canonicalField(filter.field, scope);
+    if (!field) return null;
+    const op = ['equals', 'starts', 'empty', 'notEmpty', 'gt', 'lt'].includes(filter.op)
+      ? filter.op
+      : 'contains';
+    return {
+      field,
+      op,
+      value: String(filter.value ?? '').trim()
+    };
+  }
+
+  function filterMatches(row, filter) {
+    const text = cellText(row, filter.field).trim();
+    const haystack = text.toLowerCase();
+    const needle = String(filter.value || '').toLowerCase();
+    switch (filter.op) {
+      case 'equals': return haystack === needle;
+      case 'starts': return haystack.startsWith(needle);
+      case 'empty': return !text;
+      case 'notEmpty': return !!text;
+      case 'gt': {
+        const left = parseNumeric(text);
+        const right = parseNumeric(filter.value);
+        return left != null && right != null && left > right;
+      }
+      case 'lt': {
+        const left = parseNumeric(text);
+        const right = parseNumeric(filter.value);
+        return left != null && right != null && left < right;
+      }
+      default: return haystack.includes(needle);
+    }
+  }
+
+  function applyFilters(rows, filters, scope) {
+    const normalized = (Array.isArray(filters) ? filters : [])
+      .map(filter => normalizeFilter(filter, scope))
+      .filter(Boolean);
+    if (!normalized.length) return rows;
+    return rows.filter(row => normalized.every(filter => filterMatches(row, filter)));
+  }
+
+  function applySort(rows, sort) {
+    const normalized = Array.isArray(sort) ? sort.filter(item => item?.field) : [];
+    if (!normalized.length) return rows;
+    return rows.slice().sort((a, b) => {
+      for (const item of normalized) {
+        const cmp = compareRows(item.field, item.dir)(a, b);
+        if (cmp !== 0) return cmp;
+      }
+      return 0;
+    });
+  }
+
+  function groupRows(rows, groupField) {
+    if (!groupField) return rows;
+    const groups = new Map();
+    for (const row of rows) {
+      const raw = cellText(row, groupField).trim();
+      const value = raw || 'Not specified';
+      if (!groups.has(value)) groups.set(value, []);
+      groups.get(value).push(row);
+    }
+    const out = [];
+    for (const value of [...groups.keys()].sort((a, b) => a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' }))) {
+      const items = groups.get(value);
+      out.push({
+        id: `group:${groupField}:${value}`,
+        _isGroup: true,
+        _group: { field: groupField, label: fieldLabel(groupField), value, count: items.length },
+        title: `${fieldLabel(groupField)}: ${value} (${items.length})`
+      });
+      out.push(...items);
+    }
+    return out;
+  }
+
   function applyColumnState(columns, viewState) {
     const state = viewState || {};
     const visibility = state.columnVisibility || {};
@@ -134,7 +246,7 @@
 
   function makeRow(product, flattened, idx) {
     const id = productIdOf(product, idx);
-    const row = Object.assign({}, flattened);
+    const row = Object.assign({}, product, flattened);
     row.id = id;
     row.title = product?.title || product?.productName || product?.listingTitle || '';
     row.image = product?.image || product?.thumb || product?.thumbnail || '';
@@ -165,12 +277,19 @@
       editable: true,
       specKey: field.slice(5)
     }));
+    const allColumns = BASE_COLUMNS.concat(specColumns);
+    const filteredRows = applyFilters(rows, viewState.filters, scope);
+    const sortedRows = applySort(filteredRows, viewState.sort);
+    const groupedRows = groupRows(sortedRows, viewState.group);
     return {
       mode: 'productsRows',
-      columns: applyColumnState(BASE_COLUMNS.concat(specColumns), viewState),
-      rows,
+      columns: applyColumnState(allColumns, viewState),
+      allColumns,
+      rows: groupedRows,
+      productRowCount: filteredRows.length,
+      totalProductRowCount: rows.length,
       specFields,
-      sort: Array.isArray(viewState.sort) ? viewState.sort.slice() : [],
+      sort: viewState.group ? [] : Array.isArray(viewState.sort) ? viewState.sort.slice() : [],
       filters: Array.isArray(viewState.filters) ? viewState.filters.slice() : [],
       group: viewState.group || null
     };

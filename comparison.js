@@ -1904,6 +1904,8 @@ async function clearProducts() {
          Open the detail page for a product looked up by id or URL.
      rescanProductById(idOrItem)
          Rescan a single product looked up by id or URL.
+     deleteProductById(idOrItem)
+         Delete a single product looked up by id or URL.
      setSelectedProductsFromIds(items)
          Sync the in-memory selection set from the grid's row
          selection so the "Rescan Selected" / "Delete Selected"
@@ -1935,6 +1937,12 @@ globalThis.rescanProductById = async function rescanProductById(idOrItem) {
   const products = await getProducts();
   const idx = findProductIndexByIdOrUrl(products, idOrItem);
   if (idx >= 0) return rescanList([idx]);
+};
+
+globalThis.deleteProductById = async function deleteProductById(idOrItem) {
+  const products = await getProducts();
+  const idx = findProductIndexByIdOrUrl(products, idOrItem);
+  if (idx >= 0) return removeProduct(idx);
 };
 
 globalThis.setSelectedProductsFromIds = async function setSelectedProductsFromIds(items) {
