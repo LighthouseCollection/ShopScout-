@@ -22,6 +22,7 @@
     "SSDatabaseView": "readonly",
     "SSProductRepo": "readonly",
     "SSDB": "readonly",
+    "ShopScoutUI": "readonly",
     "ShopScoutAI": "readonly",
     "ShopScoutAIUI": "readonly",
     "ShopScoutAIDevMonitor": "readonly",

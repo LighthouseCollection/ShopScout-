@@ -99,7 +99,10 @@ function init() {
         var data = await chrome.storage.local.get('shopscout_last_prompt');
         var prompt = data.shopscout_last_prompt || '';
         if (!prompt.trim()) {
-          alert('No ShopScout prompt found. Go back to ShopScout and choose a comparison option again.');
+          ShopScoutUI.toast.error(
+            'No ShopScout prompt found. Go back to ShopScout and choose a comparison option again.',
+            { duration: 6000 }
+          );
           return;
         }
 
@@ -115,7 +118,10 @@ function init() {
         // Open the AI service — background.js will inject the paste script
         await chrome.tabs.create({ url: svc.url });
       } catch (err) {
-        alert('Could not prepare the AI prompt. Please try again from ShopScout.');
+        ShopScoutUI.toast.error(
+          'Could not prepare the AI prompt. Please try again from ShopScout.',
+          { duration: 6000 }
+        );
       }
     });
 

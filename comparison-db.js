@@ -784,7 +784,13 @@
   }
 
   async function onSaveView() {
-    const name = (prompt('Name this view:') || '').trim();
+    const raw = await ShopScoutUI.prompt('Name this view:', {
+      title: 'Save view',
+      okLabel: 'Save',
+      validate: (v) => (v && v.trim()) ? null : 'Please enter a name.'
+    });
+    if (raw == null) return;
+    const name = raw.trim();
     if (!name) return;
     const listId = await repo.getActiveListId();
     const cfg = currentCaptureCfg();
@@ -799,7 +805,11 @@
     if (!currentViewId) { setStatus('No saved view selected.'); return; }
     const v = await views.getView(currentViewId);
     if (!v) return;
-    if (!confirm(`Delete view "${v.name}"?`)) return;
+    const ok = await ShopScoutUI.confirm(
+      `Delete view "${v.name}"?`,
+      { title: 'Delete view', okLabel: 'Delete', kind: 'danger' }
+    );
+    if (!ok) return;
     await views.deleteView(currentViewId);
     const listId = await repo.getActiveListId();
     await views.setActiveViewId(listId, null);

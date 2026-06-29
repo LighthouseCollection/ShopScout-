@@ -1474,12 +1474,29 @@ a{color:#2563eb;word-break:break-all;text-decoration:none}
     return { imported, listName };
   }
 
-  // --- Toast ---
+  /* SS.toast — kept as the public legacy API surface so existing
+     callsites (SS.toast.show / SS.toast.hide) don't need to change.
+     Internally it now delegates to ShopScoutUI.toast when available
+     so there's exactly one toast implementation in the UI. The legacy
+     DOM path remains as a fallback for any HTML page that hasn't
+     loaded ui/ yet (e.g. ai-provider-guide.html). */
   const toast = {
     _el: null,
     _timer: null,
+    _uiHandle: null,
     show(msg, type = 'success') {
-      this.hide();
+      const UI = (typeof globalThis !== 'undefined' && globalThis.ShopScoutUI) || null;
+      if (UI && UI.toast && typeof UI.toast.show === 'function') {
+        if (this._uiHandle) { try { this._uiHandle.dismiss(); } catch (_) {} this._uiHandle = null; }
+        const uiType = type === 'loading' ? 'loading'
+                     : type === 'error'   ? 'error'
+                     : type === 'warn'    ? 'warn'
+                     : type === 'info'    ? 'info'
+                     : 'success';
+        this._uiHandle = UI.toast.show(msg, { type: uiType });
+        return;
+      }
+      this._hideLegacy();
       const el = document.createElement('div');
       el.className = 'ss-toast ss-toast--' + type;
       el.innerHTML = `<span class="ss-toast__icon">${type === 'success' ? '&#10003;' : type === 'error' ? '!' : ''}</span><span>${esc(msg)}</span>`;
@@ -1490,6 +1507,15 @@ a{color:#2563eb;word-break:break-all;text-decoration:none}
       if (type !== 'loading') this._timer = setTimeout(() => this.hide(), 2500);
     },
     hide() {
+      if (this._uiHandle) { try { this._uiHandle.dismiss(); } catch (_) {} this._uiHandle = null; return; }
+      const UI = (typeof globalThis !== 'undefined' && globalThis.ShopScoutUI) || null;
+      if (UI && UI.toast && typeof UI.toast.clear === 'function' && !this._el) {
+        UI.toast.clear();
+        return;
+      }
+      this._hideLegacy();
+    },
+    _hideLegacy() {
       if (this._timer) { clearTimeout(this._timer); this._timer = null; }
       if (this._el) { this._el.classList.remove('ss-toast--visible'); setTimeout(() => this._el?.remove(), 200); this._el = null; }
     }

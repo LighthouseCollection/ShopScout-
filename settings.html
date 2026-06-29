@@ -7,6 +7,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="theme.css">
+  <link rel="stylesheet" href="ui/ui-core.css">
   <link rel="stylesheet" href="settings.css">
 
 </head>
@@ -168,6 +169,15 @@
       <iframe class="guide-frame" id="guideFrame" src="ai-provider-guide.html?provider=openai"></iframe>
     </aside>
   </div>
+
+  <!-- UI core — themed confirm/toast for settings.js. -->
+  <script src="ui/core/dom.js"></script>
+  <script src="ui/core/render.js"></script>
+  <script src="ui/core/events.js"></script>
+  <script src="ui/modal.js"></script>
+  <script src="ui/toast.js"></script>
+  <script src="ui/confirmDialog.js"></script>
+  <script src="ui/promptDialog.js"></script>
 
   <script src="ai-providers.js"></script>
   <script src="settings.js"></script>

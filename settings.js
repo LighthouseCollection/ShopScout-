@@ -350,7 +350,11 @@ async function removeSelectedKey() {
 
 async function resetTokenUsage() {
   const cfg = providerConfig(selectedProviderId);
-  if (!confirm('Reset tracked ShopScout token usage for this provider?')) return;
+  const ok = await ShopScoutUI.confirm(
+    'Reset tracked ShopScout token usage for this provider?',
+    { title: 'Reset token usage', okLabel: 'Reset' }
+  );
+  if (!ok) return;
   cfg.tokenUsage = ShopScoutAI.createEmptyTokenUsage();
   aiSettings.providers[selectedProviderId] = cfg;
   await saveAISettings();

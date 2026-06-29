@@ -745,7 +745,11 @@ async function deleteList() {
   const data = await getData();
   const keys = Object.keys(data.lists);
   if (keys.length <= 1) { toast.show('Cannot delete the last list', 'error'); return; }
-  if (!confirm(`Delete "${data.activeList}" and all its products?`)) return;
+  const ok = await ShopScoutUI.confirm(
+    `Delete "${data.activeList}" and all its products?`,
+    { title: 'Delete list', okLabel: 'Delete', kind: 'danger' }
+  );
+  if (!ok) return;
   delete data.lists[data.activeList];
   data.activeList = Object.keys(data.lists)[0];
   await saveData(data);

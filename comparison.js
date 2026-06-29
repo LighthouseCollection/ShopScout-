@@ -5636,7 +5636,11 @@ async function rescanList(productIndexes) {
     : products.map((_, idx) => idx);
   const withUrl = targetIndexes.filter(idx => products[idx]?.url);
   if (!withUrl.length) { toast.show('No products have URLs', 'error'); return; }
-  if (!confirm(`Rescan ${withUrl.length} product(s)? This will re-visit each URL one at a time with short pauses between pages.\n\nThis may take a while for large lists.`)) return;
+  const proceed = await ShopScoutUI.confirm(
+    `Rescan ${withUrl.length} product(s)? This will re-visit each URL one at a time with short pauses between pages.\n\nThis may take a while for large lists.`,
+    { title: 'Rescan products', okLabel: 'Rescan' }
+  );
+  if (!proceed) return;
 
   const modal = document.getElementById('rescanModal');
   const resultsDiv = document.getElementById('rescanResults');
