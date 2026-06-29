@@ -1,5 +1,6 @@
 /* Codex Phase 2 grid shell. Scoped to #productGrid / ss-grid-* only. */
 #productGrid.ss-grid-shell {
+  position: relative;
   margin: 12px 20px 44px;
   padding: 0;
   border: 1px solid var(--rule, #d1d5db);
@@ -8,46 +9,13 @@
   overflow: hidden;
 }
 
-.ss-grid-toolbar {
-  min-height: 44px;
-  padding: 8px 12px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  border-bottom: 1px solid var(--rule-soft, #e5e7eb);
-  background: var(--paper-2, #eaedf1);
-}
-
 .ss-grid-status {
-  color: var(--ink-3, #5a6470);
-  font-size: 12px;
-}
-
-.ss-grid-view-toggle {
-  display: inline-flex;
-  gap: 4px;
-  padding: 2px;
-  border: 1px solid var(--rule, #d1d5db);
-  border-radius: 5px;
-  background: var(--surface, #fff);
-}
-
-.ss-grid-view-toggle button {
-  min-height: 28px;
-  padding: 0 10px;
-  border: 0;
-  border-radius: 4px;
-  background: transparent;
-  color: var(--ink-2, #2a3441);
-  font: inherit;
-  font-size: 12px;
-  cursor: pointer;
-}
-
-.ss-grid-view-toggle button.active {
-  background: var(--primary, #0b3d4f);
-  color: #fff;
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
 }
 
 .ss-grid-host {

@@ -199,7 +199,7 @@
       autoEdit: false,
       editable: true,
       enableCellNavigation: true,
-      enableColumnReorder: true,
+      enableColumnReorder: !!(root.Sortable && typeof root.Sortable.create === 'function'),
       explicitInitialization: false,
       forceFitColumns: false,
       multiColumnSort: true,

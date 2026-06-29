@@ -8,6 +8,7 @@ const source = read('comparison.js');
 const html = pageAndStyles('comparison.html', 'comparison.css');
 const cmpHtml = read('comparison.html');
 const css = read('comparison.css');
+const gridSource = read('grid-rebuild-codex/shopscoutGrid.js');
 
 /* ---- Old grid renderer entry point is gone ------------------ */
 assert.ok(!/globalThis\.SSDatabaseView/.test(source),
@@ -66,10 +67,14 @@ assert.ok(cmpHtml.includes('id="productGrid"'),
   '#productGrid mount point exists for the Phase 2 grid');
 assert.ok(cmpHtml.includes('id="ssGridHost"'),
   'Codex grid host exists inside #productGrid');
-assert.ok(cmpHtml.includes('data-ss-grid-mode="rows"'),
-  'products-as-rows mode is available');
-assert.ok(cmpHtml.includes('data-ss-grid-mode="matrix"'),
-  'comparison matrix mode is available');
+assert.ok(!cmpHtml.includes('data-ss-grid-mode'),
+  'developer mode toggles are not exposed in the dashboard body');
+assert.ok(!cmpHtml.includes('data-ss-grid-matrix'),
+  'developer matrix depth toggles are not exposed in the dashboard body');
+assert.ok(/setMode\(mode\)/.test(gridSource),
+  'products-as-rows / matrix mode remains available through the grid API');
+assert.ok(/setMatrixMode\(mode\)/.test(gridSource),
+  'basic / detailed matrix depth remains available through the grid API');
 assert.ok(!/Product grid is being rebuilt/.test(cmpHtml),
   'Phase 1 rebuild placeholder is removed');
 assert.ok(cmpHtml.includes('src="grid-rebuild-codex/shopscoutGrid.js"'),

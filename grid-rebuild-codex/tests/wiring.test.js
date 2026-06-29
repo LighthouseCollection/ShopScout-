@@ -13,6 +13,10 @@ function indexOfRequired(value, label) {
 assert.ok(html.includes('id="productGrid"'), '#productGrid mount point exists');
 assert.ok(!html.includes('Product grid is being rebuilt.'),
   'Phase 2 replaces the rebuild placeholder with the live grid shell');
+assert.ok(!html.includes('data-ss-grid-mode'),
+  'developer grid mode toggles are not exposed in the dashboard body');
+assert.ok(!html.includes('data-ss-grid-matrix'),
+  'developer matrix depth toggles are not exposed in the dashboard body');
 
 const cssIndex = indexOfRequired('vendor/slickgrid/slick.grid.css', 'SlickGrid core CSS');
 const themeIndex = indexOfRequired('vendor/slickgrid/slick-default-theme.css', 'SlickGrid default theme CSS');
