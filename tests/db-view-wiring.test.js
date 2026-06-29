@@ -37,7 +37,9 @@ assert.ok(utilsIdx < cmpIdx,                    'utils.js loads before compariso
 assert.ok(cmpIdx   < dbViewIdx,                 'comparison.js loads before comparison-db.js');
 
 /* JS wiring */
-assert.ok(cmpJs.includes("let currentView = 'database'"), 'Database view is the default and only view');
+/* Task 8 deleted the currentView toggle entirely — Database is the only product view.
+   renderAll now short-circuits straight to SSDatabaseView.render. */
+assert.ok(!/let currentView\b/.test(cmpJs),                 'currentView view-toggle flag is removed in Task 8');
 assert.ok(cmpJs.includes('SSDatabaseView.render'),         'renderAll delegates to SSDatabaseView.render');
 assert.ok(cmpJs.includes('SS.bootstrapDataLayer'),         'comparison.js calls bootstrapDataLayer on init');
 

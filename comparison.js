@@ -2,16 +2,12 @@ var chrome = globalThis.browser || globalThis.chrome;
 
 const { getData, saveData, getProducts, saveProducts, esc, escAttr, escXml, sanitizeUrl, sanitizeProductDescription, parsePrice, normalizeReviewCount, formatRatingDisplay, normalizeSpecKeyLabel, normalizeSpecValue, normalizeProductSpecs, getCategoryComparisonSpecKeys, buildCsv, safeFilename, downloadFile, buildAIText, buildPrompt, inferCategory, detectMissingAttributes, CATEGORY_RUBRICS, buildExportHtml, parseImport, toast } = SS;
 
-let currentView = 'database';
-let tableSortCol = null;
-let tableSortAsc = true;
-let compactMode = false;
-let gridlinesEnabled = true;
-let selectedOnlyFilter = false;
-let notedOnlyFilter = false;
-let groupBySource = false;
-let groupByField = '';
-let groupsCollapsed = false;
+/* Legacy product-view state vars (currentView, tableSortCol/Asc,
+   compactMode, gridlinesEnabled, selectedOnlyFilter, notedOnlyFilter,
+   groupBySource, groupByField, groupsCollapsed) were retired with the
+   hand-rolled cards/table renderers in Task 8. The Database view
+   (Tabulator/PivotTable.js) owns sort, filter, group, and visual
+   density now. */
 /* editIndex / detailIndex are shared with comparison/productDetailView.js
    (the edit modal and detail page live there now). Both stay on
    globalThis so the extracted module can read and assign them without
@@ -88,7 +84,8 @@ const COLUMNS = [
 ];
 
 const hiddenCols = new Set(COLUMNS.filter(c => c.hidden).map(c => c.id));
-const colFilters = new Map();
+/* colFilters Map was removed in Task 8 (Tabulator header filters
+   replaced it). */
 let dynamicSpecCols = [];
 const autoHiddenDynamicCols = new Set();
 
@@ -139,44 +136,6 @@ function specColumnId(key) {
   return normalizedSpecColumn(key).id;
 }
 
-function buildSpecColumns(products) {
-  const specKeys = new Map();
-  const categoryDefaultSpecIds = new Set(
-    (getCategoryComparisonSpecKeys ? getCategoryComparisonSpecKeys(products) : []).map(specColumnId)
-  );
-  for (const p of products) {
-    for (const s of (p.rawSpecs || [])) {
-      const column = normalizedSpecColumn(s.key);
-      if (!column.id || !column.label) continue;
-      if (!specKeys.has(column.id)) specKeys.set(column.id, column.label);
-    }
-  }
-  const oldIds = new Set(dynamicSpecCols.map(c => c.id));
-  const activeIds = new Set();
-  const newCols = [];
-  for (const [id, label] of specKeys) {
-    const isCategoryDefault = categoryDefaultSpecIds.has(id);
-    activeIds.add(id);
-    newCols.push({ id, label, key: null, specKey: label, sortable: true, hideable: true, filterable: true, dynamic: true, hidden: !isCategoryDefault, categoryDefault: isCategoryDefault });
-    if (isCategoryDefault) {
-      if (autoHiddenDynamicCols.has(id)) hiddenCols.delete(id);
-      autoHiddenDynamicCols.delete(id);
-    } else if (!oldIds.has(id) && !hiddenCols.has(id)) {
-      hiddenCols.add(id);
-      autoHiddenDynamicCols.add(id);
-    } else if (autoHiddenDynamicCols.has(id)) {
-      hiddenCols.add(id);
-    }
-  }
-  for (const id of [...autoHiddenDynamicCols]) {
-    if (!activeIds.has(id)) {
-      hiddenCols.delete(id);
-      autoHiddenDynamicCols.delete(id);
-    }
-  }
-  dynamicSpecCols = newCols;
-}
-
 function getAllColumns() {
   const actionsIdx = COLUMNS.findIndex(c => c.id === 'actions');
   const before = COLUMNS.slice(0, actionsIdx);
@@ -218,41 +177,6 @@ function getVisibleColumnsForOrdering() {
     .filter(col => !hiddenCols.has(col.id) || frozenColumnIds.has(col.id));
 }
 
-function getAllGroupFields() {
-  const seen = new Set();
-  const fields = [];
-  for (const field of GROUP_FIELDS) {
-    if (seen.has(field.id)) continue;
-    seen.add(field.id);
-    fields.push(field);
-  }
-  for (const col of dynamicSpecCols) {
-    const id = `spec:${col.specKey}`;
-    if (seen.has(id)) continue;
-    seen.add(id);
-    fields.push({ id, label: col.label, specKey: col.specKey, dynamic: true });
-  }
-  return fields;
-}
-
-function renderGroupFieldMenu() {
-  const menu = document.getElementById('groupFieldMenu');
-  if (!menu) return;
-  const fields = getAllGroupFields();
-  menu.innerHTML = fields.map((field, index) => {
-    const separator = index === 1 || index === 7 || (field.dynamic && !fields[index - 1]?.dynamic)
-      ? '<div class="menu-separator"></div>'
-      : '';
-    return `${separator}<button class="menu-item${field.id === groupByField ? ' active' : ''}" data-group-field="${escAttr(field.id)}">${esc(field.label)}</button>`;
-  }).join('');
-}
-
-function getSpecValue(product, specKey) {
-  const wanted = specColumnId(specKey);
-  const spec = (product.rawSpecs || []).find(s => specColumnId(s.key) === wanted);
-  return spec ? normalizeSpecValue(spec.value) : '';
-}
-
 function getAiCorrectionMap(product) {
   if (!globalThis.ShopScoutAIUI || !product?.aiAnalysis) return {};
   return ShopScoutAIUI.buildVerifiedValueMap(product.aiAnalysis);
@@ -274,34 +198,6 @@ function truncateText(value, maxLength = 40) {
   const text = String(value || '').replace(/\s+/g, ' ').trim();
   if (text.length <= maxLength) return text;
   return `${text.slice(0, Math.max(0, maxLength - 3)).trimEnd()}...`;
-}
-
-function renderTruncatedTitle(value, maxLength = 40) {
-  const titleText = String(value || 'Untitled').replace(/\s+/g, ' ').trim() || 'Untitled';
-  return `<span class="name-text" title="${escAttr(titleText)}">${esc(truncateText(titleText, maxLength))}</span>`;
-}
-
-function editableStaticCell(product, field, displayHtml, fallback = '-', className = '') {
-  const editValue = getCorrectedValue(product, field, '');
-  const content = displayHtml || (editValue ? renderCorrectedField(product, field) : esc(fallback));
-  return `<td${className ? ` class="${className}"` : ''} data-edit-field="${escAttr(field)}" data-edit-value="${escAttr(editValue)}">${content}</td>`;
-}
-
-function editableSpecCell(product, specKey, specValue) {
-  const editValue = specValue || '';
-  const content = specValue ? renderCorrectedSpecValue(product, specKey, specValue) : '-';
-  return `<td data-edit-spec-key="${escAttr(specKey)}" data-edit-value="${escAttr(editValue)}">${content}</td>`;
-}
-
-function renderRowActionMenu(location, productUrl, idx) {
-  return `<button class="row-action-trigger" type="button" data-row-action-menu data-list="${escAttr(location.listName)}" data-idx="${idx}" data-url="${escAttr(productUrl)}" title="Actions" aria-label="Product actions">&#8942;</button>`;
-}
-
-function renderRatingHtml(product, fallback = '-') {
-  const rating = getCorrectedValue(product, 'rating');
-  if (!rating) return fallback;
-  const countText = normalizeReviewCount(product.reviewCount);
-  return `&#9733; ${renderCorrectedField(product, 'rating')}${countText ? ` (${esc(countText)})` : ''}`;
 }
 
 function normalizedCorrectionField(value) {
@@ -375,15 +271,6 @@ function renderFileRecentLists(data) {
     : '<span class="rb-label">No recent lists</span>';
 }
 
-function getProductSearchQuery() {
-  return (document.getElementById('productSearchInput')?.value || '').trim();
-}
-
-function getProductSearchScope() {
-  const value = document.getElementById('productSearchScope')?.value || 'current';
-  return value === 'all' ? 'all' : 'current';
-}
-
 function normalizeSearchFields() {
   if (activeSearchFields.size) return;
   SEARCH_FIELD_DEFINITIONS.forEach(field => activeSearchFields.add(field.id));
@@ -435,34 +322,6 @@ function getSearchableProductText(product) {
   return parts.filter(Boolean).join(' ').toLowerCase();
 }
 
-function productMatchesSearch(product, query) {
-  const terms = String(query || '').toLowerCase().split(/\s+/).filter(Boolean);
-  if (!terms.length) return true;
-  const haystack = getSearchableProductText(product);
-  return terms.every(term => haystack.includes(term));
-}
-
-function collectProductSearchItems(data, scope) {
-  const activeList = data.activeList;
-  const lists = data.lists || {};
-  const listNames = scope === 'all' ? Object.keys(lists).sort((a, b) => a.localeCompare(b)) : [activeList];
-  const items = [];
-  for (const listName of listNames) {
-    const products = lists[listName] || [];
-    products.forEach((product, index) => items.push({ product, listName, index }));
-  }
-  return items;
-}
-
-function setRenderedProductLocations(items) {
-  renderedProductLocations = new WeakMap();
-  for (const item of items) renderedProductLocations.set(item.product, { listName: item.listName, index: item.index });
-}
-
-function getRenderedProductLocation(product, fallbackProducts) {
-  return renderedProductLocations.get(product) || { listName: getActiveListName(), index: fallbackProducts.indexOf(product) };
-}
-
 function readProductLocation(el) {
   const source = el?.closest?.('[data-idx][data-list]') || el;
   return {
@@ -483,114 +342,16 @@ async function activateProductListForAction(listName) {
 }
 
 async function renderAll() {
-  // Database view (Tabulator/Pivot) is the only product view now. The old hand-rolled
-  // cards/table renderers are kept as no-ops below to avoid breaking legacy callers
-  // (AI results page, scan flows) until those are migrated. They never paint to #content.
+  /* Database view (Tabulator + PivotTable.js) is the only product
+     view. SSDatabaseView.render reads from SSProductRepo and paints
+     into #dbView. The legacy hand-rolled cards/table renderers and
+     all of their filter/sort/group plumbing were removed in Task 8. */
   if (globalThis.SSDatabaseView && typeof globalThis.SSDatabaseView.render === 'function') {
     return globalThis.SSDatabaseView.render();
   }
-  return;
-  /* DEAD CODE — preserved temporarily for diff readability; never executes. */
-  // eslint-disable-next-line no-unreachable
-  const data = await getData();
-  const activeProducts = data.lists[data.activeList] || [];
-  const searchQuery = getProductSearchQuery();
-  const searchScope = getProductSearchScope();
-  const scopedItems = collectProductSearchItems(data, searchScope);
-  let items = searchQuery ? scopedItems.filter(item => productMatchesSearch(item.product, searchQuery)) : scopedItems.slice();
-  let products = items.map(item => item.product);
-  document.title = `ShopScout — ${data.activeList} (${activeProducts.length})`;
-  syncSelectionButtons(activeProducts);
-
-  buildSpecColumns(scopedItems.map(item => item.product));
-  renderGroupFieldMenu();
-
-  // Source filter
-  const sources = [...new Set(scopedItems.map(item => item.product.source).filter(Boolean))].sort((a, b) => a.localeCompare(b));
-  const filterSel = document.getElementById('filterSource');
-  const curFilter = filterSel?.value || '';
-  const activeSourceFilter = sources.includes(curFilter) ? curFilter : '';
-  if (filterSel) {
-    filterSel.innerHTML = '<option value="">All Sources</option>' + sources.map(s => `<option value="${esc(s)}"${s === activeSourceFilter ? ' selected' : ''}>${esc(s)}</option>`).join('');
-    filterSel.value = activeSourceFilter;
-  }
-  if (activeSourceFilter) items = items.filter(item => item.product.source === activeSourceFilter);
-
-  // Column filters
-  for (const [colId, filterVal] of colFilters) {
-    const col = getAllColumns().find(c => c.id === colId);
-    if (!col || !filterVal) continue;
-    const lf = filterVal.toLowerCase();
-    if (col.dynamic) {
-      items = items.filter(item => getSpecValue(item.product, col.specKey).toLowerCase().includes(lf));
-    } else if (col.key) {
-      items = items.filter(item => String(getCorrectedValue(item.product, col.key) || '').toLowerCase().includes(lf));
-    }
-  }
-  if (selectedOnlyFilter) {
-    items = items.filter(item => item.listName === data.activeList && selectedProductIds.has(productSelectionKey(item.product, item.index, item.listName)));
-  }
-  if (notedOnlyFilter) {
-    items = items.filter(item => String(item.product.notes || '').trim());
-  }
-
-  // Sort
-  const sort = document.getElementById('sortBy').value;
-  if (sort === 'price-asc') items.sort((a, b) => parsePrice(a.product.newPrice) - parsePrice(b.product.newPrice));
-  else if (sort === 'price-desc') items.sort((a, b) => parsePrice(b.product.newPrice) - parsePrice(a.product.newPrice));
-  else if (sort === 'rating') items.sort((a, b) => (parseFloat(b.product.rating) || 0) - (parseFloat(a.product.rating) || 0));
-  else if (sort === 'source') items.sort((a, b) => (a.product.source || '').localeCompare(b.product.source || ''));
-  if (!tableSortAsc && sort !== 'price-desc') items.reverse();
-  if (groupByField) items.sort((a, b) => productGroupLabel(a.product, a).localeCompare(productGroupLabel(b.product, b)));
-
-  // Table column sort
-  if (currentView === 'table' && tableSortCol) {
-    const col = getAllColumns().find(c => c.id === tableSortCol);
-    if (col?.key || col?.dynamic) {
-      items.sort((a, b) => {
-        let va, vb;
-        if (col.dynamic) { va = getSpecValue(a.product, col.specKey); vb = getSpecValue(b.product, col.specKey); }
-        else if (col.key === '_specCount') { va = (a.product.rawSpecs || []).length; vb = (b.product.rawSpecs || []).length; }
-        else { va = getCorrectedValue(a.product, col.key); vb = getCorrectedValue(b.product, col.key); }
-        if (col.numeric) { va = parseFloat(String(va).replace(/[^0-9.\-]/g, '')) || 0; vb = parseFloat(String(vb).replace(/[^0-9.\-]/g, '')) || 0; }
-        else { va = String(va).toLowerCase(); vb = String(vb).toLowerCase(); }
-        return tableSortAsc ? (va > vb ? 1 : va < vb ? -1 : 0) : (va < vb ? 1 : va > vb ? -1 : 0);
-      });
-    }
-  }
-  products = items.map(item => item.product);
-  setRenderedProductLocations(items);
-
-  renderHiddenBar();
-  renderFilterBar();
-  syncRibbonViewState();
-
-  const content = document.getElementById('content');
-  if (!products.length) {
-    if (searchQuery) {
-      const scopeLabel = searchScope === 'all' ? 'all lists' : 'the current list';
-      content.innerHTML = `<div class="empty"><div class="icon">&#128269;</div><p>No products match <strong>${esc(searchQuery)}</strong> in ${esc(scopeLabel)}.</p></div>`;
-    } else {
-      const emptyText = searchScope === 'all' ? 'No products in any list yet.' : 'No products in this list yet.';
-      content.innerHTML = `<div class="empty"><div class="icon">&#128722;</div><p>${emptyText}<br>Click <strong>Add Product</strong> to get started.</p></div>`;
-    }
-    return;
-  }
-
-  const allProducts = activeProducts;
-  if (currentView === 'cards') renderCards(products, allProducts);
-  else renderTable(products, allProducts);
 }
 
 // --- View configuration modals ---
-function renderHiddenBar() {
-  renderColumnControlList();
-  renderFreezeControlList();
-  renderColumnOrderList();
-  renderFilterModal();
-  renderGroupingModal();
-}
-
 function filterUtilityList(items, query, labelForItem = item => item.label || item.id || '') {
   const needle = String(query || '').trim().toLowerCase();
   if (!needle) return items;
@@ -676,68 +437,9 @@ function saveColumnOrderFromDom() {
   renderAll();
 }
 
-function renderFilterModal() {
-  const selectedToggle = document.getElementById('filterSelectedToggle');
-  const notedToggle = document.getElementById('filterNotedToggle');
-  if (selectedToggle) selectedToggle.checked = selectedOnlyFilter;
-  if (notedToggle) notedToggle.checked = notedOnlyFilter;
-}
-
-function renderGroupingModal() {
-  const list = document.getElementById('groupingFieldList');
-  if (!list) return;
-  const query = document.getElementById('groupSearchInput')?.value || '';
-  const fields = filterUtilityList(getAllGroupFields(), query, field => field.label || field.id);
-  list.innerHTML = fields.map(field => `<label class="utility-option" title="${escAttr(field.label)}">
-    <input type="radio" name="groupByField" data-group-field="${escAttr(field.id)}"${field.id === groupByField ? ' checked' : ''}>
-    <span>${esc(field.label)}</span>
-  </label>`).join('') || '<div class="ai-empty">No matching fields.</div>';
-}
-
-// --- Filter bar ---
-function renderFilterBar() {
-  const bar = document.getElementById('filterBar');
-  if (!colFilters.size && !selectedOnlyFilter && !notedOnlyFilter) { bar.classList.remove('active'); return; }
-  let html = '<span class="filter-bar-label">Filters:</span>';
-  if (selectedOnlyFilter) {
-    html += `<span class="filter-chip" data-filter="selected"><span class="chip-col">Active:</span> <span class="chip-val">Selected products</span> <span class="chip-x">&times;</span></span>`;
-  }
-  if (notedOnlyFilter) {
-    html += `<span class="filter-chip" data-filter="noted"><span class="chip-col">Saved:</span> <span class="chip-val">Products with notes</span> <span class="chip-x">&times;</span></span>`;
-  }
-  for (const [colId, val] of colFilters) {
-    const col = getAllColumns().find(c => c.id === colId);
-    if (col) html += `<span class="filter-chip" data-col="${colId}"><span class="chip-col">${esc(col.label)}:</span> <span class="chip-val">${esc(val)}</span> <span class="chip-x">&times;</span></span>`;
-  }
-  bar.innerHTML = html;
-  bar.classList.add('active');
-}
-
-function syncRibbonViewState() {
-  document.body.classList.toggle('compact-mode', compactMode);
-  document.body.classList.toggle('no-gridlines', !gridlinesEnabled);
-  document.body.classList.toggle('has-frozen-cols', frozenColumnIds.size > 0);
-  document.querySelectorAll('[data-command="toggle-compact"]').forEach(btn => btn.classList.toggle('active', compactMode));
-  document.querySelectorAll('[data-command="toggle-gridlines"]').forEach(btn => btn.classList.toggle('active', gridlinesEnabled));
-  document.querySelectorAll('[data-command="open-freeze-modal"]').forEach(btn => btn.classList.toggle('active', frozenColumnIds.size > 0));
-  document.querySelectorAll('[data-command="open-column-order-modal"]').forEach(btn => btn.classList.toggle('active', columnOrderIds.length > 0));
-  document.querySelectorAll('[data-command="filter-selected"]').forEach(btn => btn.classList.toggle('active', selectedOnlyFilter));
-  document.querySelectorAll('[data-command="filter-noted"]').forEach(btn => btn.classList.toggle('active', notedOnlyFilter));
-  document.querySelectorAll('[data-command="group-by-source"]').forEach(btn => btn.classList.toggle('active', groupBySource));
-  document.querySelectorAll('[data-group-field]').forEach(btn => btn.classList.toggle('active', btn.dataset.groupField === (groupByField || (groupBySource ? 'source' : ''))));
-  document.querySelectorAll('[data-search-field]').forEach(btn => {
-    const active = activeSearchFields.has(btn.dataset.searchField);
-    btn.classList.toggle('active', active);
-    const checkbox = btn.querySelector('input[type="checkbox"]');
-    if (checkbox) checkbox.checked = active;
-  });
-  document.querySelectorAll('[data-command="sort-ascending"]').forEach(btn => btn.classList.toggle('active', tableSortAsc));
-  document.querySelectorAll('[data-command="sort-descending"]').forEach(btn => btn.classList.toggle('active', !tableSortAsc));
-  renderFilterModal();
-  renderFreezeControlList();
-  renderColumnOrderList();
-  applyFrozenColumnOffsets();
-}
+/* renderFilterModal, renderGroupingModal, renderFilterBar were retired
+   in Task 8 along with the filter/group state vars they synced. The
+   modal HTML shells still exist but no longer mount these renderers. */
 
 function toggleSearchField(fieldId) {
   if (!SEARCH_FIELD_DEFINITIONS.some(field => field.id === fieldId)) return;
@@ -747,226 +449,10 @@ function toggleSearchField(fieldId) {
   renderAll();
 }
 
-function setGroupByField(fieldId) {
-  if (!getAllGroupFields().some(field => field.id === fieldId)) return;
-  groupByField = fieldId;
-  groupBySource = fieldId === 'source';
-  groupsCollapsed = false;
-  renderAll();
-  const field = groupFieldDefinition(fieldId);
-  toast.show(`Grouped by ${field?.label || 'field'}`);
-}
-
-function groupFieldDefinition(fieldId = groupByField) {
-  return getAllGroupFields().find(field => field.id === fieldId) || GROUP_FIELDS.find(field => field.id === fieldId) || null;
-}
-
-function priceBandLabel(price) {
-  const value = parsePrice(price);
-  if (!Number.isFinite(value) || value <= 0 || value >= 99999) return 'Not specified';
-  if (value < 25) return 'Under $25';
-  if (value < 50) return '$25 to $49';
-  if (value < 100) return '$50 to $99';
-  if (value < 200) return '$100 to $199';
-  return '$200 and up';
-}
-
-function ratingBandLabel(rating) {
-  const value = parseFloat(String(rating || '').replace(/[^0-9.]/g, ''));
-  if (!Number.isFinite(value) || value <= 0) return 'Not specified';
-  if (value >= 4.5) return '4.5 stars and up';
-  if (value >= 4) return '4.0 to 4.4 stars';
-  if (value >= 3) return '3.0 to 3.9 stars';
-  return 'Under 3 stars';
-}
-
-function groupFieldValue(product, location = {}) {
-  const fieldId = groupByField || (groupBySource ? 'source' : '');
-  if (!fieldId) return '';
-  if (fieldId.startsWith('spec:')) return getSpecValue(product || {}, fieldId.slice(5)) || 'Not specified';
-  if (fieldId === 'listName') return location.listName || getActiveListName() || 'Current list';
-  if (fieldId === 'newPrice') return priceBandLabel(product?.newPrice);
-  if (fieldId === 'rating') return ratingBandLabel(product?.rating);
-  return String(product?.[fieldId] || '').trim() || 'Not specified';
-}
-
-function productGroupLabel(product, location = {}) {
-  const field = groupFieldDefinition(groupByField || (groupBySource ? 'source' : ''));
-  if (!field) return '';
-  return `${field.label}: ${groupFieldValue(product, location)}`;
-}
-
-// --- Cards ---
-function renderCards(products, allProducts) {
-  // LEGACY — retired in favor of Database view (Tabulator). See comparison-db.js.
-  // Guarded no-op so any orphan caller exits cleanly instead of painting the old UI.
-  return;
-  // eslint-disable-next-line no-unreachable
-  const cheapestPrice = Math.min(...products.map(p => parsePrice(getCorrectedValue(p, 'newPrice'))).filter(v => v < 99999));
-  const bestRating = Math.max(...products.map(p => parseFloat(getCorrectedValue(p, 'rating')) || 0));
-
-  let lastGroup = null;
-  const cardsHtml = products.map(p => {
-    const location = getRenderedProductLocation(p, allProducts);
-    const idx = location.index;
-    const isActiveListProduct = location.listName === getActiveListName();
-    const selectionKey = productSelectionKey(p, idx, location.listName);
-    const isSelected = isActiveListProduct && selectedProductIds.has(selectionKey);
-    const isCheapest = products.length > 1 && parsePrice(getCorrectedValue(p, 'newPrice')) === cheapestPrice && cheapestPrice < 99999;
-    const isBestRated = products.length > 1 && (parseFloat(getCorrectedValue(p, 'rating')) || 0) === bestRating && bestRating > 0;
-
-    const imageUrl = sanitizeUrl(p.image);
-    const productUrl = sanitizeUrl(p.url);
-    const title = getCorrectedValue(p, 'title', 'Untitled');
-    const newPrice = getCorrectedValue(p, 'newPrice');
-    const usedPrice = getCorrectedValue(p, 'usedPrice');
-    const brand = getCorrectedValue(p, 'brand');
-    const rating = getCorrectedValue(p, 'rating');
-    const modelNumber = getCorrectedValue(p, 'modelNumber');
-    const img = imageUrl ? `<img src="${escAttr(imageUrl)}" alt="">` : '<span class="no-img">No Image</span>';
-    let meta = '';
-    if (p.source) meta += productUrl ? `<a class="source-link" href="${escAttr(productUrl)}" target="_blank" rel="noopener">${esc(p.source)}</a>` : `<span>${esc(p.source)}</span>`;
-    if (getProductSearchScope() === 'all') meta += `<span class="list-badge">List: ${esc(location.listName)}</span>`;
-    if (brand) meta += `<span>${esc(brand)}</span>`;
-    const ratingText = formatRatingDisplay(rating, p.reviewCount);
-    if (ratingText) meta += `<span class="rating-badge">&#9733; ${esc(ratingText)}</span>`;
-    if (modelNumber) meta += `<span>${esc(modelNumber)}</span>`;
-
-    let badges = '';
-    if (isCheapest) badges += '<span class="source-badge" style="background:#fef9c3;color:#92400e">Best Price</span> ';
-    if (isBestRated) badges += '<span class="source-badge" style="background:#fef3c7;color:#92400e">Top Rated</span> ';
-
-    const group = productGroupLabel(p, location);
-    const groupingEnabled = !!groupByField || groupBySource;
-    const groupHeader = groupingEnabled && group !== lastGroup
-      ? `<div class="group-header">${esc(group)}${groupsCollapsed ? '' : ''}</div>`
-      : '';
-    if (groupingEnabled && group !== lastGroup) lastGroup = group;
-    if (groupingEnabled && groupsCollapsed) return groupHeader;
-
-    return `${groupHeader}<div class="product-card${isSelected ? ' selected' : ''}" data-list="${escAttr(location.listName)}" data-idx="${idx}" style="cursor:pointer">
-      <label class="product-select" title="${isActiveListProduct ? 'Select product' : 'Switch to this list to select'}"><input type="checkbox" class="product-select-input" data-list="${escAttr(location.listName)}" data-idx="${idx}" data-key="${escAttr(selectionKey)}"${isSelected ? ' checked' : ''}${isActiveListProduct ? '' : ' disabled'}><span>Select product</span></label>
-      <div class="card-img">${img}</div>
-      <div class="card-body">
-        <div class="card-title" title="${escAttr(title)}">${esc(truncateText(title, 40))}</div>
-        ${badges ? `<div style="margin-bottom:4px">${badges}</div>` : ''}
-        ${newPrice ? `<div class="card-price">${esc(newPrice)}</div>` : ''}
-        ${usedPrice ? `<div class="card-used">Used: ${esc(usedPrice)}</div>` : ''}
-        <div class="card-meta">${meta}</div>
-        ${p.notes ? `<div class="card-notes">${esc(p.notes)}</div>` : ''}
-        <div class="card-actions">
-          <button class="icon-btn rescan-btn" data-list="${escAttr(location.listName)}" data-idx="${idx}" title="Rescan product">&#8635;</button>
-          <button class="icon-btn open-btn" data-url="${escAttr(productUrl)}" title="Open product page">&#8599;</button>
-          <button class="icon-btn edit-btn" data-list="${escAttr(location.listName)}" data-idx="${idx}" title="Edit">&#9998;</button>
-          <button class="icon-btn remove-btn" data-list="${escAttr(location.listName)}" data-idx="${idx}" title="Remove">&times;</button>
-        </div>
-      </div>
-    </div>`;
-  }).join('');
-  document.getElementById('content').innerHTML = `<div class="card-grid${groupByField || groupBySource ? ' grouped' : ''}">${cardsHtml}</div>`;
-}
-
-// --- Table (LEGACY) — retired in favor of Database view (Tabulator). See comparison-db.js. ---
-function renderTable(products, allProducts) {
-  // Guarded no-op so any orphan caller exits cleanly instead of painting the old table.
-  return;
-  // eslint-disable-next-line no-unreachable
-  const cheapestPrice = Math.min(...products.map(p => parsePrice(getCorrectedValue(p, 'newPrice'))).filter(v => v < 99999));
-  const bestRating = Math.max(...products.map(p => parseFloat(getCorrectedValue(p, 'rating')) || 0));
-
-  const visibleCols = getAllColumnsInDisplayOrder().filter(c => !hiddenCols.has(c.id) || frozenColumnIds.has(c.id));
-
-  let html = '<div class="table-wrap"><table><thead><tr>';
-  for (const col of visibleCols) {
-    const cls = [
-      col.id === 'thumb' ? 'col-thumb' : '',
-      col.id === 'actions' ? 'col-actions' : '',
-      frozenColumnIds.has(col.id) ? 'frozen-col' : ''
-    ].filter(Boolean).join(' ');
-    const classAttr = cls ? ` class="${cls}"` : '';
-    if (!col.sortable && !col.filterable) {
-      html += `<th${classAttr} data-col-id="${escAttr(col.id)}"><div class="th-inner">${esc(col.label)}</div></th>`;
-    } else {
-      const arrow = tableSortCol === col.id ? `<span class="sort-arrow">${tableSortAsc ? '&#9650;' : '&#9660;'}</span>` : '';
-      const hasFilter = colFilters.has(col.id) ? ' has-filter' : '';
-      html += `<th${classAttr} data-col-id="${escAttr(col.id)}"><div class="th-inner${hasFilter}" data-col="${col.id}">${esc(col.label)} ${arrow}<span class="th-menu-trigger" data-col="${col.id}">&#9662;</span></div></th>`;
-    }
-  }
-  html += '</tr></thead><tbody>';
-
-  let lastGroup = null;
-  products.forEach(p => {
-    const location = getRenderedProductLocation(p, allProducts);
-    const idx = location.index;
-    const isActiveListProduct = location.listName === getActiveListName();
-    const selectionKey = productSelectionKey(p, idx, location.listName);
-    const isSelected = isActiveListProduct && selectedProductIds.has(selectionKey);
-    const isCheapest = products.length > 1 && parsePrice(getCorrectedValue(p, 'newPrice')) === cheapestPrice && cheapestPrice < 99999;
-    const isBestRated = products.length > 1 && (parseFloat(getCorrectedValue(p, 'rating')) || 0) === bestRating && bestRating > 0;
-
-    const imageUrl = sanitizeUrl(p.image);
-    const productUrl = sanitizeUrl(p.url);
-    const group = productGroupLabel(p, location);
-    const groupingEnabled = !!groupByField || groupBySource;
-    if (groupingEnabled && group !== lastGroup) {
-      html += `<tr class="group-row"><td colspan="${visibleCols.length}">${esc(group)}</td></tr>`;
-      lastGroup = group;
-    }
-    if (groupingEnabled && groupsCollapsed) return;
-    html += `<tr data-list="${escAttr(location.listName)}" data-idx="${idx}" class="${isSelected ? 'selected' : ''}" style="cursor:pointer">`;
-    for (const col of visibleCols) {
-      switch (col.id) {
-        case 'thumb':
-          html += `<td class="col-thumb${frozenColumnIds.has(col.id) ? ' frozen-col' : ''}" data-col-id="${escAttr(col.id)}"><label class="product-select" title="${isActiveListProduct ? 'Select product' : 'Switch to this list to select'}"><input type="checkbox" class="product-select-input" data-list="${escAttr(location.listName)}" data-idx="${idx}" data-key="${escAttr(selectionKey)}"${isSelected ? ' checked' : ''}${isActiveListProduct ? '' : ' disabled'}><span>Select product</span></label>${imageUrl ? `<img src="${escAttr(imageUrl)}" alt="">` : '<div class="no-thumb">&#128247;</div>'}</td>`;
-          break;
-        case 'name':
-          html += `<td class="col-name${frozenColumnIds.has(col.id) ? ' frozen-col' : ''}" data-col-id="${escAttr(col.id)}" data-edit-field="title" data-edit-value="${escAttr(getCorrectedValue(p, 'title', 'Untitled'))}">${renderTruncatedTitle(getCorrectedValue(p, 'title', 'Untitled'))}${getProductSearchScope() === 'all' ? `<div style="margin-top:4px"><span class="list-badge">List: ${esc(location.listName)}</span></div>` : ''}</td>`;
-          break;
-        case 'price':
-          html += editableStaticCell(p, 'newPrice', renderCorrectedField(p, 'newPrice', '-'), '-', `col-price${isCheapest ? ' best-price' : ''}`);
-          break;
-        case 'source':
-          html += editableStaticCell(p, 'source', p.source ? (productUrl ? `<a class="source-link" href="${escAttr(productUrl)}" target="_blank" rel="noopener">${esc(p.source)}</a>` : esc(p.source)) : '-', '-');
-          break;
-        case 'rating':
-          html += editableStaticCell(p, 'rating', renderRatingHtml(p), '-', `col-rating${isBestRated ? ' best-rating' : ''}`);
-          break;
-        case 'bullets': {
-          const bl = p.bullets || [];
-          const value = bl.join('\n');
-          const display = bl.length ? esc(truncateText(bl[0], 60)) + (bl.length > 1 ? ` (+${bl.length - 1})` : '') : '-';
-          html += `<td class="col-trunc" title="${escAttr(value)}" data-edit-field="bullets" data-edit-value="${escAttr(value)}">${display}</td>`;
-          break;
-        }
-        case 'description': {
-          const desc = p.description || '';
-          html += `<td class="col-trunc" title="${escAttr(desc)}" data-edit-field="description" data-edit-value="${escAttr(desc)}">${desc ? esc(truncateText(desc, 80)) : '-'}</td>`;
-          break;
-        }
-        case 'specs':
-          html += `<td>${(p.rawSpecs || []).length || '-'}</td>`;
-          break;
-        case 'actions':
-          html += `<td class="col-actions">${renderRowActionMenu(location, productUrl, idx)}</td>`;
-          break;
-        default:
-          if (col.dynamic) {
-            const specValue = getSpecValue(p, col.specKey);
-            html += editableSpecCell(p, col.specKey, specValue);
-          } else {
-            const field = col.key || '';
-            html += field ? editableStaticCell(p, field, col.key && getCorrectedValue(p, col.key) ? renderCorrectedField(p, col.key) : '-', '-') : '<td>-</td>';
-          }
-          break;
-      }
-    }
-    html += '</tr>';
-  });
-
-  html += '</tbody></table></div>';
-  document.getElementById('content').innerHTML = html;
-  applyFrozenColumnOffsets();
-}
+/* setGroupByField / groupFieldDefinition / priceBandLabel /
+   ratingBandLabel / groupFieldValue / productGroupLabel were removed
+   in Task 8. Grouping is handled natively by the Database view's
+   #dbGroupBy select (see comparison-db.js). */
 
 function applyFrozenColumnOffsets() {
   const table = document.querySelector('.table-wrap table');
@@ -1093,8 +579,8 @@ async function saveInlineCellEdit(control) {
   }
 }
 
-// --- Column menu ---
-let activeColMenu = null;
+/* activeColMenu / openColMenu / closeColMenu were retired in Task 8;
+   the Tabulator column header menu in comparison-db.js replaces them. */
 let activeRowActionMenu = null;
 
 function closeRowActionMenu() {
@@ -1158,82 +644,6 @@ async function handleProductActionButton(btn) {
   return false;
 }
 
-function openColMenu(colId, anchorEl) {
-  closeColMenu();
-  const col = getAllColumns().find(c => c.id === colId);
-  if (!col) return;
-
-  const menu = document.createElement('div');
-  menu.className = 'col-menu active';
-  menu.id = 'activeColMenu';
-
-  const isNumeric = col.numeric;
-  const ascLabel = isNumeric ? 'Sort Low &rarr; High' : 'Sort A &rarr; Z';
-  const descLabel = isNumeric ? 'Sort High &rarr; Low' : 'Sort Z &rarr; A';
-
-  let menuHtml = `
-    <button data-action="sort-asc"><span class="cm-icon">&#9650;</span> ${ascLabel}</button>
-    <button data-action="sort-desc"><span class="cm-icon">&#9660;</span> ${descLabel}</button>`;
-
-  if (col.hideable) {
-    menuHtml += `<div class="cm-divider"></div><button data-action="hide"><span class="cm-icon">&#10005;</span> Hide Column</button>`;
-  }
-
-  if (col.filterable) {
-    const curVal = colFilters.get(colId) || '';
-    menuHtml += `<div class="cm-divider"></div>
-      <div class="cm-filter">
-        <label>Filter</label>
-        <input type="text" id="cmFilterInput" placeholder="Type to filter..." value="${esc(curVal)}">
-      </div>`;
-  }
-
-  menu.innerHTML = menuHtml;
-
-  // Position relative to th
-  const rect = anchorEl.getBoundingClientRect();
-  menu.style.position = 'fixed';
-  menu.style.top = rect.bottom + 2 + 'px';
-  menu.style.left = rect.left + 'px';
-  menu.style.zIndex = '300';
-  document.body.appendChild(menu);
-  activeColMenu = { el: menu, colId };
-
-  // Focus filter input if present
-  const filterInput = menu.querySelector('#cmFilterInput');
-  if (filterInput) setTimeout(() => filterInput.focus(), 50);
-
-  // Handlers
-  menu.addEventListener('click', e => {
-    const btn = e.target.closest('button[data-action]');
-    if (!btn) return;
-    const action = btn.dataset.action;
-    if (action === 'sort-asc') { tableSortCol = colId; tableSortAsc = true; }
-    else if (action === 'sort-desc') { tableSortCol = colId; tableSortAsc = false; }
-    else if (action === 'hide') { hiddenCols.add(colId); }
-    closeColMenu();
-    renderAll();
-  });
-
-  if (filterInput) {
-    filterInput.addEventListener('keydown', e => {
-      if (e.key === 'Enter') {
-        const val = filterInput.value.trim();
-        if (val) colFilters.set(colId, val);
-        else colFilters.delete(colId);
-        closeColMenu();
-        renderAll();
-      }
-      if (e.key === 'Escape') closeColMenu();
-    });
-  }
-}
-
-function closeColMenu() {
-  const el = document.getElementById('activeColMenu');
-  if (el) el.remove();
-  activeColMenu = null;
-}
 
 // --- Events ---
 function bindEvents() {
@@ -1323,14 +733,8 @@ function bindEvents() {
   document.getElementById('filterSource')?.addEventListener('change', renderAll);
   document.getElementById('sortBy')?.addEventListener('change', renderAll);
 
-  // View toggle
-  document.querySelectorAll('[data-view]').forEach(btn => {
-    btn.addEventListener('click', () => {
-      currentView = btn.dataset.view;
-      document.querySelectorAll('[data-view]').forEach(b => b.classList.toggle('active', b.dataset.view === currentView));
-      renderAll();
-    });
-  });
+  /* The legacy data-view (cards / table) toggle was removed in Task 8.
+     Database view is now the only product browsing surface. */
 
   // Utility modals
   document.querySelectorAll('[data-close-modal]').forEach(btn => {
@@ -1348,15 +752,10 @@ function bindEvents() {
     renderAll();
   });
   document.getElementById('columnSearchInput')?.addEventListener('input', renderColumnControlList);
-  document.getElementById('groupSearchInput')?.addEventListener('input', renderGroupingModal);
-  document.getElementById('filterSelectedToggle')?.addEventListener('change', e => {
-    selectedOnlyFilter = !!e.target.checked;
-    renderAll();
-  });
-  document.getElementById('filterNotedToggle')?.addEventListener('change', e => {
-    notedOnlyFilter = !!e.target.checked;
-    renderAll();
-  });
+  /* Task 8: groupSearchInput / filterSelectedToggle / filterNotedToggle
+     no longer drive anything — the matching state vars are gone. The
+     modal shells stay in the DOM (existing tests assert them) but the
+     wiring is dead. */
   document.getElementById('freezeToggleList')?.addEventListener('change', e => {
     const input = e.target.closest('[data-freeze-column]');
     if (!input) return;
@@ -1399,19 +798,8 @@ function bindEvents() {
     draggedColumnOrderId = '';
     renderColumnOrderList();
   });
-  document.getElementById('groupingFieldList')?.addEventListener('change', e => {
-    const input = e.target.closest('[data-group-field]');
-    if (input) setGroupByField(input.dataset.groupField);
-  });
-  document.getElementById('filterModal')?.addEventListener('click', e => {
-    if (!e.target.closest('[data-command="clear-filters"]')) return;
-    selectedOnlyFilter = false;
-    notedOnlyFilter = false;
-    colFilters.clear();
-    const filter = document.getElementById('filterSource');
-    if (filter) filter.value = '';
-    renderAll();
-  });
+  /* Task 8: grouping modal and filter modal click delegates removed.
+     Tabulator owns grouping and filtering for the Database view. */
   document.getElementById('columnsModal')?.addEventListener('click', e => {
     if (!e.target.closest('[data-command="reset-columns"]')) return;
     hiddenCols.clear();
@@ -1429,47 +817,14 @@ function bindEvents() {
     columnOrderIds = [];
     renderAll();
   });
-  document.getElementById('groupingModal')?.addEventListener('click', e => {
-    if (!e.target.closest('[data-command="ungroup"]')) return;
-    groupBySource = false;
-    groupByField = '';
-    groupsCollapsed = false;
-    renderAll();
-  });
+  /* Task 8: groupingModal ungroup handler and the filter-chip remove
+     handler are gone — their backing state vars no longer exist and
+     the Database view manages its own filter chips. */
 
-  // Filter bar - click to remove filter
-  document.getElementById('filterBar').addEventListener('click', e => {
-    const chip = e.target.closest('.filter-chip');
-    if (chip) {
-      if (chip.dataset.filter === 'selected') selectedOnlyFilter = false;
-      else if (chip.dataset.filter === 'noted') notedOnlyFilter = false;
-      else colFilters.delete(chip.dataset.col);
-      renderAll();
-    }
-  });
-
-  // Content delegation
+  // Content delegation — info-page interactions (export, copy picker,
+  // feedback, dashboard back). Old table header sort and column-menu
+  // triggers were retired in Task 8 (Tabulator owns those now).
   document.getElementById('content').addEventListener('click', async e => {
-    // Column menu trigger
-    const menuTrigger = e.target.closest('.th-menu-trigger');
-    if (menuTrigger) {
-      e.stopPropagation();
-      const colId = menuTrigger.dataset.col;
-      const thInner = menuTrigger.closest('.th-inner');
-      openColMenu(colId, thInner);
-      return;
-    }
-
-    // Column header click for quick sort (not on menu trigger)
-    const thInner = e.target.closest('.th-inner[data-col]');
-    if (thInner && !e.target.closest('.th-menu-trigger')) {
-      const col = thInner.dataset.col;
-      if (tableSortCol === col) tableSortAsc = !tableSortAsc;
-      else { tableSortCol = col; tableSortAsc = true; }
-      await renderAll();
-      return;
-    }
-
     const dashboardBack = e.target.closest('[data-dashboard-back]');
     if (dashboardBack) {
       await renderAll();
@@ -1591,9 +946,6 @@ function bindEvents() {
     }
     if (activeRowActionMenu && !e.target.closest('#activeRowActionMenu') && !e.target.closest('[data-row-action-menu]')) {
       closeRowActionMenu();
-    }
-    if (activeColMenu && !e.target.closest('#activeColMenu') && !e.target.closest('.th-menu-trigger')) {
-      closeColMenu();
     }
   });
 
@@ -2007,8 +1359,8 @@ function prepareMainContentPage() {
   const dbView = document.getElementById('dbView');
   if (dbView) dbView.hidden = true;
   const content = document.getElementById('content');
-  content.classList.remove('content--legacy-unused');
-  content.classList.add('content--legacy-unused'); // ensure the class is present so CSS rules apply
+  /* body.is-info-page (set above) lets .content show as the
+     padded info pane; nothing more is needed here. */
   window.scrollTo(0, 0);
   return content;
 }
@@ -2314,12 +1666,8 @@ function showKeyboardShortcuts() {
    (loaded by comparison.html before this file). The ribbon-command
    dispatcher calls them via globalThis, so they're available by name. */
 
-function applySortDirection(ascending) {
-  tableSortAsc = ascending;
-  const sort = document.getElementById('sortBy');
-  if (sort?.value === 'price-asc' || sort?.value === 'price-desc') sort.value = ascending ? 'price-asc' : 'price-desc';
-  renderAll();
-}
+/* applySortDirection was retired in Task 8 with the rest of the
+   legacy sort plumbing. Tabulator column headers handle sort now. */
 
 function bindRibbonCommandEvents() {
   const shell = document.querySelector('.ribbon-shell');
@@ -2346,11 +1694,8 @@ function bindRibbonCommandEvents() {
       return;
     }
 
-    const groupFieldBtn = e.target.closest('[data-group-field]');
-    if (groupFieldBtn && !groupFieldBtn.disabled) {
-      setGroupByField(groupFieldBtn.dataset.groupField);
-      return;
-    }
+    /* Task 8: [data-group-field] menu item handler removed —
+       the legacy group-by menu is gone. */
 
     const stageBtn = e.target.closest('[data-stage-option]');
     if (stageBtn) {
@@ -2407,29 +1752,13 @@ function bindRibbonCommandEvents() {
     else if (command === 'rescan-selected') rescanSelectedProducts();
     else if (command === 'delete-selected') deleteSelectedProducts();
     else if (command === 'delete-all') clearProducts();
-    else if (command === 'toggle-compact') {
-      compactMode = !compactMode;
-      syncRibbonViewState();
-      toast.show(compactMode ? 'Compact view enabled' : 'Compact view disabled');
-    } else if (command === 'toggle-gridlines') {
-      gridlinesEnabled = !gridlinesEnabled;
-      syncRibbonViewState();
-      toast.show(gridlinesEnabled ? 'Gridlines enabled' : 'Gridlines hidden');
-    } else if (command === 'sort-ascending') {
-      applySortDirection(true);
-    } else if (command === 'sort-descending') {
-      applySortDirection(false);
-    } else if (command === 'add-filter') {
-      renderFilterModal();
-      showModal('filterModal');
-      document.getElementById('filterSource')?.focus();
-    } else if (command === 'filter-selected') {
-      selectedOnlyFilter = !selectedOnlyFilter;
-      renderAll();
-    } else if (command === 'filter-noted') {
-      notedOnlyFilter = !notedOnlyFilter;
-      renderAll();
-    } else if (command === 'show-columns') {
+    /* Task 8 retired the toggle-compact, toggle-gridlines,
+       sort-ascending / sort-descending, add-filter, filter-selected,
+       filter-noted, open-group-modal, group-by-source, ungroup,
+       expand-groups, collapse-groups ribbon commands. Their backing
+       state vars are gone; Tabulator owns sort, filter, group, and
+       visual density for the Database view. */
+    else if (command === 'show-columns') {
       renderColumnControlList();
       showModal('columnsModal');
       document.getElementById('columnSearchInput')?.focus();
@@ -2440,27 +1769,6 @@ function bindRibbonCommandEvents() {
       renderFreezeControlList();
       showModal('freezeModal');
       document.getElementById('freezeSearchInput')?.focus();
-    } else if (command === 'open-group-modal') {
-      renderGroupingModal();
-      showModal('groupingModal');
-      document.getElementById('groupSearchInput')?.focus();
-    } else if (command === 'group-by-source') {
-      setGroupByField('source');
-    } else if (command === 'ungroup') {
-      groupBySource = false;
-      groupByField = '';
-      groupsCollapsed = false;
-      renderAll();
-    } else if (command === 'expand-groups') {
-      if (!groupByField) groupByField = 'source';
-      groupBySource = groupByField === 'source';
-      groupsCollapsed = false;
-      renderAll();
-    } else if (command === 'collapse-groups') {
-      if (!groupByField) groupByField = 'source';
-      groupBySource = groupByField === 'source';
-      groupsCollapsed = true;
-      renderAll();
     } else if (command === 'documentation' || command === 'about') {
       await openShopScoutDocumentation(command === 'about' ? 'About' : 'Help');
     } else if (command === 'keyboard-shortcuts') {
@@ -2475,22 +1783,11 @@ function bindRibbonCommandEvents() {
       const version = chrome.runtime.getManifest?.().version || 'unknown';
       openDashboardInfoPage('Check Updates', 'Extension package status', `<p>ShopScout ${esc(version)} is installed. Browser extension store update checks are handled by the browser when the packaged extension is installed from a store.</p>`);
     }
-    else if (command === 'reset-sort') {
-      const sort = document.getElementById('sortBy');
-      if (sort) sort.value = 'added';
-      tableSortCol = null;
-      tableSortAsc = true;
-      renderAll();
-    } else if (command === 'clear-search') {
+    /* Task 8: reset-sort and clear-filters dispatch is gone — Tabulator
+       headers manage sort and filter state directly. */
+    else if (command === 'clear-search') {
       const input = document.getElementById('productSearchInput');
       if (input) input.value = '';
-      renderAll();
-    } else if (command === 'clear-filters') {
-      selectedOnlyFilter = false;
-      notedOnlyFilter = false;
-      colFilters.clear();
-      const filter = document.getElementById('filterSource');
-      if (filter) filter.value = '';
       renderAll();
     } else if (command === 'reset-columns') {
       hiddenCols.clear();
@@ -3096,14 +2393,6 @@ async function runConnectedAI(productIndexes, providerId = 'auto', analysisOptio
 }
 
 // --- Copy URLs ---
-async function copyUrls() {
-  const products = await getProducts();
-  if (!products.length) { toast.show('No products', 'error'); return; }
-  await navigator.clipboard.writeText(products.map(p => p.url).filter(Boolean).join('\n'));
-  toast.show('URLs copied');
-}
-
-// --- Remove ---
 async function removeProduct(idx) {
   const products = await getProducts();
   if (idx >= 0 && idx < products.length) {

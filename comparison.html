@@ -373,9 +373,11 @@
 <!-- Controls -->
 <div class="controls"></div>
 
-<!-- Content -->
-<!-- Legacy hand-rolled cards/table container — kept for AI results page hooks but never rendered into for product browsing. -->
-<div class="content content--legacy-unused" id="content" aria-hidden="true"></div>
+<!-- Main content area. Hosts info pages (About, Help, Export), the
+     product detail view, AI results page, settings page, and the
+     feedback page. The Database view (Tabulator) lives below in
+     #dbView, not here. -->
+<div class="content" id="content"></div>
 
 <!-- Database view (Tabulator + PivotTable.js) — the only product view.
      All controls (Group, Columns, Clear filters, Saved views, mode) live in the View ribbon.
