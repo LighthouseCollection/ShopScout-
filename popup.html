@@ -42,29 +42,6 @@
     </div>
   </div>
 
-  <div class="actions-row">
-    <div class="action-section">
-      <div class="action-label">AI Analyze</div>
-      <div class="action-group group-analyze">
-        <button id="integratedAnalyze" title="AI Integrated Analyze"><span class="button-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="m12 3 2.4 5 5.6.8-4 3.9.9 5.5-4.9-2.6-4.9 2.6.9-5.5-4-3.9 5.6-.8Z"/></svg></span><span>Auto AI</span></button>
-        <button id="manualAnalyze" title="AI Manual Analyze"><span class="button-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg></span><span>Manual AI</span></button>
-      </div>
-    </div>
-    <div class="action-divider"></div>
-    <div class="action-section">
-      <div class="action-label">Files</div>
-      <div class="action-group group-data icon-only-group">
-        <button id="exportToggle" title="Save products to file" aria-label="Save products to file"><span class="button-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2Z"/><path d="M17 21v-8H7v8M7 3v5h8"/></svg></span></button>
-        <button id="importBtn" title="Import products from file" aria-label="Import products from file"><span class="button-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M17 8 12 3 7 8"/><path d="M12 3v12"/></svg></span></button>
-      </div>
-    </div>
-    <div class="action-divider"></div>
-    <div class="action-section">
-      <div class="action-label">Dashboard</div>
-      <button class="dashboard-action" id="openComparison" title="Open full comparison dashboard"><span class="button-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg></span><span>Open ShopScout</span></button>
-    </div>
-  </div>
-
   <div class="filter-bar">
     <select id="filterSource"><option value="">All Sources</option></select>
     <select id="sortBy">
@@ -107,89 +84,6 @@
     </div>
   </div>
 
-  <!-- Save modal -->
-  <div class="modal-overlay" id="exiModal">
-    <div class="modal">
-      <h2>Save As <button class="close-btn" id="exiClose">&times;</button></h2>
-      <div class="exi-section">
-        <div class="exi-grid">
-          <button class="exi-tile" id="exportJson"><span class="exi-icon">{}</span><span class="exi-label">JSON</span><span class="exi-desc">Full data backup — re-import into ShopScout later</span></button>
-          <button class="exi-tile" id="exportCsv"><span class="exi-icon">&#9638;</span><span class="exi-label">CSV</span><span class="exi-desc">Open in Excel or Google Sheets for analysis</span></button>
-          <button class="exi-tile" id="exportXml"><span class="exi-icon">&lt;/&gt;</span><span class="exi-label">XML</span><span class="exi-desc">Structured data for integrations and APIs</span></button>
-          <button class="exi-tile" id="exportHtml"><span class="exi-icon">&#9782;</span><span class="exi-label">HTML</span><span class="exi-desc">Interactive report with images, sorting &amp; filtering</span></button>
-          <button class="exi-tile" id="exportPdf"><span class="exi-icon">&#9112;</span><span class="exi-label">PDF</span><span class="exi-desc">Static document — print or share as-is</span></button>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- AI analysis options modal -->
-  <div class="modal-overlay" id="aiOptionsModal">
-    <div class="modal ai-options-modal">
-      <div class="ai-options-header">
-        <div class="ai-options-title">
-          <h2>Analyze with AI</h2>
-          <p>Choose what ShopScout should check before the AI run starts.</p>
-        </div>
-        <button class="close-btn" id="aiOptionsClose">&times;</button>
-      </div>
-      <div class="ai-options-body">
-        <div class="ai-option-group ai-provider-field" id="aiProviderGroup">
-          <h3>AI Provider</h3>
-          <select id="aiProviderSelect"></select>
-        </div>
-        <div class="ai-option-group">
-          <h3>Prompt Payload</h3>
-          <div class="ai-option-list">
-            <label class="ai-option"><input type="radio" name="aiPayloadMode" data-payload-mode="compact" value="compact" checked><span><strong>Compact hybrid</strong><span>Send compact captured facts plus product URLs. Do not send raw page text.</span></span></label>
-            <label class="ai-option"><input type="radio" name="aiPayloadMode" data-payload-mode="estimate" value="estimate"><span><strong>Hybrid + token estimate</strong><span>Use compact hybrid and show the estimated payload size before sending.</span></span></label>
-            <label class="ai-option"><input type="radio" name="aiPayloadMode" data-payload-mode="fallback" value="fallback"><span><strong>Hybrid + raw fallback</strong><span>Use compact facts first, with capped raw excerpts only if facts are insufficient.</span></span></label>
-          </div>
-          <div class="ai-payload-estimate" id="aiPayloadEstimate">Payload estimate will appear here.</div>
-        </div>
-        <div class="ai-option-group">
-          <h3>Verification</h3>
-          <div class="ai-option-list">
-            <label class="ai-option"><input type="checkbox" data-ai-option="verifySpecs" checked><span><strong>Confirm listing specs</strong><span>Verify listing specs against official, manufacturer, or authoritative sources.</span></span></label>
-            <label class="ai-option"><input type="checkbox" data-ai-option="missingSpecs" checked><span><strong>Find missing important specs</strong><span>Identify important category specs and fill them only from reliable sources.</span></span></label>
-            <label class="ai-option"><input type="checkbox" data-ai-option="marketingClaims" checked><span><strong>Check marketing claims</strong><span>Flag vague or exaggerated claims unless real specs support them.</span></span></label>
-            <label class="ai-option"><input type="checkbox" data-ai-option="correctConflicts" checked><span><strong>Correct conflicting data</strong><span>Show original listing values and corrected values when reliable sources disagree.</span></span></label>
-          </div>
-        </div>
-        <div class="ai-option-group">
-          <h3>Comparison</h3>
-          <div class="ai-option-list">
-            <label class="ai-option"><input type="checkbox" data-ai-option="comparisonColumns" checked><span><strong>Build comparison table columns</strong><span>Convert category buying factors into useful table columns.</span></span></label>
-            <label class="ai-option"><input type="checkbox" data-ai-option="priceValue" checked><span><strong>Compare price and value</strong><span>Analyze price, used price, shipping, specs, and overpricing.</span></span></label>
-            <label class="ai-option"><input type="checkbox" data-ai-option="reviewsRatings" checked><span><strong>Analyze reviews and ratings</strong><span>Use rating count, rating quality, common complaints, and review photos when available.</span></span></label>
-            <label class="ai-option"><input type="checkbox" data-ai-option="compareAll"><span><strong>Compare it all</strong><span>Create one combined table for buying factors, price and value, and reviews.</span></span></label>
-          </div>
-        </div>
-        <div class="ai-option-group">
-          <h3>Risk Checks</h3>
-          <div class="ai-option-list">
-            <label class="ai-option"><input type="checkbox" data-ai-option="rebrandDuplicate"><span><strong>Check rebrand / duplicate products</strong><span>Detect likely same products sold under different brands.</span></span></label>
-            <label class="ai-option"><input type="checkbox" data-ai-option="riskSummary"><span><strong>Risk summary</strong><span>Summarize verification, spec, seller, warranty, rebrand, and return risk.</span></span></label>
-            <label class="ai-option"><input type="checkbox" data-ai-option="sellerRisk"><span><strong>Seller / store reliability</strong><span>Useful for Alibaba, SHEIN, eBay, Temu, and unknown sellers.</span></span></label>
-          </div>
-        </div>
-        <div class="ai-option-group">
-          <h3>Final</h3>
-          <div class="ai-option-list">
-            <label class="ai-option"><input type="checkbox" data-ai-option="finalRecommendation" checked><span><strong>Final recommendation</strong><span>Best overall, best value, lowest risk, avoid/skip, and confidence level.</span></span></label>
-          </div>
-        </div>
-      </div>
-      <div class="modal-actions ai-options-actions">
-        <span class="ai-options-status" id="aiOptionsStatus"></span>
-        <button id="aiOptionsRecommended">Recommended</button>
-        <button id="aiOptionsAll">All</button>
-        <button id="aiOptionsCancel">Cancel</button>
-        <button class="btn-save" id="aiOptionsRun">Run Analysis</button>
-      </div>
-    </div>
-  </div>
-
   <!-- List name modal -->
   <div class="modal-overlay" id="listModal">
     <div class="modal">
@@ -220,7 +114,6 @@
   <script src="ui/confirmDialog.js"></script>
   <script src="ui/promptDialog.js"></script>
 
-  <script src="ai-providers.js"></script>
   <script src="utils.js"></script>
   <script src="popup.js"></script>
 </body>

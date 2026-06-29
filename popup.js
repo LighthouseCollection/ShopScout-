@@ -1,11 +1,9 @@
 var chrome = globalThis.browser || globalThis.chrome;
 
-const { getData, saveData, getProducts, saveProducts, esc, escAttr, escXml, sanitizeUrl, parsePrice, buildCsv, safeFilename, downloadFile, buildAIText, buildPrompt, buildExportHtml, parseImport, toast } = SS;
+const { getData, saveData, getProducts, saveProducts, esc, escAttr, sanitizeUrl, parsePrice, toast } = SS;
 
 let editIndex = -1;
 let listModalMode = 'new';
-let pendingAiRunOptions = null;
-let popupAiRunInProgress = false;
 
 function setTrustedHtml(target, html) {
   if (globalThis.ShopScoutSanitize?.setTrustedHtml) {
@@ -78,7 +76,7 @@ async function renderProducts() {
     return;
   }
 
-  setTrustedHtml(container, products.map((p, i) => {
+  setTrustedHtml(container, products.map(p => {
     const idx = (data.lists[data.activeList] || []).indexOf(p);
     const imageUrl = sanitizeUrl(p.image);
     const productUrl = sanitizeUrl(p.url);
@@ -119,11 +117,6 @@ function bindEvents() {
   document.getElementById('urlSubmitBtn').addEventListener('click', addByUrl);
   document.getElementById('urlInput').addEventListener('keydown', e => { if (e.key === 'Enter') addByUrl(); });
 
-  document.getElementById('integratedAnalyze').addEventListener('click', () => openPopupAiOptionsModal(undefined, 'auto', 'integrated'));
-  document.getElementById('manualAnalyze').addEventListener('click', () => openPopupAiOptionsModal(undefined, 'auto', 'manual'));
-  document.getElementById('openComparison').addEventListener('click', openComparisonDashboard);
-  document.getElementById('exportToggle').addEventListener('click', () => document.getElementById('exiModal').classList.add('active'));
-
   document.getElementById('filterSource').addEventListener('change', renderProducts);
   document.getElementById('sortBy').addEventListener('change', renderProducts);
 
@@ -142,354 +135,14 @@ function bindEvents() {
   document.getElementById('editCancel').addEventListener('click', () => document.getElementById('editModal').classList.remove('active'));
   document.getElementById('editClose').addEventListener('click', () => document.getElementById('editModal').classList.remove('active'));
 
-  document.getElementById('exiClose').addEventListener('click', () => document.getElementById('exiModal').classList.remove('active'));
-  document.getElementById('exportJson').addEventListener('click', () => doExport('json'));
-  document.getElementById('exportCsv').addEventListener('click', () => doExport('csv'));
-  document.getElementById('exportXml').addEventListener('click', () => doExport('xml'));
-  document.getElementById('exportHtml').addEventListener('click', () => doExport('html'));
-  document.getElementById('exportPdf').addEventListener('click', () => doExport('pdf'));
-  document.getElementById('importBtn').addEventListener('click', doImport);
-
   document.getElementById('listModalSave').addEventListener('click', saveListModal);
   document.getElementById('listModalCancel').addEventListener('click', () => document.getElementById('listModal').classList.remove('active'));
-  bindPopupAiOptionsEvents();
 
   for (const ov of document.querySelectorAll('.modal-overlay')) {
     ov.addEventListener('click', e => {
       if (e.target !== ov) return;
-      if (ov.id === 'aiOptionsModal') closePopupAiOptionsModal();
-      else ov.classList.remove('active');
+      ov.classList.remove('active');
     });
-  }
-}
-
-function openComparisonDashboard() {
-  chrome.tabs.create({ url: chrome.runtime.getURL('comparison.html') });
-}
-
-function popupAiOptionInputs() {
-  return [...document.querySelectorAll('#aiOptionsModal [data-ai-option]')];
-}
-
-function popupPayloadModeInputs() {
-  return [...document.querySelectorAll('#aiOptionsModal [data-payload-mode]')];
-}
-
-function collectPromptPayloadOptionsFromModal() {
-  const selected = popupPayloadModeInputs().find(input => input.checked);
-  const payloadMode = selected?.value || selected?.dataset.payloadMode || 'compact';
-  return globalThis.ShopScoutAI?.normalizePromptOptions
-    ? ShopScoutAI.normalizePromptOptions({ payloadMode })
-    : { payloadMode };
-}
-
-function collectAiOptionsFromModal() {
-  const options = {};
-  for (const input of popupAiOptionInputs()) {
-    options[input.dataset.aiOption] = !!input.checked;
-  }
-  return globalThis.ShopScoutAI?.normalizeAnalysisOptions
-    ? ShopScoutAI.normalizeAnalysisOptions(options)
-    : options;
-}
-
-function selectedAiOptionCount(options = collectAiOptionsFromModal()) {
-  return Object.values(options).filter(Boolean).length;
-}
-
-function setAiOptionsInModal(options) {
-  const normalized = globalThis.ShopScoutAI?.normalizeAnalysisOptions
-    ? ShopScoutAI.normalizeAnalysisOptions(options)
-    : options;
-  for (const input of popupAiOptionInputs()) {
-    input.checked = !!normalized[input.dataset.aiOption];
-  }
-  updateAiOptionsStatus();
-}
-
-async function getAiOptionsProducts(productIndexes) {
-  const products = await getProducts();
-  if (Array.isArray(productIndexes) && productIndexes.length) {
-    return productIndexes.map(idx => products[idx]).filter(Boolean);
-  }
-  return products;
-}
-
-async function getRecommendedAiOptions(productIndexes) {
-  const products = await getAiOptionsProducts(productIndexes);
-  if (globalThis.ShopScoutAI?.recommendedAnalysisOptions) return ShopScoutAI.recommendedAnalysisOptions(products);
-  return collectAiOptionsFromModal();
-}
-
-function updateAiOptionsStatus() {
-  const status = document.getElementById('aiOptionsStatus');
-  const runBtn = document.getElementById('aiOptionsRun');
-  if (!status || !runBtn) return;
-  const count = selectedAiOptionCount();
-  status.textContent = count ? `${count} check${count === 1 ? '' : 's'} selected` : 'Select at least one check';
-  runBtn.disabled = !count || popupAiRunInProgress;
-}
-
-async function updatePromptPayloadEstimate() {
-  const el = document.getElementById('aiPayloadEstimate');
-  if (!el) return;
-  const options = collectPromptPayloadOptionsFromModal();
-  const products = await getAiOptionsProducts(pendingAiRunOptions?.productIndexes);
-  if (!products.length) {
-    el.textContent = 'No products selected for payload estimate.';
-    return;
-  }
-  if (globalThis.ShopScoutAI?.estimatePromptPayload) {
-    const estimate = ShopScoutAI.estimatePromptPayload(products, options);
-    const modeText = options.payloadMode === 'fallback'
-      ? 'Compact facts plus capped fallback excerpts'
-      : 'Compact facts plus product URLs';
-    el.textContent = `${modeText}: about ${estimate.estimatedTokens.toLocaleString()} input tokens (${estimate.charCount.toLocaleString()} characters) before stage instructions.`;
-    return;
-  }
-  el.textContent = 'Payload estimate is unavailable in this browser context.';
-}
-
-function renderPopupAiProviderSelect(providerId = 'auto') {
-  const select = document.getElementById('aiProviderSelect');
-  if (!select) return;
-  const providers = (globalThis.ShopScoutAI?.PROVIDERS || []).filter(provider => provider.adapter !== 'manual');
-  const options = [
-    { id: 'auto', label: 'Auto pipeline' },
-    ...providers.map(provider => ({ id: provider.id, label: provider.shortName || provider.name }))
-  ];
-  setTrustedHtml(select, options.map(option => `<option value="${escAttr(option.id)}">${esc(option.label)}</option>`).join(''));
-  select.value = options.some(option => option.id === providerId) ? providerId : 'auto';
-}
-
-async function openPopupAiOptionsModal(productIndexes, providerId = 'auto', runMode = 'integrated') {
-  if (runMode === 'integrated' && popupAiRunInProgress) {
-    toast.show('AI analysis is already running. Wait for this run to finish before starting another one.', 'error');
-    return;
-  }
-  const products = await getAiOptionsProducts(productIndexes);
-  if (!products.length) { toast.show('No products selected for AI analysis', 'error'); return; }
-  pendingAiRunOptions = { productIndexes, providerId, runMode };
-  renderPopupAiProviderSelect(providerId);
-  document.getElementById('aiProviderGroup').style.display = runMode === 'manual' ? 'none' : 'block';
-  setAiOptionsInModal(await getRecommendedAiOptions(productIndexes));
-  const title = document.querySelector('#aiOptionsModal .ai-options-title h2');
-  const help = document.querySelector('#aiOptionsModal .ai-options-title p');
-  const runBtn = document.getElementById('aiOptionsRun');
-  if (title) title.textContent = runMode === 'manual' ? 'Create Manual AI Prompt' : 'Analyze with AI';
-  if (help) {
-    help.textContent = runMode === 'manual'
-      ? 'Choose what the manual prompt should ask for before ShopScout opens the manual AI page.'
-      : 'Choose what ShopScout should check before the connected AI run starts.';
-  }
-  if (runBtn) runBtn.textContent = runMode === 'manual' ? 'Create Prompt' : 'Run Analysis';
-  updateAiOptionsStatus();
-  await updatePromptPayloadEstimate();
-  document.getElementById('aiOptionsModal')?.classList.add('active');
-}
-
-function closePopupAiOptionsModal() {
-  if (popupAiRunInProgress) return;
-  document.getElementById('aiOptionsModal')?.classList.remove('active');
-  pendingAiRunOptions = null;
-}
-
-function bindPopupAiOptionsEvents() {
-  const modal = document.getElementById('aiOptionsModal');
-  if (!modal) return;
-  popupAiOptionInputs().forEach(input => input.addEventListener('change', updateAiOptionsStatus));
-  popupPayloadModeInputs().forEach(input => input.addEventListener('change', updatePromptPayloadEstimate));
-  document.getElementById('aiOptionsClose')?.addEventListener('click', closePopupAiOptionsModal);
-  document.getElementById('aiOptionsCancel')?.addEventListener('click', closePopupAiOptionsModal);
-  document.getElementById('aiOptionsRecommended')?.addEventListener('click', async () => {
-    setAiOptionsInModal(await getRecommendedAiOptions(pendingAiRunOptions?.productIndexes));
-    await updatePromptPayloadEstimate();
-  });
-  document.getElementById('aiOptionsAll')?.addEventListener('click', () => {
-    const all = {};
-    popupAiOptionInputs().forEach(input => { all[input.dataset.aiOption] = true; });
-    setAiOptionsInModal(all);
-  });
-  document.getElementById('aiOptionsRun')?.addEventListener('click', async () => {
-    const runBtn = document.getElementById('aiOptionsRun');
-    if (runBtn?.disabled) return;
-    const options = collectAiOptionsFromModal();
-    if (!selectedAiOptionCount(options)) {
-      toast.show('Select at least one AI check', 'error');
-      return;
-    }
-    const promptOptions = collectPromptPayloadOptionsFromModal();
-    const run = pendingAiRunOptions || {};
-    const providerId = document.getElementById('aiProviderSelect')?.value || run.providerId || 'auto';
-    if (run.runMode === 'manual') {
-      closePopupAiOptionsModal();
-      await copyPrompt('deep', options, promptOptions);
-      return;
-    }
-    await runPopupConnectedAI(run.productIndexes, providerId, options, promptOptions);
-  });
-}
-
-function buildManualPromptPayloadInstructions(promptOptions) {
-  const options = globalThis.ShopScoutAI?.normalizePromptOptions
-    ? ShopScoutAI.normalizePromptOptions(promptOptions)
-    : { payloadMode: promptOptions?.payloadMode || 'compact' };
-  let text = `Prompt payload mode: ${options.payloadMode}.\n`;
-  text += 'Use compact captured facts first. Use product URLs only as source references. Retrieve/search only for missing, contradictory, or official manufacturer verification data.\n';
-  if (options.payloadMode === 'fallback') {
-    text += 'If capped raw fallback excerpts are present, use them only when compact facts are insufficient and ignore boilerplate.\n';
-  }
-  return text;
-}
-
-function buildManualAnalysisOptionsInstructions(analysisOptions, promptOptions) {
-  if (!analysisOptions) return '';
-  const normalized = globalThis.ShopScoutAI?.normalizeAnalysisOptions
-    ? ShopScoutAI.normalizeAnalysisOptions(analysisOptions)
-    : analysisOptions;
-  const labels = globalThis.ShopScoutAI?.selectedOptionLabels
-    ? ShopScoutAI.selectedOptionLabels(normalized)
-    : Object.entries(normalized).filter(([, selected]) => selected).map(([key]) => key);
-  const stages = globalThis.ShopScoutAI?.enabledStagesForAnalysis
-    ? ShopScoutAI.enabledStagesForAnalysis(normalized, false)
-    : [];
-  return `\n\n# User-selected analysis scope\n\n` +
-    `Run only these selected checks: ${labels.join(', ') || 'none'}.\n` +
-    (stages.length ? `Use these logical stages: ${stages.join(', ')}.\n` : '') +
-    buildManualPromptPayloadInstructions(promptOptions) +
-    'For every selected user-facing section, show a comparison table first, then concise explanatory text and bullet points.\n' +
-    "Include each product's cost and source link when relevant. Keep the answer precise and readable, and avoid information overload.\n";
-}
-
-function formatManualValue(value) {
-  return String(value ?? '').replace(/\s+/g, ' ').trim();
-}
-
-function formatManualProductFacts(products) {
-  return (products || []).map(product => {
-    const lines = [];
-    const name = formatManualValue(product.name || product.listingTitle || `Product ${product.id || ''}`);
-    lines.push(`## Product ${product.id || ''}: ${name}`);
-    [
-      ['URL', product.url],
-      ['Listing title', product.listingTitle],
-      ['Brand', product.brand],
-      ['Manufacturer', product.manufacturer],
-      ['Model name', product.modelName],
-      ['Model number', product.modelNumber],
-      ['Price', product.price],
-      ['Used price', product.usedPrice],
-      ['Source', product.source],
-      ['Seller', product.seller],
-      ['Category', product.category],
-      ['Rating', product.rating],
-      ['Review count', product.reviewCount]
-    ].forEach(([label, value]) => {
-      const text = formatManualValue(value);
-      if (text) lines.push(`- ${label}: ${text}`);
-    });
-    if (product.identifiers && Object.keys(product.identifiers).length) {
-      const ids = Object.entries(product.identifiers)
-        .map(([key, value]) => `${key.toUpperCase()}: ${formatManualValue(value)}`)
-        .filter(item => !item.endsWith(':'));
-      if (ids.length) lines.push(`- Identifiers: ${ids.join('; ')}`);
-    }
-    if (product.specs?.length) {
-      lines.push('- Key specs:');
-      product.specs.forEach(spec => {
-        const key = formatManualValue(spec.key);
-        const value = formatManualValue(spec.value);
-        if (key && value) lines.push(`  - ${key}: ${value}`);
-      });
-    }
-    if (product.bullets?.length) {
-      lines.push('- Useful bullets:');
-      product.bullets.forEach(bullet => {
-        const text = formatManualValue(bullet);
-        if (text) lines.push(`  - ${text}`);
-      });
-    }
-    if (product.rawFallback) {
-      const desc = formatManualValue(product.rawFallback.descriptionExcerpt);
-      if (desc) lines.push(`- Capped fallback excerpt: ${desc}`);
-      if (product.rawFallback.bullets?.length) {
-        lines.push('- Capped fallback bullets:');
-        product.rawFallback.bullets.forEach(bullet => {
-          const text = formatManualValue(bullet);
-          if (text) lines.push(`  - ${text}`);
-        });
-      }
-    }
-    return lines.join('\n');
-  }).join('\n\n');
-}
-
-function buildManualHybridPrompt(products, analysisOptions, promptOptions) {
-  const options = globalThis.ShopScoutAI?.normalizePromptOptions
-    ? ShopScoutAI.normalizePromptOptions(promptOptions)
-    : { payloadMode: promptOptions?.payloadMode || 'compact' };
-  const normalizedChecks = globalThis.ShopScoutAI?.normalizeAnalysisOptions
-    ? ShopScoutAI.normalizeAnalysisOptions(analysisOptions)
-    : analysisOptions;
-  const labels = globalThis.ShopScoutAI?.selectedOptionLabels
-    ? ShopScoutAI.selectedOptionLabels(normalizedChecks)
-    : Object.entries(normalizedChecks || {}).filter(([, selected]) => selected).map(([key]) => key);
-  const payload = globalThis.ShopScoutAI?.productSummary
-    ? ShopScoutAI.productSummary(products, options)
-    : (products || []).map((product, index) => ({ id: index + 1, name: product.title || `Product ${index + 1}`, url: product.url || '', price: product.newPrice || '', source: product.source || '' }));
-  return 'You are a product comparison, verification, and buying-decision assistant for ShopScout.\n\n' +
-    '# Output rules\n' +
-    'Do not return JSON. Do not include a JSON object, JSON schema, code block, or raw structured data block in your answer.\n' +
-    'Return a human-readable report only, with clear headings, compact tables, bullets, and short explanations.\n\n' +
-    `# Payload policy\n${buildManualPromptPayloadInstructions(options)}\n` +
-    `# Selected checks\n${labels.map(label => `- ${label}`).join('\n') || '- None'}\n\n` +
-    `# Product facts\n${formatManualProductFacts(payload)}\n\n` +
-    'Return a concise, readable report with tables first, explanations after, and confidence/verification status for important claims.';
-}
-
-function openDashboardResults(runId) {
-  const target = runId ? `comparison.html?aiRun=${encodeURIComponent(runId)}` : 'comparison.html';
-  chrome.tabs.create({ url: chrome.runtime.getURL(target) });
-}
-
-async function runPopupConnectedAI(productIndexes, providerId = 'auto', analysisOptions, promptOptions) {
-  if (popupAiRunInProgress) {
-    toast.show('AI analysis is already running. Wait for this run to finish before starting another one.', 'error');
-    return;
-  }
-  const products = await getProducts();
-  if (!products.length) { toast.show('No products to analyze', 'error'); return; }
-  const status = document.getElementById('aiOptionsStatus');
-  const runBtn = document.getElementById('aiOptionsRun');
-  popupAiRunInProgress = true;
-  if (status) status.textContent = 'Running connected AI. Keep this popup open; results will open in the dashboard.';
-  if (runBtn) {
-    runBtn.disabled = true;
-    runBtn.textContent = 'Running...';
-  }
-  toast.show('Running AI analysis...', 'loading');
-  try {
-    const result = await chrome.runtime.sendMessage({ action: 'runAIAnalysis', productIndexes, providerId, analysisOptions, promptOptions, devMonitor: false, openResultsOnComplete: true });
-    toast.hide();
-    if (!result?.success) {
-      const error = result?.error || 'AI analysis failed';
-      toast.show(error, 'error');
-      if (String(error).includes('No connected AI providers')) {
-        chrome.tabs.create({ url: chrome.runtime.getURL('settings.html') });
-      }
-      return;
-    }
-    toast.show('AI analysis complete. Opening dashboard results.');
-    document.getElementById('aiOptionsModal')?.classList.remove('active');
-    pendingAiRunOptions = null;
-    if (!result.openedResults) openDashboardResults(result.run?.id);
-  } catch (e) {
-    toast.hide();
-    toast.show(e.message || 'AI analysis failed', 'error');
-  } finally {
-    popupAiRunInProgress = false;
-    if (runBtn) runBtn.textContent = 'Run Analysis';
-    updateAiOptionsStatus();
   }
 }
 
@@ -601,16 +254,6 @@ async function addByUrl() {
   } catch (e) { toast.hide(); toast.show('Failed to fetch', 'error'); }
 }
 
-// --- Copy prompt ---
-async function copyPrompt(mode, analysisOptions, promptOptions) {
-  const products = await getProducts();
-  if (!products.length) { toast.show('No products to copy', 'error'); return; }
-  const text = buildManualHybridPrompt(products, analysisOptions, promptOptions) + buildManualAnalysisOptionsInstructions(analysisOptions, promptOptions);
-  await navigator.clipboard.writeText(text);
-  await chrome.storage.local.set({ shopscout_last_prompt: text });
-  chrome.tabs.create({ url: chrome.runtime.getURL(`ai-select.html?mode=${mode}&count=${products.length}`) });
-}
-
 // --- Remove product ---
 async function removeProduct(idx) {
   const products = await getProducts();
@@ -657,65 +300,6 @@ async function saveEdit() {
   document.getElementById('editModal').classList.remove('active');
   toast.show('Product updated');
   await renderProducts();
-}
-
-// --- Export ---
-async function doExport(format) {
-  const data = await getData();
-  const products = data.lists[data.activeList] || [];
-  const name = data.activeList;
-  if (!products.length) { toast.show('No products to export', 'error'); return; }
-  const fn = safeFilename(name);
-
-  if (format === 'json') {
-    downloadFile(JSON.stringify({ list: name, exported: new Date().toISOString(), products }, null, 2), `${fn}.json`, 'application/json');
-  } else if (format === 'csv') {
-    downloadFile(buildCsv(products), `${fn}.csv`, 'text/csv');
-  } else if (format === 'xml') {
-    let xml = `<?xml version="1.0" encoding="UTF-8"?>\n<shopscout list="${escXml(name)}" exported="${new Date().toISOString()}">\n`;
-    products.forEach(p => {
-      xml += '  <product>\n';
-      for (const k of ['title','brand','newPrice','usedPrice','source','modelNumber','rating','reviewCount','url','image','notes']) {
-        if (p[k]) xml += `    <${k}>${escXml(p[k])}</${k}>\n`;
-      }
-      xml += '  </product>\n';
-    });
-    xml += '</shopscout>';
-    downloadFile(xml, `${fn}.xml`, 'application/xml');
-  } else if (format === 'html') {
-    downloadFile(buildExportHtml(products, name), `${fn}.html`, 'text/html');
-  } else if (format === 'pdf') {
-    const w = window.open(''); w.document.write(buildExportHtml(products, name)); w.document.close();
-    setTimeout(() => w.print(), 400);
-  }
-  document.getElementById('exiModal').classList.remove('active');
-  if (format !== 'pdf') toast.show(`Exported as ${format.toUpperCase()}`);
-}
-
-// --- Import ---
-function doImport() {
-  const input = document.createElement('input');
-  input.type = 'file';
-  input.accept = '.json,.xml,.csv';
-  input.onchange = async () => {
-    const file = input.files[0]; if (!file) return;
-    try {
-      const text = await file.text();
-      const { imported, listName } = parseImport(text, file.name.toLowerCase());
-      if (!imported.length) { toast.show('No products found in file', 'error'); return; }
-      const data = await getData();
-      const target = listName || data.activeList;
-      if (!data.lists[target]) data.lists[target] = [];
-      data.lists[target].push(...imported);
-      if (listName) data.activeList = target;
-      await saveData(data);
-      await renderListSelector();
-      await renderProducts();
-      document.getElementById('exiModal').classList.remove('active');
-      toast.show(`Imported ${imported.length} product(s)`);
-    } catch (e) { toast.show('Import failed: ' + e.message, 'error'); }
-  };
-  input.click();
 }
 
 // --- List modals ---
