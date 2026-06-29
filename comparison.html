@@ -692,6 +692,28 @@
 <script src="shared/projections/specProjection.js"></script>
 <script src="shared/edits/ratingWriter.js"></script>
 
+<!-- SlickGrid vendor (drop files into vendor/slickgrid per
+     vendor/slickgrid/README.txt). Until vendored, the renderer
+     shows a placeholder and the rest of the dashboard works. -->
+<script src="vendor/slickgrid/slick.core.js"           onerror="this.dataset.missing=1"></script>
+<script src="vendor/slickgrid/slick.dataview.js"       onerror="this.dataset.missing=1"></script>
+<script src="vendor/slickgrid/slick.grid.js"           onerror="this.dataset.missing=1"></script>
+<script src="vendor/slickgrid/slick.editors.js"        onerror="this.dataset.missing=1"></script>
+<script src="vendor/slickgrid/slick.rowselectionmodel.js" onerror="this.dataset.missing=1"></script>
+<link  rel="stylesheet" href="vendor/slickgrid/slick.grid.css" onerror="this.dataset.missing=1">
+
+<!-- Phase 2 grid (Claude fork). Composition: state → projections →
+     edit adapter → renderer → mount. -->
+<script src="grid-rebuild-claude/state/gridState.js"></script>
+<script src="grid-rebuild-claude/projections/matrixModes.js"></script>
+<script src="grid-rebuild-claude/projections/productsAsRows.js"></script>
+<script src="grid-rebuild-claude/projections/productsAsColumns.js"></script>
+<script src="grid-rebuild-claude/edits/productEditor.js"></script>
+<script src="grid-rebuild-claude/renderer/formatters.js"></script>
+<script src="grid-rebuild-claude/renderer/columnDefs.js"></script>
+<script src="grid-rebuild-claude/renderer/slickGridRenderer.js"></script>
+<script src="grid-rebuild-claude/mount.js"></script>
+
   <!-- UI core — safe HTML, modals, toasts, confirm/prompt. Must load
      before utils.js so SS.toast can delegate to ShopScoutUI.toast. -->
 <script src="security/sanitize.js"></script>

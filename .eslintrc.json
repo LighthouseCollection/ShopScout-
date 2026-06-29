@@ -32,6 +32,13 @@
     "ShopScoutProjections": "readonly",
     "ShopScoutEdits": "readonly",
     "ShopScoutGrid": "readonly",
+    "ShopScoutGridState": "readonly",
+    "ShopScoutGridProjections": "readonly",
+    "ShopScoutGridRenderer": "readonly",
+    "ShopScoutGridFormatters": "readonly",
+    "ShopScoutGridColumnDefs": "readonly",
+    "ShopScoutGridEdits": "readonly",
+    "Slick": "readonly",
     "Dexie": "readonly",
     "openFeedbackPage": "readonly",
     "handleFeedbackAction": "readonly",
@@ -66,7 +73,6 @@
     "vendor/**",
     "node_modules/**",
     "archived/**",
-    "grid-rebuild-claude/**",
     "grid-rebuild-codex/**"
   ],
   "rules": {

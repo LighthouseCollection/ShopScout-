@@ -33,7 +33,7 @@ $runtimeFiles = @(
 )
 
 # Directories copied recursively into each dist (state/data/ui layers + vendor libs + icons + layered extraction pipeline).
-$runtimeDirs = @('state', 'data', 'shared', 'ui', 'security', 'vendor', 'icons', 'content', 'comparison')
+$runtimeDirs = @('state', 'data', 'shared', 'ui', 'security', 'vendor', 'icons', 'content', 'comparison', 'grid-rebuild-claude')
 
 $targets = @(
   @{ Name = 'chrome';  Manifest = 'manifest.json' },
