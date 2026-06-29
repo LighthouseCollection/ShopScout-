@@ -73,14 +73,11 @@
   }
 
   function htmlForActions() {
-    return `<details class="ss-grid-action-menu">
-      <summary aria-label="Actions" title="Actions">⋮</summary>
-      <div class="ss-grid-action-panel">
-        <button type="button" data-ss-grid-action="open">Open</button>
-        <button type="button" data-ss-grid-action="rescan">Rescan</button>
-        <button type="button" data-ss-grid-action="delete">Delete</button>
-      </div>
-    </details>`;
+    return `<div class="ss-grid-action-bar" role="toolbar" aria-label="Product actions">
+      <button class="ss-grid-action-btn" type="button" data-ss-grid-action="open" aria-label="Open product" title="Open"><span aria-hidden="true">&#8599;</span></button>
+      <button class="ss-grid-action-btn" type="button" data-ss-grid-action="rescan" aria-label="Rescan product" title="Rescan"><span aria-hidden="true">&#8635;</span></button>
+      <button class="ss-grid-action-btn ss-grid-action-danger" type="button" data-ss-grid-action="delete" aria-label="Delete product" title="Delete"><span aria-hidden="true">&times;</span></button>
+    </div>`;
   }
 
   function htmlForMatrixCell(value) {
@@ -242,7 +239,8 @@
       explicitInitialization: false,
       forceFitColumns: false,
       multiColumnSort: true,
-      rowHeight: 82
+      rowHeight: 82,
+      showCellSelection: false
     };
     const grid = new Slick.Grid(container, dataView, columns, gridOptions);
 

@@ -93,6 +93,8 @@ const liveInstance = adapter.create(host, {
 }, {});
 assert.equal(capturedGridOptions.enableColumnReorder, false,
   'missing Sortable disables SlickGrid column drag instead of throwing');
+assert.equal(capturedGridOptions.showCellSelection, false,
+  'grid does not show a selected-cell border when a cell is clicked');
 const titleColumn = capturedColumns.find(column => column.id === 'title');
 const actionsColumn = capturedColumns.find(column => column.id === 'actions');
 assert.equal(titleColumn.sortable, true, 'data columns are sortable from their own headers');
@@ -100,12 +102,15 @@ assert.equal(actionsColumn.sortable, false, 'actions column is not sortable');
 assert.deepEqual(capturedSortColumns, [{ columnId: 'title', sortAsc: false }],
   'projection sort state is shown on the matching column header');
 const actionsHtml = actionsColumn.formatter(0, 1, null, actionsColumn, { id: 'p1' });
-assert.match(actionsHtml, /ss-grid-action-menu/, 'row actions render as a compact menu');
+assert.match(actionsHtml, /ss-grid-action-bar/, 'row actions render as a compact icon toolbar');
+assert.doesNotMatch(actionsHtml, /<details|ss-grid-action-panel|<summary/,
+  'row actions do not render an in-cell popup menu that can overlap nearby rows');
 assert.match(actionsHtml, /data-ss-grid-action="open"/, 'row actions include open');
 assert.match(actionsHtml, /data-ss-grid-action="rescan"/, 'row actions include rescan');
 assert.match(actionsHtml, /data-ss-grid-action="delete"/, 'row actions include delete');
-assert.ok(!actionsHtml.includes('ss-grid-actions'),
-  'row actions do not use the old inline action button wrapper');
+assert.match(actionsHtml, /aria-label="Open product"/, 'open action is icon-only with an accessible label');
+assert.match(actionsHtml, /aria-label="Rescan product"/, 'rescan action is icon-only with an accessible label');
+assert.match(actionsHtml, /aria-label="Delete product"/, 'delete action is icon-only with an accessible label');
 liveInstance.destroy();
 assert.equal(destroyed, true, 'live instance still destroys the DataView');
 
