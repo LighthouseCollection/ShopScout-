@@ -3,8 +3,8 @@
    This file extends theme.css. theme.css MUST load first.
    No new design tokens belong here — only page-specific layout.
 
-   TASK 11 PHASE 1 NOTE
-   ---------------------
+   TASK 11 GRID NOTE
+   -----------------
    The Tabulator/PivotTable grid layer was removed. Many of the
    rules below (.db-view-*, .db-cell-*, .db-row-*, .db-columns-*,
    .db-table-*, .ss-pill, .ss-pill-row, .ss-stars, .ss-stars-*,
@@ -15,16 +15,15 @@
    .column-order-*, .inline-edit-control, .th-menu-trigger,
    .th-inner, .sort-arrow, .scanning, .empty-state, .es-*,
    .menu-item, .menu-separator) now have no live DOM to apply
-   to. They are kept temporarily so the new grid (Phase 2) can
-   either re-use them on familiar markup or replace them
-   wholesale. The next grid task should sweep the dead rules
-   it does not adopt.
+   to. The Codex Phase 2 grid uses grid-rebuild-codex/grid.css;
+   a later cleanup should sweep any old page-scoped rules it does
+   not adopt.
 
    Live styles include: ribbon shell, ribbon panes, list/url/
    filter bars, urlBar, settings page shell, AI results page,
    product detail page, manual AI modal, lightbox, feedback,
-   compare panel base, dashboard back/copy picker, and the
-   #productGrid placeholder.
+   compare panel base, dashboard back/copy picker, and non-grid
+   dashboard surfaces.
    ============================================================= */
 .product-grid-mount {
   margin: 16px 22px 48px;

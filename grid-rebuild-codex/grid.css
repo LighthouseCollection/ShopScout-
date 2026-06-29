@@ -1,0 +1,168 @@
+/* Codex Phase 2 grid shell. Scoped to #productGrid / ss-grid-* only. */
+#productGrid.ss-grid-shell {
+  margin: 12px 20px 44px;
+  padding: 0;
+  border: 1px solid var(--rule, #d1d5db);
+  border-radius: 8px;
+  background: var(--surface, #fff);
+  overflow: hidden;
+}
+
+.ss-grid-toolbar {
+  min-height: 44px;
+  padding: 8px 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  border-bottom: 1px solid var(--rule-soft, #e5e7eb);
+  background: var(--paper-2, #eaedf1);
+}
+
+.ss-grid-status {
+  color: var(--ink-3, #5a6470);
+  font-size: 12px;
+}
+
+.ss-grid-view-toggle {
+  display: inline-flex;
+  gap: 4px;
+  padding: 2px;
+  border: 1px solid var(--rule, #d1d5db);
+  border-radius: 5px;
+  background: var(--surface, #fff);
+}
+
+.ss-grid-view-toggle button {
+  min-height: 28px;
+  padding: 0 10px;
+  border: 0;
+  border-radius: 4px;
+  background: transparent;
+  color: var(--ink-2, #2a3441);
+  font: inherit;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.ss-grid-view-toggle button.active {
+  background: var(--primary, #0b3d4f);
+  color: #fff;
+}
+
+.ss-grid-host {
+  height: calc(100vh - 250px);
+  min-height: 420px;
+  width: 100%;
+}
+
+.ss-grid-host .slick-header-column {
+  background: var(--paper-2, #eaedf1);
+  color: var(--ink-3, #5a6470);
+  font-family: var(--font-mono, ui-monospace, Consolas, monospace);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  border-right: 1px solid var(--rule, #d1d5db);
+}
+
+.ss-grid-host .slick-row.odd {
+  background: #f5f5f5;
+}
+
+.ss-grid-host .slick-row.even {
+  background: #f1f1f1;
+}
+
+.ss-grid-host .slick-cell {
+  display: flex;
+  align-items: center;
+  border-right: 1px solid var(--rule-soft, #e5e7eb);
+  border-bottom: 1px solid var(--rule, #d1d5db);
+  color: var(--ink, #0f1419);
+  font-size: 13px;
+  line-height: 1.35;
+  white-space: normal;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.ss-grid-cell-title {
+  font-weight: 600;
+}
+
+.ss-grid-thumb {
+  width: 58px;
+  height: 58px;
+  object-fit: contain;
+  border: 1px solid var(--rule, #d1d5db);
+  border-radius: 5px;
+  background: #fff;
+}
+
+.ss-grid-no-thumb {
+  width: 58px;
+  height: 58px;
+  border: 1px solid var(--rule, #d1d5db);
+  border-radius: 5px;
+  background: var(--paper-2, #eaedf1);
+}
+
+.ss-grid-price {
+  color: var(--price, #b45309);
+  font-weight: 700;
+}
+
+.ss-grid-source-pill {
+  display: inline-flex;
+  align-items: center;
+  width: fit-content;
+  max-width: 100%;
+  padding: 4px 8px;
+  border-radius: 5px;
+  background: var(--primary-tint, #e6eef1);
+  color: var(--primary, #0b3d4f);
+  text-decoration: none;
+  font-size: 12px;
+}
+
+.ss-grid-rating {
+  font-weight: 650;
+}
+
+.ss-grid-sub,
+.ss-grid-empty {
+  color: var(--ink-3, #5a6470);
+}
+
+.ss-grid-select {
+  width: 16px;
+  height: 16px;
+}
+
+.ss-grid-actions {
+  display: inline-flex;
+  gap: 4px;
+}
+
+.ss-grid-actions button {
+  min-height: 26px;
+  padding: 0 7px;
+  border: 1px solid var(--rule, #d1d5db);
+  border-radius: 4px;
+  background: var(--surface, #fff);
+  color: var(--ink-2, #2a3441);
+  font: inherit;
+  font-size: 11px;
+  cursor: pointer;
+}
+
+.ss-grid-actions button:hover {
+  background: var(--paper-2, #eaedf1);
+}
+
+.ss-grid-empty {
+  padding: 40px 16px;
+  text-align: center;
+}

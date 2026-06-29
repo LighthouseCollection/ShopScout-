@@ -7,6 +7,16 @@ const path = require('path');
 const { spawnSync } = require('child_process');
 
 const root = path.dirname(__dirname);
+const branchResult = spawnSync('git', ['branch', '--show-current'], { cwd: root, encoding: 'utf8' });
+const currentBranch = branchResult.status === 0 ? branchResult.stdout.trim() : '';
+const requestedFork = String(process.env.SHOPSCOUT_TEST_FORK || '').trim().toLowerCase();
+
+function shouldRunFork(name) {
+  if (requestedFork === 'all') return true;
+  if (requestedFork === name) return true;
+  if (requestedFork) return false;
+  return currentBranch === `grid-rebuild-${name}` || currentBranch.endsWith(`/grid-rebuild-${name}`);
+}
 
 /* Discoverable test directories.
    tests/                            — the project's main test suite
@@ -15,10 +25,10 @@ const root = path.dirname(__dirname);
    Each test file's display label is relative-to-root so a failure
    tells you which fork produced it. */
 const TEST_DIRS = [
-  path.join(root, 'tests'),
-  path.join(root, 'grid-rebuild-claude', 'tests'),
-  path.join(root, 'grid-rebuild-codex', 'tests')
+  path.join(root, 'tests')
 ];
+if (shouldRunFork('claude')) TEST_DIRS.push(path.join(root, 'grid-rebuild-claude', 'tests'));
+if (shouldRunFork('codex')) TEST_DIRS.push(path.join(root, 'grid-rebuild-codex', 'tests'));
 
 const tests = [];
 for (const dir of TEST_DIRS) {

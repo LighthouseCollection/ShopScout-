@@ -1,9 +1,6 @@
-/* Task 11 Phase 1: the Tabulator + PivotTable.js grid layer was
-   removed entirely. The new grid (Phase 2) will land in its own
-   branch / folder. Until then this test pins the cleanup: the old
-   grid markup, the old grid wiring, the old grid renderer entry
-   point, and the old grid CSS are all gone, and a clear "rebuild
-   in progress" placeholder is shown to the user. */
+/* Task 11 Phase 2: the Tabulator + PivotTable.js grid layer stays
+   removed, and the Codex SlickGrid-backed grid now owns #productGrid.
+   This test pins the cleanup boundary plus the new live grid shell. */
 const assert = require('assert');
 const { read, pageAndStyles } = require('./_helpers');
 
@@ -67,8 +64,18 @@ assert.ok(cmpHtml.includes('src="shared/edits/ratingWriter.js"'),
 /* ---- Phase 2 grid mount point exists ------------------------ */
 assert.ok(cmpHtml.includes('id="productGrid"'),
   '#productGrid mount point exists for the Phase 2 grid');
-assert.ok(/Product grid is being rebuilt/.test(cmpHtml),
-  'placeholder text explains the rebuild');
+assert.ok(cmpHtml.includes('id="ssGridHost"'),
+  'Codex grid host exists inside #productGrid');
+assert.ok(cmpHtml.includes('data-ss-grid-mode="rows"'),
+  'products-as-rows mode is available');
+assert.ok(cmpHtml.includes('data-ss-grid-mode="matrix"'),
+  'comparison matrix mode is available');
+assert.ok(!/Product grid is being rebuilt/.test(cmpHtml),
+  'Phase 1 rebuild placeholder is removed');
+assert.ok(cmpHtml.includes('src="grid-rebuild-codex/shopscoutGrid.js"'),
+  'Codex grid orchestrator is loaded');
+assert.ok(!cmpHtml.includes('grid-rebuild-claude/'),
+  'Codex branch does not load Claude fork scripts');
 
 /* ---- Old Tabulator/Pivot CSS rules are gone ----------------- */
 assert.ok(!/\.tabulator/.test(css), 'no .tabulator CSS rules remain');

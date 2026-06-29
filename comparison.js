@@ -13,9 +13,8 @@ function setTrustedHtml(target, html) {
 /* Legacy product-view state vars (currentView, tableSortCol/Asc,
    compactMode, gridlinesEnabled, selectedOnlyFilter, notedOnlyFilter,
    groupBySource, groupByField, groupsCollapsed) were retired with the
-   hand-rolled cards/table renderers in Task 8. The Database view
-   (Tabulator/PivotTable.js) owns sort, filter, group, and visual
-   density now. */
+   hand-rolled cards/table renderers in Task 8. The active grid layer
+   now owns sort, filter, group, and visual density from #productGrid. */
 /* editIndex / detailIndex are shared with comparison/productDetailView.js
    (the edit modal and detail page live there now). Both stay on
    globalThis so the extracted module can read and assign them without
@@ -272,10 +271,9 @@ async function activateProductListForAction(listName) {
 }
 
 async function renderAll() {
-  /* Task 11 Phase 1: the Tabulator/PivotTable grid implementation was
-     removed. The new grid (Phase 2) will register itself on globalThis
-     and renderAll() will delegate to it. Until then this is a no-op
-     and the placeholder in #productGrid stays visible. */
+  /* Grid-neutral render hook. Task 11 Phase 2 registers the active grid
+     on globalThis.ShopScoutGrid and keeps comparison.js out of renderer
+     details. */
   const grid = globalThis.ShopScoutGrid;
   if (grid && typeof grid.render === 'function') return grid.render();
 }

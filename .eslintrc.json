@@ -73,6 +73,7 @@
     "vendor/**",
     "node_modules/**",
     "archived/**",
+    "grid-rebuild-claude/**",
     "grid-rebuild-codex/**"
   ],
   "rules": {

@@ -4,6 +4,7 @@ const path = require('path');
 
 const html = fs.readFileSync(path.join(__dirname, '..', 'comparison.html'), 'utf8');
 const js = fs.readFileSync(path.join(__dirname, '..', 'comparison.js'), 'utf8');
+const gridJs = fs.readFileSync(path.join(__dirname, '..', 'grid-rebuild-codex', 'shopscoutGrid.js'), 'utf8');
 
 assert.ok(html.includes('id="productSearchInput"'), 'product page exposes a product search input');
 assert.ok(html.includes('id="productSearchScope"'), 'product page exposes a search scope dropdown');
@@ -15,12 +16,7 @@ assert.ok(/<option value="all">All lists<\/option>/i.test(html), 'product search
 
 assert.ok(js.includes('function getSearchableProductText'), 'comparison script builds searchable product text');
 assert.ok(js.includes('function activateProductListForAction'), 'cross-list product actions switch to the owning list first');
-/* productMatchesSearch / collectProductSearchItems were the legacy
-   client-side filter and cross-list collector for the hand-rolled
-   cards/table renderers. Task 8 deleted those renderers and the
-   helpers that fed them; cross-list search will be re-wired to the
-   Database view (Tabulator) in a follow-up task. The DOM controls
-   (#productSearchInput, #productSearchScope, the scope options)
-   stay so the UI remains in place for that follow-up. */
+assert.ok(gridJs.includes('function applySearch'), 'Codex grid applies the product search query');
+assert.ok(gridJs.includes("scope === 'all'"), 'Codex grid handles all-list search scope');
 
 console.log('product search tests passed');
