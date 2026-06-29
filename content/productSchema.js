@@ -72,11 +72,14 @@
  * @property {string} modelNumber
  * @property {string} newPrice
  * @property {string} usedPrice
+ * @property {string} shippingPrice
+ * @property {string} currency
  * @property {string} rating
  * @property {string} reviewCount
  * @property {string} sellerName
  * @property {string} availability
  * @property {string} description
+ * @property {string} listingTitle
  * @property {string[]} bullets
  * @property {string} category
  * @property {string} source
@@ -84,7 +87,7 @@
  * @property {string[]} imageUrls
  * @property {string[]} reviewImages
  * @property {Object<string,string>} specs
- * @property {Array<{key:string,value:string,source?:string}>} rawSpecs
+ * @property {Array<{key:string,value:string,source?:string|null}>} rawSpecs
  * @property {string} asin
  * @property {string} sku
  * @property {string} upc
@@ -93,9 +96,20 @@
  * @property {string} mpn
  * @property {ProductSpec} [_spec]
  * @property {object} [_pipelineTrace]
+ *
+ * @typedef {object} SSExtractNamespace
+ * @property {Record<string, Confidence>} Confidence
+ * @property {(confidence: Confidence) => number} confidenceWeight
+ * @property {(left: Confidence, right: Confidence) => boolean} confidenceGt
+ * @property {(source?: string) => Confidence} defaultConfidenceFor
+ * @property {{normalizeKey: (key: *) => string, normalizeValue: (value: *) => string}} [keyCanonicalizer]
+ * @property {(o: Partial<Observation>) => Observation|null} [observation]
+ * @property {() => ProductSpec} [emptyProductSpec]
+ * @property {(observations: Observation[], options?: object) => ProductSpec} [assemble]
+ * @property {(spec: ProductSpec|null) => FlatProduct|null} [toLegacyFlatProduct]
  */
 (function initProductSchema(root) {
-  const NS = (root.SSExtract = root.SSExtract || {});
+  const NS = /** @type {SSExtractNamespace} */ (root.SSExtract = root.SSExtract || {});
   const C  = NS.Confidence;
   const conf = NS.confidenceWeight;
   const gt   = NS.confidenceGt;
@@ -430,6 +444,7 @@
    */
   function toLegacyFlatProduct(spec) {
     if (!spec) return null;
+    /** @type {FlatProduct} */
     const flat = {
       url:          spec.source.url || '',
       title:        unwrap(spec.title.value),

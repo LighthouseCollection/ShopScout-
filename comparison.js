@@ -1295,8 +1295,8 @@ function bindEvents() {
         try {
           if (globalThis.SSDatabaseView && typeof globalThis.SSDatabaseView.render === 'function') {
             await globalThis.SSDatabaseView.render();
-          } else if (typeof renderProducts === 'function') {
-            await renderProducts();
+          } else {
+            await renderAll();
           }
         } catch (err) { console.warn('Dashboard refresh failed', err); }
       }

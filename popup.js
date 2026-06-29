@@ -505,13 +505,28 @@ async function detectCurrentPageFriction(tabId) {
 }
 
 async function extractProductFromCurrentTab(tabId) {
-  await chrome.scripting.executeScript({ target: { tabId }, files: ['utils.js', 'content.js'] });
-  await new Promise(r => setTimeout(r, 500));
-  const results = await chrome.scripting.executeScript({
+  await chrome.scripting.executeScript({
     target: { tabId },
-    func: () => typeof extractProductData === 'function' ? extractProductData() : null
+    files: [
+      'utils.js',
+      'content/confidenceRules.js',
+      'content/domUtils.js',
+      'content/keyCanonicalizer.js',
+      'content/productSchema.js',
+      'content/structuredSignals.js',
+      'content/specMiner.js',
+      'content/adapters/amazon.js',
+      'content/adapters/ebay.js',
+      'content/adapters/walmart.js',
+      'content/adapters/generic.js',
+      'content/marketplace.js',
+      'content/extractor.js',
+      'content/content.js',
+      'content.js'
+    ]
   });
-  return results?.[0]?.result || null;
+  await new Promise(r => setTimeout(r, 500));
+  return await chrome.tabs.sendMessage(tabId, { action: 'extract' }) || null;
 }
 
 async function addFromTab() {
