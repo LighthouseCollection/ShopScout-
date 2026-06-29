@@ -1,0 +1,201 @@
+/* =============================================================
+   ShopScoutUI — themed styles for modal / toast / dialogs
+   Page-scoped: load AFTER theme.css so the design tokens
+   (--paper, --ink, --primary, --primary-tint, --rule, --bad, …)
+   are available. All selectors are namespaced .ssui-* so they
+   never collide with page-specific classes.
+   ============================================================= */
+
+/* ===== Modal overlay + dialog ===== */
+.ssui-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10000;
+  animation: ssui-fade-in 120ms ease-out;
+}
+.ssui-modal-overlay.is-closing {
+  animation: ssui-fade-out 120ms ease-in forwards;
+}
+.ssui-modal {
+  background: var(--paper, #fff);
+  color: var(--ink, #0f172a);
+  border-radius: 8px;
+  box-shadow: 0 24px 48px rgba(15, 23, 42, 0.28);
+  width: min(420px, 92vw);
+  max-height: 88vh;
+  display: flex;
+  flex-direction: column;
+  outline: none;
+}
+.ssui-modal-title {
+  padding: 16px 20px 8px;
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: -0.005em;
+}
+.ssui-modal-body {
+  padding: 8px 20px 16px;
+  font-size: 13px;
+  line-height: 1.5;
+  overflow-y: auto;
+  color: var(--ink-2, #1f2937);
+}
+.ssui-modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  padding: 12px 16px 16px;
+  border-top: 1px solid var(--rule-soft, #eef0f4);
+}
+
+/* ===== Buttons inside modals ===== */
+.ssui-btn {
+  padding: 7px 14px;
+  border: 1px solid var(--rule, #e5e7eb);
+  border-radius: 5px;
+  background: var(--paper, #fff);
+  color: var(--ink, #0f172a);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.12s, border-color 0.12s, color 0.12s;
+}
+.ssui-btn:hover {
+  background: var(--paper-2, #f5f5f5);
+  border-color: var(--rule-strong, #d1d5db);
+}
+.ssui-btn--primary {
+  background: var(--primary, #24428f);
+  border-color: var(--primary, #24428f);
+  color: #fff;
+}
+.ssui-btn--primary:hover {
+  background: var(--primary-dark, #1e293b);
+  border-color: var(--primary-dark, #1e293b);
+}
+.ssui-btn--danger {
+  background: var(--bad, #b42318);
+  border-color: var(--bad, #b42318);
+  color: #fff;
+}
+.ssui-btn--danger:hover {
+  background: #8e1c14;
+  border-color: #8e1c14;
+}
+.ssui-btn:focus-visible {
+  outline: 2px solid var(--primary, #24428f);
+  outline-offset: 2px;
+}
+
+/* ===== Confirm dialog body ===== */
+.ssui-confirm-body {
+  color: var(--ink-2, #1f2937);
+  white-space: pre-wrap;
+}
+
+/* ===== Prompt dialog body ===== */
+.ssui-prompt-body {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.ssui-prompt-message {
+  color: var(--ink-2, #1f2937);
+  white-space: pre-wrap;
+}
+.ssui-prompt-input {
+  width: 100%;
+  padding: 8px 10px;
+  border: 1px solid var(--rule, #e5e7eb);
+  border-radius: 5px;
+  font: inherit;
+  font-size: 13px;
+  background: var(--paper, #fff);
+  color: var(--ink, #0f172a);
+}
+.ssui-prompt-input:focus {
+  outline: none;
+  border-color: var(--primary, #24428f);
+  box-shadow: 0 0 0 3px var(--primary-tint, #e8f0fb);
+}
+.ssui-prompt-error {
+  font-size: 12px;
+  color: var(--bad, #b42318);
+  min-height: 1em;
+}
+
+/* ===== Toast container + items ===== */
+.ssui-toast-container {
+  position: fixed;
+  bottom: 18px;
+  right: 18px;
+  display: flex;
+  flex-direction: column-reverse;
+  gap: 8px;
+  z-index: 10001;
+  pointer-events: none;
+}
+.ssui-toast {
+  pointer-events: auto;
+  padding: 10px 14px;
+  border-radius: 6px;
+  background: var(--ink, #0f172a);
+  color: #fff;
+  font-size: 13px;
+  font-weight: 500;
+  box-shadow: 0 8px 18px rgba(15, 23, 42, 0.22);
+  max-width: 360px;
+  word-break: break-word;
+  cursor: pointer;
+  animation: ssui-toast-in 180ms ease-out;
+}
+.ssui-toast.is-closing {
+  animation: ssui-toast-out 180ms ease-in forwards;
+}
+.ssui-toast--success { background: var(--good, #15803d); }
+.ssui-toast--warn    { background: var(--warn, #c2410c); }
+.ssui-toast--error   { background: var(--bad, #b42318); }
+.ssui-toast--loading {
+  background: var(--paper-2, #1e293b);
+  position: relative;
+  padding-left: 32px;
+}
+.ssui-toast--loading::before {
+  content: '';
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  width: 12px;
+  height: 12px;
+  margin-top: -6px;
+  border: 2px solid rgba(255,255,255,0.4);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: ssui-spin 720ms linear infinite;
+}
+
+/* ===== Animations ===== */
+@keyframes ssui-fade-in {
+  from { opacity: 0; transform: scale(0.98); }
+  to   { opacity: 1; transform: scale(1); }
+}
+@keyframes ssui-fade-out {
+  from { opacity: 1; }
+  to   { opacity: 0; }
+}
+@keyframes ssui-toast-in {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes ssui-toast-out {
+  from { opacity: 1; transform: translateY(0); }
+  to   { opacity: 0; transform: translateY(8px); }
+}
+@keyframes ssui-spin {
+  to { transform: rotate(360deg); }
+}

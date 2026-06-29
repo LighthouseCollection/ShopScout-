@@ -33,8 +33,8 @@ $runtimeFiles = @(
   'shopscout-about.md'
 )
 
-# Directories copied recursively into each dist (state/data layers + vendor libs + icons + layered extraction pipeline).
-$runtimeDirs = @('state', 'data', 'vendor', 'icons', 'content')
+# Directories copied recursively into each dist (state/data/ui layers + vendor libs + icons + layered extraction pipeline).
+$runtimeDirs = @('state', 'data', 'ui', 'vendor', 'icons', 'content')
 
 $targets = @(
   @{ Name = 'chrome';  Manifest = 'manifest.json' },
