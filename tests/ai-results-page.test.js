@@ -2,7 +2,10 @@ const assert = require('assert');
 const { read, pageAndStyles } = require('./_helpers');
 
 const html = pageAndStyles('comparison.html', 'comparison.css');
-const js = read('comparison.js');
+/* Task 7: AI results rendering moved into comparison/aiResultsView.js.
+   Read both so the legacy content assertions still find their targets
+   regardless of which file currently owns the snippet. */
+const js = read('comparison.js') + '\n' + read('comparison/aiResultsView.js');
 
 function functionBlock(name) {
   const start = js.indexOf(`function ${name}`);

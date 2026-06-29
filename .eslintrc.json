@@ -31,7 +31,21 @@
     "Tabulator": "readonly",
     "Dexie": "readonly",
     "$": "readonly",
-    "jQuery": "readonly"
+    "jQuery": "readonly",
+    "ShopScoutComparison": "readonly",
+    "ShopScoutTable": "readonly",
+    "ShopScoutState": "readonly",
+    "SSViewsRepo": "readonly",
+    "renderAiResultsPage": "readonly",
+    "showAiResultsPage": "readonly",
+    "buildRunProductList": "readonly",
+    "isAiRunIncomplete": "readonly",
+    "aiStageLabel": "readonly",
+    "closeSettingsPage": "readonly",
+    "getCorrectedValue": "readonly",
+    "stageStatusText": "readonly",
+    "renderAll": "readonly",
+    "detailIndex": "writable"
   },
   "ignorePatterns": [
     "dist/**",

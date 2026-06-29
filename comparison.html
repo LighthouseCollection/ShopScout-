@@ -854,6 +854,11 @@
      comparison.js so the ribbon-command dispatcher in the main file
      finds them on globalThis. -->
 <script src="comparison-feedback.js"></script>
+<!-- AI results report rendering — extracted Task 7. Must load before
+     comparison.js so the back-compat globals (aiStageLabel,
+     buildRunProductList, isAiRunIncomplete, renderAiResultsPage,
+     showAiResultsPage) are populated before comparison.js calls them. -->
+<script src="comparison/aiResultsView.js"></script>
 <script src="comparison.js"></script>
 <script src="comparison-db.js"></script>
 </body>
