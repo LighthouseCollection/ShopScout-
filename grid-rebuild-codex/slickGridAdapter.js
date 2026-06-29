@@ -78,6 +78,31 @@
     </div>`;
   }
 
+  function htmlForMatrixCell(value) {
+    if (!value || typeof value !== 'object') {
+      const text = textValue(value).trim();
+      return text ? esc(text) : '<span class="ss-grid-empty">Missing</span>';
+    }
+    if (value.missing) return '<span class="ss-grid-missing">Missing</span>';
+    const shown = textValue(value.value || value.corrected || value.raw).trim();
+    const raw = textValue(value.raw).trim();
+    const corrected = textValue(value.corrected).trim();
+    const sourceTitle = Array.isArray(value.sources) && value.sources.length
+      ? ` title="${escAttr(value.sources.join(', '))}"`
+      : '';
+    const confidence = typeof value.confidence === 'number'
+      ? `<span class="ss-grid-confidence">${Math.round(value.confidence * 100)}%</span>`
+      : '';
+    const source = Array.isArray(value.sources) && value.sources.length
+      ? `<span class="ss-grid-source-dot"${sourceTitle}>source</span>`
+      : '';
+    if (corrected) {
+      return `<span class="ss-grid-matrix-cell"><span class="ss-grid-corrected">${esc(corrected)}</span>`
+        + `${raw ? `<span class="ss-grid-was">was ${esc(raw)}</span>` : ''}${confidence}${source}</span>`;
+    }
+    return `<span class="ss-grid-matrix-cell"><span>${shown ? esc(shown) : '<span class="ss-grid-empty">-</span>'}</span>${confidence}${source}</span>`;
+  }
+
   function cellFormatter(row, cell, value, column, item) {
     switch (column.type) {
       case 'selection': return htmlForSelection(item);
@@ -85,6 +110,7 @@
       case 'source':    return htmlForSource(value, item);
       case 'price':     return htmlForPrice(value);
       case 'rating':    return htmlForRating(value, item);
+      case 'matrixCell':return htmlForMatrixCell(value);
       case 'actions':   return htmlForActions();
       default: {
         const text = textValue(value).trim();
@@ -133,10 +159,37 @@
     }));
   }
 
+  function renderMissingRuntime(container) {
+    if (!container) return;
+    const doc = container.ownerDocument || root.document;
+    const message = doc?.createElement ? doc.createElement('div') : null;
+    if (!message) return;
+    message.className = 'ss-grid-empty';
+    message.textContent = 'SlickGrid runtime is not available. Product data is safe; reload the extension package after the grid files are present.';
+    container.replaceChildren(message);
+  }
+
+  function applyProjection(dataView, grid, projection) {
+    dataView.beginUpdate();
+    dataView.setItems(projection.rows || [], 'id');
+    dataView.endUpdate();
+    const sort = Array.isArray(projection.sort) ? projection.sort : [];
+    if (sort.length) {
+      const first = sort[0];
+      dataView.sort(sortableComparator(first.field, first.dir), true);
+    }
+    grid.resizeCanvas();
+    grid.render();
+  }
+
   function create(container, projection, options) {
     const Slick = root.Slick;
     if (!container || !Slick || !Slick.Grid || !Slick.Data || !Slick.Data.DataView) {
-      throw new Error('SlickGrid browser runtime is not loaded.');
+      renderMissingRuntime(container);
+      return {
+        update() {},
+        destroy() {}
+      };
     }
 
     const opts = options || {};
@@ -172,6 +225,22 @@
       if (!sortCol) return;
       const direction = (args.sortAsc || args.sortCols?.[0]?.sortAsc) ? 'asc' : 'desc';
       dataView.sort(sortableComparator(sortCol.field, direction), true);
+      if (typeof opts.onSortChange === 'function') opts.onSortChange([{ field: sortCol.field, dir: direction }]);
+    });
+
+    grid.onColumnsReordered.subscribe(() => {
+      if (typeof opts.onColumnOrderChange === 'function') {
+        opts.onColumnOrderChange(grid.getColumns().map(column => column.id));
+      }
+    });
+
+    grid.onColumnsResized.subscribe(() => {
+      if (typeof opts.onColumnWidthsChange !== 'function') return;
+      const widths = {};
+      for (const column of grid.getColumns()) {
+        if (column?.id) widths[column.id] = column.width;
+      }
+      opts.onColumnWidthsChange(widths);
     });
 
     grid.onCellChange.subscribe((_event, args) => {
@@ -215,21 +284,29 @@
       if (typeof opts.onAction === 'function') opts.onAction('open', dataView.getItem(args.row));
     });
 
-    dataView.beginUpdate();
-    dataView.setItems(projection.rows || [], 'id');
-    dataView.endUpdate();
-    grid.resizeCanvas();
-    grid.render();
+    applyProjection(dataView, grid, projection);
 
     return {
       grid,
       dataView,
       update(nextProjection) {
         grid.setColumns(toSlickColumns(nextProjection.columns));
-        dataView.beginUpdate();
-        dataView.setItems(nextProjection.rows || [], 'id');
-        dataView.endUpdate();
-        grid.resizeCanvas();
+        applyProjection(dataView, grid, nextProjection);
+      },
+      updateItem(itemId, nextItem) {
+        if (!itemId || !nextItem || !dataView.getItemById || !dataView.updateItem) return;
+        if (!dataView.getItemById(itemId)) return;
+        dataView.updateItem(itemId, nextItem);
+      },
+      flashCell(itemId, field) {
+        if (!itemId || !field || !grid.getColumns || !dataView.getRowById) return;
+        const row = dataView.getRowById(itemId);
+        const cell = grid.getColumns().findIndex(column => column.field === field);
+        if (row == null || cell < 0) return;
+        const node = grid.getCellNode(row, cell);
+        if (!node?.classList) return;
+        node.classList.add('ss-grid-cell-conflict');
+        setTimeout(() => node.classList.remove('ss-grid-cell-conflict'), 1800);
       },
       destroy() {
         if (grid && typeof grid.destroy === 'function') grid.destroy();

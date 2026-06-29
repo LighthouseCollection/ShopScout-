@@ -325,6 +325,8 @@
     <div class="ss-grid-view-toggle" aria-label="Grid view">
       <button type="button" class="active" data-ss-grid-mode="rows" aria-pressed="true">Products</button>
       <button type="button" data-ss-grid-mode="matrix" aria-pressed="false">Compare</button>
+      <button type="button" class="active" data-ss-grid-matrix="basic" aria-pressed="true">Basic</button>
+      <button type="button" data-ss-grid-matrix="detailed" aria-pressed="false">Detailed</button>
     </div>
   </div>
   <div class="ss-grid-host slick-default-theme" id="ssGridHost"></div>
@@ -704,6 +706,7 @@
 
 <!-- Codex Phase 2 grid layer. Loads before comparison.js so renderAll()
      can delegate to globalThis.ShopScoutGrid during init. -->
+<script src="grid-rebuild-codex/state.js"></script>
 <script src="grid-rebuild-codex/projections.js"></script>
 <script src="grid-rebuild-codex/editing.js"></script>
 <script src="grid-rebuild-codex/slickGridAdapter.js"></script>

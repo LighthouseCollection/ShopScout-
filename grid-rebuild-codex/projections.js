@@ -39,6 +39,15 @@
     availability: 'Availability'
   };
 
+  const BASIC_MATRIX_FIELDS = [
+    'brand',
+    'source',
+    'newPrice',
+    'rating',
+    'availability',
+    'notes'
+  ];
+
   function canonicalKey(value, scope) {
     const canon = scope?.SSCanonical || root.SSCanonical;
     if (canon && typeof canon.canonicalKey === 'function') return canon.canonicalKey(value);
@@ -89,6 +98,32 @@
     return [...keys].sort((a, b) => fieldLabel(a).localeCompare(fieldLabel(b)));
   }
 
+  function applyColumnState(columns, viewState) {
+    const state = viewState || {};
+    const visibility = state.columnVisibility || {};
+    const widths = state.columnWidths || {};
+    const order = Array.isArray(state.columnOrder) ? state.columnOrder : [];
+    const pinned = new Set(Array.isArray(state.pinnedColumns) ? state.pinnedColumns : []);
+    const prepared = columns
+      .map(column => {
+        const next = Object.assign({}, column);
+        if (widths[next.id] != null && Number(widths[next.id]) > 0) next.width = Number(widths[next.id]);
+        if (pinned.has(next.id)) next.pinned = true;
+        return next;
+      })
+      .filter(column => column.required || visibility[column.id] !== false);
+    if (!order.length) return prepared;
+    const byId = new Map(prepared.map(column => [column.id, column]));
+    const ordered = [];
+    for (const id of order) {
+      if (!byId.has(id)) continue;
+      ordered.push(byId.get(id));
+      byId.delete(id);
+    }
+    for (const column of byId.values()) ordered.push(column);
+    return ordered;
+  }
+
   function normalizeVisibleSpecFields(visibleSpecKeys, rows, scope) {
     if (Array.isArray(visibleSpecKeys) && visibleSpecKeys.length) {
       return [...new Set(visibleSpecKeys.map(key => canonicalField(key, scope)).filter(Boolean))]
@@ -115,6 +150,7 @@
 
   function buildProductsRowsProjection(products, options) {
     const opts = options || {};
+    const viewState = opts.viewState || {};
     const scope = opts.root || root;
     const input = Array.isArray(products) ? products : [];
     const flattened = flattenProducts(input, opts);
@@ -131,10 +167,86 @@
     }));
     return {
       mode: 'productsRows',
-      columns: BASE_COLUMNS.concat(specColumns),
+      columns: applyColumnState(BASE_COLUMNS.concat(specColumns), viewState),
       rows,
-      specFields
+      specFields,
+      sort: Array.isArray(viewState.sort) ? viewState.sort.slice() : [],
+      filters: Array.isArray(viewState.filters) ? viewState.filters.slice() : [],
+      group: viewState.group || null
     };
+  }
+
+  function specEntryFromProduct(product, field, scope) {
+    if (!field.startsWith('spec:')) return null;
+    const wanted = canonicalKey(field.slice(5), scope);
+    const specs = product?._spec?.specs;
+    if (specs && typeof specs === 'object') {
+      for (const [key, entry] of Object.entries(specs)) {
+        if (canonicalKey(key, scope) === wanted) return entry;
+      }
+    }
+    const list = Array.isArray(product?.rawSpecs) ? product.rawSpecs
+      : Array.isArray(product?.specs) ? product.specs
+        : [];
+    for (const spec of list) {
+      if (canonicalKey(spec?.key, scope) === wanted) return spec;
+    }
+    return null;
+  }
+
+  function correctionFor(product, field) {
+    const corrections = product?.aiCorrections || product?._corrections || {};
+    if (Object.prototype.hasOwnProperty.call(corrections, field)) return corrections[field];
+    if (field.startsWith('spec:')) {
+      const shortKey = field.slice(5);
+      if (Object.prototype.hasOwnProperty.call(corrections, shortKey)) return corrections[shortKey];
+    }
+    return null;
+  }
+
+  function sourceList(entry) {
+    if (!entry || typeof entry !== 'object') return [];
+    if (Array.isArray(entry.sources)) return entry.sources.filter(Boolean).map(String);
+    if (entry.source) return [String(entry.source)];
+    return [];
+  }
+
+  function displayCell(productRow, field, scope) {
+    const product = productRow?._shopScout?.product || productRow || {};
+    const entry = specEntryFromProduct(product, field, scope);
+    const fromEntry = entry && typeof entry === 'object'
+      ? (entry.rawValue ?? entry.value ?? entry.canonicalValue)
+      : (entry ?? productRow?.[field]);
+    const raw = fromEntry == null ? '' : String(fromEntry);
+    const correctedValue = entry && typeof entry === 'object' && entry.canonicalValue != null
+      ? entry.canonicalValue
+      : correctionFor(product, field);
+    const corrected = correctedValue != null && String(correctedValue) !== raw
+      ? String(correctedValue)
+      : null;
+    const value = corrected || raw;
+    return {
+      value,
+      raw,
+      corrected,
+      confidence: entry && typeof entry === 'object' && typeof entry.confidence === 'number' ? entry.confidence : null,
+      sources: sourceList(entry),
+      missing: value == null || value === '',
+      productId: productRow?.id || '',
+      revision: productRow?._shopScout?.revision || 0,
+      field
+    };
+  }
+
+  function fieldsForMatrix(rowProjection, opts, scope) {
+    if (Array.isArray(opts.fields) && opts.fields.length) {
+      return opts.fields.map(field => canonicalField(field, scope)).filter(Boolean);
+    }
+    const visibleSpecs = normalizeVisibleSpecFields(opts.visibleSpecKeys, rowProjection.rows, scope);
+    if (opts.matrixMode === 'detailed') {
+      return BASIC_MATRIX_FIELDS.concat(rowProjection.specFields);
+    }
+    return BASIC_MATRIX_FIELDS.concat(visibleSpecs);
   }
 
   function buildComparisonMatrixProjection(products, options) {
@@ -142,17 +254,16 @@
     const scope = opts.root || root;
     const rowProjection = buildProductsRowsProjection(products, {
       root: scope,
-      visibleSpecKeys: opts.visibleSpecKeys
+      visibleSpecKeys: opts.visibleSpecKeys,
+      viewState: opts.viewState
     });
-    const fields = Array.isArray(opts.fields) && opts.fields.length
-      ? opts.fields.map(field => canonicalField(field, scope)).filter(Boolean)
-      : ['newPrice', 'rating'].concat(rowProjection.specFields);
-    const uniqueFields = [...new Set(fields)];
+    const matrixMode = opts.matrixMode === 'detailed' ? 'detailed' : 'basic';
+    const uniqueFields = [...new Set(fieldsForMatrix(rowProjection, Object.assign({}, opts, { matrixMode }), scope))];
     const productColumns = rowProjection.rows.map((row, idx) => ({
       id: `product:${row.id}`,
       field: `product:${row.id}`,
       name: row.title || `Product ${idx + 1}`,
-      type: 'product',
+      type: 'matrixCell',
       productId: row.id,
       minWidth: 180
     }));
@@ -163,21 +274,18 @@
         type: field.startsWith('spec:') ? 'spec' : 'field'
       };
       for (const productRow of rowProjection.rows) {
-        matrixRow[`product:${productRow.id}`] = {
-          value: productRow[field] == null ? '' : productRow[field],
-          productId: productRow.id,
-          revision: productRow._shopScout.revision,
-          field
-        };
+        matrixRow[`product:${productRow.id}`] = displayCell(productRow, field, scope);
       }
       return matrixRow;
     });
     return {
       mode: 'comparisonMatrix',
+      matrixMode,
       columns: [{ id: 'attribute', field: 'attribute', name: 'Buying Factor', type: 'attribute', minWidth: 190 }]
         .concat(productColumns),
       rows,
-      products: rowProjection.rows
+      products: rowProjection.rows,
+      sort: Array.isArray(opts.viewState?.sort) ? opts.viewState.sort.slice() : []
     };
   }
 

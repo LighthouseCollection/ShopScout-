@@ -52,6 +52,16 @@ const products = [
     reviewCount: '120',
     url: 'https://example.com/p1',
     image: 'https://example.com/p1.jpg',
+    _spec: {
+      specs: {
+        'battery life': {
+          rawValue: '2 hrs',
+          canonicalValue: '2 hours',
+          confidence: 0.82,
+          source: 'official'
+        }
+      }
+    },
     rawSpecs: [
       { key: 'Battery Life', value: '2 hours' },
       { key: 'Dots per inch', value: '800 DPI' }
@@ -108,10 +118,12 @@ assert.equal(rowsProjection.rows[0]['spec:dpi'], '800 DPI');
 assert.equal(rowsProjection.rows[1]['spec:battery life'], '90 minutes');
 
 const matrix = projections.buildComparisonMatrixProjection(products, {
+  matrixMode: 'detailed',
   fields: ['newPrice', 'rating', 'spec:battery life', 'spec:dpi']
 });
 
 assert.equal(matrix.mode, 'comparisonMatrix');
+assert.equal(matrix.matrixMode, 'detailed');
 assert.deepEqual(
   matrix.columns.map(column => column.id),
   ['attribute', 'product:p1', 'product:p2'],
@@ -122,10 +134,29 @@ assert.deepEqual(
   ['newPrice', 'rating', 'spec:battery life', 'spec:dpi'],
   'matrix rows follow requested buying-factor fields'
 );
+assert.deepEqual(
+  Object.keys(matrix.rows[2]['product:p1']).sort(),
+  ['confidence', 'corrected', 'field', 'missing', 'productId', 'raw', 'revision', 'sources', 'value'].sort(),
+  'matrix cells carry raw/corrected/confidence/source/missing metadata'
+);
+assert.equal(matrix.rows[2]['product:p1'].raw, '2 hrs');
+assert.equal(matrix.rows[2]['product:p1'].corrected, '2 hours');
 assert.equal(matrix.rows[2]['product:p1'].value, '2 hours');
+assert.equal(matrix.rows[2]['product:p1'].confidence, 0.82);
+assert.deepEqual(matrix.rows[2]['product:p1'].sources, ['official']);
+assert.equal(matrix.rows[2]['product:p1'].missing, false);
 assert.equal(matrix.rows[2]['product:p2'].value, '90 minutes');
 assert.equal(matrix.rows[3]['product:p1'].value, '800 DPI');
-assert.equal(matrix.rows[3]['product:p2'].value, '');
+assert.equal(matrix.rows[3]['product:p2'].missing, true);
+
+const basic = projections.buildComparisonMatrixProjection(products, {
+  matrixMode: 'basic',
+  visibleSpecKeys: ['battery life']
+});
+assert.equal(basic.matrixMode, 'basic');
+assert.ok(basic.rows.some(row => row.id === 'newPrice'), 'basic matrix keeps core price row');
+assert.ok(basic.rows.some(row => row.id === 'spec:battery life'), 'basic matrix includes selected buying factor spec');
+assert.ok(!basic.rows.some(row => row.id === 'spec:dpi'), 'basic matrix excludes non-selected specs');
 
 assert.equal(JSON.stringify(products), original, 'projection builders do not mutate product objects');
 

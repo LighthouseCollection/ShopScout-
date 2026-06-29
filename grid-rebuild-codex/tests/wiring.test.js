@@ -33,6 +33,7 @@ for (let i = 1; i < vendorOrder.length; i += 1) {
   assert.ok(vendorOrder[i - 1] < vendorOrder[i], 'SlickGrid vendor scripts load in dependency order');
 }
 
+const stateIndex = indexOfRequired('src="grid-rebuild-codex/state.js"', 'Codex grid state');
 const projectionIndex = indexOfRequired('src="grid-rebuild-codex/projections.js"', 'Codex grid projections');
 const adapterIndex = indexOfRequired('src="grid-rebuild-codex/slickGridAdapter.js"', 'Codex SlickGrid adapter');
 const gridIndex = indexOfRequired('src="grid-rebuild-codex/shopscoutGrid.js"', 'Codex grid orchestrator');
@@ -40,6 +41,7 @@ const comparisonIndex = indexOfRequired('src="comparison.js"', 'comparison.js');
 
 assert.ok(vendorOrder[vendorOrder.length - 1] < adapterIndex,
   'Codex SlickGrid adapter loads after SlickGrid vendor scripts');
+assert.ok(stateIndex < gridIndex, 'state store loads before the grid orchestrator');
 assert.ok(projectionIndex < gridIndex, 'projection helpers load before the grid orchestrator');
 assert.ok(adapterIndex < gridIndex, 'SlickGrid adapter loads before the grid orchestrator');
 assert.ok(gridIndex < comparisonIndex, 'ShopScoutGrid is registered before comparison.js init runs');

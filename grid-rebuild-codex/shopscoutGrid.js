@@ -10,10 +10,23 @@
 
   const state = {
     adapter: null,
-    mode: 'rows',
+    store: null,
     bound: false,
     lastProducts: []
   };
+
+  function ensureStore() {
+    if (state.store) return state.store;
+    const State = root.ShopScoutGridCodexState;
+    state.store = State && typeof State.createStore === 'function'
+      ? State.createStore({})
+      : {
+        _state: { mode: 'rows', matrixMode: 'basic', search: '', sort: [], columnOrder: [], columnWidths: {} },
+        getState() { return this._state; },
+        dispatch(patch) { this._state = Object.assign({}, this._state, patch || {}); return this._state; }
+      };
+    return state.store;
+  }
 
   function getMount() {
     return root.document?.getElementById('productGrid') || null;
@@ -117,8 +130,8 @@
     ].filter(Boolean).join(' ').toLowerCase();
   }
 
-  function applySearch(products) {
-    const query = String(root.document?.getElementById('productSearchInput')?.value || '').trim().toLowerCase();
+  function applySearch(products, viewState) {
+    const query = String(viewState?.search || '').trim().toLowerCase();
     if (!query) return products;
     const parts = query.split(/\s+/).filter(Boolean);
     return products.filter(product => {
@@ -143,16 +156,27 @@
   function buildProjection(products) {
     const projections = root.ShopScoutGridCodexProjections;
     if (!projections) throw new Error('ShopScout grid projections are not loaded.');
+    const viewState = ensureStore().getState();
     const specKeys = selectedSpecKeys(products);
-    if (state.mode === 'matrix') {
-      return projections.buildComparisonMatrixProjection(products, { visibleSpecKeys: specKeys });
+    if (viewState.mode === 'matrix') {
+      return projections.buildComparisonMatrixProjection(products, {
+        visibleSpecKeys: specKeys,
+        matrixMode: viewState.matrixMode,
+        viewState
+      });
     }
-    return projections.buildProductsRowsProjection(products, { visibleSpecKeys: specKeys });
+    return projections.buildProductsRowsProjection(products, { visibleSpecKeys: specKeys, viewState });
   }
 
   function updateModeButtons() {
+    const viewState = ensureStore().getState();
     root.document?.querySelectorAll('[data-ss-grid-mode]').forEach(button => {
-      const active = button.dataset.ssGridMode === state.mode;
+      const active = button.dataset.ssGridMode === viewState.mode;
+      button.classList.toggle('active', active);
+      button.setAttribute('aria-pressed', active ? 'true' : 'false');
+    });
+    root.document?.querySelectorAll('[data-ss-grid-matrix]').forEach(button => {
+      const active = button.dataset.ssGridMatrix === viewState.matrixMode;
       button.classList.toggle('active', active);
       button.setAttribute('aria-pressed', active ? 'true' : 'false');
     });
@@ -163,11 +187,28 @@
     state.bound = true;
     root.document?.addEventListener('click', event => {
       const modeButton = event.target?.closest?.('[data-ss-grid-mode]');
-      if (!modeButton) return;
-      state.mode = modeButton.dataset.ssGridMode || 'rows';
-      updateModeButtons();
-      render();
+      if (modeButton) {
+        ensureStore().dispatch({ mode: modeButton.dataset.ssGridMode === 'matrix' ? 'matrix' : 'rows' });
+        updateModeButtons();
+        render();
+        return;
+      }
+      const matrixButton = event.target?.closest?.('[data-ss-grid-matrix]');
+      if (matrixButton) {
+        ensureStore().dispatch({
+          mode: 'matrix',
+          matrixMode: matrixButton.dataset.ssGridMatrix === 'detailed' ? 'detailed' : 'basic'
+        });
+        updateModeButtons();
+        render();
+      }
     });
+    const searchInput = root.document?.getElementById('productSearchInput');
+    if (searchInput) {
+      searchInput.addEventListener('input', () => {
+        ensureStore().dispatch({ search: searchInput.value || '' });
+      });
+    }
   }
 
   async function mirrorLegacy(product) {
@@ -202,11 +243,21 @@
     if (!result?.ok) {
       const toast = root.SS?.toast || root.toast;
       toast?.show?.('This product changed during editing. Reloaded the latest value.', 'error');
-      await render();
+      state.adapter?.flashCell?.(productId, edit.field);
+      await refreshGridData();
       return;
     }
     await mirrorLegacy(result.product);
-    await render();
+    await refreshGridData();
+  }
+
+  async function refreshGridData() {
+    const viewState = ensureStore().getState();
+    const products = applySearch(await loadProducts(), viewState);
+    state.lastProducts = products;
+    const projection = buildProjection(products);
+    if (state.adapter?.update) state.adapter.update(projection);
+    setStatus(`${products.length} product${products.length === 1 ? '' : 's'} loaded`);
   }
 
   async function handleAction(action, row) {
@@ -225,10 +276,15 @@
     const host = getHost();
     if (!mount || !host) return;
     ensureBound();
+    const store = ensureStore();
+    const searchInput = root.document?.getElementById('productSearchInput');
+    if (searchInput && searchInput.value !== store.getState().search) {
+      store.dispatch({ search: searchInput.value || '' });
+    }
     updateModeButtons();
     try {
       setStatus('Loading products...');
-      const products = applySearch(await loadProducts());
+      const products = applySearch(await loadProducts(), store.getState());
       state.lastProducts = products;
       const projection = buildProjection(products);
       if (!products.length) {
@@ -246,11 +302,21 @@
       }
       state.adapter?.destroy?.();
       state.adapter = adapterFactory.create(host, projection, {
+        onSortChange(sort) {
+          ensureStore().dispatch({ sort });
+        },
+        onColumnOrderChange(columnOrder) {
+          ensureStore().dispatch({ columnOrder });
+        },
+        onColumnWidthsChange(columnWidths) {
+          ensureStore().dispatch({ columnWidths });
+        },
         onSelectionChange(items) {
           const rows = (items || []).map(item => ({
             id: item?._shopScout?.productId || item?.id,
             url: item?._shopScout?.url || item?.url
           }));
+          ensureStore().dispatch({ selectedProductIds: rows.map(row => row.id).filter(Boolean) });
           if (typeof root.setSelectedProductsFromIds === 'function') root.setSelectedProductsFromIds(rows);
         },
         onCellCommit: commitCellEdit,
@@ -267,11 +333,18 @@
   Object.assign(NS, {
     render,
     setMode(mode) {
-      state.mode = mode === 'matrix' ? 'matrix' : 'rows';
+      ensureStore().dispatch({ mode: mode === 'matrix' ? 'matrix' : 'rows' });
+      return render();
+    },
+    setMatrixMode(mode) {
+      ensureStore().dispatch({ mode: 'matrix', matrixMode: mode === 'detailed' ? 'detailed' : 'basic' });
       return render();
     },
     getMode() {
-      return state.mode;
+      return ensureStore().getState().mode;
+    },
+    getState() {
+      return ensureStore().getState();
     }
   });
 })(globalThis);
