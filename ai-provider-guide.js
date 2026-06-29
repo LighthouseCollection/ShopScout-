@@ -1,5 +1,7 @@
 const params = new URLSearchParams(location.search);
 const provider = ShopScoutAI.getProvider(params.get('provider')) || ShopScoutAI.PROVIDERS[0];
+const keyUrl = sanitizeExternalUrl(provider.keyUrl, '#');
+const docsUrl = sanitizeExternalUrl(provider.docsUrl, '#');
 
 const guide = document.getElementById('guide');
 guide.innerHTML = `
@@ -16,10 +18,21 @@ guide.innerHTML = `
   <p class="role">Suggested use: <strong>${escapeHtml(provider.roleHint)}</strong></p>
   <p class="role">Default model: <code>${escapeHtml(provider.defaultModel || 'user-selected')}</code></p>
   <div class="actions">
-    <a class="button primary" href="${escapeAttr(provider.keyUrl)}" target="_blank" rel="noopener">Open Key Page</a>
-    <a class="button" href="${escapeAttr(provider.docsUrl)}" target="_blank" rel="noopener">Open Docs</a>
+    <a class="button primary" href="${escapeAttr(keyUrl)}" target="_blank" rel="noopener">Open Key Page</a>
+    <a class="button" href="${escapeAttr(docsUrl)}" target="_blank" rel="noopener">Open Docs</a>
   </div>
 `;
+
+function sanitizeExternalUrl(value, fallback = '') {
+  const raw = String(value || '').trim();
+  if (!raw) return fallback;
+  try {
+    const url = new URL(raw, location.href);
+    return ['http:', 'https:'].includes(url.protocol) ? url.href : fallback;
+  } catch {
+    return fallback;
+  }
+}
 
 function escapeHtml(value) {
   return String(value ?? '')

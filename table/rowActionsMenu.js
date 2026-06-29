@@ -11,6 +11,20 @@
     let bound = false;
     let openTarget = null;
 
+    function sanitizeProductUrl(value) {
+      const raw = String(value || '').trim();
+      if (!raw) return '';
+      if (root.SS && typeof root.SS.sanitizeUrl === 'function') return root.SS.sanitizeUrl(raw);
+      try {
+        const URLCtor = root.URL || (typeof URL !== 'undefined' ? URL : null);
+        if (!URLCtor) return /^https?:\/\//i.test(raw) ? raw : '';
+        const url = new URLCtor(raw, (win && win.location && win.location.href) || 'https://shopscout.local/');
+        return ['http:', 'https:'].includes(url.protocol) ? url.href : '';
+      } catch {
+        return '';
+      }
+    }
+
     function close() {
       const menu = doc && doc.getElementById && doc.getElementById('dbRowActionsMenu');
       if (menu) menu.remove();
@@ -49,7 +63,8 @@
       const action = button.dataset.action;
       close();
       if (action === 'open') {
-        if (data.url && win && win.open) win.open(data.url, '_blank', 'noopener');
+        const safeUrl = sanitizeProductUrl(data.url);
+        if (safeUrl && win && win.open) win.open(safeUrl, '_blank', 'noopener');
       } else if (action === 'edit') {
         if (typeof root.openProductDetailById === 'function') root.openProductDetailById({ id: data.id, url: data.url });
       } else if (action === 'rescan') {

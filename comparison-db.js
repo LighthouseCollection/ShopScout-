@@ -22,6 +22,25 @@
   const numericSorter = tableUtils.numericSorter;
   const truncate = tableUtils.truncate;
 
+  function sanitizeProductUrl(value) {
+    if (root.SS && typeof root.SS.sanitizeUrl === 'function') return root.SS.sanitizeUrl(value);
+    const raw = String(value || '').trim();
+    if (!raw) return '';
+    try {
+      const URLCtor = root.URL || (typeof URL !== 'undefined' ? URL : null);
+      if (!URLCtor) return /^https?:\/\//i.test(raw) ? raw : '';
+      const url = new URLCtor(raw, root.location?.href || 'https://shopscout.local/');
+      return ['http:', 'https:'].includes(url.protocol) ? url.href : '';
+    } catch {
+      return '';
+    }
+  }
+
+  function openProductUrl(value) {
+    const safeUrl = sanitizeProductUrl(value);
+    if (safeUrl && typeof root.open === 'function') root.open(safeUrl, '_blank', 'noopener');
+  }
+
   let tabulator   = null;
   let currentMode = 'grid';            // 'grid' | 'pivot'
   let currentViewId = null;
@@ -324,8 +343,7 @@
     const v = cell.getValue();
     if (!v) return '<span class="db-cell-empty">&mdash;</span>';
     const row = cell.getRow().getData();
-    const sanitize = (globalThis.SS && globalThis.SS.sanitizeUrl) ? globalThis.SS.sanitizeUrl : (u => /^https?:\/\//i.test(u) ? u : '');
-    const safe = sanitize(row.url);
+    const safe = sanitizeProductUrl(row.url);
     const CF = globalThis.SSCellFormatters;
     const text = String(v);
     const c = CF && CF.stableColor ? CF.stableColor(text) : null;
@@ -599,7 +617,7 @@
         } catch {}
       },
       rowContextMenu: [
-        { label: 'Open product page', action: (e, row) => { const u = row.getData().url; if (u) window.open(u, '_blank', 'noopener'); } },
+        { label: 'Open product page', action: (e, row) => { openProductUrl(row.getData().url); } },
         { separator: true },
         { label: 'Delete row',        action: async (e, row) => {
             const id = row.getData().id;
@@ -996,7 +1014,7 @@
             : cleaned;
           const titleEsc = esc(shortTitle);
           const fullTitleAttr = esc(cleaned);
-          const url = p.url;
+          const url = sanitizeProductUrl(p.url);
           /* Underline-free product link — explicit class so the
              global <a> styling doesn't add the default underline.
              title attribute carries the full (untruncated) name as
@@ -1009,7 +1027,7 @@
              render (see bindInvertedActions below). */
           const actions = '<div class="ss-compare-prodactions" '
             + 'data-product-id="' + esc(p.id || '') + '" '
-            + 'data-product-url="' + esc(p.url || '') + '">'
+            + 'data-product-url="' + esc(url || '') + '">'
             + '  <button type="button" data-invert-action="open"   title="Open product page"' + (url ? '' : ' disabled') + '><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3h7v7"/><path d="M21 3 11 13"/><path d="M21 14v5a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5"/></svg></button>'
             + '  <button type="button" data-invert-action="edit"   title="Edit details"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg></button>'
             + '  <button type="button" data-invert-action="rescan" title="Rescan from page"' + (url ? '' : ' disabled') + '><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 0 1 15-6.7L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-15 6.7L3 16"/><path d="M3 21v-5h5"/></svg></button>'
@@ -1262,7 +1280,7 @@
       const id = wrap.dataset.productId || '';
       const url = wrap.dataset.productUrl || '';
       if (action === 'open' && url) {
-        window.open(url, '_blank', 'noopener');
+        openProductUrl(url);
       } else if (action === 'edit') {
         if (typeof globalThis.openProductDetailById === 'function') {
           globalThis.openProductDetailById({ id, url });

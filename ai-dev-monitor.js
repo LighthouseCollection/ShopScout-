@@ -53,6 +53,22 @@
     return `${text.slice(0, maxLength - 1)}...`;
   }
 
+  function redactSecrets(value) {
+    return String(value || '')
+      .replace(/\bBearer\s+[A-Za-z0-9._~+/=-]{8,}/gi, 'Bearer [REDACTED]')
+      .replace(/\b(?:x-api-key|api-key|api_key|apikey|access_token|token|secret|key)\s*[:=]\s*[^&\s"'<>]{6,}/gi, match => {
+        const separator = match.includes(':') ? ':' : '=';
+        const name = match.slice(0, match.indexOf(separator)).trim();
+        return `${name}${separator} [REDACTED]`;
+      })
+      .replace(/\bsk-(?:proj-)?[A-Za-z0-9_-]{12,}/g, '[REDACTED]')
+      .replace(/\bAIza[A-Za-z0-9_-]{12,}/g, '[REDACTED]');
+  }
+
+  function redactList(values, maxItems) {
+    return Array.isArray(values) ? values.slice(0, maxItems).map(redactSecrets) : [];
+  }
+
   function getStage(state, stageId) {
     if (!state || !stageId) return null;
     return state.stages.find(stage => stage.id === stageId) || null;
@@ -88,15 +104,15 @@
       providerId: event.providerId || '',
       providerName: event.providerName || '',
       model: event.model || '',
-      message: event.message || '',
+      message: redactSecrets(event.message || ''),
       timestamp: event.timestamp || new Date().toISOString(),
-      promptSnippet: truncate(event.promptSnippet, 1200),
-      responseSnippet: truncate(event.responseSnippet, 1200),
-      sourceUrls: Array.isArray(event.sourceUrls) ? event.sourceUrls.slice(0, 20) : [],
-      error: event.error || '',
+      promptSnippet: redactSecrets(truncate(event.promptSnippet, 1200)),
+      responseSnippet: redactSecrets(truncate(event.responseSnippet, 1200)),
+      sourceUrls: redactList(event.sourceUrls, 20),
+      error: redactSecrets(event.error || ''),
       productCount: Number.isFinite(event.productCount) ? event.productCount : undefined,
       productIndexes: Array.isArray(event.productIndexes) ? event.productIndexes.slice() : undefined,
-      productUrls: Array.isArray(event.productUrls) ? event.productUrls.slice(0, 50) : undefined,
+      productUrls: Array.isArray(event.productUrls) ? redactList(event.productUrls, 50) : undefined,
       stages: Array.isArray(event.stages) ? event.stages.slice() : undefined,
       listName: event.listName || ''
     };

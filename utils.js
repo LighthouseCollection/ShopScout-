@@ -1449,6 +1449,20 @@ a{color:#2563eb;word-break:break-all;text-decoration:none}
   }
 
   // --- Import ---
+  function sanitizeImportedProduct(product) {
+    if (!product || typeof product !== 'object') return null;
+    const next = { ...product };
+    next.url = sanitizeUrl(next.url);
+    next.image = sanitizeUrl(next.image);
+    return next;
+  }
+
+  function sanitizeImportedProducts(products) {
+    return (Array.isArray(products) ? products : [])
+      .map(sanitizeImportedProduct)
+      .filter(Boolean);
+  }
+
   function parseImport(text, filename) {
     let imported = [], listName = '';
     if (filename.endsWith('.json')) {
@@ -1456,10 +1470,12 @@ a{color:#2563eb;word-break:break-all;text-decoration:none}
       if (!Array.isArray(imported)) throw new Error('Invalid JSON');
     } else if (filename.endsWith('.xml')) {
       const doc = new DOMParser().parseFromString(text, 'application/xml');
+      if (doc.querySelector && doc.querySelector('parsererror')) throw new Error('Invalid XML');
       listName = doc.documentElement.getAttribute('list') || '';
       for (const el of doc.querySelectorAll('product')) {
         const g = tag => el.querySelector(tag)?.textContent?.trim() || '';
-        imported.push({ title: g('title'), brand: g('brand'), newPrice: g('newPrice'), usedPrice: g('usedPrice'), source: g('source'), modelNumber: g('modelNumber'), rating: g('rating'), reviewCount: g('reviewCount'), url: g('url'), image: g('image'), notes: g('notes'), addedAt: Date.now(), id: g('url') + '|' + Date.now() });
+        const url = sanitizeUrl(g('url'));
+        imported.push({ title: g('title'), brand: g('brand'), newPrice: g('newPrice'), usedPrice: g('usedPrice'), source: g('source'), modelNumber: g('modelNumber'), rating: g('rating'), reviewCount: g('reviewCount'), url, image: sanitizeUrl(g('image')), notes: g('notes'), addedAt: Date.now(), id: url + '|' + Date.now() });
       }
     } else if (filename.endsWith('.csv')) {
       const lines = text.split('\n').filter(l => l.trim()); if (lines.length < 2) throw new Error('Empty CSV');
@@ -1467,10 +1483,12 @@ a{color:#2563eb;word-break:break-all;text-decoration:none}
       headers.forEach((h, i) => { hmap[h.toLowerCase().trim()] = i; });
       for (let i = 1; i < lines.length; i++) {
         const v = parseCsvLine(lines[i]); const g = k => v[hmap[k]] || '';
-        imported.push({ title: g('name') || g('title') || g('product'), brand: g('brand'), newPrice: g('new price') || g('price') || g('newprice'), usedPrice: g('used price') || g('usedprice'), source: g('source'), modelNumber: g('model number') || g('modelnumber') || g('model'), rating: g('rating'), reviewCount: g('reviews') || g('reviewcount') || g('review count'), url: g('url') || g('link'), image: g('image') || '', notes: g('notes') || '', addedAt: Date.now(), id: (g('url') || g('link') || '') + '|' + Date.now() });
+        const url = sanitizeUrl(g('url') || g('link'));
+        imported.push({ title: g('name') || g('title') || g('product'), brand: g('brand'), newPrice: g('new price') || g('price') || g('newprice'), usedPrice: g('used price') || g('usedprice'), source: g('source'), modelNumber: g('model number') || g('modelnumber') || g('model'), rating: g('rating'), reviewCount: g('reviews') || g('reviewcount') || g('review count'), url, image: sanitizeUrl(g('image') || ''), notes: g('notes') || '', addedAt: Date.now(), id: url + '|' + Date.now() });
       }
       imported = imported.filter(p => p.title || p.url);
     } else throw new Error('Unsupported format');
+    imported = sanitizeImportedProducts(imported);
     return { imported, listName };
   }
 

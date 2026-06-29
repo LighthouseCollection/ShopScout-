@@ -638,7 +638,7 @@ async function handleProductActionButton(btn) {
   }
   if (btn.classList.contains('open-btn') && btn.dataset.url) {
     const url = sanitizeUrl(btn.dataset.url);
-    if (url) window.open(url, '_blank');
+    if (url) window.open(url, '_blank', 'noopener');
     return true;
   }
   return false;
@@ -961,7 +961,8 @@ function bindEvents() {
   document.getElementById('detailOpen').addEventListener('click', async () => {
     const products = await getProducts();
     const p = products[detailIndex];
-    if (p && p.url) window.open(p.url, '_blank');
+    const url = sanitizeUrl(p?.url || '');
+    if (url) window.open(url, '_blank', 'noopener');
   });
   document.getElementById('detailRescan').addEventListener('click', async () => {
     if (detailIndex < 0) return;
