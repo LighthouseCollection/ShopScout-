@@ -18,9 +18,10 @@
     { id: 'source', field: 'source', name: 'Source', type: 'source', width: 118 },
     { id: 'modelName', field: 'modelName', name: 'Model', type: 'text', minWidth: 160, editable: true },
     { id: 'rating', field: 'rating', name: 'Rating', type: 'rating', width: 128, editable: true },
-    { id: 'notes', field: 'notes', name: 'Notes', type: 'text', minWidth: 160, editable: true },
-    { id: 'actions', field: '_actions', name: '', type: 'actions', width: 92, required: true }
+    { id: 'notes', field: 'notes', name: 'Notes', type: 'text', minWidth: 160, editable: true }
   ];
+
+  const ACTIONS_COLUMN = { id: 'actions', field: '_actions', name: '', type: 'actions', width: 92, required: true };
 
   const FIELD_LABELS = {
     title: 'Name',
@@ -224,8 +225,10 @@
         return next;
       })
       .filter(column => column.required || visibility[column.id] !== false);
-    if (!order.length) return prepared;
-    const byId = new Map(prepared.map(column => [column.id, column]));
+    const trailingActions = prepared.filter(column => column.type === 'actions');
+    const reorderable = prepared.filter(column => column.type !== 'actions');
+    if (!order.length) return reorderable.concat(trailingActions);
+    const byId = new Map(reorderable.map(column => [column.id, column]));
     const ordered = [];
     for (const id of order) {
       if (!byId.has(id)) continue;
@@ -233,7 +236,7 @@
       byId.delete(id);
     }
     for (const column of byId.values()) ordered.push(column);
-    return ordered;
+    return ordered.concat(trailingActions);
   }
 
   function normalizeVisibleSpecFields(visibleSpecKeys, rows, scope) {
@@ -277,7 +280,7 @@
       editable: true,
       specKey: field.slice(5)
     }));
-    const allColumns = BASE_COLUMNS.concat(specColumns);
+    const allColumns = BASE_COLUMNS.concat(specColumns, [ACTIONS_COLUMN]);
     const filteredRows = applyFilters(rows, viewState.filters, scope);
     const sortedRows = applySort(filteredRows, viewState.sort);
     const groupedRows = groupRows(sortedRows, viewState.group);

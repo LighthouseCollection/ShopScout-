@@ -35,6 +35,19 @@
   border-right: 1px solid var(--rule, #d1d5db);
 }
 
+.ss-grid-host .slick-header-column.slick-header-sortable,
+.ss-grid-host .slick-header-column[aria-sort] {
+  cursor: pointer;
+}
+
+.ss-grid-host .slick-header-column.slick-header-sortable:hover {
+  background: color-mix(in srgb, var(--paper-2, #eaedf1) 76%, var(--primary-tint, #e6eef1));
+}
+
+.ss-grid-host .slick-sort-indicator {
+  opacity: 0.72;
+}
+
 .ss-grid-host .slick-row.odd {
   background: #f5f5f5;
 }
@@ -57,7 +70,9 @@
 }
 
 .ss-grid-host .ss-grid-cell-actions {
+  justify-content: flex-end;
   overflow: visible;
+  padding-right: 8px;
 }
 
 .ss-grid-cell-title {

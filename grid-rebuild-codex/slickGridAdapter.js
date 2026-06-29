@@ -150,6 +150,33 @@
     };
   }
 
+  function sortIndicatorColumns(projection) {
+    const sort = Array.isArray(projection?.sort) ? projection.sort : [];
+    if (!sort.length) return [];
+    const columns = Array.isArray(projection?.columns) ? projection.columns : [];
+    return sort
+      .map(item => {
+        const column = columns.find(candidate => candidate.id === item.field || candidate.field === item.field);
+        if (!column || column.type === 'selection' || column.type === 'actions' || column.type === 'image') return null;
+        return {
+          columnId: column.id,
+          sortAsc: item.dir !== 'desc'
+        };
+      })
+      .filter(Boolean);
+  }
+
+  function applySortIndicator(grid, projection) {
+    const columns = sortIndicatorColumns(projection);
+    if (typeof grid.setSortColumns === 'function') {
+      grid.setSortColumns(columns);
+      return;
+    }
+    if (columns.length && typeof grid.setSortColumn === 'function') {
+      grid.setSortColumn(columns[0].columnId, columns[0].sortAsc);
+    }
+  }
+
   function toSlickColumns(columns) {
     const Slick = root.Slick || {};
     const TextEditor = Slick.Editors && Slick.Editors.Text;
@@ -189,6 +216,7 @@
       const first = sort[0];
       dataView.sort(sortableComparator(first.field, first.dir), true);
     }
+    applySortIndicator(grid, projection);
     grid.resizeCanvas();
     grid.render();
   }

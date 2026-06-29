@@ -47,6 +47,7 @@ assert.match(host.children[0].textContent, /SlickGrid runtime is not available/i
 
 let capturedGridOptions = null;
 let capturedColumns = null;
+let capturedSortColumns = null;
 let destroyed = false;
 const eventStub = { subscribe() {} };
 ctx.Slick = {
@@ -56,6 +57,7 @@ ctx.Slick = {
         beginUpdate() {},
         setItems() {},
         endUpdate() {},
+        sort() {},
         onRowCountChanged: eventStub,
         onRowsChanged: eventStub,
         destroy() { destroyed = true; }
@@ -73,6 +75,7 @@ ctx.Slick = {
       onSelectedRowsChanged: eventStub,
       onClick: eventStub,
       onDblClick: eventStub,
+      setSortColumns(columns) { capturedSortColumns = columns; },
       resizeCanvas() {},
       render() {},
       destroy() {}
@@ -85,11 +88,17 @@ const liveInstance = adapter.create(host, {
     { id: 'title', name: 'Name', field: 'title' },
     { id: 'actions', name: '', field: '_actions', type: 'actions' }
   ],
-  rows: [{ id: 'p1', title: 'Product' }]
+  rows: [{ id: 'p1', title: 'Product' }],
+  sort: [{ field: 'title', dir: 'desc' }]
 }, {});
 assert.equal(capturedGridOptions.enableColumnReorder, false,
   'missing Sortable disables SlickGrid column drag instead of throwing');
+const titleColumn = capturedColumns.find(column => column.id === 'title');
 const actionsColumn = capturedColumns.find(column => column.id === 'actions');
+assert.equal(titleColumn.sortable, true, 'data columns are sortable from their own headers');
+assert.equal(actionsColumn.sortable, false, 'actions column is not sortable');
+assert.deepEqual(capturedSortColumns, [{ columnId: 'title', sortAsc: false }],
+  'projection sort state is shown on the matching column header');
 const actionsHtml = actionsColumn.formatter(0, 1, null, actionsColumn, { id: 'p1' });
 assert.match(actionsHtml, /ss-grid-action-menu/, 'row actions render as a compact menu');
 assert.match(actionsHtml, /data-ss-grid-action="open"/, 'row actions include open');

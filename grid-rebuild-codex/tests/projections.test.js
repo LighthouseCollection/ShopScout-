@@ -109,6 +109,22 @@ assert.ok(rowsProjection.columns.some(column => column.id === 'spec:battery life
   'requested canonical spec columns are included');
 assert.ok(rowsProjection.columns.some(column => column.id === 'spec:dpi'),
   'abbreviation-equivalent spec column is canonicalized');
+assert.equal(
+  rowsProjection.columns[rowsProjection.columns.length - 1].id,
+  'actions',
+  'row actions stay in the far-right final column after dynamic specs'
+);
+const reorderedProjection = projections.buildProductsRowsProjection(products, {
+  visibleSpecKeys: ['battery life', 'dpi'],
+  viewState: {
+    columnOrder: ['actions', 'title', 'brand', 'spec:dpi', 'spec:battery life']
+  }
+});
+assert.equal(
+  reorderedProjection.columns[reorderedProjection.columns.length - 1].id,
+  'actions',
+  'saved column order cannot move row actions away from the far-right utility column'
+);
 assert.equal(rowsProjection.rows.length, 2);
 assert.equal(rowsProjection.rows[0].id, 'p1');
 assert.equal(rowsProjection.rows[0]._shopScout.productId, 'p1');
