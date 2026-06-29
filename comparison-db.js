@@ -13,7 +13,8 @@
   const Table = root.ShopScoutTable || {};
   const tableUtils = Table.utils;
   const productRows = Table.productRows;
-  if (!tableUtils || !productRows || !Table.rowActions || !Table.columnsMenu) {
+  const myRating = Table.myRating;
+  if (!tableUtils || !productRows || !myRating || !Table.rowActions || !Table.columnsMenu) {
     throw new Error('comparison-db: table modules must load before comparison-db.js');
   }
   const esc = tableUtils.escapeHtml;
@@ -26,6 +27,7 @@
   let currentViewId = null;
   let rowActionsMenu = null;
   let columnsMenu = null;
+  let myRatingDelegation = null;
   const STATUS = () => document.getElementById('dbViewStatus');
 
   /* ===== Column model for Tabulator =====
@@ -349,19 +351,7 @@
   function cellMyRating(cell) {
     const v = Number(cell.getValue() || 0);
     const row = cell.getRow().getData();
-    /* Reverse DOM order so the CSS `:hover ~ span` trick works (see
-       theme.css ▸ .db-myrating). data-current carries the persisted
-       value so mouseleave can restore the display. */
-    let html = '<span class="db-myrating" role="radiogroup" aria-label="My rating" '
-      + 'data-myrating-widget data-current="' + v + '" '
-      + 'data-product-id="' + esc(row.id || '') + '" '
-      + 'data-product-url="' + esc(row.url || '') + '">';
-    for (let i = 5; i >= 1; i--) {
-      const cls = i <= v ? 'db-myrating-on' : 'db-myrating-off';
-      html += '<span class="' + cls + '" data-myrating="' + i + '" title="' + i + ' star' + (i > 1 ? 's' : '') + '">&#9733;</span>';
-    }
-    html += '</span>';
-    return html;
+    return myRating.render(v, row.id || '', row.url || '', { role: true });
   }
   async function onMyRatingClick(e, cell) {
     const star = e.target && e.target.closest && e.target.closest('[data-myrating]');
@@ -1067,32 +1057,13 @@
           + '</div><div class="ss-stars-meta">' + n.toFixed(1) + '</div></div>';
       }
       if (row.kind === 'myrating') {
-        return renderMyRatingMarkup(Number(v || 0), p.id || '', p.url || '');
+        return myRating.render(Number(v || 0), p.id || '', p.url || '');
       }
       /* Route every non-numeric, non-special cell through the unified
          pill renderer. Multi-value strings ("App Control, Voice Control")
          split into one pill per part automatically. */
       if (CF && CF.renderValueAsPills) return CF.renderValueAsPills(v);
       return esc(String(v));
-    }
-
-    /* Shared interactive my-rating widget — used by the grid's
-       cellMyRating formatter and by the inverted view. Stars are
-       rendered in REVERSE DOM order so the CSS-only hover trick
-       (`:hover ~ span`) can light up the hovered star plus all stars
-       before it visually. Uses data-* attributes so a single delegated
-       click handler can find the product and apply the new rating. */
-    function renderMyRatingMarkup(currentValue, productId, productUrl) {
-      let h = '<span class="db-myrating" data-myrating-widget '
-            + 'data-current="' + currentValue + '" '
-            + 'data-product-id="' + esc(productId) + '" '
-            + 'data-product-url="' + esc(productUrl) + '">';
-      /* DOM order 5,4,3,2,1; visual order 1,2,3,4,5 via row-reverse. */
-      for (let i = 5; i >= 1; i--) {
-        const cls = i <= currentValue ? 'db-myrating-on' : 'db-myrating-off';
-        h += '<span class="' + cls + '" data-myrating="' + i + '" title="' + i + ' star' + (i > 1 ? 's' : '') + '">&#9733;</span>';
-      }
-      return h + '</span>';
     }
 
     function specVal(p, key) {
@@ -1329,67 +1300,15 @@
      view. A single listener on the document handles clicks on any
      [data-myrating] inside a [data-myrating-widget]. */
   function bindMyRatingDelegation(_scope) {
-    /* Mounted once globally — every call here is a no-op after the
-       first because we set a flag on the document. */
-    if (root.__ssMyRatingBound) return;
-    root.__ssMyRatingBound = true;
-    document.addEventListener('click', async (e) => {
-      const star = e.target && e.target.closest && e.target.closest('[data-myrating]');
-      if (!star) return;
-      const widget = star.closest('[data-myrating-widget]');
-      if (!widget) return;
-      e.stopPropagation();
-      const newVal = parseInt(star.dataset.myrating, 10);
-      const current = Number(widget.dataset.current || 0);
-      const v = newVal === current ? 0 : newVal;       // click same star → clear
-      widget.dataset.current = String(v);
-      widget.querySelectorAll('[data-myrating]').forEach(s => {
-        const i = parseInt(s.dataset.myrating, 10);
-        s.classList.toggle('db-myrating-on',  i <= v);
-        s.classList.toggle('db-myrating-off', i >  v);
+    if (!myRatingDelegation) {
+      myRatingDelegation = myRating.createDelegation({
+        document,
+        repo,
+        setStatus,
+        getChrome: () => globalThis.browser || globalThis.chrome
       });
-      const id = widget.dataset.productId || '';
-      const url = widget.dataset.productUrl || '';
-      try {
-        if (repo && id && repo.updateProduct && repo.getProduct) {
-          const fresh = await repo.getProduct(id);
-          const result = fresh
-            ? await repo.updateProduct(id, { userRating: v }, {
-                listId: fresh.listId,
-                baseRevision: fresh._revision,
-                source: 'myrating-edit'
-              })
-            : { ok: false, reason: 'missing-product' };
-          if (result && result.ok === false) {
-            const currentRating = Number(result.product && result.product.userRating || fresh && fresh.userRating || 0);
-            widget.dataset.current = String(currentRating);
-            widget.querySelectorAll('[data-myrating]').forEach(s => {
-              const i = parseInt(s.dataset.myrating, 10);
-              s.classList.toggle('db-myrating-on',  i <= currentRating);
-              s.classList.toggle('db-myrating-off', i >  currentRating);
-            });
-            setStatus('Rating not saved: this product changed elsewhere.');
-            return;
-          }
-        }
-      } catch (err) { console.warn('myrating updateProduct failed', err); }
-      try {
-        const chrome = globalThis.browser || globalThis.chrome;
-        if (chrome && chrome.storage) {
-          const stored = await chrome.storage.local.get('shopscout_data');
-          const blob = stored.shopscout_data;
-          if (blob && blob.lists) {
-            for (const name of Object.keys(blob.lists)) {
-              const arr = blob.lists[name];
-              if (!Array.isArray(arr)) continue;
-              const idx = arr.findIndex(p => p.id === id || p.url === url);
-              if (idx >= 0) arr[idx] = Object.assign({}, arr[idx], { userRating: v });
-            }
-            await chrome.storage.local.set({ shopscout_data: blob });
-          }
-        }
-      } catch (err) { console.warn('myrating storage mirror failed', err); }
-    });
+    }
+    myRatingDelegation.bind();
   }
 
   root.SSDatabaseView = {

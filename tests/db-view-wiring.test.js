@@ -26,11 +26,13 @@ assert.ok(html.includes('id="deleteCurrentViewBtn"'),'Delete-saved-view button e
 const htmlOnly = read('comparison.html');
 const dexieIdx     = htmlOnly.indexOf('vendor/dexie.min.js');
 const dataIdx      = htmlOnly.indexOf('data/productRepo.js');
+const tableIdx     = htmlOnly.indexOf('table/myRating.js');
 const utilsIdx     = htmlOnly.indexOf('utils.js');
 const cmpIdx       = htmlOnly.indexOf('comparison.js');
 const dbViewIdx    = htmlOnly.indexOf('comparison-db.js');
 assert.ok(dexieIdx > 0 && dexieIdx < dataIdx,  'Dexie loads before data/');
 assert.ok(dataIdx  < utilsIdx,                  'data/ layer loads before utils.js');
+assert.ok(tableIdx > dataIdx && tableIdx < cmpIdx, 'table modules load before comparison.js');
 assert.ok(utilsIdx < cmpIdx,                    'utils.js loads before comparison.js');
 assert.ok(cmpIdx   < dbViewIdx,                 'comparison.js loads before comparison-db.js');
 
@@ -45,8 +47,7 @@ assert.ok(dbJs.includes('root.SSDatabaseView'),         'comparison-db.js expose
 assert.ok(dbJs.includes('Tabulator'),                   'comparison-db.js wires Tabulator');
 assert.ok(dbJs.includes('pivotUI'),                     'comparison-db.js wires PivotTable.js');
 assert.ok(dbJs.includes('repo.query'),                  'comparison-db.js reads via repo.query');
-assert.ok(dbJs.includes('source: \'myrating-edit\''),    'my-rating quick edit declares its repo write source');
-assert.ok(dbJs.includes('baseRevision: fresh._revision'),'my-rating quick edit passes a base revision');
+assert.ok(dbJs.includes('Table.myRating'),              'comparison-db.js delegates my-rating work to table/myRating.js');
 assert.ok(!dbJs.includes('repo.updateProduct(id, { userRating: v });'), 'my-rating quick edit does not use the legacy no-revision write path');
 
-console.log('db-view-wiring.test.js: 24 assertions passed');
+console.log('db-view-wiring.test.js: 25 assertions passed');
