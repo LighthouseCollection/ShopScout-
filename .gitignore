@@ -1,5 +1,7 @@
-dist/
 node_modules/
-*.log
-.DS_Store
+dist/
+*.zip
+.env
+.env.*
 Thumbs.db
+.DS_Store
