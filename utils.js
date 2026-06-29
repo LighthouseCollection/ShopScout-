@@ -7,7 +7,7 @@ window.SS = (() => {
   // Legacy shape: { lists: { [listName]: Product[] }, activeList: string }
   // chrome.storage.local remains the primary store for backwards compatibility.
   // Every write is mirrored ("write-through") into IndexedDB via SSProductRepo
-  // so the new Tabulator/PivotTable views always see fresh data.
+  // so any grid/view backed by the repo always sees fresh data.
   async function getData() {
     const d = await chrome.storage.local.get(STORAGE_KEY);
     const data = d[STORAGE_KEY] || { lists: { 'My Products': [] }, activeList: 'My Products' };
@@ -33,7 +33,7 @@ window.SS = (() => {
     const ts = now();
     /* Track whether we generated any new ids on the chrome.storage side. If we
        did, write the legacy blob back to chrome.storage so subsequent lookups
-       against the legacy store match Tabulator's IndexedDB ids. Without this,
+       against the legacy store match the IndexedDB ids. Without this,
        selection / row-actions can't reconcile the two stores. */
     let mutatedLegacy = false;
     await db.transaction('rw', db.product_lists, db.products, db.meta, async () => {

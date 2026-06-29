@@ -14,7 +14,8 @@
          Used to populate the Columns dropdown.
      getSpecValueFor(product, canonicalKey)
          returns the raw value for a given product + canonical key,
-         used when flattening products into Tabulator-friendly rows.
+         used when flattening products into grid-ready row shapes
+         (see shared/projections/specProjection.js).
    ============================================================= */
 (function initSpecHeuristic(root) {
   /* Mirror of the synonym table used by content/keyCanonicalizer.js at

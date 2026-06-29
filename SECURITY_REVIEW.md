@@ -7,24 +7,33 @@ permissions, URL opening/rendering, import/export handling, AI key leakage risk,
 and script injection surfaces. It intentionally excludes UI redesign, datagrid
 replacement, and feature work.
 
+> **Task 11 Phase 1 note.** The grid layer (`comparison-db.js` and
+> `table/*`) was deleted after this review was written. The URL-handling
+> citations below that point at those files reference fixes that landed
+> in the runtime *as it existed at the time*. The deleted files are no
+> longer a live attack surface; their replacement (the Phase 2 grid)
+> must be re-audited against the same protocol-allowlist + `noopener`
+> standard before it ships. The remaining citations (utils.js,
+> ai-provider-guide.js, comparison.js, ai-dev-monitor.js) still apply.
+
 ## Fixed in Task 10
 
 ### URL handling
 
-- `utils.js:1452` now sanitizes imported product `url` and `image` fields with
-  `SS.sanitizeUrl`.
-- `utils.js:1473` now rejects XML parser errors instead of silently accepting
-  malformed XML imports.
-- `ai-provider-guide.js:3` and `ai-provider-guide.js:4` now sanitize provider
-  setup/documentation links before rendering them. `ai-provider-guide.js:26`
-  allows only `http:` and `https:` links; unsafe URLs fall back to `#`.
-- `table/rowActionsMenu.js:14` and `table/rowActionsMenu.js:66` now sanitize
-  product URLs before opening row-action links.
-- `comparison-db.js:25`, `comparison-db.js:39`, `comparison-db.js:620`, and
-  `comparison-db.js:1283` now route grid/inverted-view product opens through a
-  safe `http:`/`https:` URL boundary.
-- `comparison.js:641` and `comparison.js:965` now open sanitized product URLs
-  with `noopener`.
+- `utils.js` (`parseImport`) now sanitizes imported product `url` and `image`
+  fields with `SS.sanitizeUrl` across JSON, CSV, and XML imports.
+- `utils.js` (`parseImport` XML branch) rejects XML parser errors instead of
+  silently accepting malformed XML imports.
+- `ai-provider-guide.js` sanitizes provider setup/documentation links before
+  rendering them. Only `http:` and `https:` links are kept; unsafe URLs fall
+  back to `#`.
+- `comparison.js` (`handleProductActionButton` open-btn path, product-detail
+  Open button) opens sanitized product URLs with `noopener`.
+- _Removed by Task 11 Phase 1, kept here for audit history:_
+  `table/rowActionsMenu.js` row-action open paths and `comparison-db.js`
+  grid/inverted-view product opens were sanitized in this pass. Both files
+  no longer exist; the Phase 2 grid will reintroduce equivalent paths and
+  must be re-audited.
 
 ### AI monitor secret redaction
 
@@ -44,8 +53,11 @@ replacement, and feature work.
   - `SS.escapeCsvField` hardening for spreadsheet formula prefixes.
   - JSON, CSV, and XML import safety.
   - Provider guide link sanitization.
-  - Row-action product URL safe-open behavior.
   - AI monitor redaction in state and copyable logs.
+
+  _Row-action product-URL safe-open coverage was removed in Task 11 Phase 1
+  along with `table/rowActionsMenu.js`. The Phase 2 grid must reintroduce
+  equivalent coverage._
 
 ## Follow-up Cleanup
 
@@ -56,9 +68,11 @@ replacement, and feature work.
 - `SS.esc`, `SS.escAttr`, and `SS.sanitizeUrl` now delegate to the shared
   sanitizer when it is loaded, while keeping their legacy fallback path for
   older contexts.
-- Provider guide, settings, popup, dashboard, product detail, rescan, table
-  menus, content-script FAB, and AI selector paths now use the shared sanitizer
+- Provider guide, settings, popup, dashboard, product detail, rescan,
+  content-script FAB, and AI selector paths now use the shared sanitizer
   boundary where they previously carried local URL/HTML sanitizer logic.
+  (The table-menu callsites that were migrated in this pass were removed
+  along with the rest of the grid in Task 11 Phase 1.)
 - The extension build script and Chrome/Edge/Firefox manifests now ship and
   inject the `security/` directory before the scripts that depend on it.
 

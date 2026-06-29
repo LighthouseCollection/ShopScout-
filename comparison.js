@@ -1895,12 +1895,31 @@ async function clearProducts() {
 }
 
 
-/* Lookup helper used by comparison-db.js (Tabulator row click) — open the
-   detail page for a product by its IndexedDB id, not by its position in the
-   current legacy list ordering. */
-/* Match by id when present, fall back to URL for legacy chrome.storage products
-   that pre-date the id-on-save migration. */
-function findLegacyProductIndex(products, idOrItem) {
+/* =============================================================
+   Grid-neutral product action API (consumed by whichever grid layer
+   is mounted on #productGrid). These globals let the grid trigger
+   product-detail navigation, rescan, and selection-sync without
+   importing comparison.js internals.
+
+   API surface (all exposed on globalThis for the Phase 2 grid):
+     openProductDetailById(idOrItem)
+         Open the detail page for a product looked up by id or URL.
+     rescanProductById(idOrItem)
+         Rescan a single product looked up by id or URL.
+     setSelectedProductsFromIds(items)
+         Sync the in-memory selection set from the grid's row
+         selection so the "Rescan Selected" / "Delete Selected"
+         ribbon actions see the right rows. `items` accepts
+         {id,url} objects, plain id strings, or a mix.
+
+   These previously bridged Tabulator → legacy list-index code; the
+   Tabulator grid is gone (Task 11 Phase 1) but the contract is
+   intentionally grid-renderer-agnostic. The Phase 2 grid should
+   consume the same surface.
+
+   Match-by-id with URL fallback handles legacy chrome.storage
+   products that pre-date the id-on-save migration. */
+function findProductIndexByIdOrUrl(products, idOrItem) {
   const it = (idOrItem && typeof idOrItem === 'object') ? idOrItem : { id: idOrItem };
   return products.findIndex(p => p && (
     (it.id  && (p.id === it.id || p.id === String(it.id))) ||
@@ -1910,28 +1929,19 @@ function findLegacyProductIndex(products, idOrItem) {
 
 globalThis.openProductDetailById = async function openProductDetailById(idOrItem) {
   const products = await getProducts();
-  const idx = findLegacyProductIndex(products, idOrItem);
+  const idx = findProductIndexByIdOrUrl(products, idOrItem);
   if (idx >= 0) return openProductDetail(idx);
 };
 
-/* Rescan a single product by IndexedDB id — bridge from Tabulator row actions
-   to the legacy single-product rescan flow. */
 globalThis.rescanProductById = async function rescanProductById(idOrItem) {
   const products = await getProducts();
-  const idx = findLegacyProductIndex(products, idOrItem);
+  const idx = findProductIndexByIdOrUrl(products, idOrItem);
   if (idx >= 0) return rescanList([idx]);
 };
 
-/* Sync the legacy selectedProductIds Set from Tabulator's row selection. Called
-   by comparison-db.js after the user toggles row checkboxes so that the
-   existing "Rescan Selected" / "Delete Selected" buttons see a populated set. */
 globalThis.setSelectedProductsFromIds = async function setSelectedProductsFromIds(items) {
   selectedProductIds.clear();
   const products = await getProducts();
-  /* Accept three shapes for backwards compatibility:
-       - {id, url} object pairs (preferred)
-       - plain id strings
-       - undefined / null entries (skipped) */
   for (const raw of items || []) {
     const it = (raw && typeof raw === 'object') ? raw : { id: raw };
     const idx = products.findIndex(p => p && (

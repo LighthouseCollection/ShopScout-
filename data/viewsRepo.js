@@ -1,7 +1,9 @@
 /* =============================================================
    ShopScout — viewsRepo
    Saved views: a named config (filters/sort/group/columns/mode)
-   that Tabulator or PivotTable.js renders against productRepo.
+   that the active product grid renders against productRepo.
+   Renderer-agnostic — the shape is consumed by whichever grid is
+   mounted on #productGrid (Phase 2 SlickGrid implementation).
    ============================================================= */
 (function initViewsRepo(root) {
   const SSDB = root.SSDB;
