@@ -1,10 +1,8 @@
 /* =============================================================
-   ShopScout — New content script entry point
+   ShopScout — Content script extraction entry point
    Wires the layered extraction pipeline to the runtime message
-   bus. The legacy content.js script still loads (and its
-   `action: 'extract'` listener still fires) until task #66
-   completes the hard cutover; this listener handles a new
-   `action: 'extractV2'` message so callers can opt in.
+   bus. Handles `action: 'extractV2'` for callers that need the
+   structured extraction pipeline and legacy-flat compatibility shape.
    ============================================================= */
 (function initContentEntry(root) {
   /* Guard against double injection. */

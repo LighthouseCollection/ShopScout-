@@ -121,8 +121,6 @@
         '| itemDetails=' + trace.itemDetailCount,
         '| features=' + trace.featureCount,
         '| ' + trace.totalMs + 'ms');
-      console.log('[ShopScout] spec.specs', spec.specs);
-      console.log('[ShopScout] full spec', spec);
     } catch { /* ignore */ }
 
     return { spec, observations: all, trace };

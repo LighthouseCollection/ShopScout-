@@ -137,7 +137,7 @@ async function ensureContentScript(tabId) {
       'content/marketplace.js',
       'content/extractor.js',
       'content/content.js',
-      /* Legacy script — still active until task #66 hard-cutover */
+      /* Compatibility handler for the current action: 'extract' message path. */
       'content.js'
     ]
   });
