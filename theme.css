@@ -1,0 +1,2775 @@
+/* =============================================================
+   ShopScout — Canonical Theme
+   Source: shopscout-redesign template
+   This file IS the design system. Pages MUST link this first.
+   Page-specific layout lives in <page>.css, never in HTML <style>.
+   ============================================================= */
+
+/* =============================================================
+   Design tokens
+   ============================================================= */
+:root {
+  /* Palette — cool neutral, trust report */
+  --ink:           #0f1419;        /* primary text */
+  --ink-2:         #2a3441;        /* secondary text */
+  --ink-3:         #5a6470;        /* tertiary / muted */
+  --ink-4:         #8b95a1;        /* very muted / placeholder */
+  --rule:          #d1d5db;        /* horizontal row dividers, card outlines */
+  --rule-soft:     #e4e7eb;        /* vertical column dividers - softer */
+  --rule-strong:   #9ca3af;        /* emphasized dividers */
+  --paper:         #f6f7f9;        /* page background — cool gray */
+  --paper-2:       #eaedf1;        /* section background, slightly darker */
+  --card:          #ffffff;        /* surfaces */
+  --primary:       #0b3d4f;        /* deep teal — primary brand */
+  --primary-tint:  #e6eef1;
+  --primary-light: #e6eef1;        /* alias used by legacy popup/comparison code */
+  --primary-dark:  #1e2937;
+  --accent:        #c4661a;        /* burnt orange — investigative accent */
+  --accent-tint:   #f7ece0;
+
+  /* Semantic status (verified / listing-only / suspicious) */
+  --ok:            #0f6e3d;
+  --ok-tint:       #e3f1e8;
+  --ok-rule:       #b6d8c2;
+  --warn:          #a26604;
+  --warn-tint:     #faedd0;
+  --warn-rule:     #ecd496;
+  --bad:           #a3201c;
+  --bad-tint:      #fae3e1;
+  --bad-rule:      #f0b7b3;
+  --neutral-tint:  #ececea;
+
+  /* Legacy semantic aliases (kept for popup/comparison.js consumers) */
+  --bg:             var(--paper);
+  --surface:        var(--card);
+  --surface-muted:  var(--paper-2);
+  --text:           var(--ink);
+  --muted:          var(--ink-3);
+  --border:         var(--rule);
+  --border-strong:  var(--rule-strong);
+  --price:          #b45309;
+  --used:           #0f6e3d;
+  --danger:         var(--bad);
+  --danger-light:   var(--bad-tint);
+  --success:        var(--ok);
+  --success-light:  var(--ok-tint);
+  --button-shade:        #eef2f6;
+  --button-shade-hover:  #e4e9ef;
+  --button-shade-active: #dbe3eb;
+  --shadow-sm: 0 1px 2px rgba(15,20,25,0.04);
+  --shadow-md: 0 4px 12px rgba(15,20,25,0.08);
+
+  /* ===== Per-product tracking colors =====
+     Assign sequentially to products. Mirrors planaway IATA color system. */
+  --p1:            #b53a3a;        /* deep red */
+  --p2:            #2d6a8a;        /* steel blue */
+  --p3:            #4a7c3a;        /* moss green */
+  --p1-tint:       #f6e4e3;
+  --p2-tint:       #e1ecf2;
+  --p3-tint:       #e8efe2;
+
+  /* ===== Menu bar (Soft slate scheme) =====
+     Pull these out so a future scheme swap is one place. */
+  --menu-bg:           #1e2937;
+  --menu-fg:           #e5e7eb;
+  --menu-fg-bright:    #ffffff;
+  --menu-border:       rgba(255,255,255,0.13);
+  --menu-border-strong:rgba(255,255,255,0.22);
+  --menu-divider:      rgba(255,255,255,0.12);
+  --menu-label:        rgba(255,255,255,0.55);
+  --menu-btn-bg:       rgba(255,255,255,0.06);
+  --menu-btn-bg-hover: rgba(255,255,255,0.15);
+  --menu-select-bg:    rgba(255,255,255,0.08);
+  --menu-select-border:rgba(255,255,255,0.18);
+
+  --radius:        4px;
+  --radius-sm:     4px;
+  --radius-lg:     8px;
+
+  --font-display:  "Space Grotesk", "Inter", -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-body:     "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --font-mono:     "JetBrains Mono", ui-monospace, Menlo, monospace;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { background: var(--paper); color: var(--ink); font-family: var(--font-body); font-size: 14px; line-height: 1.5; -webkit-font-smoothing: antialiased; }
+body { padding-bottom: 80px; }
+a { color: var(--primary); text-decoration: none; border-bottom: 1px solid currentColor; padding-bottom: 1px; }
+a:hover { color: var(--accent); }
+
+/* =============================================================
+   RIBBON — MS Office style
+   ============================================================= */
+.ribbon-shell {
+  background: #fafbfc;
+  border-bottom: 1px solid var(--rule);
+  border-top: 1px solid var(--rule);
+}
+
+/* Tab bar — dark slate strip at top */
+.ribbon-tabs {
+  background: var(--menu-bg);
+  display: flex;
+  align-items: stretch;
+  height: 36px;
+  padding: 0;
+}
+
+.ribbon-brand {
+  padding: 0 18px;
+  display: flex; align-items: center;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 14px;
+  letter-spacing: -0.02em;
+  color: #ffffff;
+  border-right: 1px solid rgba(255,255,255,0.12);
+}
+
+.ribbon-tab {
+  font: inherit;
+  background: transparent;
+  border: none;
+  color: rgba(255,255,255,0.7);
+  padding: 0 18px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  display: flex; align-items: center;
+  position: relative;
+  white-space: nowrap;
+}
+.ribbon-tab:hover { background: rgba(255,255,255,0.06); color: #fff; }
+.ribbon-tab.active {
+  background: #fafbfc;
+  color: var(--ink);
+  font-weight: 600;
+}
+.ribbon-tab.active::after {
+  content: "";
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 2px;
+  background: var(--accent);
+}
+
+.ribbon-spacer { flex: 1; }
+
+.ribbon-settings {
+  width: 36px;
+  border: none;
+  background: transparent;
+  color: rgba(255,255,255,0.75);
+  font-size: 14px;
+  cursor: pointer;
+}
+.ribbon-settings:hover { background: rgba(255,255,255,0.08); color: #fff; }
+
+/* Ribbon body — groups laid horizontally */
+.ribbon-body {
+  position: relative;
+  height: 100px;
+  background: #fafbfc;
+  overflow: hidden;
+}
+.ribbon-pane {
+  display: none;
+  align-items: stretch;
+  height: 100%;
+  padding: 5px 14px 0;
+}
+.ribbon-pane.active {
+  display: flex;
+}
+
+.rb-group {
+  display: flex;
+  flex-direction: column;
+  padding: 0 10px;
+  min-width: 0;
+}
+.rb-group-content {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding-bottom: 4px;
+}
+.rb-group-label {
+  font-size: 10px;
+  color: var(--ink-3);
+  text-align: center;
+  padding: 4px 0 6px;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  border-top: 1px solid transparent;
+}
+
+.rb-divider {
+  width: 1px;
+  background: var(--rule-soft);
+  margin: 6px 0 22px;
+}
+
+/* Big button — icon on top, label below */
+.rb-btn-lg {
+  font: inherit;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  padding: 5px 8px;
+  min-width: 68px;
+  height: 70px;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  cursor: pointer;
+  gap: 5px;
+  color: var(--ink);
+  position: relative;
+}
+.rb-btn-lg:hover {
+  background: var(--paper-2);
+  border-color: var(--rule);
+}
+.rb-btn-lg.split-down::after {
+  content: "\25BE";
+  font-size: 9px;
+  color: var(--ink-3);
+  position: absolute;
+  bottom: 2px;
+  right: 8px;
+}
+.rb-btn-lg.primary {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+}
+.rb-btn-lg.primary:hover { background: #a85614; border-color: #a85614; }
+.rb-btn-lg.primary.split-down::after { color: rgba(255,255,255,0.85); }
+
+.rb-icon-lg {
+  width: 28px; height: 28px;
+  display: flex; align-items: center; justify-content: center;
+  color: currentColor;
+}
+.rb-icon-lg svg { width: 100%; height: 100%; }
+.rb-btn-lg-label {
+  font-size: 11px;
+  font-weight: 600;
+  text-align: center;
+  line-height: 1.2;
+  letter-spacing: -0.005em;
+}
+
+/* Stacked column of small buttons */
+.rb-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  align-self: stretch;
+  justify-content: center;
+}
+
+/* Small button — icon left, label right */
+.rb-btn-sm {
+  font: inherit;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  padding: 3px 8px;
+  height: 22px;
+  display: flex; align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--ink);
+  white-space: nowrap;
+}
+.rb-btn-sm:hover { background: var(--paper-2); border-color: var(--rule); }
+.rb-btn-sm.active { background: var(--primary-tint); border-color: #c8d6dc; color: var(--primary); font-weight: 600; }
+.rb-btn-sm.icon-only { width: 22px; padding: 0; justify-content: center; }
+.rb-btn-sm[data-menu]::after { content: "\25BE"; font-size: 8px; opacity: 0.55; margin-left: 2px; }
+.rb-btn-sm-icon { width: 14px; height: 14px; flex-shrink: 0; opacity: 0.7; display: flex; align-items: center; justify-content: center; }
+.rb-btn-sm-icon svg { width: 100%; height: 100%; }
+.rb-btn-sm:hover .rb-btn-sm-icon { opacity: 1; }
+
+.rb-row { display: flex; align-items: center; gap: 2px; }
+
+/* Toggle (e.g., Cards / Table view) */
+.rb-toggle {
+  display: inline-flex;
+  align-items: center;
+  background: #fff;
+  border: 1px solid var(--rule);
+  border-radius: 4px;
+  padding: 1px;
+}
+.rb-toggle button {
+  font: inherit;
+  background: transparent;
+  border: none;
+  border-radius: 3px;
+  padding: 3px 9px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--ink-3);
+  cursor: pointer;
+  display: inline-flex; align-items: center; gap: 5px;
+}
+.rb-toggle button.active {
+  background: var(--primary-tint);
+  color: var(--primary);
+}
+.rb-toggle button:hover:not(.active) { color: var(--ink); }
+
+/* Select dropdown */
+.rb-select {
+  height: 24px;
+  padding: 0 22px 0 8px;
+  border: 1px solid var(--rule);
+  border-radius: 4px;
+  background: #fff;
+  color: var(--ink);
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  min-width: 110px;
+  font-family: inherit;
+  appearance: none;
+  -webkit-appearance: none;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='8' height='8' viewBox='0 0 8 8'><path d='M1 2.5l3 3 3-3' stroke='%235a6470' stroke-width='1.4' fill='none' stroke-linecap='round' stroke-linejoin='round'/></svg>");
+  background-repeat: no-repeat;
+  background-position: right 8px center;
+}
+
+.rb-search {
+  height: 24px;
+  padding: 0 8px 0 26px;
+  border: 1px solid var(--rule);
+  border-radius: 4px;
+  background: #fff url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%235a6470' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><circle cx='11' cy='11' r='7'/><path d='m20 20-3-3'/></svg>") no-repeat 8px center;
+  font-size: 11px;
+  font-family: inherit;
+  width: 140px;
+}
+.rb-search.lg { width: 200px; height: 28px; }
+
+/* Topbar (old) - hide */
+.topbar { display: none; }
+
+/* =============================================================
+   Product thumbnail — placeholder for actual product image
+   Markup: <span class="prod-thumb md p1"></span>                <- placeholder
+           <span class="prod-thumb md p1"><img src="..." alt=""></span>  <- with real image
+   Sizes: sm (22px) - md (36px) - lg (48px)
+   ============================================================= */
+.prod-thumb {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  background-color: var(--paper-2);
+  border: 1px solid var(--rule);
+  border-radius: 3px;
+  vertical-align: middle;
+  overflow: hidden;
+  position: relative;
+  color: var(--ink-4);
+}
+.prod-thumb.sm { width: 22px; height: 22px; }
+.prod-thumb.md { width: 36px; height: 36px; }
+.prod-thumb.lg { width: 96px; height: 96px; border-radius: 6px; }
+.prod-thumb.xl { width: 128px; height: 128px; border-radius: 6px; }
+
+/* Real product image — drop an <img> inside to override placeholder */
+.prod-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;          /* keep the product visible — never crop */
+  display: block;
+  /* 4px white inset on every side so product images never touch the
+     thumbnail edge. box-sizing keeps the outer 100% × 100% size unchanged. */
+  padding: 4px;
+  background: #ffffff;
+  border: 1px solid var(--rule, #e5e7eb);
+  border-radius: 4px;
+  box-sizing: border-box;
+}
+
+/* Generic image-placeholder icon — shown when no <img> child */
+.prod-thumb::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%238b95a1' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'><rect x='3' y='5' width='18' height='14' rx='2'/><circle cx='9' cy='10.5' r='1.4'/><path d='M3 17l4-4 4 4 5-5 5 5'/></svg>");
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: 62%;
+  opacity: 0.55;
+  pointer-events: none;
+}
+.prod-thumb:has(img)::after { display: none; }
+
+
+/* =============================================================
+   * CANONICAL RULE 1 — CARD THUMBNAILS
+   Product thumbnails inside cards render at a consistent compact size.
+   Card contexts: verdict, verification summary, corrections summary,
+   reviews, price & value, risk cards. (Table-cell thumbs keep their
+   own sizing; this rule is for CARDS only.)
+   ============================================================= */
+.product-verdict .prod-thumb,
+.product-verdict .pv-image,
+.review-card .prod-thumb,
+.value-card .prod-thumb,
+.risk-card .prod-thumb {
+  width: 72px !important;
+  height: 72px !important;
+  border-radius: 6px;
+  flex-shrink: 0;
+}
+
+/* =============================================================
+   * CANONICAL RULE 2 — STATUS SHADING (good / caution / bad)
+   Card background + border is driven by VERDICT STATUS, never by
+   product slot.
+       GOOD     -> soft green  (--ok-tint / --ok-rule)
+       CAUTION  -> soft yellow (--warn-tint / --warn-rule)
+       BAD      -> soft red    (--bad-tint / --bad-rule)
+   Apply by adding a status class to the card: .is-good / .is-caution / .is-bad
+   ============================================================= */
+.is-good    { background: var(--ok-tint)   !important; border-color: var(--ok-rule)   !important; }
+.is-caution { background: var(--warn-tint) !important; border-color: var(--warn-rule) !important; }
+.is-bad     { background: var(--bad-tint)  !important; border-color: var(--bad-rule)  !important; }
+
+/* =============================================================
+   Page wrapper
+   ============================================================= */
+.page { max-width: 1280px; margin: 0 auto; padding: 0 28px; }
+
+/* =============================================================
+   Report header — eyebrow + title + run metadata strip
+   ============================================================= */
+.report-head { padding: 36px 0 24px; border-bottom: 1px solid var(--rule); }
+.eyebrow {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+  margin-bottom: 12px;
+  display: flex; align-items: center; gap: 10px;
+}
+.eyebrow .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--ok); display: inline-block; }
+.report-title {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 28px;
+  line-height: 1.1;
+  letter-spacing: -0.022em;
+  margin-bottom: 4px;
+}
+.report-sub {
+  font-size: 13px;
+  color: var(--ink-3);
+  margin-bottom: 20px;
+}
+
+/* =============================================================
+   Bottom meta line — completed / stages / confidence in one row
+   ============================================================= */
+.meta-bottom {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  font-size: 11px;
+  font-family: var(--font-mono);
+  color: var(--ink-4);
+  line-height: 1.6;
+}
+.meta-bottom .mb-label {
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--ink-3);
+  font-weight: 700;
+  margin-right: 5px;
+  font-size: 10px;
+}
+.meta-bottom .mb-sep {
+  opacity: 0.4;
+  margin: 0 2px;
+}
+
+/* =============================================================
+   Verdict pane content
+   Lives inside the Verdict tab. Headline summary + 3 product cards.
+   ============================================================= */
+.verdict { display: none; } /* legacy — verdict now lives in Tab 1 */
+
+.verdict-headline {
+  background: var(--ok-tint);
+  color: var(--ink);
+  padding: 14px 18px 16px;
+  border: 1px solid var(--ok-rule);
+  border-radius: var(--radius-lg);
+  margin-bottom: 16px;
+}
+.vh-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 6px;
+}
+.vh-rank {
+  font-family: var(--font-mono);
+  font-weight: 700;
+  font-size: 12px;
+  color: #fff;
+  background: var(--ok);
+  padding: 4px 9px;
+  border-radius: 3px;
+  letter-spacing: 0.04em;
+  line-height: 1;
+}
+.vh-label {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ok);
+  font-weight: 700;
+}
+.vh-product {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 16px;
+  color: var(--ink);
+  letter-spacing: -0.01em;
+}
+.vh-price {
+  font-family: var(--font-mono);
+  font-weight: 700;
+  font-size: 13px;
+  color: var(--ink);
+  background: rgba(255,255,255,0.7);
+  padding: 4px 9px;
+  border-radius: 3px;
+  margin-left: auto;
+  border: 1px solid var(--ok-rule);
+}
+.vh-why {
+  color: var(--ink-2);
+  font-size: 12px;
+  line-height: 1.55;
+  max-width: none;
+}
+
+/* Row of 3 per-product cards — each card has its own border now */
+.verdict-row {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+}
+.product-verdict {
+  background: var(--card);
+  border: 1px solid var(--rule-strong);
+  border-radius: var(--radius-lg);
+  padding: 12px 14px;
+  position: relative;
+  display: flex; flex-direction: column; gap: 8px;
+  overflow: hidden;
+  transition: background 0.12s, border-color 0.12s;
+}
+
+/* =============================================================
+   GRADING STANDARD — apply tinted bg + border based on outcome
+   Green = positive (buy / low risk / verified / ok)
+   Yellow = caution (medium risk / listing-only / mixed)
+   Pink = negative (avoid / high risk / suspicious / contradictory)
+   Used across product-verdict cards AND risk-card cards.
+   ============================================================= */
+.product-verdict:has(.pv-tag.buy)    { background: var(--ok-tint);   border-color: var(--ok-rule); }
+.product-verdict:has(.pv-tag.care)   { background: var(--warn-tint); border-color: var(--warn-rule); }
+.product-verdict:has(.pv-tag.avoid)  { background: var(--bad-tint);  border-color: var(--bad-rule); }
+
+.risk-card:has(.rk-level.low)  { background: var(--ok-tint);   border-color: var(--ok-rule); }
+.risk-card:has(.rk-level.med)  { background: var(--warn-tint); border-color: var(--warn-rule); }
+.risk-card:has(.rk-level.high) { background: var(--bad-tint);  border-color: var(--bad-rule); }
+
+.pv-tag {
+  display: inline-flex; align-items: center; gap: 5px;
+  font-family: var(--font-mono);
+  font-size: 9.5px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  padding: 3px 7px;
+  border-radius: 3px;
+  align-self: flex-start;
+}
+.pv-tag.buy    { background: var(--ok-tint); color: var(--ok); border: 1px solid var(--ok-rule); }
+.pv-tag.care   { background: var(--warn-tint); color: var(--warn); border: 1px solid var(--warn-rule); }
+.pv-tag.avoid  { background: var(--bad-tint); color: var(--bad); border: 1px solid var(--bad-rule); }
+
+.pv-name {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 13px;
+  line-height: 1.25;
+  color: var(--ink);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.pv-name .pv-rank-num {
+  font-family: var(--font-mono);
+  color: var(--ink-4);
+  font-weight: 500;
+  font-size: 0.78em;
+  margin-right: 4px;
+}
+.pv-stats { display: flex; gap: 10px; align-items: center; font-size: 11.5px; flex-wrap: wrap; }
+.pv-stats .stat { display: flex; align-items: baseline; gap: 4px; }
+.pv-stats .stat .k {
+  font-family: var(--font-mono);
+  font-size: 9.5px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ink-4);
+  font-weight: 500;
+}
+.pv-stats .stat .v {
+  font-family: var(--font-mono);
+  font-weight: 600;
+  color: var(--ink-2);
+}
+.pv-stats .stat .v.price { color: var(--ink); font-size: 13px; }
+.stars { display: inline-flex; align-items: center; gap: 4px; color: var(--accent); font-size: 11.5px; font-weight: 600; }
+.stars .star-icon { font-size: 11px; }
+.stars .count { color: var(--ink-4); font-weight: 500; font-family: var(--font-mono); font-size: 10.5px; }
+
+.pv-why {
+  font-size: 11.5px;
+  color: var(--ink-3);
+  line-height: 1.4;
+  margin-top: 0;
+  padding-top: 8px;
+  border-top: 1px dashed var(--rule);
+}
+
+/* pv-body — horizontal split inside verdict card */
+.pv-body {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+.pv-body-info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+/* pv-image — product thumbnail in verdict cards */
+.pv-image {
+  display: block;
+  width: 80px;
+  height: 80px;
+  flex-shrink: 0;
+  background: #ffffff;
+  border: 1px solid var(--rule);
+  border-radius: 6px;
+  overflow: hidden;
+  position: relative;
+  color: var(--ink-4);
+}
+.pv-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+.pv-image::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%238b95a1' stroke-width='1.4' stroke-linecap='round' stroke-linejoin='round'><rect x='3' y='5' width='18' height='14' rx='2'/><circle cx='9' cy='10.5' r='1.4'/><path d='M3 17l4-4 4 4 5-5 5 5'/></svg>");
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: 55%;
+  opacity: 0.5;
+  pointer-events: none;
+}
+.pv-image:has(img)::after { display: none; }
+.pv-image.p1::before,
+.pv-image.p2::before,
+.pv-image.p3::before {
+  display: none;
+}
+
+/* =============================================================
+   Level 1 Tabs — folder-tab pattern
+   ============================================================= */
+.tab-bar {
+  display: flex;
+  gap: 6px;
+  padding: 0 8px;
+  margin: 28px 0 0;
+  position: relative;
+}
+.tab-btn {
+  font: inherit;
+  background: var(--paper-2);
+  border: 1px solid var(--rule);
+  border-bottom: none;
+  border-radius: 6px 6px 0 0;
+  padding: 11px 22px 13px;
+  margin-bottom: -1px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink-3);
+  cursor: pointer;
+  display: flex; align-items: center; gap: 9px;
+  font-family: var(--font-body);
+  position: relative;
+  transition: background 0.12s, color 0.12s;
+  z-index: 1;
+}
+.tab-btn .tab-num { display: none; }
+.tab-btn:hover {
+  background: #f0f2f5;
+  color: var(--ink);
+}
+.tab-btn.active {
+  background: var(--card);
+  color: var(--ink);
+  font-weight: 700;
+  border-color: var(--rule);
+  z-index: 2;
+}
+.tab-btn.active .tab-num { color: var(--accent); font-weight: 600; }
+.tab-btn.active::after {
+  content: "";
+  position: absolute;
+  left: 0; right: 0; bottom: -1px;
+  height: 2px;
+  background: var(--card);
+}
+.tab-btn.active::before {
+  content: "";
+  position: absolute;
+  top: -1px; left: 0; right: 0;
+  height: 3px;
+  background: var(--accent);
+  z-index: 2;
+}
+
+.tab-pane {
+  background: var(--card);
+  border: 1px solid var(--rule-strong);
+  border-radius: 0 6px 6px 6px;
+  padding: 24px;
+  display: none;
+}
+.tab-pane.active { display: block; }
+
+/* =============================================================
+   Level 2 Subtabs — pill-style, sit inside a tab-pane
+   ============================================================= */
+.subtab-bar {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+  padding: 0 0 14px;
+  margin: -4px -4px 20px;
+  padding-left: 4px;
+  border-bottom: 1px solid var(--rule);
+}
+.subtab-btn {
+  font: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--ink-4);
+  background: var(--paper);
+  border: 1px solid transparent;
+  padding: 6px 12px;
+  border-radius: var(--radius);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-family: var(--font-body);
+  transition: color 0.12s, background 0.12s;
+}
+.sub-num { display: none; }
+.subtab-btn:hover {
+  color: var(--ink);
+  background: var(--paper-2);
+}
+.subtab-btn.active {
+  color: var(--ink);
+  background: #accbd7;
+  border-color: transparent;
+  font-weight: 700;
+}
+.subtab-btn.active .sub-num { color: var(--primary); font-weight: 600; }
+
+.subtab-pane { display: none; }
+.subtab-pane.active { display: block; }
+
+/* =============================================================
+   Section header inside a tab pane
+   ============================================================= */
+.section { margin-bottom: 28px; }
+.section:last-child { margin-bottom: 0; }
+.section-head { margin-bottom: 12px; }
+.section-eyebrow {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--accent);
+  font-weight: 600;
+  margin-bottom: 3px;
+}
+.section-title {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 16px;
+  letter-spacing: -0.01em;
+  color: var(--ink);
+  line-height: 1.3;
+  margin-bottom: 2px;
+}
+.section-deck {
+  font-size: 12px;
+  color: var(--ink-3);
+  line-height: 1.5;
+}
+
+/* =============================================================
+   Assessment — concise takeaway shown beneath a table/area
+   ============================================================= */
+.assessment {
+  margin-top: 16px;
+  padding-top: 14px;
+  border-top: 1px solid var(--rule-soft);
+}
+.assessment-label {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--accent);
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+.assessment ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+.assessment li {
+  position: relative;
+  padding-left: 18px;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--ink-2);
+}
+.assessment li::before {
+  content: "";
+  position: absolute;
+  left: 2px;
+  top: 8px;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--ink-4);
+}
+.assessment li strong { color: var(--ink); font-weight: 700; }
+
+/* =============================================================
+   POPOVER PANELS — Filter & Group (Airtable-style)
+   ============================================================= */
+.popover-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 90;
+  display: none;
+}
+.popover-backdrop.open { display: block; }
+.popover {
+  position: absolute;
+  z-index: 100;
+  background: var(--card);
+  border: 1px solid var(--rule-strong);
+  border-radius: var(--radius-lg);
+  box-shadow: 0 10px 32px rgba(13, 27, 42, 0.16), 0 2px 8px rgba(13, 27, 42, 0.08);
+  padding: 14px;
+  width: 460px;
+  display: none;
+}
+.popover.open { display: block; }
+.popover-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+.popover-title {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 13px;
+  color: var(--ink);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.popover-title .help {
+  width: 14px; height: 14px;
+  border-radius: 50%;
+  border: 1px solid var(--rule-strong);
+  color: var(--ink-4);
+  font-size: 9px;
+  display: inline-flex; align-items: center; justify-content: center;
+  font-family: var(--font-mono);
+}
+.popover-sub {
+  font-size: 11px;
+  color: var(--ink-4);
+  margin-bottom: 10px;
+}
+
+/* Filter rows */
+.filter-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 7px;
+}
+.filter-conj {
+  flex-shrink: 0;
+  width: 64px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--ink-3);
+  font-weight: 600;
+}
+.filter-conj select {
+  width: 100%;
+  height: 28px;
+  border: 1px solid var(--rule);
+  border-radius: 4px;
+  background: var(--card);
+  font: inherit;
+  font-size: 11px;
+  color: var(--ink-2);
+  padding: 0 4px;
+}
+.filter-row .fr-field,
+.filter-row .fr-op {
+  height: 28px;
+  border: 1px solid var(--rule);
+  border-radius: 4px;
+  background: var(--card);
+  font: inherit;
+  font-size: 12px;
+  color: var(--ink-2);
+  padding: 0 6px;
+  cursor: pointer;
+}
+.filter-row .fr-field { flex: 1.1; }
+.filter-row .fr-op { flex: 1; }
+.filter-row .fr-value {
+  flex: 1.3;
+  height: 28px;
+  border: 1px solid var(--rule);
+  border-radius: 4px;
+  background: var(--card);
+  font: inherit;
+  font-size: 12px;
+  color: var(--ink);
+  padding: 0 8px;
+}
+.filter-row .fr-value::placeholder { color: var(--ink-4); }
+.filter-row .fr-del {
+  flex-shrink: 0;
+  width: 28px; height: 28px;
+  border: 1px solid var(--rule);
+  border-radius: 4px;
+  background: var(--card);
+  color: var(--ink-4);
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+}
+.filter-row .fr-del:hover { color: var(--bad); border-color: var(--bad-rule); background: var(--bad-tint); }
+.filter-row .fr-del svg { width: 13px; height: 13px; }
+
+.popover-foot {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 12px;
+  padding-top: 10px;
+  border-top: 1px solid var(--rule-soft);
+}
+.pop-btn {
+  font: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  border-radius: 5px;
+  padding: 6px 11px;
+  cursor: pointer;
+  display: inline-flex; align-items: center; gap: 6px;
+  border: 1px solid var(--rule);
+  background: var(--card);
+  color: var(--ink-2);
+}
+.pop-btn:hover { background: var(--paper-2); color: var(--ink); }
+.pop-btn svg { width: 13px; height: 13px; }
+.pop-btn.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+.pop-btn.primary:hover { background: #a85614; }
+
+/* Group field list */
+.group-field-list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.group-field {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 8px;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 13px;
+  color: var(--ink-2);
+  border: 1px solid transparent;
+}
+.group-field:hover { background: var(--paper-2); }
+.group-field.active { background: var(--primary-tint); border-color: #c8d6dc; color: var(--ink); font-weight: 600; }
+.group-field .gf-icon {
+  width: 16px; height: 16px;
+  color: var(--ink-4);
+  flex-shrink: 0;
+}
+.group-field.active .gf-icon { color: var(--primary); }
+.group-field .gf-check {
+  margin-left: auto;
+  width: 15px; height: 15px;
+  color: var(--primary);
+  opacity: 0;
+}
+.group-field.active .gf-check { opacity: 1; }
+
+/* =============================================================
+   Comparison table — primary product comparison
+   ============================================================= */
+.cmp-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  font-size: 13px;
+  background: var(--card);
+  border: 1px solid var(--rule-strong);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+}
+.cmp-table thead th {
+  background: var(--paper-2);
+  text-align: left;
+  padding: 12px 14px;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+  border-bottom: 1px solid var(--rule-strong);
+  white-space: nowrap;
+  position: relative;
+}
+.cmp-table thead th.sortable {
+  cursor: pointer;
+  user-select: none;
+  padding-right: 24px;
+  transition: background 0.12s, color 0.12s;
+}
+.cmp-table thead th.sortable:hover {
+  background: #e0e3e8;
+  color: var(--ink);
+}
+.cmp-table thead th.sortable .sort-arrow {
+  position: absolute;
+  right: 9px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 11px;
+  height: 11px;
+  opacity: 0.35;
+  transition: opacity 0.12s;
+  pointer-events: none;
+}
+.cmp-table thead th.sortable:hover .sort-arrow { opacity: 0.7; }
+.cmp-table thead th.sortable[data-dir="asc"] .sort-arrow,
+.cmp-table thead th.sortable[data-dir="desc"] .sort-arrow {
+  opacity: 1;
+  color: var(--accent);
+}
+.cmp-table thead th.sortable[data-dir="desc"] .sort-arrow {
+  transform: translateY(-50%) rotate(180deg);
+}
+.cmp-table tbody td {
+  padding: 14px;
+  border-bottom: 1px solid var(--rule);
+  vertical-align: middle;
+  color: var(--ink-2);
+  position: relative;
+}
+.cmp-table tbody tr:last-child td { border-bottom: none; }
+.cmp-table tbody tr { position: relative; }
+
+/* Middle column dividers */
+.cmp-table th:not(:last-child)::after,
+.cmp-table td:not(:last-child)::after {
+  content: "";
+  position: absolute;
+  right: 0;
+  width: 1px;
+  background: var(--rule-soft);
+  pointer-events: none;
+}
+.cmp-table th:not(:last-child)::after { top: 7px; bottom: 7px; background: var(--rule-strong); }
+.cmp-table td:not(:last-child)::after { top: 10px; bottom: 10px; }
+
+.cmp-table td.col-id {
+  font-family: var(--font-mono);
+  font-weight: 600;
+  color: var(--ink-3);
+  width: 30px;
+  padding: 14px 4px;
+  text-align: center;
+}
+.cmp-table th.col-id-h {
+  width: 30px;
+  padding: 12px 4px;
+  text-align: center;
+}
+
+.cmp-table td.col-thumb {
+  width: 120px;
+  padding: 12px;
+}
+
+.cmp-table td.col-product strong {
+  display: block;
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 12.5px;
+  color: var(--ink);
+  margin-bottom: 1px;
+  line-height: 1.3;
+}
+.cmp-table td.col-product .model {
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  color: var(--ink-4);
+  font-weight: 500;
+}
+
+.cmp-table td.col-source { white-space: nowrap; }
+.cmp-table td.col-price {
+  font-family: var(--font-mono);
+  font-weight: 700;
+  color: var(--ink);
+  font-size: 14px;
+  white-space: nowrap;
+}
+.cmp-table td.col-reviews { white-space: nowrap; }
+
+.cmp-table .badge.confidence {
+  min-width: 64px;
+  justify-content: center;
+  text-align: center;
+}
+
+/* Status badge — used for verification status, risk, etc */
+.badge {
+  display: inline-flex; align-items: center; gap: 5px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  padding: 3px 8px;
+  border-radius: 3px;
+  white-space: nowrap;
+  border: 1px solid transparent;
+  text-transform: lowercase;
+}
+.badge.ok    { background: var(--ok-tint);    color: var(--ok);    border-color: var(--ok-rule); }
+.badge.warn  { background: var(--warn-tint);  color: var(--warn);  border-color: var(--warn-rule); }
+.badge.bad   { background: var(--bad-tint);   color: var(--bad);   border-color: var(--bad-rule); }
+.badge.muted { background: var(--neutral-tint); color: var(--ink-3); border-color: var(--rule); }
+.badge::before {
+  content: "";
+  width: 5px; height: 5px;
+  border-radius: 50%;
+  background: currentColor;
+  display: inline-block;
+}
+.badge.muted::before { background: var(--ink-4); }
+
+/* Source pill — matches generic .ss-pill metrics for visual consistency.
+   Background/foreground are inline styled when stableColor is in play. */
+.src-pill {
+  display: inline-block;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--primary);
+  background: var(--primary-tint);
+  padding: 2px 6px;
+  border-radius: 4px;
+  border: 1px solid transparent;
+  line-height: 15px;
+  letter-spacing: 0.3px;
+  text-transform: uppercase;
+  vertical-align: middle;
+}
+.src-pill:hover { background: var(--primary); color: #fff; }
+.src-pill-link { text-decoration: none; }
+
+.cmp-table .empty {
+  color: var(--ink-4);
+  font-style: italic;
+  font-weight: 400;
+}
+
+/* =============================================================
+   .notes — small inline legend that sits under a table
+   ============================================================= */
+.notes {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  margin-top: 10px;
+  padding: 0;
+  font-size: 11.5px;
+  line-height: 1.5;
+  color: var(--ink-3);
+}
+.note {
+  background: transparent;
+  border: none;
+  padding: 0;
+  font-size: 11.5px;
+  line-height: 1.5;
+  color: var(--ink-3);
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  border-radius: 0;
+}
+.note.ok,
+.note.warn,
+.note.bad,
+.note.muted { background: transparent; border: none; }
+.note .note-label {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  flex-shrink: 0;
+  min-width: 100px;
+  display: inline-block;
+  margin-bottom: 0;
+}
+.note.ok    .note-label { color: var(--ok); }
+.note.warn  .note-label { color: var(--warn); }
+.note.bad   .note-label { color: var(--bad); }
+.note.muted .note-label { color: var(--ink-3); }
+
+/* =============================================================
+   Buying factors — multi-column compare
+   ============================================================= */
+.factors {
+  background: var(--card);
+  border: 1px solid var(--rule-strong);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+}
+.factors-head, .factors-row {
+  display: grid;
+  grid-template-columns: 200px repeat(3, 1fr);
+  gap: 0;
+}
+.factors-head {
+  background: var(--paper-2);
+  border-bottom: 1px solid var(--rule);
+}
+.factors-head > div {
+  padding: 14px 16px;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+  font-weight: 600;
+  border-left: 1px solid var(--rule);
+  position: relative;
+}
+.factors-head > div:first-child { border-left: none; }
+.factors-head > div[data-p] {
+  color: var(--ink);
+  font-weight: 700;
+  text-transform: none;
+  font-family: var(--font-display);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  padding: 16px 12px 18px;
+  text-align: center;
+}
+.factors-head > div[data-p] .fh-label {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 13px;
+  color: var(--ink);
+  line-height: 1.3;
+}
+.factors-head > div[data-p] .fh-rank {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--ink-4);
+  font-weight: 500;
+}
+
+.factors-row {
+  border-bottom: 1px solid var(--rule);
+}
+.factors-row:last-child { border-bottom: none; }
+.factors-row > div {
+  padding: 12px 16px;
+  font-size: 13px;
+  border-left: 1px solid var(--rule);
+  color: var(--ink-2);
+  vertical-align: top;
+}
+.factors-row > div:first-child {
+  border-left: none;
+  font-weight: 600;
+  color: var(--ink);
+  font-size: 12px;
+  background: var(--paper);
+}
+.factors-row:hover { background: var(--paper); }
+.factors-row .empty {
+  color: var(--ink-4);
+  font-style: italic;
+}
+
+.factors-row > div.best {
+  background: var(--ok-tint);
+  position: relative;
+}
+.factors-row > div.best::after {
+  content: "best";
+  position: absolute;
+  top: 6px; right: 8px;
+  font-family: var(--font-mono);
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ok);
+  opacity: 0.7;
+}
+.factors-row > div.worst {
+  background: var(--bad-tint);
+}
+
+/* =============================================================
+   Risk heatmap
+   ============================================================= */
+.risk-grid {
+  background: var(--card);
+  border: 1px solid var(--rule-strong);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  font-size: 13px;
+}
+.risk-row {
+  display: grid;
+  grid-template-columns: 220px repeat(6, 1fr) 1.2fr;
+  border-bottom: 1px solid var(--rule);
+}
+.risk-row:last-child { border-bottom: none; }
+.risk-row.head {
+  background: var(--paper-2);
+  border-bottom: 1px solid var(--rule);
+}
+.risk-row.head > div {
+  padding: 10px 12px;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+  font-weight: 600;
+  text-align: center;
+  border-left: 1px solid var(--rule);
+}
+.risk-row.head > div:first-child { text-align: left; border-left: none; }
+.risk-row > div {
+  padding: 14px 12px;
+  text-align: center;
+  border-left: 1px solid var(--rule);
+  display: flex; align-items: center; justify-content: center;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 600;
+}
+.risk-row > div:first-child {
+  text-align: left;
+  border-left: none;
+  justify-content: flex-start;
+  padding-left: 16px;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 13px;
+  color: var(--ink);
+  position: relative;
+  gap: 8px;
+}
+.risk-row > div:first-child::before { display: none; }
+
+.risk-cell-low    { background: var(--ok-tint);    color: var(--ok); }
+.risk-cell-medium { background: var(--warn-tint);  color: var(--warn); }
+.risk-cell-high   { background: var(--bad-tint);   color: var(--bad); }
+.risk-cell-overall {
+  font-family: var(--font-body);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-size: 11px;
+}
+
+/* =============================================================
+   Reviews bar
+   ============================================================= */
+.reviews-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+}
+.review-card {
+  background: var(--card);
+  border: 1px solid var(--rule-strong);
+  border-radius: var(--radius-lg);
+  padding: 12px 14px;
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.review-card .rc-body {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+.review-card .rc-info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.review-card .rc-name {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 13px;
+  color: var(--ink);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.review-card .rc-score { display: flex; align-items: baseline; gap: 4px; }
+.review-card .rc-score .num {
+  font-family: var(--font-body);
+  font-weight: 900;
+  font-size: 22px;
+  color: var(--ink);
+  line-height: 1;
+}
+.review-card .rc-score .denom {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--ink-3);
+}
+.review-card .rc-meter {
+  height: 3px;
+  background: var(--rule);
+  border-radius: 2px;
+  overflow: hidden;
+}
+.review-card .rc-meter > span {
+  display: block;
+  height: 100%;
+  background: var(--accent);
+}
+.review-card .rc-meta {
+  display: flex; justify-content: space-between;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--ink-4);
+}
+.review-card .rc-meta .count { color: var(--ink); font-weight: 600; }
+.review-card .rc-note {
+  font-size: 11px;
+  color: var(--ink-3);
+  line-height: 1.4;
+  padding-top: 8px;
+  border-top: 1px dashed var(--rule);
+}
+
+/* =============================================================
+   Section: price & value strip
+   ============================================================= */
+.value-strip {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+}
+.value-card {
+  background: var(--card);
+  border: 1px solid var(--rule-strong);
+  border-radius: var(--radius-lg);
+  padding: 12px 14px;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.value-card .vc-body {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+.value-card .vc-info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.value-card .vc-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 10px;
+}
+.value-card .vc-name {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 13px;
+  color: var(--ink);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: 1;
+}
+.value-card .vc-price {
+  font-family: var(--font-mono);
+  font-weight: 700;
+  font-size: 14px;
+  color: var(--ink);
+  flex-shrink: 0;
+}
+.value-card .vc-judgement {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 13px;
+  color: var(--ink-2);
+  line-height: 1.3;
+}
+.value-card[data-tone="bad"] .vc-judgement { color: var(--bad); }
+.value-card[data-tone="ok"]  .vc-judgement { color: var(--ok); }
+.value-card[data-tone="mid"] .vc-judgement { color: var(--warn); }
+.value-card .vc-why {
+  font-size: 11px;
+  color: var(--ink-3);
+  line-height: 1.4;
+  padding-top: 8px;
+  border-top: 1px dashed var(--rule);
+}
+
+/* =============================================================
+   Footer
+   ============================================================= */
+.report-foot {
+  margin-top: 32px;
+  padding-top: 14px;
+  border-top: 1px solid var(--rule);
+}
+
+/* Print/PDF nudges */
+@media print {
+  .ribbon-shell, .tab-bar { display: none; }
+  .tab-pane { display: block !important; page-break-before: always; }
+}
+
+/* =============================================================
+   RIBBON RESPONSIVE COLLAPSE — MS-Ribbon style
+   ============================================================= */
+.ribbon-pane.active {
+  overflow-x: auto;
+  overflow-y: hidden;
+  scrollbar-width: thin;
+}
+.ribbon-pane::-webkit-scrollbar { height: 5px; }
+.ribbon-pane::-webkit-scrollbar-thumb { background: var(--rule); border-radius: 3px; }
+
+@media (max-width: 1200px) {
+  .rb-search.lg { width: 130px; }
+  .rb-group { padding: 0 7px; }
+}
+
+@media (max-width: 1000px) {
+  .rb-btn-sm:has(.rb-btn-sm-icon) .rb-btn-sm-label { display: none; }
+  .rb-btn-sm:has(.rb-btn-sm-icon) { width: 24px; padding: 0; justify-content: center; }
+  .rb-btn-sm[data-menu]::after { display: none; }
+  .rb-search.lg { width: 92px; }
+  .rb-group { padding: 0 5px; }
+  .rb-divider { margin: 6px 0 18px; }
+}
+
+@media (max-width: 820px) {
+  .rb-btn-lg { min-width: 54px; height: 64px; padding: 4px 5px; }
+  .rb-btn-lg-label { font-size: 10px; }
+  .rb-icon-lg { width: 24px; height: 24px; }
+  .rb-group-label { font-size: 9px; }
+  .ribbon-body { height: 92px; }
+}
+
+@media (max-width: 640px) {
+  .rb-btn-lg-label { display: none; }
+  .rb-btn-lg { min-width: 44px; height: 52px; }
+  .rb-group-label { display: none; }
+  .ribbon-body { height: 64px; }
+  .rb-search.lg { width: 64px; }
+  .rb-toggle button span:not(.rb-icon) { display: none; }
+}
+
+/* =============================================================
+   Empty state — used in Second opinion and other empty panes
+   ============================================================= */
+.empty-state {
+  text-align: center;
+  padding: 60px 24px;
+}
+.empty-state .es-icon {
+  width: 52px; height: 52px;
+  margin: 0 auto 14px;
+  border-radius: 50%;
+  background: var(--paper-2);
+  border: 1px solid var(--rule);
+  display: flex; align-items: center; justify-content: center;
+  color: var(--ink-4);
+  font-size: 22px;
+}
+.empty-state .es-title {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 15px;
+  color: var(--ink);
+  margin-bottom: 6px;
+  letter-spacing: -0.01em;
+}
+.empty-state .es-body {
+  font-size: 13px;
+  color: var(--ink-3);
+  max-width: 40ch;
+  margin: 0 auto;
+  line-height: 1.55;
+}
+
+/* Strikethrough / inserted text in correction tables */
+.cmp-table del {
+  color: var(--bad);
+  text-decoration: line-through;
+  text-decoration-color: rgba(163,32,28,0.6);
+  text-decoration-thickness: 1px;
+  font-style: italic;
+}
+.cmp-table ins {
+  color: var(--ok);
+  text-decoration: none;
+  font-weight: 600;
+}
+
+/* Risk top cards — used in Risks tab */
+.risk-summary-row {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  margin-bottom: 18px;
+}
+.risk-card {
+  background: var(--card);
+  border: 1px solid var(--rule-strong);
+  border-radius: var(--radius-lg);
+  padding: 14px 16px;
+  position: relative;
+  overflow: hidden;
+}
+.risk-card::before { content: none; }
+.risk-card .rk-name {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 13px;
+  color: var(--ink);
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.risk-card .rk-level {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 4px 9px;
+  border-radius: 3px;
+  margin-bottom: 10px;
+}
+.risk-card .rk-level.high { background: var(--bad-tint); color: var(--bad); border: 1px solid var(--bad-rule); }
+.risk-card .rk-level.med  { background: var(--warn-tint); color: var(--warn); border: 1px solid var(--warn-rule); }
+.risk-card .rk-level.low  { background: var(--ok-tint); color: var(--ok); border: 1px solid var(--ok-rule); }
+.risk-card .rk-why {
+  font-size: 12px;
+  color: var(--ink-3);
+  line-height: 1.5;
+}
+
+/* =============================================================
+   Tabulator skin — canonical theme
+   Re-skins vendor/tabulator.min.css to match the rest of ShopScout.
+   Conventions:
+     - Headers: mono caps, soft paper-2 surface, accent on sort
+     - Body: serif-free body font, ink-2 text, zebra stripes
+     - Numerics: mono with tabular figures
+     - Selection: primary-tint with primary border
+     - Frozen: subtle drop shadow on right edge
+     - Group rows: display font, paper-2 surface, expander caret
+   ============================================================= */
+.tabulator {
+  position: relative;
+  border: 1px solid var(--rule-strong);
+  border-radius: var(--radius-lg);
+  background: var(--card);
+  font-family: var(--font-body);
+  font-size: 13px;
+  color: var(--ink-2);
+  overflow: hidden;
+  box-shadow: var(--shadow-sm);
+}
+.tabulator * { box-sizing: border-box; }
+
+/* ---- Header row ---- */
+.tabulator .tabulator-header {
+  background: var(--paper-2);
+  border-bottom: 1px solid var(--rule-strong);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+  outline: none;
+}
+.tabulator .tabulator-header .tabulator-col {
+  background: var(--paper-2);
+  border-right: 1px solid var(--rule-soft);
+  padding: 0;
+  transition: background 0.12s;
+}
+.tabulator .tabulator-header .tabulator-col:last-child { border-right: none; }
+.tabulator .tabulator-header .tabulator-col.tabulator-sortable:hover {
+  background: #e0e3e8;
+  color: var(--ink);
+}
+.tabulator .tabulator-header .tabulator-col .tabulator-col-content {
+  padding: 10px 12px;
+}
+.tabulator .tabulator-header .tabulator-col .tabulator-col-title {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+  font-weight: 600;
+}
+.tabulator .tabulator-header .tabulator-col.tabulator-sortable[aria-sort="ascending"] .tabulator-col-title,
+.tabulator .tabulator-header .tabulator-col.tabulator-sortable[aria-sort="descending"] .tabulator-col-title {
+  color: var(--accent);
+}
+
+/* Sort arrow — small, accent-tinted when active */
+.tabulator .tabulator-header .tabulator-col.tabulator-sortable .tabulator-col-sorter {
+  right: 6px;
+  opacity: 0.35;
+  transition: opacity 0.12s;
+}
+.tabulator .tabulator-header .tabulator-col.tabulator-sortable:hover .tabulator-col-sorter { opacity: 0.7; }
+.tabulator .tabulator-header .tabulator-col.tabulator-sortable[aria-sort="ascending"] .tabulator-col-sorter,
+.tabulator .tabulator-header .tabulator-col.tabulator-sortable[aria-sort="descending"] .tabulator-col-sorter { opacity: 1; }
+.tabulator .tabulator-col-sorter .tabulator-arrow {
+  border-bottom-color: var(--ink-4);
+  border-top-color: var(--ink-4);
+}
+.tabulator-col.tabulator-sortable[aria-sort="ascending"]  .tabulator-col-sorter .tabulator-arrow { border-bottom-color: var(--accent) !important; border-top: none; }
+.tabulator-col.tabulator-sortable[aria-sort="descending"] .tabulator-col-sorter .tabulator-arrow { border-top-color:    var(--accent) !important; border-bottom: none; }
+
+/* Header filter inputs — hidden by default so the column titles render at full
+   height (Tabulator sizes the header from inner content). The Filter button in
+   the View ribbon toggles .ss-filters-on on the .tabulator root to reveal them.
+   Any column that currently has an active filter value also pins its filter row
+   open via .has-filter — so the active constraint is always visible. */
+.tabulator .tabulator-col .tabulator-header-filter {
+  padding: 0;
+  background: transparent;
+  border-top: 0;
+  display: none;
+}
+.tabulator.ss-filters-on .tabulator-col .tabulator-header-filter,
+.tabulator .tabulator-col.has-filter .tabulator-header-filter {
+  display: block;
+  padding: 4px 8px 8px;
+}
+.tabulator .tabulator-header-filter input,
+.tabulator .tabulator-header-filter select,
+.tabulator .tabulator-header-filter textarea {
+  width: 100%;
+  height: 26px;
+  padding: 0 9px;
+  border: 1px solid var(--rule);
+  border-radius: var(--radius);
+  background: var(--card);
+  font-family: var(--font-body);
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--ink);
+  text-transform: none;
+  letter-spacing: 0;
+}
+.tabulator .tabulator-header-filter input:focus,
+.tabulator .tabulator-header-filter select:focus,
+.tabulator .tabulator-header-filter textarea:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 2px rgba(11,61,79,0.16);
+}
+.tabulator .tabulator-header-filter input::placeholder { color: var(--ink-4); font-style: italic; }
+/* Column with an active filter — accent the title to advertise the filter is on. */
+.tabulator .tabulator-col.has-filter .tabulator-col-title { color: var(--accent); }
+.tabulator .tabulator-col.has-filter .tabulator-header-filter input { border-color: var(--accent); }
+
+/* Column resize handle */
+.tabulator .tabulator-col .tabulator-col-resize-handle {
+  background: transparent;
+  transition: background 0.15s;
+}
+.tabulator .tabulator-col .tabulator-col-resize-handle:hover { background: var(--accent); }
+
+/* ---- Body rows ---- */
+.tabulator .tabulator-tableholder { background: var(--card); outline: none; }
+.tabulator .tabulator-table { background: transparent; color: var(--ink-2); }
+.tabulator .tabulator-row {
+  background: #f1f1f1;                /* odd rows */
+  border-bottom: 1px solid var(--rule);
+  min-height: 60px;                    /* taller row to comfortably host bigger thumb */
+  transition: background 0.08s;
+}
+.tabulator .tabulator-row.tabulator-row-even { background: #f5f5f5; }
+/* Hover and selected use VISUALLY DISTINCT colors so they never look alike:
+   - hover  : soft neutral highlight (warm gray)
+   - selected: cool primary tint + bold left rule */
+.tabulator .tabulator-row:hover { background: #e4e7ec; }
+.tabulator .tabulator-row.tabulator-selected,
+.tabulator .tabulator-row.tabulator-selected:hover {
+  background: var(--primary-tint);
+  box-shadow: inset 3px 0 0 var(--primary);
+}
+.tabulator .tabulator-row .tabulator-cell {
+  padding: 6px 10px;
+  border-right: 1px solid var(--rule-soft);
+  color: var(--ink-2);
+  /* 10px for dense data scanning — small enough to fit many spec
+     columns on screen, large enough to remain legible. */
+  font-size: 10px;
+  line-height: 1.4;
+  vertical-align: middle;
+}
+.tabulator .tabulator-row .tabulator-cell:last-child { border-right: none; }
+
+/* Numeric cells (set via column hozAlign='right') — tabular figures, mono */
+.tabulator .tabulator-row .tabulator-cell[tabulator-field="newPrice"],
+.tabulator .tabulator-row .tabulator-cell[tabulator-field="usedPrice"],
+.tabulator .tabulator-row .tabulator-cell[tabulator-field="shippingPrice"],
+.tabulator .tabulator-row .tabulator-cell[tabulator-field="rating"],
+.tabulator .tabulator-row .tabulator-cell[tabulator-field="reviewCount"],
+.tabulator .tabulator-row .tabulator-cell[tabulator-field="capturedAt"] {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  color: var(--ink);
+  font-weight: 600;
+}
+
+/* Title cell — emphasize */
+.tabulator .tabulator-row .tabulator-cell[tabulator-field="title"] {
+  font-family: var(--font-display);
+  font-weight: 600;
+  color: var(--ink);
+  letter-spacing: -0.005em;
+}
+
+/* Empty value rendering helper — Tabulator shows '' by default; nothing extra. */
+
+/* ---- Frozen columns ----
+   Frozen cells MUST paint a solid background that matches the row,
+   otherwise data scrolling horizontally behind the frozen column
+   bleeds through and overlaps the visible text. We match each row
+   state (odd / even / hover / selected) so the pinned column reads
+   identically to the rest of the row. */
+.tabulator .tabulator-row .tabulator-cell.tabulator-frozen {
+  background: #ffffff;
+  z-index: 2;
+}
+.tabulator .tabulator-row.tabulator-row-even .tabulator-cell.tabulator-frozen { background: #f5f5f5; }
+.tabulator .tabulator-row:hover .tabulator-cell.tabulator-frozen { background: #e4e7ec; }
+.tabulator .tabulator-row.tabulator-selected .tabulator-cell.tabulator-frozen,
+.tabulator .tabulator-row.tabulator-selected:hover .tabulator-cell.tabulator-frozen { background: var(--primary-tint); }
+.tabulator .tabulator-row .tabulator-cell.tabulator-frozen.tabulator-frozen-right { box-shadow: -4px 0 8px -6px rgba(15,20,25,0.18); }
+.tabulator .tabulator-row .tabulator-cell.tabulator-frozen:not(.tabulator-frozen-right) { box-shadow: 4px 0 8px -6px rgba(15,20,25,0.18); }
+/* Header frozen cells keep the header-strip color so the header doesn't show row colors. */
+.tabulator .tabulator-header .tabulator-col.tabulator-frozen { background: var(--paper-2); z-index: 2; }
+.tabulator .tabulator-header .tabulator-col.tabulator-frozen:not(.tabulator-frozen-right) { box-shadow: 4px 0 8px -6px rgba(15,20,25,0.18); }
+.tabulator .tabulator-header .tabulator-col.tabulator-frozen.tabulator-frozen-right { box-shadow: -4px 0 8px -6px rgba(15,20,25,0.18); }
+
+/* ---- Inline cell edit ---- */
+.tabulator .tabulator-row .tabulator-cell.tabulator-editing {
+  background: var(--card);
+  border: 1px solid var(--primary);
+  box-shadow: 0 0 0 2px rgba(11,61,79,0.18);
+  padding: 6px 10px;
+}
+.tabulator .tabulator-row .tabulator-cell.tabulator-editing input,
+.tabulator .tabulator-row .tabulator-cell.tabulator-editing select,
+.tabulator .tabulator-row .tabulator-cell.tabulator-editing textarea {
+  border: none;
+  background: transparent;
+  font: inherit;
+  color: var(--ink);
+  width: 100%;
+  outline: none;
+}
+.tabulator .tabulator-row .tabulator-cell.tabulator-validation-fail { background: var(--bad-tint); color: var(--bad); }
+
+/* ---- Group rows ---- */
+.tabulator .tabulator-row.tabulator-group {
+  background: var(--paper-2);
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 12px;
+  letter-spacing: -0.005em;
+  color: var(--ink);
+  border-top: 1px solid var(--rule-strong);
+  border-bottom: 1px solid var(--rule);
+  padding: 8px 12px;
+  min-height: 32px;
+}
+.tabulator .tabulator-row.tabulator-group:hover { background: #e0e3e8; }
+.tabulator .tabulator-row.tabulator-group .tabulator-arrow {
+  border-left-color: var(--ink-3);
+  margin-right: 8px;
+}
+.tabulator .tabulator-row.tabulator-group.tabulator-group-visible .tabulator-arrow { border-top-color: var(--ink-3); }
+.tabulator .tabulator-row.tabulator-group span {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--ink-3);
+  letter-spacing: 0.04em;
+  margin-left: 8px;
+  font-weight: 600;
+}
+
+/* ---- Selection checkbox column ---- */
+.tabulator .tabulator-cell input[type="checkbox"],
+.tabulator .tabulator-col input[type="checkbox"] {
+  width: 14px; height: 14px;
+  accent-color: var(--primary);
+  cursor: pointer;
+}
+
+/* ---- Pagination footer (if/when enabled) ---- */
+.tabulator .tabulator-footer {
+  background: var(--paper-2);
+  border-top: 1px solid var(--rule-strong);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--ink-3);
+  padding: 8px 12px;
+}
+.tabulator .tabulator-footer .tabulator-page {
+  background: var(--card);
+  border: 1px solid var(--rule);
+  border-radius: var(--radius);
+  color: var(--ink-2);
+  font-family: var(--font-body);
+  font-size: 11px;
+  font-weight: 600;
+  padding: 4px 8px;
+  margin: 0 2px;
+}
+.tabulator .tabulator-footer .tabulator-page.active {
+  background: var(--primary);
+  border-color: var(--primary);
+  color: #fff;
+}
+.tabulator .tabulator-footer .tabulator-page:hover:not(.active) {
+  background: var(--paper-2);
+  border-color: var(--rule-strong);
+}
+.tabulator .tabulator-footer .tabulator-page[disabled] { opacity: 0.4; cursor: not-allowed; }
+
+/* ---- Placeholder (no rows) ---- */
+.tabulator .tabulator-tableholder .tabulator-placeholder {
+  background: transparent;
+}
+.tabulator .tabulator-tableholder .tabulator-placeholder .tabulator-placeholder-contents {
+  font-family: var(--font-body);
+  font-size: 13px;
+  color: var(--ink-3);
+  text-align: center;
+  padding: 60px 24px;
+  max-width: 40ch;
+  line-height: 1.55;
+}
+
+/* ---- Scrollbar (webkit) ---- */
+.tabulator .tabulator-tableholder::-webkit-scrollbar { width: 10px; height: 10px; }
+.tabulator .tabulator-tableholder::-webkit-scrollbar-track { background: var(--paper); }
+.tabulator .tabulator-tableholder::-webkit-scrollbar-thumb {
+  background: var(--rule-strong);
+  border-radius: 5px;
+  border: 2px solid var(--paper);
+}
+.tabulator .tabulator-tableholder::-webkit-scrollbar-thumb:hover { background: var(--ink-4); }
+
+/* ---- Column header right-click / dropdown menu (Tabulator's built-in) ---- */
+.tabulator-menu {
+  background: var(--card);
+  border: 1px solid var(--rule-strong);
+  border-radius: var(--radius-lg);
+  box-shadow: 0 10px 32px rgba(13, 27, 42, 0.16), 0 2px 8px rgba(13, 27, 42, 0.08);
+  font-family: var(--font-body);
+  font-size: 13px;
+  padding: 6px 0;
+}
+.tabulator-menu .tabulator-menu-item {
+  padding: 8px 14px;
+  color: var(--ink-2);
+  cursor: pointer;
+}
+.tabulator-menu .tabulator-menu-item:hover { background: var(--paper-2); color: var(--ink); }
+.tabulator-menu .tabulator-menu-item.tabulator-menu-item-disabled { color: var(--ink-4); cursor: not-allowed; }
+.tabulator-menu .tabulator-menu-separator { background: var(--rule); margin: 4px 0; }
+
+/* =============================================================
+   PivotTable.js skin — canonical theme
+   ============================================================= */
+.pvtUi {
+  font-family: var(--font-body);
+  background: var(--card);
+  border-radius: var(--radius-lg);
+  border-collapse: separate;
+  color: var(--ink-2);
+}
+.pvtUi td.pvtAxisContainer,
+.pvtUi td.pvtVals,
+.pvtUi td.pvtRendererArea {
+  background: var(--paper);
+  border: 1px solid var(--rule);
+  border-radius: var(--radius);
+  padding: 8px;
+}
+.pvtAxisContainer { min-height: 36px; }
+.pvtAxisContainer li {
+  margin: 3px;
+  list-style: none;
+}
+.pvtAxisContainer li span.pvtAttr,
+.pvtVals li span.pvtAttr {
+  background: var(--card);
+  border: 1px solid var(--rule);
+  border-radius: var(--radius);
+  color: var(--ink-2);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 600;
+  padding: 4px 8px;
+  cursor: grab;
+}
+.pvtAxisContainer li span.pvtAttr:hover { border-color: var(--primary); color: var(--primary); background: var(--primary-tint); }
+.pvtRenderers select, .pvtAggregator select, .pvtVals select {
+  height: 28px;
+  border: 1px solid var(--rule);
+  border-radius: var(--radius);
+  background: var(--card);
+  color: var(--ink);
+  font: inherit;
+  font-size: 12px;
+  padding: 0 22px 0 8px;
+}
+.pvtTriangle { color: var(--ink-4); }
+.pvtFilterBox {
+  background: var(--card);
+  border: 1px solid var(--rule-strong);
+  border-radius: var(--radius-lg);
+  box-shadow: 0 10px 32px rgba(13, 27, 42, 0.16);
+  font-family: var(--font-body);
+}
+.pvtFilterBox input[type="text"] {
+  height: 28px;
+  border: 1px solid var(--rule);
+  border-radius: var(--radius);
+  padding: 0 8px;
+  font: inherit;
+}
+
+table.pvtTable {
+  font-family: var(--font-body);
+  font-size: 12px;
+  border: 1px solid var(--rule-strong);
+  background: var(--card);
+  border-collapse: separate;
+  border-spacing: 0;
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+table.pvtTable thead tr th,
+table.pvtTable tbody tr th {
+  background: var(--paper-2);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+  font-weight: 600;
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--rule);
+  border-right: 1px solid var(--rule-soft);
+}
+table.pvtTable thead tr th.pvtAxisLabel,
+table.pvtTable tbody tr th.pvtAxisLabel { background: var(--paper); color: var(--ink-2); }
+table.pvtTable tbody tr td {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  color: var(--ink-2);
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--rule);
+  border-right: 1px solid var(--rule-soft);
+  text-align: right;
+}
+table.pvtTable tbody tr td:last-child,
+table.pvtTable tbody tr th:last-child { border-right: none; }
+table.pvtTable tbody tr:last-child td { border-bottom: none; }
+table.pvtTable .pvtTotal,
+table.pvtTable .pvtGrandTotal {
+  background: var(--primary-tint);
+  color: var(--primary);
+  font-weight: 700;
+}
+table.pvtTable .pvtRowTotalLabel,
+table.pvtTable .pvtColTotalLabel,
+table.pvtTable .pvtGrandTotalLabel {
+  background: var(--paper-2);
+  color: var(--ink);
+  font-weight: 700;
+  text-transform: uppercase;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.08em;
+}
+
+/* =============================================================
+   Toast — used by popup, comparison, and settings
+   ============================================================= */
+.ss-toast {
+  position: fixed;
+  bottom: 16px;
+  left: 50%;
+  transform: translateX(-50%) translateY(20px);
+  padding: 10px 18px;
+  border-radius: var(--radius);
+  font-size: 12px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  z-index: 9999;
+  opacity: 0;
+  transition: all 0.2s ease;
+  pointer-events: none;
+  box-shadow: var(--shadow-md);
+}
+.ss-toast--visible { opacity: 1; transform: translateX(-50%) translateY(0); }
+.ss-toast--success { background: var(--success); color: #fff; }
+.ss-toast--error   { background: var(--danger); color: #fff; }
+.ss-toast--loading { background: var(--menu-bg); color: #fff; }
+.ss-toast__icon { font-size: 14px; }
+.ss-toast__spinner { width: 14px; height: 14px; border: 2px solid rgba(255,255,255,0.3); border-top-color: #fff; border-radius: 50%; animation: ss-spin 0.6s linear infinite; }
+@keyframes ss-spin { to { transform: rotate(360deg); } }
+
+/* =============================================================
+   In-cell helpers used by comparison-db.js Tabulator formatters
+   ============================================================= */
+.db-cell-title {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 13px;
+  color: var(--ink);
+  line-height: 1.25;
+  letter-spacing: -0.005em;
+}
+.db-cell-sub {
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  font-weight: 500;
+  color: var(--ink-4);
+  margin-top: 2px;
+}
+.db-cell-empty {
+  color: var(--ink-4);
+  font-style: italic;
+  font-weight: 400;
+}
+
+/* ===== Generic value pill =====
+   Background/foreground/border are inline style (stableColor hash).
+   Class carries chip shape + typography. Per ShopScout grid: all
+   pills use 4px border-radius (not full round) and 9px text for
+   dense data scanning. */
+.ss-pill {
+  display: inline-block;
+  padding: 2px 6px;
+  border-radius: 4px;
+  border: 1px solid transparent;
+  font-size: 10px;
+  font-weight: 600;
+  line-height: 15px;
+  white-space: nowrap;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  vertical-align: middle;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+/* Multi-value pill row — when a cell value contains comma-separated
+   parts ("App Control, Voice Control"), each part gets its own pill.
+   Use inline-flex with wrap so they flow inside the cell. */
+.ss-pill-row {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 3px;
+  vertical-align: middle;
+  max-width: 100%;
+}
+/* Yes / No pills — fixed colors regardless of stableColor hash. */
+.ss-pill-yes {
+  background: #e7f6ed;
+  color: #14633a;
+  border-color: #b8e0c8;
+}
+.ss-pill-no {
+  /* "muted pink" per user — desaturated rose, not alarm red. */
+  background: #fdeaee;
+  color: #8a3a4a;
+  border-color: #f1c4cf;
+}
+
+/* ===== Best-in-row highlight =====
+   Soft warm-gold tint + slight bold on the cell value. Applied via
+   a wrapping span (.ss-best-in-row) so it works whether the cell
+   value is a plain string, a pill, or a stars block. */
+.ss-best-in-row {
+  background: #fff7d6;
+  box-shadow: inset 0 0 0 1px #f1d878;
+  border-radius: 4px;
+  padding: 0 6px;
+  font-weight: 700;
+}
+
+/* Generic value wrapper (no pill / no highlight needed) — matches
+   the pill padding/line-height so rows align consistently. */
+.ss-cell-val {
+  display: inline-block;
+  padding: 2px 4px;
+  line-height: 18px;
+}
+
+/* ===== Visual five-star rating ===== */
+.ss-stars {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: flex-end;
+  line-height: 1;
+}
+.ss-stars-row {
+  position: relative;
+  display: inline-block;
+  font-size: 14px;
+  letter-spacing: 1px;
+  line-height: 1;
+}
+.ss-stars-empty {
+  color: #d6d6d6;
+}
+.ss-stars-fill {
+  position: absolute;
+  top: 0;
+  left: 0;
+  color: #f5a623;
+  overflow: hidden;
+  white-space: nowrap;
+}
+.ss-stars-meta {
+  font-size: 10px;
+  color: var(--ink-4);
+  margin-top: 2px;
+  font-weight: 500;
+}
+
+/* ===== Compare panel ===== */
+.ss-compare-modal { width: min(96vw, 1280px); max-height: 90vh; display: flex; flex-direction: column; }
+.ss-compare-body { overflow: auto; flex: 1; }
+.ss-compare-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.ss-compare-table th,
+.ss-compare-table td {
+  border-bottom: 1px solid var(--rule, #e5e7eb);
+  /* Vertical grid lines between columns — same separator the
+     Tabulator grid uses (--rule-soft). Last column has none so the
+     edge of the table reads clean. */
+  border-right: 1px solid var(--rule-soft, #eef0f4);
+  padding: 8px 12px;
+  vertical-align: top;
+  text-align: left;
+}
+.ss-compare-table th:last-child,
+.ss-compare-table td:last-child { border-right: none; }
+.ss-compare-keycol {
+  position: sticky;
+  left: 0;
+  background: #d1d5db;
+  font-weight: 600;
+  color: var(--ink, #0f172a);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  min-width: 140px;
+  width: 140px;
+  z-index: 1;
+  box-shadow: 2px 0 4px rgba(0,0,0,0.04);
+}
+.ss-compare-prodcol {
+  min-width: 220px;
+  background: #d1d5db;
+  border-bottom: 2px solid var(--rule, #e5e7eb);
+  vertical-align: top;        /* every product column starts at the top */
+  padding: 8px 12px;          /* uniform breathing room */
+}
+/* The product-column header is broken into three fixed-height
+   sections so EVERY column has identical vertical metrics —
+   image (88px), title (1 line, ~22px), actions (32px) — no matter
+   how long the title is. align-self centers the image inside its
+   own band. All three sections top-align via flex column. */
+.ss-compare-prodhead {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  justify-content: flex-start;
+  gap: 0;
+  padding: 0;
+}
+.ss-compare-prodhead img,
+.ss-compare-noimg {
+  width: 88px;
+  height: 88px;
+  object-fit: contain;
+  border-radius: 6px;
+  background: #fff;
+  border: 1px solid var(--rule, #e5e7eb);
+  /* 4px white inset on every side per the canonical thumbnail rule. */
+  padding: 4px;
+  box-sizing: border-box;
+  align-self: center;     /* center horizontally inside the column */
+  flex: 0 0 auto;         /* never stretch or shrink */
+}
+
+/* Selection checkbox at the top of each product column. Sits above
+   the image; clicking it toggles the row's Tabulator selection so
+   Compare works identically in both views. */
+.ss-compare-select {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 22px;
+  margin: 4px 0 6px;
+  cursor: pointer;
+  flex: 0 0 auto;
+}
+.ss-compare-select input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  margin: 0;
+  cursor: pointer;
+  accent-color: var(--primary, #2563eb);
+}
+/* Title: exactly ONE line. Truncated with ellipsis, full text in the
+   tooltip. Fixed height so columns stay aligned regardless of length. */
+.ss-compare-prodtitle {
+  height: 22px;
+  line-height: 22px;
+  font-weight: 600;
+  font-size: 12px;
+  text-align: center;
+  padding: 0 6px;
+  margin: 8px 0 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  flex: 0 0 auto;
+}
+/* Global a-tag styling adds a border-bottom underline imitation —
+   override it for the inverted-view title link AND its parent so
+   no underline shows through. */
+.ss-compare-prodtitle a,
+.ss-compare-prodtitle a:link,
+.ss-compare-prodtitle a:visited,
+.ss-compare-prodtitle a:hover,
+.ss-compare-prodtitle a:active,
+.ss-compare-titlelink,
+.ss-compare-titlelink:link,
+.ss-compare-titlelink:visited,
+.ss-compare-titlelink:hover,
+.ss-compare-titlelink:active {
+  color: inherit;
+  text-decoration: none !important;
+  border-bottom: none !important;
+  padding-bottom: 0 !important;
+}
+
+/* ===== Inverted-view product-column actions =====
+   Fixed-height action strip so the divider line and icons sit at
+   exactly the same vertical offset in every product column. */
+.ss-compare-prodactions {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 4px;
+  margin-top: 8px;
+  padding-top: 6px;
+  height: 30px;
+  flex: 0 0 auto;
+  border-top: 1px solid var(--rule, #e5e7eb);
+  box-sizing: border-box;
+}
+.ss-compare-prodactions button {
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: 1px solid var(--rule, #e5e7eb);
+  border-radius: 3px;
+  color: var(--ink-3, #51606e);
+  cursor: pointer;
+  transition: background .12s, border-color .12s, color .12s;
+}
+.ss-compare-prodactions button:hover:not([disabled]) {
+  background: var(--primary-tint, #eef4ff);
+  border-color: var(--primary, #2563eb);
+  color: var(--primary, #2563eb);
+}
+.ss-compare-prodactions button.is-danger:hover:not([disabled]) {
+  background: #fdeaee;
+  border-color: #b42318;
+  color: #b42318;
+}
+.ss-compare-prodactions button[disabled] { opacity: 0.35; cursor: not-allowed; }
+
+/* ===== Inverted-view row-filter input =====
+   Hidden by default; shown when the .ss-filters-on class lands on
+   the #dbViewInvert container (toggled by the same Filter button
+   the grid uses). Sits beneath the row label inside the keycol. */
+.ss-compare-keycol .ss-compare-rowfilter {
+  display: none;
+  width: 100%;
+  margin-top: 4px;
+  padding: 2px 5px;
+  border: 1px solid var(--rule, #e5e7eb);
+  border-radius: 3px;
+  font-size: 10px;
+  background: #fff;
+  color: var(--ink, #0f172a);
+}
+.ss-compare-keycol .ss-compare-rowfilter:focus {
+  outline: none;
+  border-color: var(--primary, #2563eb);
+  box-shadow: 0 0 0 2px var(--primary-tint, #eef4ff);
+}
+.db-view-invert.ss-filters-on .ss-compare-rowfilter { display: block; }
+
+/* Hide a column entirely — applied to every <td>/<th> in that column
+   when a row-filter rules it out. */
+.ss-compare-table .ss-col-hidden { display: none; }
+.ss-compare-keylabel { font-weight: 600; line-height: 1.2; }
+.ss-compare-cell { display: inline-block; padding: 2px 4px; }
+.ss-compare-table tbody tr:nth-child(odd) td { background: var(--surface-muted-2, #fcfcfd); }
+/* (Removed: previously forced the first body row to match the
+   header bg. The Brand row now uses the standard alternating row
+   styling via tr:nth-child(odd) so it visually separates from the
+   header.) */
+.ss-compare-help { padding: 8px 4px; line-height: 1.55; }
+.ss-compare-help h3 { margin: 0 0 10px; font-size: 14px; color: var(--ink, #0f172a); }
+.ss-compare-help ol { margin: 0 0 12px 18px; padding: 0; font-size: 13px; }
+.ss-compare-help ol li { margin: 4px 0; }
+.ss-compare-help .ai-muted { font-size: 12px; }
+
+/* ===== My Rating (clickable five stars in-grid) =====
+   Stars are rendered in REVERSE DOM order (5,4,3,2,1) and laid out
+   row-reverse so the visual order is 1,2,3,4,5. This lets us light
+   up the hovered star + every visually-earlier star purely via CSS
+   (`:hover ~ span` selects later DOM siblings = earlier visual stars).
+   Idle state: every star is half-transparent so unrated cells look
+   muted. Hovering the widget brings all stars to full opacity but
+   colored according to the cursor position. Click sets the value. */
+.db-myrating {
+  display: inline-flex;
+  flex-direction: row-reverse;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 1px;
+  line-height: 1;
+}
+.db-myrating > span {
+  cursor: pointer;
+  font-size: 16px;
+  user-select: none;
+  color: #f5a623;
+  opacity: 0.35;
+  transition: opacity .12s ease, transform .08s ease;
+}
+.db-myrating > span:hover { transform: scale(1.15); }
+/* Persisted "on" stars sit at full opacity by default; "off" stars at idle alpha. */
+.db-myrating-on { opacity: 1; }
+.db-myrating-off { opacity: 0.35; }
+/* Hovering any star lights itself + every later DOM sibling. Combined
+   with row-reverse layout, that means the hovered visual star and
+   every star to its left light up — the standard rating widget UX. */
+.db-myrating > span:hover,
+.db-myrating > span:hover ~ span {
+  opacity: 1 !important;
+  color: #f5a623;
+}
+/* While the cursor is anywhere over the widget, stars AFTER the
+   hovered one in DOM order (= visually to the RIGHT) dim down so
+   the lit/unlit split tracks the cursor exactly. */
+.db-myrating:hover > span { opacity: 0.25; }
+.db-myrating > span:hover { opacity: 1 !important; }
+
+/* ===== Notes cell ===== */
+.db-notes { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: inline-block; max-width: 100%; }
+
+/* ===== Columns dropdown — Select all / Hide all actions ===== */
+.db-columns-actions {
+  display: flex;
+  gap: 6px;
+  padding: 6px 8px 8px;
+  border-bottom: 1px solid var(--rule, #e5e7eb);
+  margin-bottom: 4px;
+  position: sticky;
+  top: 0;
+  background: var(--paper, #fff);
+  z-index: 1;
+}
+.db-columns-actions button {
+  flex: 1;
+  padding: 4px 8px;
+  border: 1px solid var(--rule, #e5e7eb);
+  border-radius: 3px;
+  background: var(--paper, #fff);
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--ink, #0f172a);
+  cursor: pointer;
+}
+.db-columns-actions button:hover { background: var(--primary-tint, #eef4ff); border-color: var(--primary, #2563eb); color: var(--primary, #2563eb); }
+
+/* ===== Inverted-view container ===== */
+.db-view-invert {
+  overflow: auto;
+  max-height: 72vh;
+  padding: 6px;
+  background: var(--paper, #fff);
+  border: 1px solid var(--rule, #e5e7eb);
+  border-radius: 4px;
+}
+.db-view-invert .ss-compare-table { width: auto; min-width: 100%; }
+
+/* Active toggle state for Compare + Invert buttons */
+#dbCompareBtn.active,
+#dbInvertBtn.active { background: var(--primary-tint, #eef4ff); border-color: var(--primary, #2563eb); color: var(--primary, #2563eb); }
+
+/* (Removed: .ss-source-badge / .ss-source-glyph — orphaned after
+   Source reverted to a stable-color text pill. .src-pill-link
+   styling lives next to .src-pill earlier in this file.) */
+.db-cell-stars {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 4px;
+  color: var(--accent);
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+  font-size: 12px;
+}
+.db-cell-stars .db-cell-sub { color: var(--ink-4); font-weight: 500; }
+
+/* =============================================================
+   Database grid — selection checkbox column + bigger thumbnail
+   ============================================================= */
+.tabulator .col-row-select.tabulator-cell,
+.tabulator .col-row-select.tabulator-col {
+  background: var(--paper-2);
+}
+.tabulator .col-row-select input[type="checkbox"] {
+  width: 16px; height: 16px;
+  accent-color: var(--primary);
+  cursor: pointer;
+  margin: 0;
+}
+/* Bigger product thumbnail inside the grid cell */
+.prod-thumb.db-thumb {
+  width: 56px;
+  height: 56px;
+  border-radius: 6px;
+  border: 1px solid var(--rule);
+  background-color: var(--card);
+}
+.prod-thumb.db-thumb img { width: 100%; height: 100%; object-fit: cover; }
+.tabulator .col-thumb.tabulator-cell { padding: 6px; }
+
+/* =============================================================
+   Lists group (canonical in Products + mirror in every other pane)
+   The two MUST render identically so the user sees the same control
+   in every tab. Same padding, same label, same dropdown size.
+   ============================================================= */
+.rb-select.rb-select--wide {
+  min-width: 200px;
+  height: 28px;
+  font-size: 12px;
+  font-weight: 600;
+}
+.rb-group--list-mirror,
+.rb-group[aria-label="Lists"] {
+  padding: 0 12px;
+  min-width: 220px;
+}
+.rb-group--list-mirror .rb-stack,
+.rb-group[aria-label="Lists"] .rb-stack { gap: 4px; align-self: stretch; }
+.rb-group--list-mirror .rb-mini-label,
+.rb-group[aria-label="Lists"] .rb-mini-label {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+  font-weight: 600;
+  margin: 0 2px 2px;
+}
+
+/* Hide resize handles on the two system columns (selection / thumbnail).
+   The actions column uses default Tabulator styling — no CSS overrides. */
+.tabulator .col-row-select .tabulator-col-resize-handle,
+.tabulator .col-thumb      .tabulator-col-resize-handle { display: none !important; }
+.db-row-actions-btn {
+  width: 28px; height: 28px;
+  border: 1px solid transparent;
+  border-radius: var(--radius);
+  background: transparent;
+  color: var(--ink-3);
+  cursor: pointer;
+  display: inline-flex; align-items: center; justify-content: center;
+  padding: 0;
+}
+.db-row-actions-btn:hover {
+  background: var(--paper-2);
+  border-color: var(--rule);
+  color: var(--ink);
+}
+
+.db-row-actions-menu {
+  position: absolute;
+  z-index: 200;
+  min-width: 200px;
+  background: var(--card);
+  border: 1px solid var(--rule-strong);
+  border-radius: var(--radius-lg);
+  box-shadow: 0 10px 32px rgba(13, 27, 42, 0.16), 0 2px 8px rgba(13, 27, 42, 0.08);
+  padding: 6px 4px;
+}
+.db-row-actions-menu button {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  border: 0;
+  background: transparent;
+  font: inherit;
+  font-size: 13px;
+  color: var(--ink-2);
+  cursor: pointer;
+  border-radius: var(--radius);
+  text-align: left;
+}
+.db-row-actions-menu button:hover { background: var(--paper-2); color: var(--ink); }
+.db-row-actions-menu button[disabled] { color: var(--ink-4); cursor: not-allowed; }
+.db-row-actions-menu button[disabled]:hover { background: transparent; }
+.db-row-actions-menu button.is-danger { color: var(--bad); }
+.db-row-actions-menu button.is-danger:hover { background: var(--bad-tint); color: var(--bad); }
+.db-row-actions-ico {
+  width: 18px; height: 18px;
+  display: inline-flex; align-items: center; justify-content: center;
+  font-size: 13px;
+  color: currentColor;
+  opacity: 0.85;
+}
+.db-row-actions-sep { height: 1px; background: var(--rule-soft); margin: 4px 8px; }

@@ -1,0 +1,193 @@
+/* =============================================================
+   Page-scoped styles for ai-select.html (Manual AI iframe)
+   Extends theme.css — uses the canonical tokens, no redefines.
+   Designed to fit inside the Manual AI modal with no vertical scroll
+   at common viewports.
+   ============================================================= */
+
+.ai-select-body {
+  font-family: var(--font-body);
+  color: var(--ink);
+  background: var(--paper);
+  padding: 14px 16px;
+  margin: 0;
+  min-height: unset;
+}
+
+/* ---------- Paste-tip card ---------- */
+.paste-tip {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  background: var(--primary-tint);
+  border: 1px solid #c8d6dc;
+  border-left: 3px solid var(--primary);
+  border-radius: var(--radius);
+  padding: 10px 12px;
+  margin-bottom: 14px;
+}
+.paste-tip-icon {
+  font-size: 16px;
+  line-height: 1;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+.paste-tip-text {
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--ink-2);
+}
+.paste-tip-text strong {
+  color: var(--ink);
+  font-family: var(--font-display);
+  font-weight: 700;
+}
+.paste-tip-text kbd {
+  background: var(--card);
+  border: 1px solid var(--rule-strong);
+  border-radius: 3px;
+  padding: 1px 6px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+/* ---------- AI cards grid — compact, 4 cols on wide, auto-wrap on narrow ---------- */
+.ai-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(168px, 1fr));
+  gap: 8px;
+  margin-bottom: 14px;
+}
+.ai-card {
+  background: var(--card);
+  border: 1px solid var(--rule);
+  border-radius: var(--radius);
+  padding: 10px 12px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  text-decoration: none;
+  color: var(--ink);
+  transition: border-color 0.12s, box-shadow 0.12s, transform 0.12s;
+}
+.ai-card:hover {
+  border-color: var(--primary);
+  box-shadow: 0 4px 12px rgba(11, 61, 79, 0.10);
+  transform: translateY(-1px);
+}
+.ai-card:active { transform: translateY(0); }
+
+.ai-logo {
+  width: 32px;
+  height: 32px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-display);
+  font-size: 14px;
+  font-weight: 700;
+  color: #fff;
+  flex-shrink: 0;
+}
+.ai-info { display: flex; flex-direction: column; min-width: 0; gap: 1px; }
+.ai-name {
+  font-family: var(--font-display);
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--ink);
+  letter-spacing: -0.005em;
+  line-height: 1.2;
+}
+.ai-desc {
+  font-size: 10.5px;
+  color: var(--ink-3);
+  line-height: 1.3;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.ai-hint {
+  display: none;
+}
+.ai-auto {
+  font-family: var(--font-mono);
+  font-size: 8.5px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ok);
+  background: var(--ok-tint);
+  border: 1px solid var(--ok-rule);
+  border-radius: 3px;
+  padding: 1px 5px;
+  margin-left: auto;
+  flex-shrink: 0;
+}
+
+/* Brand logo tints — kept the same vendor colors. */
+.logo-chatgpt    { background: #10a37f; }
+.logo-claude     { background: #d97706; }
+.logo-gemini     { background: #4285f4; }
+.logo-copilot    { background: #7c3aed; }
+.logo-perplexity { background: #1a1a2e; }
+.logo-grok       { background: #000; }
+.logo-deepseek   { background: #2563eb; }
+.logo-metaai     { background: #0668e1; }
+.logo-mistral    { background: #ff7000; }
+.logo-poe        { background: #6366f1; }
+
+/* ---------- Collapsible prompt preview ---------- */
+.ai-preview {
+  background: var(--card);
+  border: 1px solid var(--rule);
+  border-radius: var(--radius);
+  font-size: 11px;
+}
+.ai-preview summary {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
+  cursor: pointer;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--ink-3);
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  list-style: none;
+}
+.ai-preview summary::-webkit-details-marker { display: none; }
+.ai-preview summary::after {
+  content: "\25BE";
+  margin-left: auto;
+  font-size: 9px;
+  color: var(--ink-4);
+  transition: transform 0.15s;
+}
+.ai-preview[open] summary::after { transform: rotate(180deg); }
+.ai-preview-meta {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--ink-4);
+  margin-left: 6px;
+  font-weight: 500;
+}
+.ai-preview-box {
+  display: block;
+  margin: 0;
+  padding: 10px 12px;
+  border-top: 1px solid var(--rule-soft);
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  line-height: 1.45;
+  color: var(--ink-2);
+  max-height: 160px;
+  overflow-y: auto;
+  white-space: pre-wrap;
+  word-break: break-word;
+  background: var(--paper);
+}

@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>ShopScout — Send to AI</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="theme.css">
+  <link rel="stylesheet" href="ai-select.css">
+</head>
+<body class="ai-select-body">
+  <!-- Paste tip — kept; this is what users actually need to read. -->
+  <div class="paste-tip">
+    <span class="paste-tip-icon" aria-hidden="true">&#128203;</span>
+    <div class="paste-tip-text">
+      <strong>Your prompt will be auto-pasted.</strong>
+      Click an AI below — ShopScout will open it and paste the full prompt into the chat input.
+      If auto-paste doesn't work, use <kbd>Ctrl+V</kbd> (or <kbd>Cmd+V</kbd> on Mac) to paste manually.
+    </div>
+  </div>
+
+  <!-- AI grid — the actual choice the user came here to make. -->
+  <div class="ai-grid" id="aiGrid"></div>
+
+  <!-- Run metadata + collapsible prompt preview, hidden by default to save space. -->
+  <details class="ai-preview">
+    <summary>Preview the copied prompt <span class="ai-preview-meta" id="statusDetail"></span></summary>
+    <pre class="ai-preview-box" id="previewBox"></pre>
+  </details>
+
+  <!-- Hidden compat hooks for ai-select.js — the script writes to these but they
+       no longer render visible UI. Keeping the IDs so the script doesn't error. -->
+  <span hidden id="statusText"></span>
+  <span hidden id="modeTitle"></span>
+  <span hidden id="modeDesc"></span>
+  <span hidden id="modeCard"></span>
+  <button hidden id="previewToggle"></button>
+
+  <script src="ai-select.js"></script>
+</body>
+</html>

@@ -1,0 +1,75 @@
+{
+  "manifest_version": 3,
+  "name": "ShopScout",
+  "version": "3.3.0",
+  "description": "Collect product details, specs, and identifiers from shopping sites for AI-powered comparison and verification",
+  "permissions": [
+    "activeTab",
+    "storage",
+    "scripting",
+    "tabs",
+    "contextMenus"
+  ],
+  "host_permissions": [
+    "<all_urls>"
+  ],
+  "background": {
+    "scripts": ["ai-providers.js", "background.js"]
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "*://*.amazon.com/*", "*://*.amazon.co.uk/*", "*://*.amazon.ca/*",
+        "*://*.amazon.de/*",  "*://*.amazon.fr/*",   "*://*.amazon.es/*",
+        "*://*.amazon.it/*",  "*://*.amazon.com.au/*","*://*.amazon.in/*",
+        "*://*.amazon.co.jp/*","*://*.amazon.com.br/*","*://*.amazon.com.mx/*",
+        "*://*.ebay.com/*",   "*://*.ebay.co.uk/*",  "*://*.ebay.de/*",
+        "*://*.ebay.ca/*",    "*://*.ebay.com.au/*",
+        "*://*.walmart.com/*","*://*.walmart.ca/*",
+        "*://*.bestbuy.com/*","*://*.bestbuy.ca/*",
+        "*://*.target.com/*", "*://*.costco.com/*",  "*://*.newegg.com/*",
+        "*://*.homedepot.com/*","*://*.lowes.com/*",
+        "*://*.aliexpress.com/*","*://*.aliexpress.us/*",
+        "*://*.alibaba.com/*","*://*.temu.com/*",   "*://*.shein.com/*"
+      ],
+      "js": [
+        "utils.js",
+        "content/confidenceRules.js",
+        "content/domUtils.js",
+        "content/keyCanonicalizer.js",
+        "content/productSchema.js",
+        "content/structuredSignals.js",
+        "content/specMiner.js",
+        "content/adapters/amazon.js",
+        "content/adapters/ebay.js",
+        "content/adapters/walmart.js",
+        "content/adapters/generic.js",
+        "content/marketplace.js",
+        "content/extractor.js",
+        "content/content.js",
+        "content.js"
+      ],
+      "run_at": "document_end"
+    }
+  ],
+  "options_page": "settings.html",
+  "action": {
+    "default_popup": "popup.html",
+    "default_icon": {
+      "16": "icons/icon16.png",
+      "48": "icons/icon48.png",
+      "128": "icons/icon128.png"
+    }
+  },
+  "icons": {
+    "16": "icons/icon16.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  },
+  "browser_specific_settings": {
+    "gecko": {
+      "id": "shopscout@shopscout.extension",
+      "strict_min_version": "121.0"
+    }
+  }
+}

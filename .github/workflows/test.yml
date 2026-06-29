@@ -1,0 +1,35 @@
+name: test
+
+# Runs the node-based test suite on every push and pull request.
+# The project has zero npm dependencies, so install is a no-op and
+# the workflow takes <30 seconds end-to-end.
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Syntax check (every .js file)
+        run: |
+          for f in $(find . -maxdepth 3 -name '*.js' \
+                         ! -path './dist/*' \
+                         ! -path './node_modules/*' \
+                         ! -path './vendor/*'); do
+            node --check "$f" || { echo "FAIL: $f"; exit 1; }
+          done
+
+      - name: Run tests
+        run: npm test

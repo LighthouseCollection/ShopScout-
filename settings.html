@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>ShopScout Settings</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="theme.css">
+  <link rel="stylesheet" href="settings.css">
+
+</head>
+<body>
+  <div class="topbar">
+    <h1>ShopScout Settings</h1>
+    <span>AI providers, roles, and setup guides — changes save automatically</span>
+    <div class="spacer"></div>
+    <button id="openDashboard">Open Dashboard</button>
+  </div>
+  <!-- Floating "Saved" pill — fades in for ~1.5s each time a setting is
+       persisted. Auto-save means no explicit Save button, but the user
+       gets visible confirmation. -->
+  <div id="savedPill" class="saved-pill" role="status" aria-live="polite">Saved</div>
+
+  <div class="layout">
+    <aside class="providers">
+      <h2>AI Providers</h2>
+      <div id="providerList"></div>
+      <div class="role-panel">
+        <h2>Pipeline Roles</h2>
+        <div id="roleRows"></div>
+      </div>
+    </aside>
+
+    <main class="panel">
+      <h2>Selected AI Setup</h2>
+      <section class="setup-card">
+        <div class="setup-head">
+          <div>
+            <h3 id="providerTitle">Provider</h3>
+            <p id="providerHint"></p>
+          </div>
+          <div class="spacer"></div>
+          <span class="status off" id="providerStatus">Off</span>
+        </div>
+
+        <label class="toggle">
+          <input type="checkbox" id="providerEnabled">
+          Enable this provider
+        </label>
+
+        <div class="field">
+          <label id="apiKeyLabel">API key</label>
+          <div class="key-row">
+            <input type="password" id="apiKeyInput" autocomplete="off" spellcheck="false">
+            <button class="btn" id="toggleKey">Show</button>
+          </div>
+        </div>
+
+        <div class="field">
+          <label>Recommended Model</label>
+          <select id="modelSelect"></select>
+          <div class="model-note" id="modelNote"></div>
+        </div>
+
+        <div class="field">
+          <label>Custom Model Name</label>
+          <input type="text" id="modelInput" spellcheck="false">
+        </div>
+
+        <div class="field" id="baseUrlField">
+          <label>Endpoint / Base URL</label>
+          <input type="text" id="baseUrlInput" spellcheck="false">
+        </div>
+
+        <div class="field">
+          <label>Token Budget</label>
+          <input type="number" id="tokenBudgetInput" min="0" step="1000" placeholder="Optional monthly/session budget, e.g. 50000">
+        </div>
+
+        <div class="usage-card">
+          <h4>Tracked ShopScout Usage</h4>
+          <div class="usage-summary" id="tokenUsageSummary">No usage tracked yet.</div>
+          <div class="usage-detail" id="tokenUsageDetail">Provider-reported tokens are used when available. Otherwise ShopScout stores a local estimate.</div>
+        </div>
+
+        <div class="field">
+          <label>Notes</label>
+          <textarea id="providerNotes" placeholder="Optional internal note, account name, billing reminder..."></textarea>
+        </div>
+
+        <div class="actions">
+          <button class="btn primary" id="saveProvider">Save Provider</button>
+          <button class="btn success" id="testProvider">Test Connection</button>
+          <button class="btn" id="openKeyPage">Open Key Page</button>
+          <button class="btn" id="openDocs">Docs</button>
+          <button class="btn" id="resetTokenUsage">Reset Usage</button>
+          <button class="btn danger" id="removeKey">Remove Key</button>
+        </div>
+        <div class="test-result" id="testResult"></div>
+        <div class="security-note">
+          API keys are stored in browser extension storage on this machine. Browser storage is convenient, not a password vault. Remove keys anytime from this screen.
+        </div>
+      </section>
+
+      <!-- =============================================================
+           Floating capture button (FAB)
+           Shows an orange "+" button on the lower-right of any detected
+           product page. One click adds the product to the active list.
+           ============================================================= -->
+      <h2>Quick Capture Button</h2>
+      <section class="setup-card" id="captureButtonCard">
+        <p class="setup-help">
+          Shows a small orange button in the lower-right corner whenever
+          ShopScout detects a product page. One click adds the product to
+          your active list — no need to open the extension popup.
+        </p>
+        <label class="toggle-row">
+          <input type="checkbox" id="captureButtonEnabled">
+          <span>Show capture button on product pages</span>
+        </label>
+        <fieldset class="hidden-hosts" id="hiddenHostsField">
+          <legend>Hidden on these sites</legend>
+          <div class="hidden-hosts-list" id="hiddenHostsList">
+            <span class="hidden-hosts-empty">(none — the button shows everywhere by default)</span>
+          </div>
+          <div class="hidden-hosts-add">
+            <input type="text" id="hiddenHostInput" placeholder="example.com" autocomplete="off">
+            <button type="button" id="hiddenHostAdd" class="btn">Add</button>
+          </div>
+        </fieldset>
+      </section>
+
+      <!-- =============================================================
+           Open*Facts GTIN enrichment (opt-in)
+           When a product has a barcode and one of these toggles is on,
+           ShopScout asks the matching Open*Facts API for extra structured
+           data (ingredients, nutrition, allergens, etc.) and merges any
+           missing fields into the captured product.
+           ============================================================= -->
+      <h2>Open*Facts Enrichment</h2>
+      <section class="setup-card" id="openFactsCard">
+        <p class="setup-help">
+          Optional. When a product page has a GTIN/UPC/EAN, ShopScout can ask the
+          open Open*Facts databases for richer structured data and merge missing
+          fields into the captured product. No personal data is sent — only the
+          barcode.
+        </p>
+        <label class="toggle-row">
+          <input type="checkbox" id="openFactsEnabled">
+          <span>Enable Open*Facts enrichment</span>
+        </label>
+        <fieldset class="openfacts-sources" id="openFactsSources" disabled>
+          <legend>Sources</legend>
+          <label class="toggle-row"><input type="checkbox" id="openFactsFood">     <span>Open Food Facts (groceries)</span></label>
+          <label class="toggle-row"><input type="checkbox" id="openFactsBeauty">   <span>Open Beauty Facts (cosmetics)</span></label>
+          <label class="toggle-row"><input type="checkbox" id="openFactsPet">      <span>Open Pet Food Facts (pet food)</span></label>
+          <label class="toggle-row"><input type="checkbox" id="openFactsProducts"> <span>Open Products Facts (everything else)</span></label>
+        </fieldset>
+      </section>
+    </main>
+
+    <aside class="guide">
+      <h2>Side-by-side Setup Guide</h2>
+      <div class="guide-actions">
+        <button class="btn" id="refreshGuide">Refresh Guide</button>
+      </div>
+      <iframe class="guide-frame" id="guideFrame" src="ai-provider-guide.html?provider=openai"></iframe>
+    </aside>
+  </div>
+
+  <script src="ai-providers.js"></script>
+  <script src="settings.js"></script>
+</body>
+</html>

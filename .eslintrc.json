@@ -1,0 +1,51 @@
+{
+  "_comment": "Minimal ESLint config — opt-in. To use: npm i -D eslint && npx eslint . The rules below catch the typo class of bugs (unused vars, undefined refs, missing await) without being noisy. Tighten over time.",
+  "root": true,
+  "env": {
+    "browser": true,
+    "node": true,
+    "es2022": true,
+    "webextensions": true
+  },
+  "parserOptions": {
+    "ecmaVersion": 2022,
+    "sourceType": "script"
+  },
+  "globals": {
+    "chrome": "writable",
+    "browser": "writable",
+    "SS": "readonly",
+    "SSExtract": "readonly",
+    "SSCellFormatters": "readonly",
+    "SSSpecHeuristic": "readonly",
+    "SSCanonical": "readonly",
+    "SSDatabaseView": "readonly",
+    "SSProductRepo": "readonly",
+    "SSDB": "readonly",
+    "ShopScoutAI": "readonly",
+    "Tabulator": "readonly",
+    "Dexie": "readonly",
+    "$": "readonly",
+    "jQuery": "readonly"
+  },
+  "ignorePatterns": [
+    "dist/**",
+    "vendor/**",
+    "node_modules/**",
+    "archived/**"
+  ],
+  "rules": {
+    "no-unused-vars": ["warn", { "argsIgnorePattern": "^_", "varsIgnorePattern": "^_" }],
+    "no-undef": "error",
+    "no-redeclare": "warn",
+    "no-implicit-globals": "off",
+    "no-async-promise-executor": "error",
+    "no-await-in-loop": "off",
+    "no-console": "off",
+    "no-debugger": "warn",
+    "no-empty": ["warn", { "allowEmptyCatch": true }],
+    "no-prototype-builtins": "off",
+    "no-useless-escape": "warn",
+    "no-fallthrough": "error"
+  }
+}

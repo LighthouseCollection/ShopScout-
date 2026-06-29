@@ -1,0 +1,844 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>ShopScout — Comparison</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="theme.css">
+  <link rel="stylesheet" href="comparison.css">
+
+</head>
+<body>
+
+<!-- ====== Ribbon shell ====== -->
+<div class="ribbon-shell">
+  <div class="ribbon-tabs">
+    <div class="ribbon-brand">ShopScout</div>
+    <button class="ribbon-tab" type="button" data-tab="file">File</button>
+    <button class="ribbon-tab active" type="button" data-tab="products">Products</button>
+    <button class="ribbon-tab" type="button" data-tab="analyze">Analyze</button>
+    <button class="ribbon-tab" type="button" data-tab="view">View</button>
+    <button class="ribbon-tab" type="button" data-tab="search">Search</button>
+    <button class="ribbon-tab" type="button" data-tab="about">About</button>
+    <div class="ribbon-spacer"></div>
+    <div class="ribbon-actions">
+      <div class="ai-token-usage" id="aiTokenUsage" title=""></div>
+      <button class="ribbon-settings settings-icon-btn" id="settingsBtn" title="Settings" aria-label="Settings">&#9881;</button>
+    </div>
+  </div>
+
+  <div class="ribbon-body">
+    <div class="ribbon-pane" data-pane="file">
+      <!-- Mirror selector so the active list is switchable from File too.
+           Canonical Lists group (with New/Rename/Delete) lives in the Products ribbon. -->
+      <div class="rb-group rb-group--list-mirror" aria-label="Active list">
+        <div class="rb-group-content">
+          <div class="rb-stack">
+            <label class="rb-mini-label">Product list</label>
+            <select class="rb-select rb-select--wide" data-list-mirror="file"></select>
+          </div>
+        </div>
+        <div class="rb-group-label">Lists</div>
+      </div>
+
+      <div class="rb-divider" aria-hidden="true"></div>
+
+      <div class="rb-group" aria-label="Open or Import">
+        <div class="rb-group-content">
+          <button class="rb-btn-lg" id="openBtn" title="Open a saved file (JSON / XML / CSV) as a NEW list to work with. Does not touch your current list.">
+            <span class="rb-icon-lg"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2Z"/></svg></span>
+            <span class="rb-btn-lg-label">Open</span>
+          </button>
+          <button class="rb-btn-lg" id="importBtn" title="Import (MERGE) products from a file into your CURRENT active list. Existing products are kept.">
+            <span class="rb-icon-lg"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M17 8l-5-5-5 5"/><path d="M12 3v12"/></svg></span>
+            <span class="rb-btn-lg-label">Import List</span>
+          </button>
+        </div>
+        <div class="rb-group-label">Open · Import</div>
+      </div>
+
+      <div class="rb-divider" aria-hidden="true"></div>
+
+      <div class="rb-group" aria-label="Save">
+        <div class="rb-group-content">
+          <button class="rb-btn-lg split-down" id="exportToggle" title="Save products as PDF, HTML, CSV, JSON, or XML">
+            <span class="rb-icon-lg"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M7 10l5 5 5-5"/><path d="M12 15V3"/></svg></span>
+            <span class="rb-btn-lg-label">Save As</span>
+          </button>
+          <div class="rb-save-grid">
+            <button class="rb-btn-sm" data-export-format="pdf"><span class="rb-btn-sm-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg></span><span class="rb-btn-sm-label">PDF</span></button>
+            <button class="rb-btn-sm" data-export-format="html"><span class="rb-btn-sm-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg></span><span class="rb-btn-sm-label">HTML</span></button>
+            <button class="rb-btn-sm" data-export-format="csv"><span class="rb-btn-sm-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M8 13h8M8 17h6"/></svg></span><span class="rb-btn-sm-label">CSV</span></button>
+            <button class="rb-btn-sm" data-export-format="json"><span class="rb-btn-sm-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg></span><span class="rb-btn-sm-label">JSON</span></button>
+            <button class="rb-btn-sm" data-export-format="xml"><span class="rb-btn-sm-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="m9 15 2 2 4-5"/></svg></span><span class="rb-btn-sm-label">XML</span></button>
+          </div>
+        </div>
+        <div class="rb-group-label">Save</div>
+      </div>
+    </div>
+
+    <div class="ribbon-pane active" data-pane="products">
+      <!-- Canonical Lists group — owns #listSelect + New / Rename / Delete.
+           Every other pane (File, Analyze, View, Search, About) mirrors this dropdown. -->
+      <div class="rb-group" aria-label="Lists">
+        <div class="rb-group-content">
+          <div class="rb-stack">
+            <label class="rb-mini-label" for="listSelect">Product list</label>
+            <select class="rb-select rb-select--wide" id="listSelect"></select>
+          </div>
+          <div class="rb-stack">
+            <button class="rb-btn-sm" id="newListBtn" title="Create a new product list" aria-label="New list"><span class="rb-btn-sm-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></span><span class="rb-btn-sm-label">New&nbsp;list</span></button>
+            <button class="rb-btn-sm" id="renameListBtn" title="Rename the current list" aria-label="Rename list"><span class="rb-btn-sm-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg></span><span class="rb-btn-sm-label">Rename</span></button>
+            <button class="rb-btn-sm" id="deleteListBtn" title="Delete the current list" aria-label="Delete list"><span class="rb-btn-sm-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg></span><span class="rb-btn-sm-label">Delete</span></button>
+          </div>
+        </div>
+        <div class="rb-group-label">Lists</div>
+      </div>
+      <div class="rb-divider" aria-hidden="true"></div>
+      <div class="rb-group" aria-label="Products">
+        <div class="rb-group-content">
+          <button class="rb-btn-lg" id="addUrlToggle" title="Add Product">
+            <span class="rb-icon-lg"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/><path d="M12 13v6"/><path d="M9 16h6"/></svg></span>
+            <span class="rb-btn-lg-label">Add Product</span>
+          </button>
+          <details class="toolbar-menu">
+            <summary class="rb-btn-lg split-down" data-menu="true" title="Rescan products">
+              <span class="rb-icon-lg"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 0 1 15-6.7L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-15 6.7L3 16"/><path d="M3 21v-5h5"/></svg></span>
+              <span class="rb-btn-lg-label">Rescan Products</span>
+            </summary>
+            <div class="toolbar-menu-panel">
+              <button class="menu-item" id="rescanBtn" title="Re-scrape all products from their URLs">Rescan All</button>
+              <button class="menu-item" id="rescanSelectedBtn" title="Re-scrape selected products" disabled>Rescan Selected</button>
+            </div>
+          </details>
+          <details class="toolbar-menu">
+            <summary class="rb-btn-lg split-down" data-menu="true" title="Delete products">
+              <span class="rb-icon-lg"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></span>
+              <span class="rb-btn-lg-label">Delete Product(s)</span>
+            </summary>
+            <div class="toolbar-menu-panel">
+              <button class="menu-item menu-item--danger" id="deleteSelectedBtn" title="Delete selected products" disabled>Delete Selected</button>
+              <button class="menu-item menu-item--danger" id="clearBtn" title="Delete all products but keep this list">Delete All</button>
+            </div>
+          </details>
+        </div>
+        <div class="rb-group-label">Products</div>
+      </div>
+    </div>
+
+    <div class="ribbon-pane" data-pane="analyze">
+      <div class="rb-group rb-group--list-mirror" aria-label="Active list">
+        <div class="rb-group-content">
+          <div class="rb-stack">
+            <label class="rb-mini-label">Product list</label>
+            <select class="rb-select rb-select--wide" data-list-mirror="analyze"></select>
+          </div>
+        </div>
+        <div class="rb-group-label">Lists</div>
+      </div>
+      <div class="rb-divider" aria-hidden="true"></div>
+      <div class="rb-group" aria-label="Auto AI">
+        <div class="rb-group-content">
+          <details class="toolbar-menu">
+            <summary class="rb-btn-lg split-down" id="aiIntegratedTrigger" data-menu="true" title="Run integrated AI analysis">
+              <span class="rb-icon-lg"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15 9 22 9.5 17 14 18.5 21 12 17 5.5 21 7 14 2 9.5 9 9"/></svg></span>
+              <span class="rb-btn-lg-label" id="defaultAiProviderLabel">Auto AI</span>
+            </summary>
+            <div class="toolbar-menu-panel toolbar-menu-panel--wide integrated-ai-provider-menu" id="integratedAiProviderMenu">
+              <button class="menu-item ai-provider-run" data-provider-id="auto" title="Use the configured ShopScout AI pipeline">Auto pipeline</button>
+            </div>
+          </details>
+          <div class="rb-stack" id="integratedAiSideProviders"></div>
+        </div>
+        <div class="rb-group-label">Auto AI</div>
+      </div>
+
+      <div class="rb-group" aria-label="Manual AI">
+        <div class="rb-group-content">
+          <button class="rb-btn-lg" id="manualAiBtn" data-command="manual-ai" title="Open manual AI prompt window">
+            <span class="rb-icon-lg"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg></span>
+            <span class="rb-btn-lg-label">Manual AI</span>
+          </button>
+        </div>
+        <div class="rb-group-label">Manual AI</div>
+      </div>
+
+      <div class="rb-divider" aria-hidden="true"></div>
+
+      <div class="rb-group" aria-label="AI Results">
+        <div class="rb-group-content">
+          <button class="rb-btn-lg" id="aiAnalysisPageBtn" title="Open the latest AI analysis results">
+            <span class="rb-icon-lg"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="m7 14 4-4 4 4 5-5"/></svg></span>
+            <span class="rb-btn-lg-label">View<br>Results</span>
+          </button>
+          <div class="rb-stack">
+            <button class="rb-btn-sm" data-command="ai-results"><span class="rb-btn-sm-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></span><span class="rb-btn-sm-label">History</span></button>
+            <button class="rb-btn-sm" data-command="ai-results"><span class="rb-btn-sm-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="8" height="8" rx="1"/><rect x="13" y="3" width="8" height="8" rx="1"/><rect x="3" y="13" width="8" height="8" rx="1"/><rect x="13" y="13" width="8" height="8" rx="1"/></svg></span><span class="rb-btn-sm-label">Compare runs</span></button>
+            <button class="rb-btn-sm" data-command="export"><span class="rb-btn-sm-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M7 10l5 5 5-5"/><path d="M12 15V3"/></svg></span><span class="rb-btn-sm-label">Export</span></button>
+          </div>
+        </div>
+        <div class="rb-group-label">AI Results</div>
+      </div>
+
+      <div class="rb-divider" aria-hidden="true"></div>
+
+      <div class="rb-group" aria-label="Settings">
+        <div class="rb-group-content">
+          <button class="rb-btn-lg" data-command="settings" title="Open settings in dashboard">
+            <span class="rb-icon-lg"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></span>
+            <span class="rb-btn-lg-label">Settings</span>
+          </button>
+        </div>
+        <div class="rb-group-label">Settings</div>
+      </div>
+    </div>
+
+    <div class="ribbon-pane" data-pane="view">
+      <div class="rb-group rb-group--list-mirror" aria-label="Active list">
+        <div class="rb-group-content">
+          <div class="rb-stack">
+            <label class="rb-mini-label">Product list</label>
+            <select class="rb-select rb-select--wide" data-list-mirror="view"></select>
+          </div>
+        </div>
+        <div class="rb-group-label">Lists</div>
+      </div>
+      <div class="rb-divider" aria-hidden="true"></div>
+      <!-- Layout: Grid / Pivot -->
+      <div class="rb-group" aria-label="Layout">
+        <div class="rb-group-content">
+          <div class="rb-row layout-view-toggle">
+            <!-- List icon: the Compare icon rotated 90° — two horizontal
+                 cards stacked (each = a product row), each containing
+                 short vertical marks (= field columns). Mirrors the
+                 Compare glyph so the pair reads as "rows vs columns". -->
+            <button class="rb-btn-lg" data-db-mode="grid" title="List view — products as rows. Best for scanning, sorting, and filtering your whole library."><span class="rb-icon-lg"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="8" rx="1.5"/><rect x="3" y="13" width="18" height="8" rx="1.5"/><line x1="8" y1="5.5" x2="8" y2="8.5"/><line x1="12" y1="5.5" x2="12" y2="8.5"/><line x1="16" y1="5.5" x2="16" y2="8.5"/><line x1="8" y1="15.5" x2="8" y2="18.5"/><line x1="12" y1="15.5" x2="12" y2="18.5"/><line x1="16" y1="15.5" x2="16" y2="18.5"/></svg></span><span class="rb-btn-lg-label">List</span></button>
+            <!-- Compare icon: two product cards side by side with internal
+                 spec lines, the visual analogue of "products as columns,
+                 specs as rows". Echoes the side-by-side shopping pattern. -->
+            <button class="rb-btn-lg active" id="dbInvertBtn" title="Compare view — products as columns, specs as rows. Best for putting a few products side-by-side."><span class="rb-icon-lg"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="8" height="18" rx="1.5"/><rect x="13" y="3" width="8" height="18" rx="1.5"/><line x1="5.5" y1="8" x2="8.5" y2="8"/><line x1="5.5" y1="12" x2="8.5" y2="12"/><line x1="5.5" y1="16" x2="8.5" y2="16"/><line x1="15.5" y1="8" x2="18.5" y2="8"/><line x1="15.5" y1="12" x2="18.5" y2="12"/><line x1="15.5" y1="16" x2="18.5" y2="16"/></svg></span><span class="rb-btn-lg-label">Compare</span></button>
+            <button class="rb-btn-lg" data-db-mode="pivot" title="Pivot table — drag dimensions to summarize / aggregate (PivotTable.js)"><span class="rb-icon-lg"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="6" rx="1"/><rect x="3" y="11" width="8" height="10" rx="1"/><rect x="13" y="11" width="8" height="10" rx="1"/></svg></span><span class="rb-btn-lg-label">Pivot</span></button>
+          </div>
+        </div>
+        <div class="rb-group-label">Layout</div>
+      </div>
+
+      <div class="rb-divider" aria-hidden="true"></div>
+
+      <!-- Group / Columns / Clear filters -->
+      <div class="rb-group" aria-label="Table">
+        <div class="rb-group-content">
+          <div class="rb-stack">
+            <label class="rb-mini-label" for="dbGroupBy">Group by</label>
+            <select class="rb-select" id="dbGroupBy">
+              <option value="">None</option>
+              <option value="source">Source</option>
+              <option value="brand">Brand</option>
+              <option value="manufacturer">Manufacturer</option>
+              <option value="category">Category</option>
+              <option value="sellerName">Seller</option>
+              <option value="availability">Availability</option>
+              <option value="modelNumber">Model</option>
+            </select>
+          </div>
+          <!-- 2 × 2 grid: Filter | Columns / Clear filters | Compare.
+               All four table-action buttons sit in the same compact
+               cluster. Invert lives up in the Layout group as a big
+               icon (Grid · Invert · Pivot). -->
+          <div class="rb-stack db-columns-tool">
+            <div class="db-table-buttons">
+              <button class="rb-btn-sm" id="dbToggleFiltersBtn" aria-pressed="false" title="Show or hide the per-column filter row"><span class="rb-btn-sm-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18l-7 9v6l-4-2v-4Z"/></svg></span><span class="rb-btn-sm-label">Filter</span></button>
+              <button class="rb-btn-sm" id="dbColumnsBtn" aria-haspopup="true" aria-expanded="false" title="Show / hide columns"><span class="rb-btn-sm-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="6" height="18" rx="1"/><rect x="11" y="3" width="6" height="18" rx="1"/><path d="M19 5h2v14h-2"/></svg></span><span class="rb-btn-sm-label">Columns</span></button>
+              <button class="rb-btn-sm" id="dbClearFiltersBtn" title="Clear all column filters"><span class="rb-btn-sm-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18l-7 9v6l-4-2v-4Z"/><path d="m6 6 12 12"/></svg></span><span class="rb-btn-sm-label">Clear filters</span></button>
+              <button class="rb-btn-sm" id="dbCompareBtn" title="Check 2+ products, then click to filter the table to JUST those rows. Click again to clear and show everything."><span class="rb-btn-sm-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 11 3 3 8-8"/><path d="M21 12v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h11"/></svg></span><span class="rb-btn-sm-label">Selected only</span></button>
+            </div>
+            <div class="db-columns-menu" id="dbColumnsMenu" hidden></div>
+          </div>
+        </div>
+        <div class="rb-group-label">Table</div>
+      </div>
+
+      <div class="rb-divider" aria-hidden="true"></div>
+
+      <!-- Saved views -->
+      <div class="rb-group" aria-label="Saved views">
+        <div class="rb-group-content">
+          <div class="rb-stack">
+            <label class="rb-mini-label" for="savedViewSelect">Saved view</label>
+            <select class="rb-select" id="savedViewSelect"></select>
+          </div>
+          <div class="rb-stack">
+            <button class="rb-btn-sm" id="saveCurrentViewBtn" title="Save the current filters / sort / grouping as a named view"><span class="rb-btn-sm-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg></span><span class="rb-btn-sm-label">Save</span></button>
+            <button class="rb-btn-sm" id="deleteCurrentViewBtn" title="Delete the selected saved view"><span class="rb-btn-sm-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg></span><span class="rb-btn-sm-label">Delete</span></button>
+          </div>
+        </div>
+        <div class="rb-group-label">Saved views</div>
+      </div>
+    </div>
+
+    <div class="ribbon-pane" data-pane="search">
+      <div class="rb-group rb-group--list-mirror" aria-label="Active list">
+        <div class="rb-group-content">
+          <div class="rb-stack">
+            <label class="rb-mini-label">Product list</label>
+            <select class="rb-select rb-select--wide" data-list-mirror="search"></select>
+          </div>
+        </div>
+        <div class="rb-group-label">Lists</div>
+      </div>
+      <div class="rb-divider" aria-hidden="true"></div>
+      <div class="rb-group rb-group-wide" aria-label="Search">
+        <div class="rb-group-content">
+          <!-- Row 1: search input + current-list scope side-by-side.
+               Each field sits in a rb-stack with a mini-label so it bottom-aligns
+               with the Product List dropdown in the mirror group to the left.
+               type="search" gives the browser-native X to clear inside the field. -->
+          <div class="product-search product-search--row" role="search">
+            <div class="rb-stack">
+              <label class="rb-mini-label" for="productSearchInput">Find</label>
+              <input class="rb-search lg" type="search" id="productSearchInput" placeholder="Search products..." aria-label="Search products">
+            </div>
+            <div class="rb-stack">
+              <label class="rb-mini-label" for="productSearchScope">Scope</label>
+              <select class="rb-select" id="productSearchScope" aria-label="Product search scope">
+                <option value="current" selected>Current list</option>
+                <option value="all">All lists</option>
+              </select>
+            </div>
+          </div>
+          <!-- Field-scope toggles laid out in 2 rows x 3 cols, spread out -->
+          <div class="search-options-grid">
+            <label class="search-check active" data-search-field="title"><input class="stage-checkbox" type="checkbox" checked tabindex="-1" aria-hidden="true"><span>Titles and names</span></label>
+            <label class="search-check active" data-search-field="identity"><input class="stage-checkbox" type="checkbox" checked tabindex="-1" aria-hidden="true"><span>Identifiers</span></label>
+            <label class="search-check active" data-search-field="pricing"><input class="stage-checkbox" type="checkbox" checked tabindex="-1" aria-hidden="true"><span>Pricing and ratings</span></label>
+            <label class="search-check active" data-search-field="specs"><input class="stage-checkbox" type="checkbox" checked tabindex="-1" aria-hidden="true"><span>Specs and features</span></label>
+            <label class="search-check active" data-search-field="notes"><input class="stage-checkbox" type="checkbox" checked tabindex="-1" aria-hidden="true"><span>Notes and descriptions</span></label>
+            <span aria-hidden="true"></span>
+          </div>
+        </div>
+        <div class="rb-group-label">Search</div>
+      </div>
+    </div>
+
+    <div class="ribbon-pane" data-pane="about">
+      <div class="rb-group rb-group--list-mirror" aria-label="Active list">
+        <div class="rb-group-content">
+          <div class="rb-stack">
+            <label class="rb-mini-label">Product list</label>
+            <select class="rb-select rb-select--wide" data-list-mirror="about"></select>
+          </div>
+        </div>
+        <div class="rb-group-label">Lists</div>
+      </div>
+      <div class="rb-divider" aria-hidden="true"></div>
+      <div class="rb-group" aria-label="About">
+        <div class="rb-group-content">
+          <button class="rb-btn-lg" type="button" title="About ShopScout" data-command="about"><span class="rb-icon-lg"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg></span><span class="rb-btn-lg-label">About</span></button>
+          <button class="rb-btn-lg" type="button" title="Help" data-command="documentation"><span class="rb-icon-lg"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2Z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7Z"/></svg></span><span class="rb-btn-lg-label">Help</span></button>
+          <button class="rb-btn-lg" type="button" title="Check updates" data-command="check-updates"><span class="rb-icon-lg"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-9-9c2.39 0 4.68.94 6.36 2.64L21 8"/><path d="M21 3v5h-5"/></svg></span><span class="rb-btn-lg-label">Check<br>Updates</span></button>
+        </div>
+        <div class="rb-group-label">About</div>
+      </div>
+
+      <div class="rb-divider" aria-hidden="true"></div>
+
+      <div class="rb-group" aria-label="Feedback">
+        <div class="rb-group-content">
+          <button class="rb-btn-lg" data-command="report-bug"><span class="rb-icon-lg"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M8 2h8l4 4v4l-3 3-2-2-3 3-2-2-3 3-2-2-1 1V6Z"/><path d="M12 22a3 3 0 0 0 3-3v-3H9v3a3 3 0 0 0 3 3Z"/></svg></span><span class="rb-btn-lg-label">Report<br>Bug</span></button>
+          <div class="rb-stack">
+            <button class="rb-btn-sm" data-command="suggest-feature"><span class="rb-btn-sm-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18h6"/><path d="M10 22h4"/><path d="M15.09 14c.18-.98.65-1.74 1.41-2.5A4.65 4.65 0 0 0 18 8 6 6 0 0 0 6 8c0 1 .23 2.23 1.5 3.5A4.61 4.61 0 0 1 8.91 14"/></svg></span><span class="rb-btn-sm-label">Suggest feature</span></button>
+            <button class="rb-btn-sm" data-command="rate-extension"><span class="rb-btn-sm-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15 8 22 9 17 14 18 21 12 18 6 21 7 14 2 9 9 8"/></svg></span><span class="rb-btn-sm-label">Rate extension</span></button>
+          </div>
+        </div>
+        <div class="rb-group-label">Feedback</div>
+      </div>
+    </div>
+  </div>
+</div>
+<!-- URL input bar -->
+<div class="url-bar" id="urlBar">
+  <input type="text" id="urlInput" placeholder="Paste a product URL and press Enter...">
+  <button id="urlSubmitBtn">Add</button>
+  <button class="close-url" id="urlClose">&times;</button>
+</div>
+
+<!-- Active filters bar -->
+<div class="filter-bar" id="filterBar">
+  <span class="filter-bar-label">Filters:</span>
+</div>
+
+<!-- Controls -->
+<div class="controls"></div>
+
+<!-- Content -->
+<!-- Legacy hand-rolled cards/table container — kept for AI results page hooks but never rendered into for product browsing. -->
+<div class="content content--legacy-unused" id="content" aria-hidden="true"></div>
+
+<!-- Database view (Tabulator + PivotTable.js) — the only product view.
+     All controls (Group, Columns, Clear filters, Saved views, mode) live in the View ribbon.
+     This section only shows a small status strip + the grid / pivot containers. -->
+<section class="db-view" id="dbView">
+  <div class="db-view-statusbar">
+    <span class="db-view-status" id="dbViewStatus" aria-live="polite"></span>
+    <span class="db-view-help">Hover a column header to filter &middot; click to sort (shift-click to add) &middot; drag to reorder &middot; right-click a row for more</span>
+  </div>
+  <div class="db-view-grid"  id="dbViewGrid"></div>
+  <div class="db-view-pivot" id="dbViewPivot" hidden></div>
+  <!-- Inverted view: products as columns, spec keys as rows. Toggled
+       from the View ribbon's Invert button; reuses the same row data
+       (and any active Compare-filter) the grid is showing. -->
+  <div class="db-view-invert" id="dbViewInvert" style="display:none"></div>
+</section>
+
+<!-- Settings page embedded in dashboard -->
+<div class="settings-page" id="settingsPage" aria-hidden="true">
+  <div class="settings-page-shell">
+    <div class="settings-page-header">
+      <div>
+        <h2>Settings</h2>
+        <p>AI providers, preferences, and pipeline setup.</p>
+      </div>
+      <button class="settings-page-close" id="settingsPageClose">Back to Products</button>
+    </div>
+    <iframe id="settingsFrame" title="ShopScout settings"></iframe>
+  </div>
+</div>
+
+<!-- Filter modal -->
+<div class="modal-overlay" id="filterModal">
+  <div class="modal utility-modal">
+    <h2>Filters <button class="close-btn" data-close-modal="filterModal">&times;</button></h2>
+    <label>Source</label>
+    <select class="rb-select modal-control" id="filterSource"><option value="">All Sources</option></select>
+    <div class="utility-list">
+      <label class="utility-check"><input type="checkbox" id="filterSelectedToggle"> Selected products only</label>
+      <label class="utility-check"><input type="checkbox" id="filterNotedToggle"> Products with notes</label>
+    </div>
+    <div class="modal-actions">
+      <button data-command="clear-filters">Clear filters</button>
+      <button class="btn-save" data-close-modal="filterModal">Done</button>
+    </div>
+  </div>
+</div>
+
+<!-- Columns modal -->
+<div class="modal-overlay" id="columnsModal">
+  <div class="modal utility-modal utility-modal-wide">
+    <h2>Columns <button class="close-btn" data-close-modal="columnsModal">&times;</button></h2>
+    <p class="utility-help">Turn product data columns on or off. System columns stay out of this list.</p>
+    <input class="utility-search" type="search" id="columnSearchInput" placeholder="Search columns..." aria-label="Search columns">
+    <div class="utility-list utility-list-grid" id="columnToggleList"></div>
+    <div class="modal-actions">
+      <button data-command="reset-columns">Reset</button>
+      <button class="btn-save" data-close-modal="columnsModal">Done</button>
+    </div>
+  </div>
+</div>
+
+<!-- Column order modal -->
+<div class="modal-overlay" id="columnOrderModal">
+  <div class="modal utility-modal utility-modal-wide">
+    <h2>Column Order <button class="close-btn" data-close-modal="columnOrderModal">&times;</button></h2>
+    <p class="utility-help">Drag selected visible fields into the order you want them to appear in the product table.</p>
+    <div class="utility-list column-order-list" id="columnOrderList"></div>
+    <div class="modal-actions">
+      <button data-command="reset-column-order">Reset order</button>
+      <button class="btn-save" data-close-modal="columnOrderModal">Done</button>
+    </div>
+  </div>
+</div>
+
+<!-- Freeze modal -->
+<div class="modal-overlay" id="freezeModal">
+  <div class="modal utility-modal utility-modal-wide">
+    <h2>Freeze Columns <button class="close-btn" data-close-modal="freezeModal">&times;</button></h2>
+    <p class="utility-help">Choose which product fields should stay locked while scrolling horizontally.</p>
+    <input class="utility-search" type="search" id="freezeSearchInput" placeholder="Search fields to freeze..." aria-label="Search fields to freeze">
+    <div class="utility-list utility-list-grid" id="freezeToggleList"></div>
+    <div class="modal-actions">
+      <button data-command="clear-frozen-columns">Clear frozen fields</button>
+      <button class="btn-save" data-close-modal="freezeModal">Done</button>
+    </div>
+  </div>
+</div>
+
+<!-- Grouping modal -->
+<div class="modal-overlay" id="groupingModal">
+  <div class="modal utility-modal utility-modal-wide">
+    <h2>Group By <button class="close-btn" data-close-modal="groupingModal">&times;</button></h2>
+    <p class="utility-help">Group the current product view by any captured field. Nested grouping can build on this foundation later.</p>
+    <input class="utility-search" type="search" id="groupSearchInput" placeholder="Search fields..." aria-label="Search group fields">
+    <div class="utility-list utility-list-grid" id="groupingFieldList"></div>
+    <div class="modal-actions">
+      <button data-command="ungroup">Ungroup</button>
+      <button class="btn-save" data-close-modal="groupingModal">Done</button>
+    </div>
+  </div>
+</div>
+
+<!-- Manual AI modal — sized to host ai-select.html without vertical scroll. -->
+<div class="modal-overlay" id="manualAiModal">
+  <div class="modal embedded-modal embedded-modal--manual-ai">
+    <div class="embedded-modal-header">
+      <div>
+        <h2>Manual AI &middot; Choose your AI assistant</h2>
+        <p>Your comparison prompt is ready &middot; click an AI to open it in a new tab with the prompt auto-pasted.</p>
+      </div>
+      <button class="close-btn" id="manualAiClose" aria-label="Close">&times;</button>
+    </div>
+    <iframe id="manualAiFrame" title="Manual AI prompt selector"></iframe>
+  </div>
+</div>
+
+<!-- AI analysis results page -->
+<div class="ai-results-page" id="aiResultsPage">
+  <div class="ai-results-report">
+    <div class="ai-results-header">
+      <div class="ai-results-title">
+        <h2>AI Analysis Results</h2>
+        <p id="aiResultsSubtitle">Latest saved AI run</p>
+      </div>
+      <div class="ai-results-actions">
+        <button id="aiResultsBack">Back to Products</button>
+      </div>
+    </div>
+    <div class="ai-results-body" id="aiResultsBody"></div>
+  </div>
+</div>
+
+<!-- Product detail full page -->
+<div class="detail-page" id="productDetail">
+  <div class="detail-topbar">
+    <button class="detail-back" id="detailBack">&#8592; Back</button>
+    <div class="detail-nav">
+      <button id="detailPrev" title="Previous product">&#8249;</button>
+      <span class="detail-pos" id="detailPos"></span>
+      <button id="detailNext" title="Next product">&#8250;</button>
+    </div>
+    <div class="detail-actions">
+      <div class="detail-ai-group" title="Choose which AI provider should analyze this product">
+        <select id="detailAiProvider"></select>
+        <button class="detail-ai" id="detailAi">Analyze</button>
+      </div>
+      <button class="detail-open" id="detailOpen" title="Open product page">&#8599; Open Page</button>
+      <button class="detail-rescan" id="detailRescan" title="Rescan product">&#8635; Rescan</button>
+      <button id="detailEdit" title="Edit in modal">&#9998; Edit</button>
+      <button class="detail-delete" id="detailDelete" title="Delete product">&times; Delete</button>
+    </div>
+  </div>
+  <div class="detail-content" id="detailContent"></div>
+</div>
+
+<!-- Edit modal -->
+<div class="modal-overlay" id="editModal">
+  <div class="modal" style="width:680px;max-height:85vh">
+    <h2>Edit Product <button class="close-btn" id="editClose">&times;</button></h2>
+
+    <!-- Tabs -->
+    <div class="edit-tabs" id="editTabs">
+      <button class="edit-tab active" data-tab="general">General</button>
+      <button class="edit-tab" data-tab="pricing">Pricing &amp; Seller</button>
+      <button class="edit-tab" data-tab="identifiers">Identifiers</button>
+      <button class="edit-tab" data-tab="specs">Specs &amp; Features</button>
+      <button class="edit-tab" data-tab="media">Media</button>
+    </div>
+
+    <!-- General tab -->
+    <div class="edit-pane active" data-pane="general">
+      <label>Name</label>
+      <textarea id="editTitle"></textarea>
+      <div class="modal-row">
+        <div><label>Brand</label><input type="text" id="editBrand"></div>
+        <div><label>Manufacturer</label><input type="text" id="editManufacturer"></div>
+      </div>
+      <div class="modal-row">
+        <div><label>Source</label><input type="text" id="editSource" readonly></div>
+        <div><label>Category</label><input type="text" id="editCategory"></div>
+      </div>
+      <div class="modal-row">
+        <div><label>Rating</label><input type="text" id="editRating"></div>
+        <div><label>Review Count</label><input type="text" id="editReviewCount"></div>
+      </div>
+      <label>URL</label>
+      <input type="text" id="editUrl">
+      <label>Availability</label>
+      <input type="text" id="editAvailability">
+      <label>Notes</label>
+      <textarea id="editNotes" placeholder="Personal notes..." style="height:40px"></textarea>
+    </div>
+
+    <!-- Pricing & Seller tab -->
+    <div class="edit-pane" data-pane="pricing">
+      <div class="modal-row">
+        <div><label>New Price</label><input type="text" id="editNewPrice"></div>
+        <div><label>Used Price</label><input type="text" id="editUsedPrice"></div>
+      </div>
+      <div class="modal-row">
+        <div><label>Shipping Price</label><input type="text" id="editShippingPrice"></div>
+        <div><label>Seller Name</label><input type="text" id="editSellerName"></div>
+      </div>
+    </div>
+
+    <!-- Identifiers tab -->
+    <div class="edit-pane" data-pane="identifiers">
+      <div class="modal-row">
+        <div><label>Model Number</label><input type="text" id="editModel"></div>
+        <div><label>SKU</label><input type="text" id="editSku"></div>
+      </div>
+      <div class="modal-row">
+        <div><label>ASIN</label><input type="text" id="editAsin"></div>
+        <div><label>UPC</label><input type="text" id="editUpc"></div>
+      </div>
+      <div class="modal-row">
+        <div><label>MPN</label><input type="text" id="editMpn"></div>
+        <div><label>GTIN</label><input type="text" id="editGtin"></div>
+      </div>
+    </div>
+
+    <!-- Specs & Features tab -->
+    <div class="edit-pane" data-pane="specs">
+      <label>Feature Bullets</label>
+      <textarea id="editBullets" placeholder="One bullet per line" style="height:100px"></textarea>
+      <label>Description</label>
+      <textarea id="editDescription" placeholder="Product description" style="height:80px"></textarea>
+      <div class="spec-table-header">
+        <label>Specifications</label>
+        <button class="spec-add-btn" id="specAddBtn">+ Add Spec</button>
+      </div>
+      <div class="spec-table" id="editSpecTable"></div>
+    </div>
+
+    <!-- Media tab -->
+    <div class="edit-pane" data-pane="media">
+      <label>Primary Image URL</label>
+      <input type="text" id="editImage">
+      <div class="edit-image-preview" id="editImagePreview"></div>
+      <label>Additional Images</label>
+      <div class="img-gallery" id="editImageGallery"></div>
+      <div style="margin-top:6px">
+        <input type="text" id="addImageUrl" placeholder="Paste image URL to add...">
+        <button class="spec-add-btn" id="addImageBtn" style="margin-left:4px">+ Add Image</button>
+      </div>
+      <label style="margin-top:12px">User Review Photos</label>
+      <div class="img-gallery" id="editReviewImages"></div>
+    </div>
+
+    <div class="modal-actions">
+      <button id="editCancel">Cancel</button>
+      <button class="btn-save" id="editSave">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- Save modal -->
+<div class="modal-overlay" id="exiModal">
+  <div class="modal">
+    <h2>Save As <button class="close-btn" id="exiClose">&times;</button></h2>
+    <div class="exi-section">
+      <div class="exi-grid">
+        <button class="exi-tile" id="exportJson"><span class="exi-icon">{}</span><span class="exi-label">JSON</span><span class="exi-desc">Full data backup — re-import into ShopScout later</span></button>
+        <button class="exi-tile" id="exportCsv"><span class="exi-icon">&#9638;</span><span class="exi-label">CSV</span><span class="exi-desc">Open in Excel or Google Sheets for analysis</span></button>
+        <button class="exi-tile" id="exportXml"><span class="exi-icon">&lt;/&gt;</span><span class="exi-label">XML</span><span class="exi-desc">Structured data for integrations and APIs</span></button>
+        <button class="exi-tile" id="exportHtml"><span class="exi-icon">&#9782;</span><span class="exi-label">HTML</span><span class="exi-desc">Interactive report with images, sorting &amp; filtering</span></button>
+        <button class="exi-tile" id="exportPdf"><span class="exi-icon">&#9112;</span><span class="exi-label">PDF</span><span class="exi-desc">Static document — print or share as-is</span></button>
+        <button class="exi-tile" id="exportCopy"><span class="exi-icon">&#9112;&#x2398;</span><span class="exi-label">Copy</span><span class="exi-desc">Plain text to clipboard — no AI prompt wrapper</span></button>
+      </div>
+      <!-- Inline picker for the Copy tile. Shown after the user clicks Copy.
+           Lets the user choose which fields to include before the clipboard
+           write. Defaults match the user's stated minimum: Name + URL. -->
+      <div id="exiCopyPicker" class="exi-copy-picker" hidden>
+        <div class="exi-copy-picker-title">What to copy</div>
+        <div class="exi-copy-picker-options">
+          <label><input type="checkbox" id="copyOptName"   checked> Product name</label>
+          <label><input type="checkbox" id="copyOptUrl"    checked> URL</label>
+          <label><input type="checkbox" id="copyOptBrand">          Brand</label>
+          <label><input type="checkbox" id="copyOptPrice">          Price</label>
+          <label><input type="checkbox" id="copyOptSpecs">          Include specs</label>
+        </div>
+        <div class="exi-copy-picker-actions">
+          <button class="btn primary" id="copyApplyBtn">Copy to clipboard</button>
+          <button class="btn" id="copyCancelBtn">Cancel</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Compare panel: side-by-side vertical layout of selected products.
+     Each product is a column; each captured spec key is a row. Same cell
+     formatters as the grid: stars, pills, Yes/No, best-in-row tint. -->
+<div class="modal-overlay" id="compareModal">
+  <div class="modal ss-compare-modal">
+    <h2>Compare products <button class="close-btn" id="compareClose">&times;</button></h2>
+    <div class="ss-compare-body" id="compareBody"></div>
+  </div>
+</div>
+
+<!-- Rescan results modal -->
+<div class="modal-overlay" id="rescanModal">
+  <div class="modal" style="width:600px;max-height:80vh">
+    <h2>Rescan Results <button class="close-btn" id="rescanClose">&times;</button></h2>
+    <div id="rescanResults"></div>
+  </div>
+</div>
+
+<!-- AI analysis options modal -->
+<div class="modal-overlay" id="aiOptionsModal">
+  <div class="modal ai-options-modal">
+    <div class="ai-options-header">
+      <div class="ai-options-title">
+        <h2>Analyze with AI</h2>
+        <p>Choose what ShopScout should check before the AI run starts. Recommended checks are preselected.</p>
+      </div>
+      <button class="close-btn" id="aiOptionsClose">&times;</button>
+    </div>
+    <div class="ai-options-body">
+      <div class="ai-option-group">
+        <h3>Prompt Payload</h3>
+        <div class="ai-option-list">
+          <label class="ai-option"><input type="radio" name="aiPayloadMode" data-payload-mode="compact" value="compact" checked><span><strong>Compact hybrid</strong><span>Send compact captured facts plus product URLs. Do not send raw page text.</span></span></label>
+          <label class="ai-option"><input type="radio" name="aiPayloadMode" data-payload-mode="estimate" value="estimate"><span><strong>Hybrid + token estimate</strong><span>Use compact hybrid and show the estimated payload size before sending.</span></span></label>
+          <label class="ai-option"><input type="radio" name="aiPayloadMode" data-payload-mode="fallback" value="fallback"><span><strong>Hybrid + raw fallback</strong><span>Use compact facts first, with capped raw excerpts only if facts are insufficient.</span></span></label>
+        </div>
+        <div class="ai-payload-estimate" id="aiPayloadEstimate">Payload estimate will appear here.</div>
+      </div>
+      <div class="ai-option-group">
+        <h3>Verification</h3>
+        <div class="ai-option-list">
+          <label class="ai-option"><input type="checkbox" data-ai-option="verifySpecs" checked><span><strong>Confirm listing specs</strong><span>Verify listing specs against official, manufacturer, or authoritative sources.</span></span></label>
+          <label class="ai-option"><input type="checkbox" data-ai-option="missingSpecs" checked><span><strong>Find missing important specs</strong><span>Identify important category specs and fill them only from reliable sources.</span></span></label>
+          <label class="ai-option"><input type="checkbox" data-ai-option="marketingClaims" checked><span><strong>Check marketing claims</strong><span>Flag vague or exaggerated claims unless real specs support them.</span></span></label>
+          <label class="ai-option"><input type="checkbox" data-ai-option="correctConflicts" checked><span><strong>Correct conflicting data</strong><span>Show original listing values and corrected values when reliable sources disagree.</span></span></label>
+        </div>
+      </div>
+      <div class="ai-option-group">
+        <h3>Comparison</h3>
+        <div class="ai-option-list">
+          <label class="ai-option"><input type="checkbox" data-ai-option="comparisonColumns" checked><span><strong>Build comparison table columns</strong><span>Convert category buying factors into useful table columns.</span></span></label>
+          <label class="ai-option"><input type="checkbox" data-ai-option="priceValue" checked><span><strong>Compare price and value</strong><span>Analyze price, used price, shipping, specs, and overpricing.</span></span></label>
+          <label class="ai-option"><input type="checkbox" data-ai-option="reviewsRatings" checked><span><strong>Analyze reviews and ratings</strong><span>Use rating count, rating quality, common complaints, and review photos when available.</span></span></label>
+          <label class="ai-option"><input type="checkbox" data-ai-option="compareAll"><span><strong>Compare it all</strong><span>Create one combined table for buying factors, price and value, and reviews.</span></span></label>
+        </div>
+      </div>
+      <div class="ai-option-group">
+        <h3>Risk Checks</h3>
+        <div class="ai-option-list">
+          <label class="ai-option"><input type="checkbox" data-ai-option="rebrandDuplicate"><span><strong>Check rebrand / duplicate products</strong><span>Detect likely same products sold under different brands.</span></span></label>
+          <label class="ai-option"><input type="checkbox" data-ai-option="riskSummary"><span><strong>Risk summary</strong><span>Summarize verification, spec, seller, warranty, rebrand, and return risk.</span></span></label>
+          <label class="ai-option"><input type="checkbox" data-ai-option="sellerRisk"><span><strong>Seller / store reliability</strong><span>Useful for Alibaba, SHEIN, eBay, Temu, and unknown sellers.</span></span></label>
+        </div>
+      </div>
+      <div class="ai-option-group">
+        <h3>Final</h3>
+        <div class="ai-option-list">
+          <label class="ai-option"><input type="checkbox" data-ai-option="finalRecommendation" checked><span><strong>Final recommendation</strong><span>Best overall, best value, lowest risk, avoid/skip, and confidence level.</span></span></label>
+        </div>
+      </div>
+    </div>
+    <div class="modal-actions ai-options-actions">
+      <span class="ai-options-status" id="aiOptionsStatus"></span>
+      <button id="aiOptionsRecommended">Select Recommended</button>
+      <button id="aiOptionsAll">Select All</button>
+      <button id="aiOptionsCancel">Cancel</button>
+      <button class="btn-save" id="aiOptionsRun">Run Analysis</button>
+    </div>
+  </div>
+</div>
+
+<!-- Development-only AI run monitor -->
+<div class="modal-overlay" id="aiDevModal">
+  <div class="modal ai-dev-modal">
+    <div class="ai-dev-header">
+      <div class="ai-dev-title">
+        AI Run Monitor
+        <span class="ai-dev-badge">Development only</span>
+      </div>
+      <div class="ai-dev-actions">
+        <button class="primary" id="aiDevViewResults" hidden>View Results</button>
+        <button id="aiDevCopy">Copy Log</button>
+        <button id="aiDevClose">Close</button>
+      </div>
+    </div>
+    <div class="ai-dev-meta" id="aiDevMeta"></div>
+    <div class="ai-dev-progress" id="aiDevProgress">
+      <div class="ai-dev-progress-row">
+        <div class="ai-dev-progress-text" id="aiDevProgressText">Preparing AI request...</div>
+        <div class="ai-dev-progress-percent" id="aiDevProgressPercent">0%</div>
+      </div>
+      <div class="ai-dev-progress-track" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+        <div class="ai-dev-progress-fill" id="aiDevProgressFill"></div>
+      </div>
+    </div>
+    <div class="ai-dev-body">
+      <div class="ai-dev-stages" id="aiDevStages"></div>
+      <div class="ai-dev-log-panel">
+        <div class="ai-dev-log-head"><h3>Live Events</h3></div>
+        <textarea class="ai-dev-log" id="aiDevLog" readonly spellcheck="false"></textarea>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- List name modal -->
+<div class="modal-overlay" id="listModal">
+  <div class="modal" style="width:380px">
+    <h2 id="listModalTitle">New List</h2>
+    <input type="text" id="listNameInput" placeholder="List name">
+    <div class="modal-actions">
+      <button id="listModalCancel">Cancel</button>
+      <button class="btn-save" id="listModalSave">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- Image lightbox with carousel -->
+<div class="lightbox" id="lightbox">
+  <button class="lightbox-close">&times;</button>
+  <div class="lightbox-main">
+    <button class="lightbox-nav lightbox-prev hidden" id="lightboxPrev">&#8249;</button>
+    <img id="lightboxImg" src="" alt="">
+    <button class="lightbox-nav lightbox-next hidden" id="lightboxNext">&#8250;</button>
+  </div>
+  <div class="lightbox-counter" id="lightboxCounter"></div>
+  <div class="lightbox-thumbs" id="lightboxThumbs"></div>
+</div>
+
+<!-- Vendor libs (drop files into vendor/ per vendor/README.md) -->
+<script src="vendor/dexie.min.js"></script>
+<script src="vendor/jquery.min.js"></script>
+<!-- js-quantities provides unit-aware value normalization (120W ↔ 120 watts). -->
+<script src="vendor/quantities.min.js"></script>
+<!-- jQuery UI is required by PivotTable.js for its drag-drop sortable zones. -->
+<script src="vendor/jquery-ui.min.js"></script>
+<script src="vendor/tabulator.min.js"></script>
+<link  rel="stylesheet" href="vendor/tabulator.min.css">
+<script src="vendor/pivot.min.js"></script>
+<link  rel="stylesheet" href="vendor/pivot.min.css">
+
+<!-- Local data layer (IndexedDB; survives without a server) -->
+<script src="data/db.js"></script>
+<script src="data/productRepo.js"></script>
+<script src="data/viewsRepo.js"></script>
+<script src="data/migrate.js"></script>
+<!-- Canonical lookup (Shopify + Google taxonomies + abbreviation table). -->
+<script src="data/canonical.js"></script>
+<!-- Spec-column heuristic — picks default-visible spec columns per list. -->
+<script src="data/specHeuristic.js"></script>
+<!-- Cell formatters: pills, yes/no, stars, value normalization (metric→imperial,
+     time unification), best-in-row ranking. Shared by Grid view + Compare panel. -->
+<script src="data/cellFormatters.js"></script>
+
+<script src="ai-providers.js"></script>
+<script src="ai-dev-monitor.js"></script>
+<script src="ai-ui.js"></script>
+<script src="utils.js"></script>
+<!-- Extracted slices of the comparison.js monolith. Load BEFORE
+     comparison.js so the ribbon-command dispatcher in the main file
+     finds them on globalThis. -->
+<script src="comparison-feedback.js"></script>
+<script src="comparison.js"></script>
+<script src="comparison-db.js"></script>
+</body>
+</html>
