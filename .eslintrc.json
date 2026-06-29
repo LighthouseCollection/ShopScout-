@@ -45,7 +45,22 @@
     "getCorrectedValue": "readonly",
     "stageStatusText": "readonly",
     "renderAll": "readonly",
-    "detailIndex": "writable"
+    "detailIndex": "writable",
+    "rescanSingle": "readonly",
+    "rescanList": "readonly",
+    "rescanSelectedProducts": "readonly",
+    "getSelectedProductIndexes": "readonly",
+    "normalizeReviewCount": "readonly",
+    "openEditModal": "readonly",
+    "closeProductDetail": "readonly",
+    "openProductDetail": "readonly",
+    "saveEdit": "readonly",
+    "switchEditTab": "readonly",
+    "addSpecRow": "readonly",
+    "updateImagePreview": "readonly",
+    "renderCorrectedField": "readonly",
+    "renderCorrectedSpecValue": "readonly",
+    "editIndex": "writable"
   },
   "ignorePatterns": [
     "dist/**",

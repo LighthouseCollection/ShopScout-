@@ -2,7 +2,12 @@ const assert = require('assert');
 const fs = require('fs');
 const path = require('path');
 
-const source = fs.readFileSync(path.join(__dirname, '..', 'comparison.js'), 'utf8');
+/* Task 7.5: detail-page rendering moved into comparison/productDetailView.js.
+   Read both so the legacy content assertions still find their targets
+   regardless of which file currently owns the snippet. */
+const source =
+  fs.readFileSync(path.join(__dirname, '..', 'comparison.js'), 'utf8') + '\n' +
+  fs.readFileSync(path.join(__dirname, '..', 'comparison', 'productDetailView.js'), 'utf8');
 
 const headerDeclaration = source.indexOf('const productHeaderHtml');
 const tabsDeclaration = source.indexOf('const overviewHtml');

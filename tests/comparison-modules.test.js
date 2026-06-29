@@ -14,14 +14,19 @@ const path = require('path');
 const vm = require('vm');
 const { read } = require('./_helpers');
 
-/* --- script-tag ordering in the HTML --- */
+/* --- script-tag ordering in the HTML — every comparison/ module
+   must load BEFORE comparison.js so back-compat globals are populated
+   before any callsite in the main file fires. --- */
 const html = read('comparison.html');
-const aiResultsIdx = html.indexOf('comparison/aiResultsView.js');
 const comparisonIdx = html.indexOf('src="comparison.js"');
-assert.ok(aiResultsIdx > 0, 'comparison.html references comparison/aiResultsView.js');
 assert.ok(comparisonIdx > 0, 'comparison.html references comparison.js');
-assert.ok(aiResultsIdx < comparisonIdx,
-  'comparison/aiResultsView.js must load BEFORE comparison.js so back-compat globals are populated first');
+const modules = ['comparison/aiResultsView.js', 'comparison/rescanController.js', 'comparison/productDetailView.js'];
+for (const mod of modules) {
+  const idx = html.indexOf(mod);
+  assert.ok(idx > 0, `comparison.html references ${mod}`);
+  assert.ok(idx < comparisonIdx,
+    `${mod} must load BEFORE comparison.js so back-compat globals are populated first`);
+}
 
 /* --- build script copies the new directory into each dist --- */
 const buildScript = read('scripts/build-extension.ps1');
@@ -157,5 +162,42 @@ const vmResult = view.buildViewModel({
 assert.ok(vmResult, 'buildViewModel returns an object');
 assert.ok(Array.isArray(vmResult.products), 'view-model exposes products array');
 assert.strictEqual(vmResult.products.length, 2, 'view-model carries each product');
+
+/* === rescanController surface === */
+const rescanCtx = makeCtx();
+vm.runInContext(read('comparison/rescanController.js'), rescanCtx, { filename: 'comparison/rescanController.js' });
+const rc = rescanCtx.ShopScoutComparison && rescanCtx.ShopScoutComparison.rescanController;
+assert.ok(rc, 'ShopScoutComparison.rescanController namespace registered');
+for (const name of ['rescanSingle', 'rescanSelectedProducts', 'rescanList', 'cancelActive']) {
+  assert.strictEqual(typeof rc[name], 'function',
+    `rescanController.${name} is a function on the namespace`);
+}
+/* Back-compat globals — comparison.js still binds these as event handlers. */
+for (const name of ['rescanSingle', 'rescanList', 'rescanSelectedProducts']) {
+  assert.strictEqual(typeof rescanCtx[name], 'function',
+    `back-compat global ${name} is set on globalThis by rescanController`);
+}
+/* cancelActive returns false when no scan is running (the ribbon dispatcher
+   reads the boolean to decide whether to surface a "no scan running" toast). */
+assert.strictEqual(rc.cancelActive(), false,
+  'cancelActive returns false when no scan is active');
+
+/* === productDetailView surface === */
+const detailCtx = makeCtx();
+/* productDetailView reads editIndex/detailIndex off globalThis. */
+detailCtx.editIndex = -1;
+detailCtx.detailIndex = -1;
+vm.runInContext(read('comparison/productDetailView.js'), detailCtx, { filename: 'comparison/productDetailView.js' });
+const pd = detailCtx.ShopScoutComparison && detailCtx.ShopScoutComparison.productDetailView;
+assert.ok(pd, 'ShopScoutComparison.productDetailView namespace registered');
+for (const name of ['openEditModal', 'saveEdit', 'openProductDetail', 'closeProductDetail']) {
+  assert.strictEqual(typeof pd[name], 'function',
+    `productDetailView.${name} is a function on the namespace`);
+}
+/* Back-compat globals for the row-action menu and ribbon bindings. */
+for (const name of ['openEditModal', 'saveEdit', 'openProductDetail', 'closeProductDetail']) {
+  assert.strictEqual(typeof detailCtx[name], 'function',
+    `back-compat global ${name} is set on globalThis by productDetailView`);
+}
 
 console.log('comparison-modules.test.js: all assertions passed');

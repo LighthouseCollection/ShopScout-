@@ -36,10 +36,6 @@ function renderAiOutputHtml(text) {
   return `<div class="ai-text">${esc(text || 'No readable AI output returned.')}</div>`;
 }
 
-function latestRunStage(run, stageId) {
-  return (run?.stages || []).find(stage => stage.stage === stageId) || null;
-}
-
 function stageParsedJson(stage) {
   if (stage?.parsedJson && typeof stage.parsedJson === 'object') return stage.parsedJson;
   if (stage?.responseText && globalThis.ShopScoutAI?.extractJsonFromText) {
@@ -84,10 +80,6 @@ function renderReportSourceLink(url, label) {
 function normalizeReportJson(json) {
   if (Array.isArray(json)) return { products: json };
   return json && typeof json === 'object' ? json : {};
-}
-
-function firstReportArray(...values) {
-  return values.find(Array.isArray) || [];
 }
 
 function reportPriceNumber(row) {
