@@ -45,5 +45,8 @@ assert.ok(dbJs.includes('root.SSDatabaseView'),         'comparison-db.js expose
 assert.ok(dbJs.includes('Tabulator'),                   'comparison-db.js wires Tabulator');
 assert.ok(dbJs.includes('pivotUI'),                     'comparison-db.js wires PivotTable.js');
 assert.ok(dbJs.includes('repo.query'),                  'comparison-db.js reads via repo.query');
+assert.ok(dbJs.includes('source: \'myrating-edit\''),    'my-rating quick edit declares its repo write source');
+assert.ok(dbJs.includes('baseRevision: fresh._revision'),'my-rating quick edit passes a base revision');
+assert.ok(!dbJs.includes('repo.updateProduct(id, { userRating: v });'), 'my-rating quick edit does not use the legacy no-revision write path');
 
-console.log('db-view-wiring.test.js: 21 assertions passed');
+console.log('db-view-wiring.test.js: 24 assertions passed');

@@ -1351,7 +1351,27 @@
       const id = widget.dataset.productId || '';
       const url = widget.dataset.productUrl || '';
       try {
-        if (repo && id && repo.updateProduct) await repo.updateProduct(id, { userRating: v });
+        if (repo && id && repo.updateProduct && repo.getProduct) {
+          const fresh = await repo.getProduct(id);
+          const result = fresh
+            ? await repo.updateProduct(id, { userRating: v }, {
+                listId: fresh.listId,
+                baseRevision: fresh._revision,
+                source: 'myrating-edit'
+              })
+            : { ok: false, reason: 'missing-product' };
+          if (result && result.ok === false) {
+            const currentRating = Number(result.product && result.product.userRating || fresh && fresh.userRating || 0);
+            widget.dataset.current = String(currentRating);
+            widget.querySelectorAll('[data-myrating]').forEach(s => {
+              const i = parseInt(s.dataset.myrating, 10);
+              s.classList.toggle('db-myrating-on',  i <= currentRating);
+              s.classList.toggle('db-myrating-off', i >  currentRating);
+            });
+            setStatus('Rating not saved: this product changed elsewhere.');
+            return;
+          }
+        }
       } catch (err) { console.warn('myrating updateProduct failed', err); }
       try {
         const chrome = globalThis.browser || globalThis.chrome;

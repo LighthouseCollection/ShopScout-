@@ -107,6 +107,7 @@ const repo = ctx.SSProductRepo;
   lockCalls.length = 0;
   let result = await repo.updateProduct('p1', {
     title: 'Manual edit',
+    listId: 'other-list',
     'spec:Voltage': '12V',
     _ssRanks: { newPrice: 'best' },
     rowActions: 'generated'
@@ -117,6 +118,7 @@ const repo = ctx.SSProductRepo;
   assert.strictEqual(result.product['spec:Voltage'], undefined, 'generated spec columns are not persisted');
   assert.strictEqual(result.product._ssRanks, undefined, 'generated rank metadata is not persisted');
   assert.strictEqual(result.product.rowActions, undefined, 'generated action cells are not persisted');
+  assert.strictEqual(result.product.listId, listId, 'patches cannot move a product across lists');
   assert.deepStrictEqual(lockCalls, [`list:${listId}`], 'update uses the list-scoped state lock');
 
   result = await repo.updateProduct('p1', { title: 'Stale rescan' }, { listId, baseRevision: 1, source: 'rescan' });

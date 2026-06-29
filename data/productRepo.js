@@ -112,6 +112,7 @@
   function cleanPatch(patch) {
     const next = Object.assign({}, patch || {});
     delete next.id;
+    delete next.listId;
     delete next._revision;
     delete next.updatedAt;
     delete next.rowSelect;
