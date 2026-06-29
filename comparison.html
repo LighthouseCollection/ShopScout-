@@ -206,77 +206,11 @@
         </div>
         <div class="rb-group-label">Lists</div>
       </div>
-      <div class="rb-divider" aria-hidden="true"></div>
-      <!-- Layout: Grid / Pivot -->
-      <div class="rb-group" aria-label="Layout">
-        <div class="rb-group-content">
-          <div class="rb-row layout-view-toggle">
-            <!-- List icon: the Compare icon rotated 90° — two horizontal
-                 cards stacked (each = a product row), each containing
-                 short vertical marks (= field columns). Mirrors the
-                 Compare glyph so the pair reads as "rows vs columns". -->
-            <button class="rb-btn-lg" data-db-mode="grid" title="List view — products as rows. Best for scanning, sorting, and filtering your whole library."><span class="rb-icon-lg"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="8" rx="1.5"/><rect x="3" y="13" width="18" height="8" rx="1.5"/><line x1="8" y1="5.5" x2="8" y2="8.5"/><line x1="12" y1="5.5" x2="12" y2="8.5"/><line x1="16" y1="5.5" x2="16" y2="8.5"/><line x1="8" y1="15.5" x2="8" y2="18.5"/><line x1="12" y1="15.5" x2="12" y2="18.5"/><line x1="16" y1="15.5" x2="16" y2="18.5"/></svg></span><span class="rb-btn-lg-label">List</span></button>
-            <!-- Compare icon: two product cards side by side with internal
-                 spec lines, the visual analogue of "products as columns,
-                 specs as rows". Echoes the side-by-side shopping pattern. -->
-            <button class="rb-btn-lg active" id="dbInvertBtn" title="Compare view — products as columns, specs as rows. Best for putting a few products side-by-side."><span class="rb-icon-lg"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="8" height="18" rx="1.5"/><rect x="13" y="3" width="8" height="18" rx="1.5"/><line x1="5.5" y1="8" x2="8.5" y2="8"/><line x1="5.5" y1="12" x2="8.5" y2="12"/><line x1="5.5" y1="16" x2="8.5" y2="16"/><line x1="15.5" y1="8" x2="18.5" y2="8"/><line x1="15.5" y1="12" x2="18.5" y2="12"/><line x1="15.5" y1="16" x2="18.5" y2="16"/></svg></span><span class="rb-btn-lg-label">Compare</span></button>
-            <button class="rb-btn-lg" data-db-mode="pivot" title="Pivot table — drag dimensions to summarize / aggregate (PivotTable.js)"><span class="rb-icon-lg"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="6" rx="1"/><rect x="3" y="11" width="8" height="10" rx="1"/><rect x="13" y="11" width="8" height="10" rx="1"/></svg></span><span class="rb-btn-lg-label">Pivot</span></button>
-          </div>
-        </div>
-        <div class="rb-group-label">Layout</div>
-      </div>
-
-      <div class="rb-divider" aria-hidden="true"></div>
-
-      <!-- Group / Columns / Clear filters -->
-      <div class="rb-group" aria-label="Table">
-        <div class="rb-group-content">
-          <div class="rb-stack">
-            <label class="rb-mini-label" for="dbGroupBy">Group by</label>
-            <select class="rb-select" id="dbGroupBy">
-              <option value="">None</option>
-              <option value="source">Source</option>
-              <option value="brand">Brand</option>
-              <option value="manufacturer">Manufacturer</option>
-              <option value="category">Category</option>
-              <option value="sellerName">Seller</option>
-              <option value="availability">Availability</option>
-              <option value="modelNumber">Model</option>
-            </select>
-          </div>
-          <!-- 2 × 2 grid: Filter | Columns / Clear filters | Compare.
-               All four table-action buttons sit in the same compact
-               cluster. Invert lives up in the Layout group as a big
-               icon (Grid · Invert · Pivot). -->
-          <div class="rb-stack db-columns-tool">
-            <div class="db-table-buttons">
-              <button class="rb-btn-sm" id="dbToggleFiltersBtn" aria-pressed="false" title="Show or hide the per-column filter row"><span class="rb-btn-sm-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18l-7 9v6l-4-2v-4Z"/></svg></span><span class="rb-btn-sm-label">Filter</span></button>
-              <button class="rb-btn-sm" id="dbColumnsBtn" aria-haspopup="true" aria-expanded="false" title="Show / hide columns"><span class="rb-btn-sm-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="6" height="18" rx="1"/><rect x="11" y="3" width="6" height="18" rx="1"/><path d="M19 5h2v14h-2"/></svg></span><span class="rb-btn-sm-label">Columns</span></button>
-              <button class="rb-btn-sm" id="dbClearFiltersBtn" title="Clear all column filters"><span class="rb-btn-sm-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18l-7 9v6l-4-2v-4Z"/><path d="m6 6 12 12"/></svg></span><span class="rb-btn-sm-label">Clear filters</span></button>
-              <button class="rb-btn-sm" id="dbCompareBtn" title="Check 2+ products, then click to filter the table to JUST those rows. Click again to clear and show everything."><span class="rb-btn-sm-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 11 3 3 8-8"/><path d="M21 12v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h11"/></svg></span><span class="rb-btn-sm-label">Selected only</span></button>
-            </div>
-            <div class="db-columns-menu" id="dbColumnsMenu" hidden></div>
-          </div>
-        </div>
-        <div class="rb-group-label">Table</div>
-      </div>
-
-      <div class="rb-divider" aria-hidden="true"></div>
-
-      <!-- Saved views -->
-      <div class="rb-group" aria-label="Saved views">
-        <div class="rb-group-content">
-          <div class="rb-stack">
-            <label class="rb-mini-label" for="savedViewSelect">Saved view</label>
-            <select class="rb-select" id="savedViewSelect"></select>
-          </div>
-          <div class="rb-stack">
-            <button class="rb-btn-sm" id="saveCurrentViewBtn" title="Save the current filters / sort / grouping as a named view"><span class="rb-btn-sm-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg></span><span class="rb-btn-sm-label">Save</span></button>
-            <button class="rb-btn-sm" id="deleteCurrentViewBtn" title="Delete the selected saved view"><span class="rb-btn-sm-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg></span><span class="rb-btn-sm-label">Delete</span></button>
-          </div>
-        </div>
-        <div class="rb-group-label">Saved views</div>
-      </div>
+      <!-- The Layout / Table / Saved views groups owned the Tabulator grid
+           (Grid / Compare / Pivot toggles, Group-by select, Columns menu,
+           Clear-filters, Selected-only, Saved-view dropdown). Removed in
+           Task 11 Phase 1. The new grid rebuild (Phase 2) will re-add its
+           own controls here. -->
     </div>
 
     <div class="ribbon-pane" data-pane="search">
@@ -375,24 +309,23 @@
 
 <!-- Main content area. Hosts info pages (About, Help, Export), the
      product detail view, AI results page, settings page, and the
-     feedback page. The Database view (Tabulator) lives below in
-     #dbView, not here. -->
+     feedback page. -->
 <div class="content" id="content"></div>
 
-<!-- Database view (Tabulator + PivotTable.js) — the only product view.
-     All controls (Group, Columns, Clear filters, Saved views, mode) live in the View ribbon.
-     This section only shows a small status strip + the grid / pivot containers. -->
-<section class="db-view" id="dbView">
-  <div class="db-view-statusbar">
-    <span class="db-view-status" id="dbViewStatus" aria-live="polite"></span>
-    <span class="db-view-help">Hover a column header to filter &middot; click to sort (shift-click to add) &middot; drag to reorder &middot; right-click a row for more</span>
+<!-- Product grid mount point. The Tabulator/PivotTable implementation
+     that lived here was removed in Task 11 Phase 1. The new grid
+     rebuild (Phase 2) will mount inside #productGrid and may also
+     render its own ribbon controls into the now-empty View pane. -->
+<section class="product-grid-mount" id="productGrid" aria-live="polite">
+  <div class="product-grid-empty">
+    <h2>Product grid is being rebuilt.</h2>
+    <p>
+      The previous Tabulator/PivotTable implementation has been removed.
+      Phase 2 of the rebuild (SlickGrid-backed projection layer) will
+      mount here. Product capture, detail view, AI analysis, settings,
+      export, and feedback flows continue to work normally.
+    </p>
   </div>
-  <div class="db-view-grid"  id="dbViewGrid"></div>
-  <div class="db-view-pivot" id="dbViewPivot" hidden></div>
-  <!-- Inverted view: products as columns, spec keys as rows. Toggled
-       from the View ribbon's Invert button; reuses the same row data
-       (and any active Compare-filter) the grid is showing. -->
-  <div class="db-view-invert" id="dbViewInvert" style="display:none"></div>
 </section>
 
 <!-- Settings page embedded in dashboard -->
@@ -406,78 +339,6 @@
       <button class="settings-page-close" id="settingsPageClose">Back to Products</button>
     </div>
     <iframe id="settingsFrame" title="ShopScout settings"></iframe>
-  </div>
-</div>
-
-<!-- Filter modal -->
-<div class="modal-overlay" id="filterModal">
-  <div class="modal utility-modal">
-    <h2>Filters <button class="close-btn" data-close-modal="filterModal">&times;</button></h2>
-    <label>Source</label>
-    <select class="rb-select modal-control" id="filterSource"><option value="">All Sources</option></select>
-    <div class="utility-list">
-      <label class="utility-check"><input type="checkbox" id="filterSelectedToggle"> Selected products only</label>
-      <label class="utility-check"><input type="checkbox" id="filterNotedToggle"> Products with notes</label>
-    </div>
-    <div class="modal-actions">
-      <button data-command="clear-filters">Clear filters</button>
-      <button class="btn-save" data-close-modal="filterModal">Done</button>
-    </div>
-  </div>
-</div>
-
-<!-- Columns modal -->
-<div class="modal-overlay" id="columnsModal">
-  <div class="modal utility-modal utility-modal-wide">
-    <h2>Columns <button class="close-btn" data-close-modal="columnsModal">&times;</button></h2>
-    <p class="utility-help">Turn product data columns on or off. System columns stay out of this list.</p>
-    <input class="utility-search" type="search" id="columnSearchInput" placeholder="Search columns..." aria-label="Search columns">
-    <div class="utility-list utility-list-grid" id="columnToggleList"></div>
-    <div class="modal-actions">
-      <button data-command="reset-columns">Reset</button>
-      <button class="btn-save" data-close-modal="columnsModal">Done</button>
-    </div>
-  </div>
-</div>
-
-<!-- Column order modal -->
-<div class="modal-overlay" id="columnOrderModal">
-  <div class="modal utility-modal utility-modal-wide">
-    <h2>Column Order <button class="close-btn" data-close-modal="columnOrderModal">&times;</button></h2>
-    <p class="utility-help">Drag selected visible fields into the order you want them to appear in the product table.</p>
-    <div class="utility-list column-order-list" id="columnOrderList"></div>
-    <div class="modal-actions">
-      <button data-command="reset-column-order">Reset order</button>
-      <button class="btn-save" data-close-modal="columnOrderModal">Done</button>
-    </div>
-  </div>
-</div>
-
-<!-- Freeze modal -->
-<div class="modal-overlay" id="freezeModal">
-  <div class="modal utility-modal utility-modal-wide">
-    <h2>Freeze Columns <button class="close-btn" data-close-modal="freezeModal">&times;</button></h2>
-    <p class="utility-help">Choose which product fields should stay locked while scrolling horizontally.</p>
-    <input class="utility-search" type="search" id="freezeSearchInput" placeholder="Search fields to freeze..." aria-label="Search fields to freeze">
-    <div class="utility-list utility-list-grid" id="freezeToggleList"></div>
-    <div class="modal-actions">
-      <button data-command="clear-frozen-columns">Clear frozen fields</button>
-      <button class="btn-save" data-close-modal="freezeModal">Done</button>
-    </div>
-  </div>
-</div>
-
-<!-- Grouping modal -->
-<div class="modal-overlay" id="groupingModal">
-  <div class="modal utility-modal utility-modal-wide">
-    <h2>Group By <button class="close-btn" data-close-modal="groupingModal">&times;</button></h2>
-    <p class="utility-help">Group the current product view by any captured field. Nested grouping can build on this foundation later.</p>
-    <input class="utility-search" type="search" id="groupSearchInput" placeholder="Search fields..." aria-label="Search group fields">
-    <div class="utility-list utility-list-grid" id="groupingFieldList"></div>
-    <div class="modal-actions">
-      <button data-command="ungroup">Ungroup</button>
-      <button class="btn-save" data-close-modal="groupingModal">Done</button>
-    </div>
   </div>
 </div>
 
@@ -808,17 +669,13 @@
   <div class="lightbox-thumbs" id="lightboxThumbs"></div>
 </div>
 
-<!-- Vendor libs (drop files into vendor/ per vendor/README.md) -->
+<!-- Vendor libs (drop files into vendor/ per vendor/README.md).
+     Tabulator + PivotTable.js + jquery/jquery-ui were removed in
+     Task 11 Phase 1 along with the old grid layer. The grid rebuild
+     (Task 11 Phase 2) will load its own vendor here. -->
 <script src="vendor/dexie.min.js"></script>
-<script src="vendor/jquery.min.js"></script>
 <!-- js-quantities provides unit-aware value normalization (120W ↔ 120 watts). -->
 <script src="vendor/quantities.min.js"></script>
-<!-- jQuery UI is required by PivotTable.js for its drag-drop sortable zones. -->
-<script src="vendor/jquery-ui.min.js"></script>
-<script src="vendor/tabulator.min.js"></script>
-<link  rel="stylesheet" href="vendor/tabulator.min.css">
-<script src="vendor/pivot.min.js"></script>
-<link  rel="stylesheet" href="vendor/pivot.min.css">
 
 <!-- Local data layer (IndexedDB; survives without a server) -->
 <script src="data/db.js"></script>
@@ -829,14 +686,11 @@
 <script src="data/canonical.js"></script>
 <!-- Spec-column heuristic — picks default-visible spec columns per list. -->
 <script src="data/specHeuristic.js"></script>
-<!-- Cell formatters: pills, yes/no, stars, value normalization (metric→imperial,
-     time unification), best-in-row ranking. Shared by Grid view + Compare panel. -->
-<script src="data/cellFormatters.js"></script>
-<script src="table/tableUtils.js"></script>
-<script src="table/myRating.js"></script>
-<script src="table/productRows.js"></script>
-<script src="table/rowActionsMenu.js"></script>
-<script src="table/columnsMenu.js"></script>
+
+<!-- Renderer-agnostic shared logic (extracted Task 11 Phase 1). -->
+<script src="shared/values/cellValues.js"></script>
+<script src="shared/projections/specProjection.js"></script>
+<script src="shared/edits/ratingWriter.js"></script>
 
   <!-- UI core — safe HTML, modals, toasts, confirm/prompt. Must load
      before utils.js so SS.toast can delegate to ShopScoutUI.toast. -->
@@ -865,6 +719,5 @@
 <script src="comparison/rescanController.js"></script>
 <script src="comparison/productDetailView.js"></script>
 <script src="comparison.js"></script>
-<script src="comparison-db.js"></script>
 </body>
 </html>

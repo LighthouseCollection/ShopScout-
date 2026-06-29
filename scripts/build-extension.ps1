@@ -19,7 +19,6 @@ $runtimeFiles = @(
   'comparison.html',
   'comparison.css',
   'comparison.js',
-  'comparison-db.js',
   'comparison-feedback.js',
   'content.js',
   'popup.html',
@@ -34,7 +33,7 @@ $runtimeFiles = @(
 )
 
 # Directories copied recursively into each dist (state/data/ui layers + vendor libs + icons + layered extraction pipeline).
-$runtimeDirs = @('state', 'data', 'table', 'ui', 'security', 'vendor', 'icons', 'content', 'comparison')
+$runtimeDirs = @('state', 'data', 'shared', 'ui', 'security', 'vendor', 'icons', 'content', 'comparison')
 
 $targets = @(
   @{ Name = 'chrome';  Manifest = 'manifest.json' },

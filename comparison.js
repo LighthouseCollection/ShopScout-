@@ -30,9 +30,6 @@ let aiRunInProgress = false;
 let selectedAiUsageProviderId = 'auto';
 let activeInlineEdit = null;
 const selectedProductIds = new Set();
-const frozenColumnIds = new Set();
-let columnOrderIds = [];
-let draggedColumnOrderId = '';
 let renderedProductLocations = new WeakMap();
 
 const SEARCH_FIELD_DEFINITIONS = [
@@ -65,37 +62,6 @@ const GROUP_FIELDS = [
   { id: 'notes', label: 'Notes' }
 ];
 
-const COLUMNS = [
-  { id: 'thumb',        label: '',              key: null,            sortable: false, hideable: false, filterable: false },
-  { id: 'name',         label: 'Name',          key: 'title',         sortable: true,  hideable: false, filterable: true  },
-  { id: 'brand',        label: 'Brand',         key: 'brand',         sortable: true,  hideable: true,  filterable: true  },
-  { id: 'manufacturer', label: 'Manufacturer',  key: 'manufacturer',  sortable: true,  hideable: true,  filterable: true,  hidden: true },
-  { id: 'category',     label: 'Category',      key: 'category',      sortable: true,  hideable: true,  filterable: true,  hidden: true },
-  { id: 'price',        label: 'Price',         key: 'newPrice',      sortable: true,  hideable: true,  filterable: false, numeric: true },
-  { id: 'used',         label: 'Used Price',    key: 'usedPrice',     sortable: true,  hideable: true,  filterable: false, numeric: true, hidden: true },
-  { id: 'shipping',     label: 'Shipping',      key: 'shippingPrice', sortable: true,  hideable: true,  filterable: false, numeric: true, hidden: true },
-  { id: 'source',       label: 'Source',        key: 'source',        sortable: true,  hideable: true,  filterable: true  },
-  { id: 'seller',       label: 'Seller',        key: 'sellerName',    sortable: true,  hideable: true,  filterable: true,  hidden: true },
-  { id: 'model',        label: 'Model',         key: 'modelNumber',   sortable: true,  hideable: true,  filterable: true  },
-  { id: 'sku',          label: 'SKU',           key: 'sku',           sortable: true,  hideable: true,  filterable: true,  hidden: true },
-  { id: 'asin',         label: 'ASIN',          key: 'asin',          sortable: true,  hideable: true,  filterable: true,  hidden: true },
-  { id: 'upc',          label: 'UPC',           key: 'upc',           sortable: true,  hideable: true,  filterable: true,  hidden: true },
-  { id: 'mpn',          label: 'MPN',           key: 'mpn',           sortable: true,  hideable: true,  filterable: true,  hidden: true },
-  { id: 'gtin',         label: 'GTIN',          key: 'gtin',          sortable: true,  hideable: true,  filterable: true,  hidden: true },
-  { id: 'rating',       label: 'Rating',        key: 'rating',        sortable: true,  hideable: true,  filterable: false, numeric: true },
-  { id: 'availability', label: 'Availability',  key: 'availability',  sortable: true,  hideable: true,  filterable: true,  hidden: true },
-  { id: 'bullets',      label: 'Features',      key: '_bullets',      sortable: false, hideable: true,  filterable: false, hidden: true },
-  { id: 'description',  label: 'Description',   key: '_description',  sortable: false, hideable: true,  filterable: false, hidden: true },
-  { id: 'specs',        label: 'Specs',         key: '_specCount',    sortable: true,  hideable: true,  filterable: false, numeric: true, hidden: true },
-  { id: 'notes',        label: 'Notes',         key: 'notes',         sortable: false, hideable: true,  filterable: false },
-  { id: 'actions',      label: '',              key: null,            sortable: false, hideable: false, filterable: false },
-];
-
-const hiddenCols = new Set(COLUMNS.filter(c => c.hidden).map(c => c.id));
-/* colFilters Map was removed in Task 8 (Tabulator header filters
-   replaced it). */
-let dynamicSpecCols = [];
-const autoHiddenDynamicCols = new Set();
 
 function getActiveListName() {
   return document.getElementById('listSelect')?.value || '';
@@ -130,60 +96,6 @@ function syncSelectionButtons(products) {
   }
 }
 
-function normalizedSpecColumn(key) {
-  const normalized = normalizeSpecKeyLabel ? normalizeSpecKeyLabel(key) : null;
-  const label = normalized?.label || String(key || '').replace(/\s+/g, ' ').trim();
-  const idSource = normalized?.id || label;
-  return {
-    id: 'spec_' + String(idSource || '').toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_+|_+$/g, ''),
-    label
-  };
-}
-
-function specColumnId(key) {
-  return normalizedSpecColumn(key).id;
-}
-
-function getAllColumns() {
-  const actionsIdx = COLUMNS.findIndex(c => c.id === 'actions');
-  const before = COLUMNS.slice(0, actionsIdx);
-  const after = COLUMNS.slice(actionsIdx);
-  return [...before, ...dynamicSpecCols, ...after];
-}
-
-function displayColumnLabel(col) {
-  if (!col) return '';
-  if (col.label) return col.label;
-  if (col.id === 'thumb') return 'Image';
-  return col.id || '';
-}
-
-function applyColumnOrder(columns) {
-  const idToColumn = new Map(columns.map(col => [col.id, col]));
-  const ordered = [];
-  const used = new Set();
-  for (const id of columnOrderIds) {
-    const col = idToColumn.get(id);
-    if (!col || used.has(id)) continue;
-    ordered.push(col);
-    used.add(id);
-  }
-  for (const col of columns) {
-    if (used.has(col.id)) continue;
-    ordered.push(col);
-  }
-  return ordered;
-}
-
-function getAllColumnsInDisplayOrder() {
-  return applyColumnOrder(getAllColumns());
-}
-
-function getVisibleColumnsForOrdering() {
-  return getAllColumnsInDisplayOrder()
-    .filter(col => col.id !== 'actions')
-    .filter(col => !hiddenCols.has(col.id) || frozenColumnIds.has(col.id));
-}
 
 function getAiCorrectionMap(product) {
   if (!globalThis.ShopScoutAIUI || !product?.aiAnalysis) return {};
@@ -330,6 +242,16 @@ function getSearchableProductText(product) {
   return parts.filter(Boolean).join(' ').toLowerCase();
 }
 
+/* Search-field toggle — called from the Search ribbon checkboxes.
+   Not grid-coupled (toggles a Set used by getSearchableProductText). */
+function toggleSearchField(fieldId) {
+  if (!SEARCH_FIELD_DEFINITIONS.some(field => field.id === fieldId)) return;
+  if (activeSearchFields.has(fieldId)) activeSearchFields.delete(fieldId);
+  else activeSearchFields.add(fieldId);
+  normalizeSearchFields();
+  renderAll();
+}
+
 function readProductLocation(el) {
   const source = el?.closest?.('[data-idx][data-list]') || el;
   return {
@@ -350,307 +272,16 @@ async function activateProductListForAction(listName) {
 }
 
 async function renderAll() {
-  /* Database view (Tabulator + PivotTable.js) is the only product
-     view. SSDatabaseView.render reads from SSProductRepo and paints
-     into #dbView. The legacy hand-rolled cards/table renderers and
-     all of their filter/sort/group plumbing were removed in Task 8. */
-  if (globalThis.SSDatabaseView && typeof globalThis.SSDatabaseView.render === 'function') {
-    return globalThis.SSDatabaseView.render();
-  }
+  /* Task 11 Phase 1: the Tabulator/PivotTable grid implementation was
+     removed. The new grid (Phase 2) will register itself on globalThis
+     and renderAll() will delegate to it. Until then this is a no-op
+     and the placeholder in #productGrid stays visible. */
+  const grid = globalThis.ShopScoutGrid;
+  if (grid && typeof grid.render === 'function') return grid.render();
 }
 
 // --- View configuration modals ---
-function filterUtilityList(items, query, labelForItem = item => item.label || item.id || '') {
-  const needle = String(query || '').trim().toLowerCase();
-  if (!needle) return items;
-  return items.filter(item => String(labelForItem(item) || '').toLowerCase().includes(needle));
-}
 
-function renderColumnControlList() {
-  const list = document.getElementById('columnToggleList');
-  if (!list) return;
-  const query = document.getElementById('columnSearchInput')?.value || '';
-  const columns = filterUtilityList(getAllColumns()
-    .filter(col => col.hideable)
-    .filter(col => col.label || col.id)
-    .sort((a, b) => String(a.label || a.id).localeCompare(String(b.label || b.id), undefined, { sensitivity: 'base' })),
-    query,
-    col => col.label || col.id
-  );
-  setTrustedHtml(list, columns.map(col => {
-    const checked = !hiddenCols.has(col.id);
-    return `<label class="utility-option" title="${escAttr(col.label || col.id)}">
-      <input type="checkbox" data-column-toggle="${escAttr(col.id)}"${checked ? ' checked' : ''}>
-      <span>${esc(col.label || col.id)}</span>
-    </label>`;
-  }).join('') || '<div class="ai-empty">No matching columns.</div>');
-}
-
-function renderFreezeControlList() {
-  const list = document.getElementById('freezeToggleList');
-  if (!list) return;
-  const query = document.getElementById('freezeSearchInput')?.value || '';
-  const columns = filterUtilityList(
-    getAllColumns()
-      .filter(col => col.id !== 'actions')
-      .filter(col => col.label || col.id)
-      .map(col => ({ ...col, label: col.label || (col.id === 'thumb' ? 'Image' : col.id) }))
-      .sort((a, b) => String(a.label || a.id).localeCompare(String(b.label || b.id), undefined, { sensitivity: 'base' })),
-    query,
-    col => col.label || col.id
-  );
-  setTrustedHtml(list, columns.map(col => `<label class="utility-option" title="${escAttr(col.label || col.id)}">
-    <input type="checkbox" data-freeze-column="${escAttr(col.id)}"${frozenColumnIds.has(col.id) ? ' checked' : ''}>
-    <span>${esc(col.label || col.id)}</span>
-  </label>`).join('') || '<div class="ai-empty">No matching fields.</div>');
-}
-
-function renderColumnOrderList() {
-  const list = document.getElementById('columnOrderList');
-  if (!list) return;
-  const columns = getVisibleColumnsForOrdering();
-  setTrustedHtml(list, columns.map((col, index) => {
-    const label = displayColumnLabel(col);
-    return `<div class="column-order-item" draggable="true" data-column-order-id="${escAttr(col.id)}" title="${escAttr(label)}">
-      <span class="column-order-handle" aria-hidden="true">::</span>
-      <span class="column-order-rank">${String(index + 1).padStart(2, '0')}</span>
-      <span class="column-order-label">${esc(label)}</span>
-    </div>`;
-  }).join('') || '<div class="ai-empty">No visible fields selected.</div>');
-}
-
-function getColumnOrderDropTarget(list, y) {
-  const items = [...list.querySelectorAll('.column-order-item:not(.dragging)')];
-  return items.reduce((closest, item) => {
-    const box = item.getBoundingClientRect();
-    const offset = y - box.top - (box.height / 2);
-    if (offset < 0 && offset > closest.offset) return { offset, item };
-    return closest;
-  }, { offset: Number.NEGATIVE_INFINITY, item: null }).item;
-}
-
-function saveColumnOrderFromDom() {
-  const list = document.getElementById('columnOrderList');
-  if (!list) return;
-  const visibleOrder = [...list.querySelectorAll('[data-column-order-id]')]
-    .map(item => item.dataset.columnOrderId)
-    .filter(Boolean);
-  const allColumnIds = getAllColumns().map(col => col.id);
-  const allColumnIdSet = new Set(allColumnIds);
-  const visibleOrderSet = new Set(visibleOrder);
-  const carriedHiddenOrder = columnOrderIds.filter(id => allColumnIdSet.has(id) && !visibleOrderSet.has(id));
-  const carriedHiddenSet = new Set(carriedHiddenOrder);
-  const defaultRemainder = allColumnIds.filter(id => !visibleOrderSet.has(id) && !carriedHiddenSet.has(id));
-  columnOrderIds = [...visibleOrder, ...carriedHiddenOrder, ...defaultRemainder];
-  renderAll();
-}
-
-/* renderFilterModal, renderGroupingModal, renderFilterBar were retired
-   in Task 8 along with the filter/group state vars they synced. The
-   modal HTML shells still exist but no longer mount these renderers. */
-
-function toggleSearchField(fieldId) {
-  if (!SEARCH_FIELD_DEFINITIONS.some(field => field.id === fieldId)) return;
-  if (activeSearchFields.has(fieldId)) activeSearchFields.delete(fieldId);
-  else activeSearchFields.add(fieldId);
-  normalizeSearchFields();
-  renderAll();
-}
-
-/* setGroupByField / groupFieldDefinition / priceBandLabel /
-   ratingBandLabel / groupFieldValue / productGroupLabel were removed
-   in Task 8. Grouping is handled natively by the Database view's
-   #dbGroupBy select (see comparison-db.js). */
-
-function applyFrozenColumnOffsets() {
-  const table = document.querySelector('.table-wrap table');
-  if (!table) return;
-  const headers = [...table.querySelectorAll('thead th')];
-  let left = 0;
-  headers.forEach((th, index) => {
-    const isFrozen = frozenColumnIds.has(th.dataset.colId);
-    th.classList.toggle('frozen-col', isFrozen);
-    const cells = [...table.querySelectorAll(`tbody tr:not(.group-row) td:nth-child(${index + 1})`)];
-    cells.forEach(cell => cell.classList.toggle('frozen-col', isFrozen));
-    if (!isFrozen) {
-      th.style.left = '';
-      cells.forEach(cell => { cell.style.left = ''; });
-      return;
-    }
-    const offset = `${left}px`;
-    th.style.left = offset;
-    cells.forEach(cell => { cell.style.left = offset; });
-    left += th.getBoundingClientRect().width || th.offsetWidth || 0;
-  });
-}
-
-function fieldLabelForInlineEdit(field, specKey) {
-  if (specKey) return specKey;
-  const col = getAllColumns().find(item => item.key === field || item.id === field);
-  if (col?.label) return col.label;
-  if (field === 'title') return 'Name';
-  if (field === 'newPrice') return 'Price';
-  if (field === 'modelNumber') return 'Model';
-  return String(field || 'Field').replace(/([A-Z])/g, ' $1').replace(/^./, ch => ch.toUpperCase());
-}
-
-function restoreInlineCellEdit() {
-  if (!activeInlineEdit?.cell) {
-    activeInlineEdit = null;
-    return;
-  }
-  setTrustedHtml(activeInlineEdit.cell, activeInlineEdit.originalHtml);
-  activeInlineEdit.cell.classList.remove('inline-editing');
-  activeInlineEdit = null;
-}
-
-function startInlineCellEdit(cell) {
-  if (!cell || cell.classList.contains('inline-editing')) return;
-  if (cell.closest('tr.group-row') || cell.closest('.col-actions') || cell.closest('.col-thumb')) return;
-  const field = cell.dataset.editField || '';
-  const specKey = cell.dataset.editSpecKey || '';
-  if (!field && !specKey) return;
-  if (activeInlineEdit?.cell && activeInlineEdit.cell !== cell) restoreInlineCellEdit();
-
-  const value = cell.dataset.editValue || '';
-  const originalHtml = cell.innerHTML;
-  const row = cell.closest('tr[data-list][data-idx]');
-  if (!row) return;
-  activeInlineEdit = {
-    cell,
-    originalHtml,
-    listName: row.dataset.list || getActiveListName(),
-    index: parseInt(row.dataset.idx, 10),
-    field,
-    specKey,
-    saving: false
-  };
-
-  cell.classList.add('inline-editing');
-  const useTextarea = field === 'description' || field === 'notes' || field === 'bullets';
-  setTrustedHtml(cell, useTextarea
-    ? `<textarea class="inline-edit-control" rows="3">${esc(value)}</textarea>`
-    : `<input class="inline-edit-control" type="text" value="${escAttr(value)}">`);
-  const control = cell.querySelector('.inline-edit-control');
-  control?.focus();
-  control?.select?.();
-}
-
-function updateProductInlineValue(product, edit, value) {
-  if (edit.specKey) {
-    if (!Array.isArray(product.rawSpecs)) product.rawSpecs = [];
-    const wanted = specColumnId(edit.specKey);
-    let spec = product.rawSpecs.find(item => specColumnId(item.key) === wanted);
-    if (!value) {
-      product.rawSpecs = product.rawSpecs.filter(item => specColumnId(item.key) !== wanted);
-      return;
-    }
-    if (!spec) {
-      spec = { key: edit.specKey, value: '' };
-      product.rawSpecs.push(spec);
-    }
-    spec.value = value;
-    return;
-  }
-
-  if (edit.field === 'bullets') {
-    product.bullets = value.split(/\r?\n|;/).map(item => item.trim()).filter(Boolean);
-    return;
-  }
-  if (edit.field) product[edit.field] = value;
-}
-
-async function saveInlineCellEdit(control) {
-  const edit = activeInlineEdit;
-  if (!edit || edit.saving) return;
-  edit.saving = true;
-  const value = (control?.value || '').trim();
-  try {
-    const data = await getData();
-    const products = data.lists?.[edit.listName] || [];
-    const product = products[edit.index];
-    if (!product) {
-      restoreInlineCellEdit();
-      toast.show('Could not find that product to update', 'error');
-      return;
-    }
-    updateProductInlineValue(product, edit, value);
-    await saveData(data);
-    activeInlineEdit = null;
-    await renderListSelector();
-    await renderAll();
-    toast.show(`${fieldLabelForInlineEdit(edit.field, edit.specKey)} updated`);
-  } catch (err) {
-    edit.saving = false;
-    toast.show(err?.message || 'Inline edit failed', 'error');
-    restoreInlineCellEdit();
-  }
-}
-
-/* activeColMenu / openColMenu / closeColMenu were retired in Task 8;
-   the Tabulator column header menu in comparison-db.js replaces them. */
-let activeRowActionMenu = null;
-
-function closeRowActionMenu() {
-  if (activeRowActionMenu?.trigger) activeRowActionMenu.trigger.classList.remove('active');
-  const menu = document.getElementById('activeRowActionMenu');
-  if (menu) menu.remove();
-  activeRowActionMenu = null;
-}
-
-function openRowActionMenu(trigger) {
-  if (!trigger) return;
-  if (activeRowActionMenu?.trigger === trigger) {
-    closeRowActionMenu();
-    return;
-  }
-  closeRowActionMenu();
-  const listName = trigger.dataset.list || getActiveListName();
-  const idx = trigger.dataset.idx || '';
-  const productUrl = sanitizeUrl(trigger.dataset.url || '');
-  const menu = document.createElement('div');
-  menu.className = 'row-action-panel';
-  menu.id = 'activeRowActionMenu';
-  setTrustedHtml(menu, `
-    <button class="icon-btn rescan-btn" data-list="${escAttr(listName)}" data-idx="${escAttr(idx)}" title="Rescan product"><span>&#8635;</span><span>Rescan</span></button>
-    <button class="icon-btn open-btn" data-url="${escAttr(productUrl)}" title="Open product page"><span>&#8599;</span><span>Open</span></button>
-    <button class="icon-btn edit-btn" data-list="${escAttr(listName)}" data-idx="${escAttr(idx)}" title="Edit product"><span>&#9998;</span><span>Edit</span></button>
-    <button class="icon-btn remove-btn" data-list="${escAttr(listName)}" data-idx="${escAttr(idx)}" title="Delete product"><span>&times;</span><span>Delete</span></button>`);
-  document.body.appendChild(menu);
-  const rect = trigger.getBoundingClientRect();
-  const menuRect = menu.getBoundingClientRect();
-  const left = Math.max(8, Math.min(window.innerWidth - menuRect.width - 8, rect.right - menuRect.width));
-  const top = Math.max(8, Math.min(window.innerHeight - menuRect.height - 8, rect.bottom + 4));
-  menu.style.left = `${left}px`;
-  menu.style.top = `${top}px`;
-  trigger.classList.add('active');
-  activeRowActionMenu = { el: menu, trigger };
-}
-
-async function handleProductActionButton(btn) {
-  const location = readProductLocation(btn);
-  if (btn.classList.contains('rescan-btn')) {
-    const switched = await activateProductListForAction(location.listName);
-    await rescanSingle(location.index, switched ? null : btn);
-    return true;
-  }
-  if (btn.classList.contains('edit-btn')) {
-    await activateProductListForAction(location.listName);
-    openEditModal(location.index);
-    return true;
-  }
-  if (btn.classList.contains('remove-btn')) {
-    await activateProductListForAction(location.listName);
-    await removeProduct(location.index);
-    return true;
-  }
-  if (btn.classList.contains('open-btn') && btn.dataset.url) {
-    const url = sanitizeUrl(btn.dataset.url);
-    if (url) window.open(url, '_blank', 'noopener');
-    return true;
-  }
-  return false;
-}
 
 
 // --- Events ---
@@ -715,16 +346,11 @@ function bindEvents() {
           if (next && SS.mirrorToProductRepo) await SS.mirrorToProductRepo(next);
         } catch (err) { console.warn('Live re-mirror failed', err); }
         try {
-          if (globalThis.SSDatabaseView && typeof globalThis.SSDatabaseView.render === 'function') {
-            await globalThis.SSDatabaseView.render();
-          } else {
-            await renderAll();
-          }
+          await renderAll();
         } catch (err) { console.warn('Dashboard refresh failed', err); }
       }
     });
   }
-  window.addEventListener('resize', () => applyFrozenColumnOffsets());
 
   // URL bar
   document.getElementById('addUrlToggle').addEventListener('click', () => document.getElementById('urlBar').classList.toggle('active'));
@@ -748,86 +374,6 @@ function bindEvents() {
   document.querySelectorAll('[data-close-modal]').forEach(btn => {
     btn.addEventListener('click', () => closeModal(btn.dataset.closeModal));
   });
-  document.getElementById('columnToggleList')?.addEventListener('change', e => {
-    const input = e.target.closest('[data-column-toggle]');
-    if (!input || input.disabled) return;
-    if (input.checked) {
-      hiddenCols.delete(input.dataset.columnToggle);
-      autoHiddenDynamicCols.delete(input.dataset.columnToggle);
-    } else {
-      hiddenCols.add(input.dataset.columnToggle);
-    }
-    renderAll();
-  });
-  document.getElementById('columnSearchInput')?.addEventListener('input', renderColumnControlList);
-  /* Task 8: groupSearchInput / filterSelectedToggle / filterNotedToggle
-     no longer drive anything — the matching state vars are gone. The
-     modal shells stay in the DOM (existing tests assert them) but the
-     wiring is dead. */
-  document.getElementById('freezeToggleList')?.addEventListener('change', e => {
-    const input = e.target.closest('[data-freeze-column]');
-    if (!input) return;
-    if (input.checked) {
-      frozenColumnIds.add(input.dataset.freezeColumn);
-      hiddenCols.delete(input.dataset.freezeColumn);
-      autoHiddenDynamicCols.delete(input.dataset.freezeColumn);
-    } else {
-      frozenColumnIds.delete(input.dataset.freezeColumn);
-    }
-    renderAll();
-  });
-  document.getElementById('freezeSearchInput')?.addEventListener('input', renderFreezeControlList);
-  const columnOrderList = document.getElementById('columnOrderList');
-  columnOrderList?.addEventListener('dragstart', e => {
-    const item = e.target.closest('[data-column-order-id]');
-    if (!item) return;
-    draggedColumnOrderId = item.dataset.columnOrderId || '';
-    item.classList.add('dragging');
-    if (e.dataTransfer) {
-      e.dataTransfer.effectAllowed = 'move';
-      e.dataTransfer.setData('text/plain', draggedColumnOrderId);
-    }
-  });
-  columnOrderList?.addEventListener('dragover', e => {
-    const dragging = columnOrderList.querySelector('.column-order-item.dragging');
-    if (!dragging) return;
-    e.preventDefault();
-    const target = getColumnOrderDropTarget(columnOrderList, e.clientY);
-    if (target) columnOrderList.insertBefore(dragging, target);
-    else columnOrderList.appendChild(dragging);
-  });
-  columnOrderList?.addEventListener('drop', e => {
-    if (!draggedColumnOrderId) return;
-    e.preventDefault();
-    saveColumnOrderFromDom();
-  });
-  columnOrderList?.addEventListener('dragend', e => {
-    e.target.closest('[data-column-order-id]')?.classList.remove('dragging');
-    draggedColumnOrderId = '';
-    renderColumnOrderList();
-  });
-  /* Task 8: grouping modal and filter modal click delegates removed.
-     Tabulator owns grouping and filtering for the Database view. */
-  document.getElementById('columnsModal')?.addEventListener('click', e => {
-    if (!e.target.closest('[data-command="reset-columns"]')) return;
-    hiddenCols.clear();
-    getAllColumns().forEach(col => { if (col.hidden) hiddenCols.add(col.id); });
-    columnOrderIds = [];
-    renderAll();
-  });
-  document.getElementById('freezeModal')?.addEventListener('click', e => {
-    if (!e.target.closest('[data-command="clear-frozen-columns"]')) return;
-    frozenColumnIds.clear();
-    renderAll();
-  });
-  document.getElementById('columnOrderModal')?.addEventListener('click', e => {
-    if (!e.target.closest('[data-command="reset-column-order"]')) return;
-    columnOrderIds = [];
-    renderAll();
-  });
-  /* Task 8: groupingModal ungroup handler and the filter-chip remove
-     handler are gone — their backing state vars no longer exist and
-     the Database view manages its own filter chips. */
 
   // Content delegation — info-page interactions (export, copy picker,
   // feedback, dashboard back). Old table header sort and column-menu
@@ -888,74 +434,17 @@ function bindEvents() {
       return;
     }
 
-    const rowActionTrigger = e.target.closest('[data-row-action-menu]');
-    if (rowActionTrigger) {
-      e.stopPropagation();
-      openRowActionMenu(rowActionTrigger);
-      return;
-    }
-
-    const editableCell = e.target.closest('td[data-edit-field], td[data-edit-spec-key]');
-    if (editableCell && !e.target.closest('a, button, input, textarea, select, label')) {
-      e.stopPropagation();
-      startInlineCellEdit(editableCell);
-      return;
-    }
-
-    const btn = e.target.closest('button');
-    if (btn) {
-      if (await handleProductActionButton(btn)) closeRowActionMenu();
-      return;
-    }
-
-    const card = e.target.closest('.product-card[data-idx]');
-    if (card && !e.target.closest('a')) {
-      const location = readProductLocation(card);
-      await activateProductListForAction(location.listName);
-      openProductDetail(location.index);
-      return;
-    }
-
-    const row = e.target.closest('tr[data-idx]');
-    if (row && !e.target.closest('a, [data-row-action-menu]')) {
-      const location = readProductLocation(row);
-      await activateProductListForAction(location.listName);
-      openProductDetail(location.index);
-      return;
-    }
+    /* Task 11 Phase 1: row-action menu trigger, inline-cell edit,
+       product-card click, and table-row click handlers were the
+       old card/table interactions; the underlying renderers and
+       their target markup are gone. The new grid will reattach
+       its own interactions when it lands. */
   });
 
-  document.getElementById('content').addEventListener('keydown', async e => {
-    const control = e.target.closest('.inline-edit-control');
-    if (!control) return;
-    e.stopPropagation();
-    if (e.key === 'Enter' && control.tagName !== 'TEXTAREA') {
-      e.preventDefault();
-      await saveInlineCellEdit(control);
-    } else if (e.key === 'Escape') {
-      e.preventDefault();
-      restoreInlineCellEdit();
-    }
-  });
-
-  document.getElementById('content').addEventListener('focusout', async e => {
-    const control = e.target.closest('.inline-edit-control');
-    if (!control || !activeInlineEdit) return;
-    await saveInlineCellEdit(control);
-  });
-
-  // Close column menu on outside click
-  document.addEventListener('click', async e => {
-    const rowActionButton = e.target.closest('#activeRowActionMenu button');
-    if (rowActionButton) {
-      e.stopPropagation();
-      if (await handleProductActionButton(rowActionButton)) closeRowActionMenu();
-      return;
-    }
-    if (activeRowActionMenu && !e.target.closest('#activeRowActionMenu') && !e.target.closest('[data-row-action-menu]')) {
-      closeRowActionMenu();
-    }
-  });
+  /* Task 11 Phase 1: #content keydown/focusout handlers for the
+     inline-edit control are gone with the rest of the inline-edit
+     flow. Document-level outside-click handler for the row-action
+     menu is also gone. The new grid will own these. */
 
   // Product detail page
   document.getElementById('detailBack').addEventListener('click', closeProductDetail);
@@ -1133,14 +622,11 @@ function bindEvents() {
   /* Compare panel — opens a side-by-side vertical layout of selected
      rows. If nothing is selected, fall back to "first 3 rows" so the
      button always does something useful. */
-  document.getElementById('dbCompareBtn')?.addEventListener('click', openComparePanel);
   document.getElementById('compareClose')?.addEventListener('click', () => closeModal('compareModal'));
-  /* Invert button: flips the dashboard between standard grid (products
-     as rows) and matrix layout (products as columns). */
-  document.getElementById('dbInvertBtn')?.addEventListener('click', async () => {
-    const SDV = globalThis.SSDatabaseView;
-    if (SDV && SDV.toggleInvert) await SDV.toggleInvert();
-  });
+  /* Task 11 Phase 1: #dbCompareBtn and #dbInvertBtn were ribbon controls
+     for the old Tabulator grid (Selected-only filter + Compare/Invert
+     toggle). They were removed with the rest of the grid; the new
+     grid (Phase 2) will register its own ribbon UI. */
   document.getElementById('exportJson').addEventListener('click', () => doExport('json'));
   document.getElementById('exportCsv').addEventListener('click', () => doExport('csv'));
   document.getElementById('exportXml').addEventListener('click', () => doExport('xml'));
@@ -1347,13 +833,11 @@ function restoreProductListChrome() {
   document.getElementById('filterBar').style.display = '';
   document.querySelector('.controls').style.display = '';
   document.body.classList.remove('is-info-page');
-  const dbView = document.getElementById('dbView');
-  if (dbView) dbView.hidden = false;
-  // Tell the Database view to re-render in case the active list changed
-  // while the info page was open.
-  if (globalThis.SSDatabaseView && typeof globalThis.SSDatabaseView.render === 'function') {
-    globalThis.SSDatabaseView.render();
-  }
+  const productGrid = document.getElementById('productGrid');
+  if (productGrid) productGrid.hidden = false;
+  /* Task 11 Phase 1: SSDatabaseView is gone. The new grid (Phase 2)
+     will get a re-render cue here when it lands. */
+  renderAll();
 }
 
 function prepareMainContentPage() {
@@ -1561,36 +1045,15 @@ function closeModal(id) {
   document.getElementById(id)?.classList.remove('active');
 }
 
-/* Compare = filter mode. Click Compare with 2+ rows selected and the
-   grid filters down to only those rows. Click Compare again to clear
-   the filter. With 0 or 1 selected, show an instructions modal so
-   the user knows what to do. The modal is the simplest "side-by-side"
-   layout when they want it AS WELL — invoked via the Invert button. */
-let compareFilterActive = false;
+/* Task 11 Phase 1: openComparePanel previously delegated to
+   SSDatabaseView.getSelectedRows / applyCompareFilter /
+   clearCompareFilter on the Tabulator grid. All three are gone with
+   the grid layer. The Phase 2 grid will re-implement selection +
+   compare-filter on its own data view and reattach this entry point.
+   Until then, fall back to the instructions modal so the action is
+   not silently broken. */
 async function openComparePanel() {
-  /* If the filter is already on, treat the click as "clear filter". */
-  const SDV = globalThis.SSDatabaseView;
-  if (compareFilterActive) {
-    if (SDV && SDV.clearCompareFilter) SDV.clearCompareFilter();
-    compareFilterActive = false;
-    const btn = document.getElementById('dbCompareBtn');
-    if (btn) btn.classList.remove('active');
-    toast.show('Showing all products');
-    return;
-  }
-  const selected = (SDV && SDV.getSelectedRows) ? SDV.getSelectedRows() : [];
-  if (!selected || selected.length < 2) {
-    /* Less than 2 selected — show instructions. */
-    openCompareInstructions();
-    return;
-  }
-  if (SDV && SDV.applyCompareFilter) {
-    SDV.applyCompareFilter(selected);
-    compareFilterActive = true;
-    const btn = document.getElementById('dbCompareBtn');
-    if (btn) btn.classList.add('active');
-    toast.show('Showing only ' + selected.length + ' selected products. Click "Selected only" again to show everything.');
-  }
+  openCompareInstructions();
 }
 
 function openCompareInstructions() {
@@ -1767,18 +1230,10 @@ function bindRibbonCommandEvents() {
        expand-groups, collapse-groups ribbon commands. Their backing
        state vars are gone; Tabulator owns sort, filter, group, and
        visual density for the Database view. */
-    else if (command === 'show-columns') {
-      renderColumnControlList();
-      showModal('columnsModal');
-      document.getElementById('columnSearchInput')?.focus();
-    } else if (command === 'open-column-order-modal') {
-      renderColumnOrderList();
-      showModal('columnOrderModal');
-    } else if (command === 'open-freeze-modal') {
-      renderFreezeControlList();
-      showModal('freezeModal');
-      document.getElementById('freezeSearchInput')?.focus();
-    } else if (command === 'documentation' || command === 'about') {
+    /* Task 11 Phase 1: show-columns / open-column-order-modal /
+       open-freeze-modal dispatch removed along with the Tabulator
+       grid. The new grid (Phase 2) owns these. */
+    else if (command === 'documentation' || command === 'about') {
       await openShopScoutDocumentation(command === 'about' ? 'About' : 'Help');
     } else if (command === 'keyboard-shortcuts') {
       showKeyboardShortcuts();
@@ -1798,15 +1253,10 @@ function bindRibbonCommandEvents() {
       const input = document.getElementById('productSearchInput');
       if (input) input.value = '';
       renderAll();
-    } else if (command === 'reset-columns') {
-      hiddenCols.clear();
-      getAllColumns().forEach(col => { if (col.hidden) hiddenCols.add(col.id); });
-      columnOrderIds = [];
-      renderAll();
-    } else if (command === 'hide-all-columns') {
-      getAllColumns().forEach(col => { if (col.hideable) hiddenCols.add(col.id); });
-      renderAll();
-    } else if (command === 'stage-select-all' || command === 'stage-clear-all') {
+    }
+    /* Task 11 Phase 1: reset-columns / hide-all-columns are gone with
+       the legacy column-visibility state. The new grid will own these. */
+    else if (command === 'stage-select-all' || command === 'stage-clear-all') {
       const active = command === 'stage-select-all';
       document.querySelectorAll('[data-stage-option]').forEach(btn => {
         if (btn.disabled || btn.hidden) return;

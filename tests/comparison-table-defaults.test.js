@@ -1,81 +1,85 @@
-/* The hand-rolled Cards/Table views were retired in favor of the Database view
-   (Tabulator + PivotTable.js, backed by SSProductRepo). Task 8 took the final
-   step: the legacy renderers and their state vars are GONE (not no-ops).
-   This test pins the cleaned-up contract. */
+/* Task 11 Phase 1: the Tabulator + PivotTable.js grid layer was
+   removed entirely. The new grid (Phase 2) will land in its own
+   branch / folder. Until then this test pins the cleanup: the old
+   grid markup, the old grid wiring, the old grid renderer entry
+   point, and the old grid CSS are all gone, and a clear "rebuild
+   in progress" placeholder is shown to the user. */
 const assert = require('assert');
 const { read, pageAndStyles } = require('./_helpers');
 
 const source = read('comparison.js');
 const html = pageAndStyles('comparison.html', 'comparison.css');
-const dbJs = read('comparison-db.js');
 const cmpHtml = read('comparison.html');
-
-/* Legacy view-state vars are GONE -------------------------------- */
-assert.ok(!/^\s*let currentView\b/m.test(source),
-  'currentView view-toggle flag is removed (Database is the only view)');
-assert.ok(!/^\s*let compactMode\b/m.test(source),
-  'compactMode toggle is removed (Tabulator owns visual density)');
-assert.ok(!/^\s*let gridlinesEnabled\b/m.test(source),
-  'gridlinesEnabled toggle is removed');
-assert.ok(!/^\s*let tableSortCol\b/m.test(source) && !/^\s*let tableSortAsc\b/m.test(source),
-  'tableSortCol/tableSortAsc are removed (Tabulator headers sort)');
-assert.ok(!/^\s*let selectedOnlyFilter\b/m.test(source) && !/^\s*let notedOnlyFilter\b/m.test(source),
-  'selectedOnlyFilter / notedOnlyFilter are removed (Tabulator header filters)');
-
-/* Legacy renderers are GONE -------------------------------------- */
-assert.ok(!/function renderCards\b/.test(source),
-  'renderCards is removed (was a guarded no-op in the transitional state)');
-assert.ok(!/function renderTable\b/.test(source),
-  'renderTable is removed (was a guarded no-op in the transitional state)');
-
-/* The old view-toggle HTML buttons are also gone ----------------- */
-assert.ok(!cmpHtml.includes('data-view="cards"'),
-  'Cards view-toggle button is removed from the ribbon');
-assert.ok(!cmpHtml.includes('data-view="table"'),
-  'Table view-toggle button is removed from the ribbon');
-assert.ok(!cmpHtml.includes('data-command="toggle-compact"'),
-  'Compact toggle is removed from the ribbon');
-assert.ok(!cmpHtml.includes('data-command="toggle-gridlines"'),
-  'Gridlines toggle is removed from the ribbon');
-
-/* renderAll delegates straight to the Database view -------------- */
-assert.ok(
-  /async function renderAll[\s\S]{0,400}SSDatabaseView\.render\b/.test(source),
-  'renderAll delegates straight to SSDatabaseView.render and returns'
-);
-assert.ok(
-  !/function renderAll[\s\S]{0,600}renderCards|function renderAll[\s\S]{0,600}renderTable/.test(source),
-  'renderAll has no path back into the deleted renderers'
-);
-
-/* Old compact/gridline product-view CSS is GONE ------------------ */
 const css = read('comparison.css');
-assert.ok(!/body\.compact-mode\b/.test(css),
-  'compact-mode CSS rules are removed (legacy card/table only)');
-assert.ok(!/body\.no-gridlines\b/.test(css),
-  'no-gridlines CSS rules are removed (legacy table only)');
 
-/* #content stays — info pages, product detail, AI results page,
-   and feedback page render into it. The transitional
-   "legacy-unused" class is gone now that the container plays an
-   active role. */
-assert.ok(!cmpHtml.includes('content--legacy-unused'),
-  '#content no longer carries the legacy-unused marker');
-assert.ok(/<div\s+class="content"\s+id="content"/.test(cmpHtml),
-  '#content remains for AI results / detail / info pages');
+/* ---- Old grid renderer entry point is gone ------------------ */
+assert.ok(!/globalThis\.SSDatabaseView/.test(source),
+  'comparison.js no longer references SSDatabaseView (the old grid orchestrator)');
+assert.ok(!/Tabulator\(/.test(source),
+  'comparison.js does not instantiate Tabulator');
 
-/* Database section IS visible by default ----------------------- */
-assert.ok(/<section[^>]*id="dbView"(?![^>]*\bhidden\b)/.test(cmpHtml),
-  '#dbView no longer carries a hidden attribute (it is the only view)');
+/* ---- renderAll is a one-line delegate to the future grid ---- */
+assert.ok(
+  /async function renderAll[\s\S]{0,500}ShopScoutGrid/.test(source),
+  'renderAll delegates to globalThis.ShopScoutGrid (the new-grid mount point)'
+);
 
-/* Database view boots on DOMContentLoaded ---------------------- */
-assert.ok(dbJs.includes('async function boot') && dbJs.includes('show();'),
-  'comparison-db.js boots and shows the Database view on load');
+/* ---- Old grid HTML is gone ---------------------------------- */
+assert.ok(!cmpHtml.includes('id="dbView"'),       '#dbView is removed');
+assert.ok(!cmpHtml.includes('id="dbViewGrid"'),   '#dbViewGrid is removed');
+assert.ok(!cmpHtml.includes('id="dbViewPivot"'),  '#dbViewPivot is removed');
+assert.ok(!cmpHtml.includes('id="dbViewInvert"'), '#dbViewInvert is removed');
+assert.ok(!cmpHtml.includes('data-db-mode='),     'data-db-mode toggles are removed');
+assert.ok(!cmpHtml.includes('id="dbGroupBy"'),    '#dbGroupBy ribbon select is removed');
+assert.ok(!cmpHtml.includes('id="dbColumnsBtn"'), '#dbColumnsBtn ribbon trigger is removed');
+assert.ok(!cmpHtml.includes('id="dbClearFiltersBtn"'), '#dbClearFiltersBtn is removed');
+assert.ok(!cmpHtml.includes('id="savedViewSelect"'),   '#savedViewSelect is removed');
+assert.ok(!cmpHtml.includes('id="saveCurrentViewBtn"'),'#saveCurrentViewBtn is removed');
+assert.ok(!cmpHtml.includes('id="deleteCurrentViewBtn"'),'#deleteCurrentViewBtn is removed');
 
-/* View ribbon hosts the actual table controls. */
-assert.ok(cmpHtml.includes('id="dbGroupBy"'),       'View ribbon hosts the Group-by select');
-assert.ok(cmpHtml.includes('id="dbColumnsBtn"'),    'View ribbon hosts the Columns dropdown trigger');
-assert.ok(cmpHtml.includes('id="dbClearFiltersBtn"'),'View ribbon hosts the Clear-filters button');
-assert.ok(cmpHtml.includes('id="savedViewSelect"'), 'View ribbon hosts the Saved-view select');
+/* ---- Old grid modals (Filter/Columns/ColumnOrder/Freeze/Group) are gone --- */
+for (const id of ['filterModal', 'columnsModal', 'columnOrderModal', 'freezeModal', 'groupingModal']) {
+  assert.ok(!cmpHtml.includes(`id="${id}"`), `${id} shell is removed`);
+}
 
+/* ---- Vendor script tags for the grid stack are gone --------- */
+assert.ok(!cmpHtml.includes('vendor/tabulator.min.js'),  'Tabulator vendor JS unloaded');
+assert.ok(!cmpHtml.includes('vendor/tabulator.min.css'), 'Tabulator vendor CSS unloaded');
+assert.ok(!cmpHtml.includes('vendor/pivot.min.js'),      'PivotTable vendor JS unloaded');
+assert.ok(!cmpHtml.includes('vendor/pivot.min.css'),     'PivotTable vendor CSS unloaded');
+assert.ok(!cmpHtml.includes('vendor/jquery.min.js'),     'jQuery vendor JS unloaded');
+assert.ok(!cmpHtml.includes('vendor/jquery-ui.min.js'),  'jQuery UI vendor JS unloaded');
+
+/* ---- The grid script wiring (comparison-db.js + table/) is gone --- */
+assert.ok(!cmpHtml.includes('src="comparison-db.js"'), 'comparison-db.js script tag removed');
+assert.ok(!cmpHtml.includes('src="table/'),            'no table/ script tags remain');
+assert.ok(!cmpHtml.includes('src="data/cellFormatters.js"'),
+  'data/cellFormatters.js script tag removed');
+
+/* ---- The reusable extractions ship as shared/ --------------- */
+assert.ok(cmpHtml.includes('src="shared/values/cellValues.js"'),
+  'shared/values/cellValues.js is loaded for the new grid');
+assert.ok(cmpHtml.includes('src="shared/projections/specProjection.js"'),
+  'shared/projections/specProjection.js is loaded for the new grid');
+assert.ok(cmpHtml.includes('src="shared/edits/ratingWriter.js"'),
+  'shared/edits/ratingWriter.js is loaded for the new grid');
+
+/* ---- Phase 2 grid mount point exists ------------------------ */
+assert.ok(cmpHtml.includes('id="productGrid"'),
+  '#productGrid mount point exists for the Phase 2 grid');
+assert.ok(/Product grid is being rebuilt/.test(cmpHtml),
+  'placeholder text explains the rebuild');
+
+/* ---- Old Tabulator/Pivot CSS rules are gone ----------------- */
+assert.ok(!/\.tabulator/.test(css), 'no .tabulator CSS rules remain');
+assert.ok(!/\.pvtUi/.test(css),     'no PivotTable.js .pvtUi CSS rules remain');
+
+/* ---- AI results / detail / settings / feedback flows are preserved --- */
+assert.ok(cmpHtml.includes('id="content"'),       '#content (info pages + detail + AI results host) preserved');
+assert.ok(cmpHtml.includes('id="settingsPage"'),  'embedded settings page preserved');
+assert.ok(cmpHtml.includes('id="aiResultsPage"'), 'AI results page preserved');
+assert.ok(cmpHtml.includes('id="productDetail"'), 'product detail page preserved');
+assert.ok(cmpHtml.includes('id="manualAiModal"'), 'manual AI modal preserved');
+
+void html; // pageAndStyles is consumed by the CSS-rule assertions above
 console.log('comparison-table-defaults.test.js: all assertions passed');

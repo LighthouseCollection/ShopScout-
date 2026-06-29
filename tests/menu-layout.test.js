@@ -60,31 +60,31 @@ assertIncludes('<div class="rb-group-label">Settings</div>', 'Analyze tab includ
 assertNotIncludes('data-stage-option="finalRecommendation"', 'Analyze ribbon no longer owns stage option checkboxes');
 assertNotIncludes('data-stage-option="secondOpinion"', 'Second opinion stage selection stays inside the AI modal only');
 
-/* View ribbon was rewritten for the Database view (Tabulator + PivotTable.js).
-   The old Sort/Filter/Columns/Grouping groups and their modal triggers are gone:
-   sort/filter/group/columns are now native Tabulator interactions on column headers. */
-assertIncludes('<div class="rb-group-label">Layout</div>',      'View tab keeps a Layout group (Grid / Pivot toggle)');
-assertIncludes('<div class="rb-group-label">Table</div>',       'View tab has a Table group (Group by / Columns / Clear filters)');
-assertIncludes('<div class="rb-group-label">Saved views</div>', 'View tab has a Saved views group');
-assertIncludes('data-db-mode="grid"',                           'Layout group has a Grid mode button');
-assertIncludes('data-db-mode="pivot"',                          'Layout group has a Pivot mode button');
-assertIncludes('id="dbGroupBy"',                                'View ribbon hosts the Group-by select');
-assertIncludes('id="dbColumnsBtn"',                             'View ribbon hosts the Columns dropdown trigger');
-assertIncludes('id="dbClearFiltersBtn"',                        'View ribbon hosts the Clear-filters button');
-assertIncludes('id="savedViewSelect"',                          'View ribbon hosts the Saved-view select');
-assertNotIncludes('<div class="rb-group-label">Sort</div>',          'Old Sort ribbon group is removed (Tabulator headers sort)');
-assertNotIncludes('<div class="rb-group-label">Filter</div>',        'Old Filter ribbon group is removed (Tabulator header filters)');
-assertNotIncludes('<div class="rb-group-label">Columns</div>',       'Old Columns ribbon group is removed (Tabulator column menu)');
-assertNotIncludes('<div class="rb-group-label">Grouping</div>',      'Old Grouping ribbon group is removed (Tabulator grouping)');
-assertNotIncludes('data-command="add-filter"',                       'Old add-filter button is gone');
-assertNotIncludes('data-command="show-columns"',                     'Old show-columns button is gone');
-assertNotIncludes('data-command="open-freeze-modal"',                'Old freeze-modal button is gone');
-assertNotIncludes('data-command="open-column-order-modal"',          'Old column-order button is gone');
-assertNotIncludes('data-command="open-group-modal"',                 'Old group-modal button is gone');
-assertNotIncludes('data-command="hide-all-columns"',                 'View tab removes Hide all');
-assertNotIncludes('<span class="rb-btn-sm-label">Active</span>',     'View tab removes Active filter shortcut');
-assertNotIncludes('<span class="rb-btn-sm-label">Saved</span>',      'View tab removes Saved filter shortcut');
-assertNotIncludes('id="hiddenBar"',                                  'Hidden fields bar is removed from beneath the ribbon');
+/* Task 11 Phase 1 removed the View ribbon's grid-specific groups
+   (Layout / Table / Saved views) along with the Tabulator grid.
+   The View pane now only carries the Active-list mirror; the
+   Phase 2 grid will re-add its own controls. */
+assertIncludes('class="ribbon-pane" data-pane="view"',  'View ribbon pane still exists');
+assertIncludes('data-list-mirror="view"',               'View pane keeps the Active-list mirror');
+assertNotIncludes('<div class="rb-group-label">Layout</div>',  'Old Layout group removed');
+assertNotIncludes('<div class="rb-group-label">Table</div>',   'Old Table group removed');
+assertNotIncludes('<div class="rb-group-label">Saved views</div>', 'Old Saved views group removed');
+assertNotIncludes('data-db-mode="grid"',                       'Old Grid mode toggle removed');
+assertNotIncludes('data-db-mode="pivot"',                      'Old Pivot mode toggle removed');
+assertNotIncludes('id="dbGroupBy"',                            'Old Group-by select removed');
+assertNotIncludes('id="dbColumnsBtn"',                         'Old Columns trigger removed');
+assertNotIncludes('id="dbClearFiltersBtn"',                    'Old Clear-filters button removed');
+assertNotIncludes('id="savedViewSelect"',                      'Old Saved-view select removed');
+assertNotIncludes('<div class="rb-group-label">Sort</div>',    'Old Sort group still absent');
+assertNotIncludes('<div class="rb-group-label">Filter</div>',  'Old Filter group still absent');
+assertNotIncludes('<div class="rb-group-label">Columns</div>', 'Old Columns group still absent');
+assertNotIncludes('<div class="rb-group-label">Grouping</div>','Old Grouping group still absent');
+assertNotIncludes('data-command="show-columns"',               'Old show-columns ribbon dispatch still absent');
+assertNotIncludes('data-command="open-freeze-modal"',          'Old freeze-modal ribbon dispatch still absent');
+assertNotIncludes('data-command="open-column-order-modal"',    'Old column-order ribbon dispatch still absent');
+assertNotIncludes('data-command="open-group-modal"',           'Old group-modal ribbon dispatch still absent');
+assertNotIncludes('data-command="hide-all-columns"',           'hide-all-columns still absent');
+assertNotIncludes('id="hiddenBar"',                            'Hidden fields bar still absent');
 
 assertIncludes('class="ribbon-pane" data-pane="search"', 'Search tab exists as its own ribbon pane');
 assertIncludes('id="productSearchInput"', 'Search tab contains product search input');
@@ -108,33 +108,24 @@ assertIncludes('data-command="suggest-feature"', 'About tab exposes suggest feat
 assertNotIncludes('data-command="contact-support"', 'About tab removes Contact Support');
 assertNotIncludes('Contact support', 'About tab no longer shows Contact Support');
 
-assertIncludes('id="filterModal"', 'Filter modal shell exists');
-assertIncludes('id="columnsModal"', 'Columns modal shell exists');
-assertIncludes('id="freezeModal"', 'Freeze modal shell exists');
-assertIncludes('id="columnOrderModal"', 'Column order modal shell exists');
-assertIncludes('id="groupingModal"', 'Grouping modal shell exists');
-assertIncludes('id="columnSearchInput"', 'Columns modal includes live search');
-assertIncludes('id="freezeSearchInput"', 'Freeze modal includes live search');
-assertIncludes('id="columnOrderList"', 'Column order modal includes a draggable selected-field list');
-assertIncludes('id="groupSearchInput"', 'Grouping modal includes live search');
-assertIncludes('id="manualAiModal"', 'Manual AI modal shell exists');
-assertIncludes('id="settingsPage"', 'Settings can open inside the dashboard content area');
-assertIncludes('id="settingsFrame"', 'Settings page is embedded in the dashboard content area');
+/* Task 11 Phase 1: the five grid modal shells (filterModal,
+   columnsModal, freezeModal, columnOrderModal, groupingModal)
+   were removed with the grid. The Phase 2 grid will register its
+   own modals if it needs any. */
+assertNotIncludes('id="filterModal"',      'Old filterModal removed');
+assertNotIncludes('id="columnsModal"',     'Old columnsModal removed');
+assertNotIncludes('id="freezeModal"',      'Old freezeModal removed');
+assertNotIncludes('id="columnOrderModal"', 'Old columnOrderModal removed');
+assertNotIncludes('id="groupingModal"',    'Old groupingModal removed');
+
+/* Manual AI / Settings / detail flows remain intact. */
+assertIncludes('id="manualAiModal"', 'Manual AI modal shell preserved');
+assertIncludes('id="settingsPage"',  'Settings page preserved');
+assertIncludes('id="settingsFrame"', 'Settings iframe preserved');
+assertIncludes('id="productGrid"',   'Phase 2 grid mount point exists');
 
 assert.ok(js.includes('openSettingsPage'), 'comparison script opens settings inside the dashboard');
 assert.ok(js.includes('openManualAiModal'), 'comparison script opens manual AI in an embedded modal');
-assert.ok(js.includes('filterUtilityList'), 'column and grouping modals filter as the user types');
-assert.ok(js.includes('renderColumnControlList'), 'comparison script renders column visibility controls in a modal');
-assert.ok(js.includes('autoHiddenDynamicCols.delete(input.dataset.columnToggle)'), 'turning on an auto-hidden dynamic spec column keeps it visible');
-assert.ok(js.includes('renderFreezeControlList'), 'comparison script renders freeze controls in a modal');
-assert.ok(js.includes('frozenColumnIds') && js.includes('data-freeze-column'), 'Freeze modal allows selecting specific fields to freeze');
-assert.ok(js.includes('applyFrozenColumnOffsets'), 'selected frozen fields are applied to table columns');
-assert.ok(js.includes('columnOrderIds') && js.includes('renderColumnOrderList'), 'Column order modal tracks selected visible fields');
-assert.ok(js.includes('data-column-order-id') && js.includes('saveColumnOrderFromDom'), 'Column order modal persists drag order back to the table');
-assert.ok(js.includes('renderFilterModal'), 'comparison script renders filter controls in a modal');
-assert.ok(js.includes('renderGroupingModal'), 'comparison script renders grouping controls in a modal');
-assert.ok(/getAllColumns\(\)[\s\S]*?\.filter\(col => col\.hideable\)/.test(js), 'Columns modal hides non-hideable system columns such as thumbnail and actions');
-assert.ok(!js.includes(' (required)'), 'Columns modal no longer labels thumbnail/actions as required');
 assert.ok(js.includes("activateRibbonTab('products')"), 'open-list command routes to the Products tab');
 assert.ok(js.includes("activateRibbonTab('about')"), 'help/about commands route to the About tab');
 assert.ok(js.includes('renderMarkdownToHtml'), 'markdown help/about files render inside the dashboard');
@@ -142,5 +133,22 @@ assert.ok(js.includes('openDashboardInfoPage'), 'ribbon informational commands o
 assert.ok(js.includes('openFeedbackPage'), 'suggest feature and report bug open inside the main content area');
 assert.ok(js.includes('renderTopbarAiProviderMenu'), 'comparison script renders AI provider choices in the analyze ribbon');
 assert.ok(!js.includes('modelLabel'), 'AI provider menu shows provider names only, not model names');
+
+/* Task 11 Phase 1: the column/freeze/order/filter/group modal
+   wiring (filterUtilityList, renderColumnControlList,
+   renderFreezeControlList, renderColumnOrderList, renderFilterModal,
+   renderGroupingModal, applyFrozenColumnOffsets,
+   saveColumnOrderFromDom, getAllColumns, frozenColumnIds,
+   columnOrderIds, hiddenCols, autoHiddenDynamicCols) was deleted
+   with the rest of the grid layer. */
+for (const removed of [
+  'filterUtilityList', 'renderColumnControlList', 'renderFreezeControlList',
+  'renderColumnOrderList', 'renderFilterModal', 'renderGroupingModal',
+  'applyFrozenColumnOffsets', 'saveColumnOrderFromDom',
+  'frozenColumnIds', 'columnOrderIds', 'hiddenCols', 'autoHiddenDynamicCols',
+  'data-column-order-id', 'data-freeze-column'
+]) {
+  assert.ok(!js.includes(removed), `${removed} no longer in comparison.js`);
+}
 
 console.log('menu layout tests passed');

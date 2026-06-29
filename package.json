@@ -8,7 +8,7 @@
     "build": "pwsh -File scripts/build-extension.ps1",
     "syntax": "node -e \"const fs=require('fs'),path=require('path'),cp=require('child_process');function walk(d){for(const e of fs.readdirSync(d,{withFileTypes:true})){const p=path.join(d,e.name);if(e.isDirectory()){if(['dist','node_modules','vendor','archived','.git'].includes(e.name))continue;walk(p)}else if(e.name.endsWith('.js'))cp.execSync('node --check '+JSON.stringify(p))}}walk('.')\"",
     "lint": "eslint .",
-    "typecheck": "tsc --noEmit --allowJs --checkJs --target es2020 --moduleResolution node --ignoreDeprecations 6.0 --skipLibCheck --noImplicitAny false content/productSchema.js data/cellFormatters.js data/specHeuristic.js"
+    "typecheck": "tsc --noEmit --allowJs --checkJs --target es2020 --moduleResolution node --ignoreDeprecations 6.0 --skipLibCheck --noImplicitAny false content/productSchema.js data/specHeuristic.js shared/values/cellValues.js shared/projections/specProjection.js shared/edits/ratingWriter.js"
   },
   "devDependencies": {
     "eslint": "^8.57.1",

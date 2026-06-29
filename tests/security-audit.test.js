@@ -124,54 +124,9 @@ function loadSanitizeForGuide() {
   return context.ShopScoutSanitize;
 }
 
-function createRowActionsMenu() {
-  const sourcePath = path.join(__dirname, '..', 'table', 'rowActionsMenu.js');
-  const createdElements = [];
-  const document = {
-    body: {
-      appendChild(element) {
-        createdElements.push(element);
-      }
-    },
-    createElement() {
-      return {
-        id: '',
-        className: '',
-        innerHTML: '',
-        style: {},
-        remove() {},
-        getBoundingClientRect() { return { width: 140, height: 100 }; },
-        addEventListener(type, handler) {
-          if (type === 'click') this._click = handler;
-        }
-      };
-    },
-    getElementById(id) {
-      return createdElements.find(element => element.id === id) || null;
-    },
-    addEventListener() {}
-  };
-  const opened = [];
-  const context = {
-    globalThis: null,
-    document,
-    window: {
-      innerWidth: 1200,
-      scrollX: 0,
-      scrollY: 0,
-      open(url) { opened.push(url); }
-    }
-  };
-  context.globalThis = context;
-  vm.createContext(context);
-  vm.runInContext(fs.readFileSync(sourcePath, 'utf8'), context, { filename: sourcePath });
-  return {
-    create: context.ShopScoutTable.rowActions.create,
-    document,
-    opened,
-    latestMenu: () => createdElements[createdElements.length - 1]
-  };
-}
+/* Task 11 Phase 1: table/rowActionsMenu.js was deleted with the rest
+   of the grid layer. The Phase 2 grid will re-implement row actions
+   and reattach this kind of safe-open test. */
 
 const SS = loadUtils();
 
@@ -245,21 +200,8 @@ assert.ok(!providerHtml.includes('href="javascript:'), 'provider guide never emi
 assert.ok(!providerHtml.includes('href="data:'), 'provider guide never emits data: hrefs');
 assert.strictEqual((providerHtml.match(/href="#"/g) || []).length, 2, 'unsafe provider links fall back to inert anchors');
 
-const rowActions = createRowActionsMenu();
-const menuApi = rowActions.create({
-  document: rowActions.document,
-  window: { innerWidth: 1200, scrollX: 0, scrollY: 0, open(url) { rowActions.opened.push(url); } },
-  repo: { removeProduct() {} },
-  getTabulator: () => ({ getDataCount: () => 1 }),
-  setStatus() {}
-});
-const anchor = { getBoundingClientRect() { return { right: 200, bottom: 40 }; } };
-menuApi.open(anchor, { getData: () => ({ id: 'bad', url: 'javascript:alert(1)' }) });
-rowActions.latestMenu()._click({ target: { closest: () => ({ dataset: { action: 'open' }, disabled: false }) } });
-assert.deepStrictEqual(rowActions.opened, [], 'row actions do not open unsafe product URLs');
-menuApi.open(anchor, { getData: () => ({ id: 'good', url: 'https://example.com/product' }) });
-rowActions.latestMenu()._click({ target: { closest: () => ({ dataset: { action: 'open' }, disabled: false }) } });
-assert.deepStrictEqual(rowActions.opened, ['https://example.com/product'], 'row actions open safe http(s) product URLs');
+/* row-action safe-open assertions removed with the grid (Task 11
+   Phase 1). The new grid will reattach equivalent coverage. */
 
 const Monitor = loadMonitor();
 const state = Monitor.createMonitorState({ productIndexes: [0], productCount: 1 });

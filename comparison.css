@@ -2,7 +2,54 @@
    Page-scoped styles for comparison.html
    This file extends theme.css. theme.css MUST load first.
    No new design tokens belong here — only page-specific layout.
+
+   TASK 11 PHASE 1 NOTE
+   ---------------------
+   The Tabulator/PivotTable grid layer was removed. Many of the
+   rules below (.db-view-*, .db-cell-*, .db-row-*, .db-columns-*,
+   .db-table-*, .ss-pill, .ss-pill-row, .ss-stars, .ss-stars-*,
+   .ss-cell-val, .ss-compare-*, .table-wrap, .frozen-col,
+   .row-action-panel, .utility-modal, .utility-modal-wide,
+   .utility-search, .utility-list, .utility-option, .utility-check,
+   .utility-help, .filter-bar, .filter-chip, .chip-*,
+   .column-order-*, .inline-edit-control, .th-menu-trigger,
+   .th-inner, .sort-arrow, .scanning, .empty-state, .es-*,
+   .menu-item, .menu-separator) now have no live DOM to apply
+   to. They are kept temporarily so the new grid (Phase 2) can
+   either re-use them on familiar markup or replace them
+   wholesale. The next grid task should sweep the dead rules
+   it does not adopt.
+
+   Live styles include: ribbon shell, ribbon panes, list/url/
+   filter bars, urlBar, settings page shell, AI results page,
+   product detail page, manual AI modal, lightbox, feedback,
+   compare panel base, dashboard back/copy picker, and the
+   #productGrid placeholder.
    ============================================================= */
+.product-grid-mount {
+  margin: 16px 22px 48px;
+  border: 1px dashed var(--rule-soft, #d1d5db);
+  border-radius: 12px;
+  padding: 40px 24px;
+  background: #fafbfd;
+}
+.product-grid-empty {
+  max-width: 640px;
+  margin: 0 auto;
+  text-align: center;
+  color: var(--muted, #4b5563);
+}
+.product-grid-empty h2 {
+  font-size: 16px;
+  font-weight: 600;
+  margin-bottom: 8px;
+  color: var(--text, #111827);
+}
+.product-grid-empty p {
+  font-size: 13px;
+  line-height: 1.6;
+}
+
 
 :root {
     --ink: #0f1419; --ink-2: #2a3441; --ink-3: #5a6470; --ink-4: #8b95a1;
