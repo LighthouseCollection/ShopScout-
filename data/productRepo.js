@@ -8,6 +8,21 @@
   const SSDB = root.SSDB;
   if (!SSDB) throw new Error('productRepo: data/db.js must load first');
   const { db, uuid, now } = SSDB;
+  const State = root.ShopScoutState || {};
+  const lockManager = State.createLockManager ? State.createLockManager() : null;
+
+  function listLock(listId) {
+    if (State.Actions && typeof State.Actions.listLock === 'function') return State.Actions.listLock(listId);
+    return listId ? 'list:' + listId : null;
+  }
+
+  async function withListLock(listId, task) {
+    const lockKey = listLock(listId);
+    if (lockKey && lockManager && typeof lockManager.runWithLock === 'function') {
+      return lockManager.runWithLock(lockKey, task);
+    }
+    return task();
+  }
 
   /* ---------- lists ---------- */
   async function ensureDefaultList() {
@@ -62,44 +77,126 @@
   }
 
   /* ---------- products ---------- */
+  function normalizeRevision(value) {
+    const n = Number(value);
+    return isFinite(n) && n > 0 ? Math.floor(n) : 1;
+  }
+
   function normalizeIncoming(p, listId) {
     const ts = now();
     return Object.assign({}, p, {
       id: p.id || uuid(),
       listId,
       capturedAt: p.capturedAt || ts,
-      updatedAt: ts
+      updatedAt: ts,
+      _revision: normalizeRevision(p._revision)
     });
   }
 
   async function addProduct(listId, product) {
-    const rec = normalizeIncoming(product, listId);
-    await db.products.add(rec);
-    return rec;
+    return withListLock(listId, async () => {
+      const rec = normalizeIncoming(product, listId);
+      await db.products.add(rec);
+      return rec;
+    });
   }
 
   async function addProducts(listId, products) {
-    const ts = now();
-    const recs = products.map(p => Object.assign({}, p, {
-      id: p.id || uuid(),
-      listId,
-      capturedAt: p.capturedAt || ts,
-      updatedAt: ts
-    }));
-    await db.products.bulkAdd(recs);
-    return recs;
+    return withListLock(listId, async () => {
+      const recs = products.map(p => normalizeIncoming(p, listId));
+      await db.products.bulkAdd(recs);
+      return recs;
+    });
   }
 
-  async function updateProduct(id, patch) {
-    await db.products.update(id, Object.assign({}, patch, { updatedAt: now() }));
+  function cleanPatch(patch) {
+    const next = Object.assign({}, patch || {});
+    delete next.id;
+    delete next._revision;
+    delete next.updatedAt;
+    delete next.rowSelect;
+    delete next.rowActions;
+    delete next._ssRanks;
+    delete next._rankCalls;
+    for (const key of Object.keys(next)) {
+      if (key.startsWith('spec:')) delete next[key];
+    }
+    return next;
   }
 
-  async function removeProduct(id) {
-    await db.products.delete(id);
+  function revisionConflict(product, baseRevision) {
+    return baseRevision != null && normalizeRevision(product && product._revision) > Number(baseRevision);
   }
 
-  async function removeProducts(ids) {
-    await db.products.bulkDelete(ids);
+  async function updateProduct(id, patch, options) {
+    const opts = options || {};
+    const current = await db.products.get(id);
+    if (!current) return { ok: false, reason: 'missing-product' };
+    const listId = opts.listId || current.listId || patch && patch.listId || '';
+    return withListLock(listId, async () => {
+      const fresh = await db.products.get(id);
+      if (!fresh) return { ok: false, reason: 'missing-product' };
+      if (opts.listId && fresh.listId && opts.listId !== fresh.listId) {
+        return { ok: false, reason: 'list-mismatch', product: fresh };
+      }
+      if (revisionConflict(fresh, opts.baseRevision)) {
+        return {
+          ok: false,
+          reason: 'revision-conflict',
+          product: fresh,
+          conflict: {
+            productId: id,
+            listId: fresh.listId || listId,
+            baseRevision: opts.baseRevision,
+            currentRevision: normalizeRevision(fresh._revision),
+            source: opts.source || 'update'
+          }
+        };
+      }
+      const revision = normalizeRevision(fresh._revision) + 1;
+      const next = Object.assign({}, cleanPatch(patch), {
+        updatedAt: now(),
+        _revision: revision,
+        _lastMutationSource: opts.source || 'update'
+      });
+      await db.products.update(id, next);
+      return { ok: true, product: Object.assign({}, fresh, next) };
+    });
+  }
+
+  async function removeProduct(id, options) {
+    const current = await db.products.get(id);
+    const listId = options && options.listId || current && current.listId || '';
+    return withListLock(listId, async () => {
+      await db.products.delete(id);
+      return { ok: true, product: current || null };
+    });
+  }
+
+  async function removeProducts(ids, options) {
+    const input = Array.isArray(ids) ? ids : [];
+    const opts = options || {};
+    if (opts.listId) {
+      return withListLock(opts.listId, async () => {
+        await db.products.bulkDelete(input);
+        return { ok: true, removed: input.length };
+      });
+    }
+    const byList = new Map();
+    for (const id of input) {
+      const product = await db.products.get(id);
+      const listId = product && product.listId || '';
+      if (!byList.has(listId)) byList.set(listId, []);
+      byList.get(listId).push(id);
+    }
+    let removed = 0;
+    for (const [listId, groupIds] of byList.entries()) {
+      await withListLock(listId, async () => {
+        await db.products.bulkDelete(groupIds);
+        removed += groupIds.length;
+      });
+    }
+    return { ok: true, removed };
   }
 
   async function getProduct(id) {

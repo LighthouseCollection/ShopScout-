@@ -10,11 +10,23 @@
   const views = root.SSViewsRepo;
   const Tabulator = root.Tabulator;
   const $ = root.jQuery || root.$;
+  const Table = root.ShopScoutTable || {};
+  const tableUtils = Table.utils;
+  const productRows = Table.productRows;
+  if (!tableUtils || !productRows || !Table.rowActions || !Table.columnsMenu) {
+    throw new Error('comparison-db: table modules must load before comparison-db.js');
+  }
+  const esc = tableUtils.escapeHtml;
+  const escapeHtml = tableUtils.escapeHtml;
+  const numericSorter = tableUtils.numericSorter;
+  const truncate = tableUtils.truncate;
 
   let tabulator   = null;
   let currentMode = 'grid';            // 'grid' | 'pivot'
   let currentViewId = null;
-  const STATUS = id => document.getElementById('dbViewStatus');
+  let rowActionsMenu = null;
+  let columnsMenu = null;
+  const STATUS = () => document.getElementById('dbViewStatus');
 
   /* ===== Column model for Tabulator =====
      Mirrors the legacy COLUMNS array but expressed in Tabulator's language. */
@@ -109,7 +121,6 @@
     { title: 'Price',    field: 'newPrice',     sorter: numericSorter, hozAlign: 'right', headerHozAlign: 'right',
       headerFilter: 'input', headerFilterFunc: numericOperatorFilter, headerFilterPlaceholder: '>100, <50, 10-20…',
       formatter(cell) {
-        const CF = globalThis.SSCellFormatters;
         const v = cell.getValue();
         if (v == null || v === '') return '<span class="db-cell-empty">&mdash;</span>';
         const n = Number(String(v).replace(/[^\d.-]/g, ''));
@@ -236,68 +247,20 @@
   }
 
   /* ===== Row actions popover ===== */
-  let openRowActionsTarget = null;
-  function closeRowActionsMenu() {
-    const menu = document.getElementById('dbRowActionsMenu');
-    if (menu) menu.remove();
-    openRowActionsTarget = null;
+  function getRowActionsMenu() {
+    if (!rowActionsMenu) {
+      rowActionsMenu = Table.rowActions.create({
+        document,
+        window,
+        repo,
+        getTabulator: () => tabulator,
+        setStatus
+      });
+    }
+    return rowActionsMenu;
   }
   function openRowActionsMenu(anchor, row) {
-    closeRowActionsMenu();
-    if (!anchor || !row) return;
-    const data = row.getData();
-    if (!data) return;
-    const menu = document.createElement('div');
-    menu.id = 'dbRowActionsMenu';
-    menu.className = 'db-row-actions-menu';
-    menu.innerHTML =
-      '<button type="button" data-action="open"   ' + (data.url ? '' : 'disabled') + '><span class="db-row-actions-ico">&#x2197;</span>Open product page</button>' +
-      '<button type="button" data-action="edit">  <span class="db-row-actions-ico">&#x270E;</span>Edit details</button>' +
-      '<button type="button" data-action="rescan" ' + (data.url ? '' : 'disabled') + '><span class="db-row-actions-ico">&#x21bb;</span>Rescan from page</button>' +
-      '<div class="db-row-actions-sep"></div>' +
-      '<button type="button" data-action="delete" class="is-danger"><span class="db-row-actions-ico">&times;</span>Delete row</button>';
-    document.body.appendChild(menu);
-    const rect = anchor.getBoundingClientRect();
-    const menuRect = menu.getBoundingClientRect();
-    let left = rect.right - menuRect.width;
-    if (left < 8) left = 8;
-    if (left + menuRect.width > window.innerWidth - 8) left = window.innerWidth - menuRect.width - 8;
-    menu.style.top  = (rect.bottom + 4 + window.scrollY) + 'px';
-    menu.style.left = (left + window.scrollX) + 'px';
-    openRowActionsTarget = anchor;
-    menu.addEventListener('click', e => onRowActionClick(e, data, row));
-  }
-  async function onRowActionClick(e, data, row) {
-    const btn = e.target.closest('button[data-action]');
-    if (!btn || btn.disabled) return;
-    const action = btn.dataset.action;
-    closeRowActionsMenu();
-    if (action === 'open') {
-      if (data.url) window.open(data.url, '_blank', 'noopener');
-    } else if (action === 'edit') {
-      if (typeof globalThis.openProductDetailById === 'function') globalThis.openProductDetailById({ id: data.id, url: data.url });
-    } else if (action === 'rescan') {
-      if (typeof globalThis.rescanProductById === 'function') globalThis.rescanProductById({ id: data.id, url: data.url });
-    } else if (action === 'delete') {
-      if (data.id) await repo.removeProduct(data.id);
-      row.delete();
-      setStatus(((tabulator && tabulator.getDataCount()) || 0) + ' rows');
-    }
-  }
-  /* Outside-click / Escape closes the menu. */
-  document.addEventListener('click', e => {
-    const menu = document.getElementById('dbRowActionsMenu');
-    if (!menu) return;
-    if (menu.contains(e.target)) return;
-    if (e.target.closest && e.target.closest('[data-row-actions]')) return;
-    closeRowActionsMenu();
-  });
-  document.addEventListener('keydown', e => { if (e.key === 'Escape') closeRowActionsMenu(); });
-
-  function esc(s) {
-    return String(s == null ? '' : s)
-      .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
-      .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+    getRowActionsMenu().open(anchor, row);
   }
 
   function cellMoney(cell) {
@@ -305,27 +268,6 @@
     if (v == null || v === '') return '<span class="db-cell-empty">&mdash;</span>';
     const n = Number(String(v).replace(/[^\d.-]/g, ''));
     return isFinite(n) ? '$' + n.toFixed(2) : esc(v);
-  }
-
-  /* Numeric sorter that handles values stored as currency / count strings.
-     "$20.99" -> 20.99, "1,234 ratings" -> 1234, "" / null -> -Infinity (sort last
-     ascending). Tabulator's built-in 'number' sorter passes the raw string to
-     Number(), which is NaN for any of these, so sort order is undefined. */
-  function parseNumeric(v) {
-    if (v == null || v === '') return -Infinity;
-    if (typeof v === 'number' && isFinite(v)) return v;
-    const cleaned = String(v).replace(/[^\d.\-]/g, '');
-    if (!cleaned || cleaned === '-' || cleaned === '.') return -Infinity;
-    const n = Number(cleaned);
-    return isFinite(n) ? n : -Infinity;
-  }
-  function numericSorter(a, b) {
-    const an = parseNumeric(a);
-    const bn = parseNumeric(b);
-    if (an === bn) return 0;
-    if (an === -Infinity) return -1;
-    if (bn === -Infinity) return 1;
-    return an - bn;
   }
 
   function cellNumber(cell) {
@@ -346,10 +288,6 @@
      an ellipsis; the full title is preserved in the title attribute so the
      browser native tooltip shows it on hover. */
   const TITLE_MAX = 40;
-  function truncate(s, n) {
-    s = String(s || '');
-    return s.length > n ? s.slice(0, n - 1).trimEnd() + '…' : s;
-  }
   function cellTitle(cell) {
     const row = cell.getRow().getData();
     /* Apply the dedup heuristic to the raw stored title so legacy
@@ -457,7 +395,29 @@
     const data = cell.getRow().getData();
     if (!data || !data.id) return;
     try {
-      if (repo && repo.updateProduct) await repo.updateProduct(data.id, data);
+      if (repo && repo.updateProduct) {
+        const result = await repo.updateProduct(data.id, data, {
+          listId: data.listId,
+          baseRevision: data._revision,
+          source: 'table-edit'
+        });
+        if (result && result.ok === false) {
+          if (result.reason === 'revision-conflict') {
+            setStatus('Edit not saved: this product changed elsewhere. Row refreshed.');
+            if (result.product && cell.getRow && cell.getRow().update) {
+              const refreshed = productRows.flattenSpecs([result.product], { root })[0];
+              cell.getRow().update(refreshed);
+            }
+            return;
+          }
+          setStatus('Edit not saved: ' + (result.reason || 'update failed') + '.');
+          return;
+        }
+        if (result && result.product && cell.getRow && cell.getRow().update) {
+          const refreshed = productRows.flattenSpecs([result.product], { root })[0];
+          cell.getRow().update(refreshed);
+        }
+      }
     } catch (err) { console.warn('updateProduct failed', err); }
     /* Mirror back into chrome.storage.local so the legacy popup view
        picks up the edit too. */
@@ -495,7 +455,7 @@
     const raw = cell.getValue();
     const v = unwrapStored(raw);
     if (!v) return '<span class="db-cell-empty">&mdash;</span>';
-    const n = Number(String(v).replace(/[^\d.\-]/g, ''));
+    const n = Number(String(v).replace(/[^\d.-]/g, ''));
     if (!isFinite(n)) return '<span class="db-cell-empty">&mdash;</span>';
     const stars = n.toFixed(1);
     const cntRaw = unwrapStored(row.reviewCount);
@@ -543,46 +503,13 @@
   }
 
   /* ===== Data ===== */
-  /* Flatten product.specs[] into top-level "spec:<CanonicalKey>" fields so
-     Tabulator can sort/filter/render them like any other column. The raw
-     product.specs[] array stays on the row untouched. */
-  function flattenSpecs(rows) {
-    const canon = globalThis.SSCanonical;
-    const canonKey = canon && canon.canonicalKey
-      ? (k) => canon.canonicalKey(k)
-      : (k) => String(k || '').trim();
-    const SH = globalThis.SSSpecHeuristic;
-    const CF = globalThis.SSCellFormatters;
-    const flattened = rows.map(p => {
-      const flat = Object.assign({}, p);
-      const list = SH && SH.specListOf ? SH.specListOf(p) : (Array.isArray(p.specs) ? p.specs : []);
-      const seen = new Set();
-      for (const s of list) {
-        if (!s || s.key == null) continue;
-        const key = canonKey(s.key);
-        if (!key || seen.has(key)) continue;
-        seen.add(key);
-        flat['spec:' + key] = s.value == null ? '' : String(s.value);
-      }
-      return flat;
-    });
-    /* Pre-compute best-in-row ranks for the always-visible numeric
-       columns so the formatters can tint them. Spec columns get their
-       own ranks computed inside buildSpecColumns at column-build time. */
-    if (CF && CF.computeRanks) {
-      CF.computeRanks(flattened, 'newPrice', 'low');
-      CF.computeRanks(flattened, 'rating',   'high');
-    }
-    return flattened;
-  }
-
   async function loadRows() {
     if (!repo) throw new Error('SSProductRepo not loaded — check data/ script order');
     const listId = await repo.getActiveListId();
     if (!listId) return [];
     const view = currentViewId ? await views.getView(currentViewId) : null;
     const raw = await repo.query(listId, view || {});
-    return flattenSpecs(raw);
+    return productRows.flattenSpecs(raw, { root });
   }
 
   /* ===== Grid (Tabulator) ===== */
@@ -699,32 +626,6 @@
      PivotTable.js crashes if any cell value is a non-primitive (object / array),
      so we flatten product records to scalar-only fields here. Nested specs and
      bullets are summarized into a count column instead. */
-  const PIVOT_FIELDS = [
-    'source','brand','manufacturer','category','sellerName','availability',
-    'modelName','modelNumber','sku','asin','upc','mpn','gtin'
-  ];
-  const PIVOT_NUMERIC = ['newPrice','usedPrice','shippingPrice','rating','reviewCount'];
-
-  function flattenForPivot(rows) {
-    return rows.map(r => {
-      const out = {};
-      for (const f of PIVOT_FIELDS) out[f] = scalarOrBlank(r[f]);
-      for (const f of PIVOT_NUMERIC) {
-        const n = Number(String(r[f] || '').replace(/[^\d.\-]/g, ''));
-        out[f] = isFinite(n) ? n : 0;
-      }
-      out.specsCount   = Array.isArray(r.specs)   ? r.specs.length   : 0;
-      out.bulletsCount = Array.isArray(r.bullets) ? r.bullets.length : 0;
-      out.capturedYear = r.capturedAt ? new Date(Number(r.capturedAt)).getUTCFullYear() : '';
-      return out;
-    });
-  }
-  function scalarOrBlank(v) {
-    if (v == null) return '';
-    if (typeof v === 'object') return '';
-    return String(v);
-  }
-
   async function renderPivot() {
     const container = document.getElementById('dbViewPivot');
     if (!container) return;
@@ -744,7 +645,7 @@
         '<div class="es-body">Capture products from a product page, then come back here to slice them by source, category, brand, etc.</div></div>';
       return;
     }
-    const data = flattenForPivot(rows);
+    const data = productRows.flattenForPivot(rows);
     try {
       $(container).empty().pivotUI(data, {
         rows: ['source'],
@@ -775,12 +676,6 @@
     sel.innerHTML = '<option value="">(All products)</option>' + all.map(v =>
       `<option value="${v.id}"${v.id === currentViewId ? ' selected' : ''}>${escapeHtml(v.name)} · ${v.mode}</option>`
     ).join('');
-  }
-
-  function escapeHtml(s) {
-    return String(s == null ? '' : s)
-      .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
-      .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
   }
 
   async function onSaveView() {
@@ -939,90 +834,25 @@
   }
 
   /* ===== Columns popover — list every column with a visibility checkbox ===== */
-  function buildColumnsMenu() {
-    const menu = document.getElementById('dbColumnsMenu');
-    if (!menu || !tabulator) return;
-    const cols = tabulator.getColumns();
-    /* Build entries, then sort: rowSelect always first; pinned (title, thumb)
-       next; everything else alphabetically by label — case-insensitive,
-       locale-aware so "Brand" sorts before "category" the way a user expects. */
-    const entries = cols.map(c => {
-      const def = c.getDefinition();
-      const id = def.field || '';
-      const label = (def.title || id || '').toString().trim() || '(unnamed)';
-      const locked = (id === 'title' || id === 'thumb');
-      const isRowSelect = (id === 'rowSelect' || def.formatter === 'rowSelection');
-      return { c, def, id, label, locked, isRowSelect };
-    });
-    function sortGroup(e) {
-      if (e.isRowSelect) return 0;
-      if (e.locked) return 1;
-      return 2;
+  function getColumnsMenu() {
+    if (!columnsMenu) {
+      columnsMenu = Table.columnsMenu.create({
+        document,
+        getTabulator: () => tabulator,
+        applyInvertedRowVisibility
+      });
     }
-    entries.sort((a, b) => {
-      const ga = sortGroup(a), gb = sortGroup(b);
-      if (ga !== gb) return ga - gb;
-      return a.label.localeCompare(b.label, undefined, { sensitivity: 'base' });
-    });
-    /* Two quick-actions at the top: show every (non-locked) column,
-       or hide them all. Locked columns (Title, thumb) stay visible. */
-    const header = ''
-      + '<div class="db-columns-actions">'
-      +   '<button type="button" data-col-action="all">Show all</button>'
-      +   '<button type="button" data-col-action="none">Hide all</button>'
-      + '</div>';
-    menu.innerHTML = header + entries.map(e => {
-      const checked = e.c.isVisible() ? ' checked' : '';
-      const disabled = e.locked ? ' disabled' : '';
-      return '<label class="db-columns-row' + (e.locked ? ' is-locked' : '') + '">' +
-             '<input type="checkbox" data-col-field="' + escapeHtml(e.id) + '"' + checked + disabled + '>' +
-             '<span>' + escapeHtml(e.label) + '</span>' +
-             (e.locked ? '<small>pinned</small>' : '') +
-             '</label>';
-    }).join('');
-    menu.querySelectorAll('[data-col-action]').forEach(btn => {
-      btn.addEventListener('click', () => {
-        const want = btn.dataset.colAction === 'all';
-        for (const e of entries) {
-          if (e.locked) continue;
-          if (want) e.c.show(); else e.c.hide();
-          const cb = menu.querySelector('[data-col-field="' + CSS.escape(e.id) + '"]');
-          if (cb && !cb.disabled) cb.checked = want;
-          /* Sync the inverted view row for this column. */
-          const def = e.c.getDefinition();
-          const label = (def.title || '').toString().trim();
-          if (label) applyInvertedRowVisibility(label, want);
-        }
-      });
-    });
-    menu.querySelectorAll('input[data-col-field]').forEach(cb => {
-      cb.addEventListener('change', () => {
-        const col = tabulator.getColumn(cb.dataset.colField);
-        if (!col) return;
-        if (cb.checked) col.show(); else col.hide();
-        /* Bridge to the inverted view: a Tabulator column maps to a
-           ROW in the transposed table. We match by the column title
-           against the row's data-row-label so any toggle in the
-           Columns popover hides/shows the matching spec key here. */
-        const def = col.getDefinition();
-        const label = (def.title || '').toString().trim();
-        if (label) applyInvertedRowVisibility(label, cb.checked);
-      });
-    });
+    return columnsMenu;
   }
 
   function toggleColumnsMenu(open) {
-    const btn = document.getElementById('dbColumnsBtn');
-    const menu = document.getElementById('dbColumnsMenu');
-    if (!btn || !menu) return;
-    const shouldOpen = open != null ? open : menu.hidden;
-    if (shouldOpen) buildColumnsMenu();
-    menu.hidden = !shouldOpen;
-    btn.setAttribute('aria-expanded', shouldOpen ? 'true' : 'false');
+    getColumnsMenu().toggle(open);
   }
 
   /* ===== Event wiring ===== */
   function bind() {
+    getRowActionsMenu().bindGlobal();
+
     /* Mode toggle (Grid / Pivot) — in both the dbView toolbar AND the ribbon Layout group.
        Clicking Grid or Pivot explicitly turns OFF the inverted layout
        because the user is asking for the standard view. */
@@ -1228,7 +1058,7 @@
       v = unwrapStored(v);
       if (!v) return '<span class="db-cell-empty">&mdash;</span>';
       if (row.kind === 'stars') {
-        const n = parseFloat(String(v).replace(/[^\d.\-]/g, ''));
+        const n = parseFloat(String(v).replace(/[^\d.-]/g, ''));
         if (!isFinite(n)) return esc(String(v));
         const pct = Math.max(0, Math.min(100, (n / 5) * 100));
         return '<div class="ss-stars"><div class="ss-stars-row">'
@@ -1451,7 +1281,7 @@
      carries data-invert-action; the containing div carries the
      product id/url. We route to the same handlers the grid's row
      menu uses. */
-  function bindInvertedActions(container, visibleRows) {
+  function bindInvertedActions(container, _visibleRows) {
     container.addEventListener('click', async (e) => {
       const btn = e.target && e.target.closest && e.target.closest('[data-invert-action]');
       if (!btn || btn.disabled) return;
@@ -1498,7 +1328,7 @@
   /* My-rating delegation — supports BOTH the grid and the inverted
      view. A single listener on the document handles clicks on any
      [data-myrating] inside a [data-myrating-widget]. */
-  function bindMyRatingDelegation(scope) {
+  function bindMyRatingDelegation(_scope) {
     /* Mounted once globally — every call here is a no-op after the
        first because we set a flag on the document. */
     if (root.__ssMyRatingBound) return;
