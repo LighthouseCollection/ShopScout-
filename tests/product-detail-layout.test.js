@@ -11,7 +11,7 @@ const source =
 
 const headerDeclaration = source.indexOf('const productHeaderHtml');
 const tabsDeclaration = source.indexOf('const overviewHtml');
-const contentAssignment = source.indexOf('content.innerHTML = `${productHeaderHtml}');
+const contentAssignment = source.indexOf('setTrustedHtml(content, `${productHeaderHtml}');
 
 assert.ok(headerDeclaration >= 0, 'product detail has a separate product header block');
 assert.ok(tabsDeclaration > headerDeclaration, 'tab pane content is declared after the product header block');

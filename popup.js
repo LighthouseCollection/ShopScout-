@@ -7,6 +7,14 @@ let listModalMode = 'new';
 let pendingAiRunOptions = null;
 let popupAiRunInProgress = false;
 
+function setTrustedHtml(target, html) {
+  if (globalThis.ShopScoutSanitize?.setTrustedHtml) {
+    globalThis.ShopScoutSanitize.setTrustedHtml(target, html);
+    return;
+  }
+  if (target) target.innerHTML = html == null ? '' : String(html);
+}
+
 document.addEventListener('DOMContentLoaded', init);
 
 async function init() {
@@ -36,7 +44,7 @@ async function init() {
 async function renderListSelector() {
   const data = await getData();
   const sel = document.getElementById('listSelect');
-  sel.innerHTML = Object.keys(data.lists).map(n => `<option value="${esc(n)}"${n === data.activeList ? ' selected' : ''}>${esc(n)}</option>`).join('');
+  setTrustedHtml(sel, Object.keys(data.lists).map(n => `<option value="${esc(n)}"${n === data.activeList ? ' selected' : ''}>${esc(n)}</option>`).join(''));
 }
 
 async function switchList(name) {
@@ -54,7 +62,7 @@ async function renderProducts() {
   const sources = [...new Set(products.map(p => p.source).filter(Boolean))];
   const filterSel = document.getElementById('filterSource');
   const curFilter = filterSel.value;
-  filterSel.innerHTML = '<option value="">All Sources</option>' + sources.map(s => `<option value="${esc(s)}"${s === curFilter ? ' selected' : ''}>${esc(s)}</option>`).join('');
+  setTrustedHtml(filterSel, '<option value="">All Sources</option>' + sources.map(s => `<option value="${esc(s)}"${s === curFilter ? ' selected' : ''}>${esc(s)}</option>`).join(''));
 
   if (curFilter) products = products.filter(p => p.source === curFilter);
 
@@ -66,11 +74,11 @@ async function renderProducts() {
 
   const container = document.getElementById('productList');
   if (!products.length) {
-    container.innerHTML = `<div class="empty"><div class="icon">&#128722;</div><p>No products yet.<br>Visit a product page and click <strong>Add Current Product</strong>.</p></div>`;
+    setTrustedHtml(container, `<div class="empty"><div class="icon">&#128722;</div><p>No products yet.<br>Visit a product page and click <strong>Add Current Product</strong>.</p></div>`);
     return;
   }
 
-  container.innerHTML = products.map((p, i) => {
+  setTrustedHtml(container, products.map((p, i) => {
     const idx = (data.lists[data.activeList] || []).indexOf(p);
     const imageUrl = sanitizeUrl(p.image);
     const productUrl = sanitizeUrl(p.url);
@@ -95,7 +103,7 @@ async function renderProducts() {
         <button class="remove-btn" data-idx="${idx}" title="Remove">&times;</button>
       </div>
     </div>`;
-  }).join('');
+  }).join(''));
 }
 
 // --- Events ---
@@ -250,7 +258,7 @@ function renderPopupAiProviderSelect(providerId = 'auto') {
     { id: 'auto', label: 'Auto pipeline' },
     ...providers.map(provider => ({ id: provider.id, label: provider.shortName || provider.name }))
   ];
-  select.innerHTML = options.map(option => `<option value="${escAttr(option.id)}">${esc(option.label)}</option>`).join('');
+  setTrustedHtml(select, options.map(option => `<option value="${escAttr(option.id)}">${esc(option.label)}</option>`).join(''));
   select.value = options.some(option => option.id === providerId) ? providerId : 'auto';
 }
 
@@ -508,6 +516,7 @@ async function extractProductFromCurrentTab(tabId) {
   await chrome.scripting.executeScript({
     target: { tabId },
     files: [
+      'security/sanitize.js',
       'utils.js',
       'content/confidenceRules.js',
       'content/domUtils.js',

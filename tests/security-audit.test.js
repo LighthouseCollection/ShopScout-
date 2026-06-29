@@ -61,15 +61,43 @@ function loadMonitor() {
 
 function renderProviderGuide(provider) {
   const guidePath = path.join(__dirname, '..', 'ai-provider-guide.js');
-  const guide = { innerHTML: '' };
+  function serialize(node) {
+    if (node.nodeType === 3) return node.textContent;
+    if (node._html != null) return node._html;
+    const attrs = Object.entries(node.attributes || {})
+      .map(([key, value]) => ` ${key}="${String(value)}"`)
+      .join('');
+    return `<${node.tagName.toLowerCase()}${attrs}>${(node.children || []).map(serialize).join('')}</${node.tagName.toLowerCase()}>`;
+  }
+  function createElement(tag) {
+    return {
+      nodeType: 1,
+      tagName: String(tag).toUpperCase(),
+      attributes: {},
+      children: [],
+      _html: null,
+      set innerHTML(value) { this._html = String(value); },
+      get innerHTML() { return this._html != null ? this._html : this.children.map(serialize).join(''); },
+      set textContent(value) { this.children = [{ nodeType: 3, textContent: String(value ?? '') }]; this._html = null; },
+      appendChild(child) { this._html = null; this.children.push(child); return child; },
+      replaceChildren(...children) { this._html = null; this.children = children; },
+      setAttribute(name, value) { this.attributes[name] = String(value); },
+      getAttribute(name) { return this.attributes[name]; }
+    };
+  }
+  const guide = createElement('div');
   const context = {
     URLSearchParams,
     location: { search: '?provider=test' },
+    URL,
     document: {
+      createElement,
+      createTextNode(text) { return { nodeType: 3, textContent: String(text ?? '') }; },
       getElementById(id) {
         return id === 'guide' ? guide : null;
       }
     },
+    ShopScoutSanitize: loadSanitizeForGuide(),
     ShopScoutAI: {
       PROVIDERS: [provider],
       getProvider() { return provider; }
@@ -78,6 +106,22 @@ function renderProviderGuide(provider) {
   vm.createContext(context);
   vm.runInContext(fs.readFileSync(guidePath, 'utf8'), context, { filename: guidePath });
   return guide.innerHTML;
+}
+
+function loadSanitizeForGuide() {
+  const sanitizePath = path.join(__dirname, '..', 'security', 'sanitize.js');
+  const context = {
+    globalThis: null,
+    location: { href: 'https://shopscout.local/ai-provider-guide.html' },
+    URL,
+    document: {
+      createTextNode(text) { return { nodeType: 3, textContent: String(text ?? '') }; }
+    }
+  };
+  context.globalThis = context;
+  vm.createContext(context);
+  vm.runInContext(fs.readFileSync(sanitizePath, 'utf8'), context, { filename: sanitizePath });
+  return context.ShopScoutSanitize;
 }
 
 function createRowActionsMenu() {

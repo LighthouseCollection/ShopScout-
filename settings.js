@@ -58,10 +58,10 @@ function renderHiddenHostsList(hosts, onRemove) {
   const list = document.getElementById('hiddenHostsList');
   if (!list) return;
   if (!hosts.length) {
-    list.innerHTML = '<span class="hidden-hosts-empty">(none — the button shows everywhere by default)</span>';
+    setTrustedHtml(list, '<span class="hidden-hosts-empty">(none — the button shows everywhere by default)</span>');
     return;
   }
-  list.innerHTML = '';
+  setTrustedHtml(list, '');
   for (const h of hosts) {
     const chip = document.createElement('span');
     chip.className = 'host-chip';
@@ -184,33 +184,33 @@ function providerStatus(provider) {
 
 function renderProviderList() {
   const list = document.getElementById('providerList');
-  list.innerHTML = ShopScoutAI.PROVIDERS.map(provider => {
+  setTrustedHtml(list, ShopScoutAI.PROVIDERS.map(provider => {
     const status = providerStatus(provider);
     return `<button class="provider-card ${provider.id === selectedProviderId ? 'active' : ''}" data-provider="${provider.id}">
       <div class="row">
-        <span class="provider-name">${escapeHtml(provider.name)}</span>
-        <span class="status ${status.cls}">${escapeHtml(status.text)}</span>
+        <span class="provider-name">${ShopScoutSanitize.escapeHtml(provider.name)}</span>
+        <span class="status ${status.cls}">${ShopScoutSanitize.escapeHtml(status.text)}</span>
       </div>
-      <div class="provider-type">${escapeHtml(provider.setupType)} · ${escapeHtml(provider.roleHint)}</div>
+      <div class="provider-type">${ShopScoutSanitize.escapeHtml(provider.setupType)} · ${ShopScoutSanitize.escapeHtml(provider.roleHint)}</div>
     </button>`;
-  }).join('');
+  }).join(''));
 }
 
 function renderRoles() {
   const rows = document.getElementById('roleRows');
-  rows.innerHTML = ShopScoutAI.STAGES.map(stage => {
+  setTrustedHtml(rows, ShopScoutAI.STAGES.map(stage => {
     const value = aiSettings.roles[stage.id] || (stage.id === 'secondOpinion' ? '' : 'auto');
     const options = ['auto', ''].concat(ShopScoutAI.PROVIDERS.map(p => p.id)).map(id => {
       const provider = id ? ShopScoutAI.getProvider(id) : null;
       let label = id === 'auto' ? 'Auto (Recommended)' : provider ? provider.shortName : 'None';
       if (provider && !providerConfig(provider.id).enabled) label += ' - not enabled';
-      return `<option value="${escapeAttr(id)}"${id === value ? ' selected' : ''}>${escapeHtml(label)}</option>`;
+      return `<option value="${ShopScoutSanitize.escapeAttribute(id)}"${id === value ? ' selected' : ''}>${ShopScoutSanitize.escapeHtml(label)}</option>`;
     }).join('');
     return `<div class="role-row">
-      <label>${escapeHtml(stage.label)}</label>
-      <select data-role="${escapeAttr(stage.id)}">${options}</select>
+      <label>${ShopScoutSanitize.escapeHtml(stage.label)}</label>
+      <select data-role="${ShopScoutSanitize.escapeAttribute(stage.id)}">${options}</select>
     </div>`;
-  }).join('');
+  }).join(''));
 }
 
 function selectProvider(providerId) {
@@ -279,13 +279,13 @@ function renderModelOptions(provider, currentModel) {
   const select = document.getElementById('modelSelect');
   const models = provider.models || [];
   const hasCurrent = models.some(model => model.id === currentModel);
-  select.innerHTML = [
+  setTrustedHtml(select, [
     ...models.map(model => {
       const suffix = model.recommended ? ' (Recommended)' : model.tier ? ` (${model.tier})` : '';
-      return `<option value="${escapeAttr(model.id)}"${model.id === currentModel ? ' selected' : ''}>${escapeHtml(model.label + suffix)}</option>`;
+      return `<option value="${ShopScoutSanitize.escapeAttribute(model.id)}"${model.id === currentModel ? ' selected' : ''}>${ShopScoutSanitize.escapeHtml(model.label + suffix)}</option>`;
     }),
     `<option value=""${hasCurrent ? '' : ' selected'}>Custom / account-specific model</option>`
-  ].join('');
+  ].join(''));
   updateModelNote();
 }
 
@@ -381,7 +381,7 @@ function toggleKeyVisibility() {
 
 function openProviderUrl(key) {
   const provider = ShopScoutAI.getProvider(selectedProviderId);
-  const url = provider?.[key];
+  const url = ShopScoutSanitize.sanitizeUrl(provider?.[key]);
   if (url) chrome.tabs.create({ url });
 }
 
@@ -391,14 +391,10 @@ function showTestResult(type, message) {
   result.textContent = message;
 }
 
-function escapeHtml(value) {
-  return String(value ?? '')
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;');
-}
-
-function escapeAttr(value) {
-  return escapeHtml(value).replace(/'/g, '&#39;');
+function setTrustedHtml(target, html) {
+  if (globalThis.ShopScoutSanitize?.setTrustedHtml) {
+    globalThis.ShopScoutSanitize.setTrustedHtml(target, html);
+    return;
+  }
+  if (target) target.innerHTML = html == null ? '' : String(html);
 }

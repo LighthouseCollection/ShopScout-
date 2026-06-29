@@ -47,6 +47,33 @@ replacement, and feature work.
   - Row-action product URL safe-open behavior.
   - AI monitor redaction in state and copyable logs.
 
+## Follow-up Cleanup
+
+### Shared sanitizer module
+
+- Added `security/sanitize.js` as the shared lightweight sanitizer for browser
+  pages, content scripts, and UI helpers.
+- `SS.esc`, `SS.escAttr`, and `SS.sanitizeUrl` now delegate to the shared
+  sanitizer when it is loaded, while keeping their legacy fallback path for
+  older contexts.
+- Provider guide, settings, popup, dashboard, product detail, rescan, table
+  menus, content-script FAB, and AI selector paths now use the shared sanitizer
+  boundary where they previously carried local URL/HTML sanitizer logic.
+- The extension build script and Chrome/Edge/Firefox manifests now ship and
+  inject the `security/` directory before the scripts that depend on it.
+
+### Named trusted HTML sinks
+
+- Manual HTML assignments in active UI renderers were moved behind named
+  `setTrustedHtml(...)` calls. The reviewed templates still escape or sanitize
+  user-controlled fields before render, but raw assignment is now grep-visible
+  as an intentional sink instead of scattered `element.innerHTML = ...` writes.
+- `ai-provider-guide.js`, `ai-select.js`, background auto-paste fallback, and
+  legacy toast fallback were converted to DOM/text rendering where full HTML
+  templates were not needed.
+- `tests/sanitize-module.test.js` covers sanitizer behavior, load order,
+  manifest injection order, and build packaging.
+
 ## Manifest Permission Review
 
 Current permissions are unchanged in this task.
@@ -119,14 +146,16 @@ leakage from key-like strings.
 Revisit trigger: if a backend service is introduced, if provider CORS behavior
 changes, or if users need centralized organization credentials.
 
-### HTML rendering sinks
+### Component-renderer migration
 
-Risk: the app still uses manual string renderers in legacy areas. The primary
-safe UI core exists, but not every page has migrated to it.
+Risk: the app still uses template-string renderers in legacy areas. The active
+manual assignments now go through named trusted sinks and reviewed fields are
+escaped/sanitized, but the app is not yet on a component framework with a
+single render abstraction.
 
-Why deferred: the current sinks reviewed in this pass escape or sanitize the
-specific user-controlled fields they render. Full renderer migration is a
-larger refactor and outside Task 10.
+Why deferred: replacing the remaining template renderers with componentized UI
+is a broader framework/refactor task. This follow-up reduced the sink surface
+without changing the dashboard/product behavior.
 
 Revisit trigger: before adding new rich text/markdown rendering, AI-generated
 HTML rendering, or a broader component framework migration.

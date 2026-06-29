@@ -78,18 +78,35 @@ function init() {
   sorted.forEach(function(svc) {
     var card = document.createElement('a');
     card.className = 'ai-card';
-    card.href = svc.url;
+    card.href = globalThis.ShopScoutSanitize.sanitizeUrl(svc.url, '#');
     card.target = '_blank';
     card.rel = 'noopener';
     card.dataset.id = svc.id;
 
     var isLast = svc.id === lastAi;
-    card.innerHTML =
-      '<div class="ai-logo ' + svc.logo + '">' + svc.letter + '</div>' +
-      '<div class="ai-info">' +
-        '<div class="ai-name">' + svc.name + (isLast ? ' <span class="ai-auto">last</span>' : '') + '</div>' +
-        '<div class="ai-desc">' + svc.desc + '</div>' +
-      '</div>';
+    var logo = document.createElement('div');
+    logo.className = 'ai-logo ' + svc.logo;
+    logo.textContent = svc.letter;
+
+    var infoWrap = document.createElement('div');
+    infoWrap.className = 'ai-info';
+    var name = document.createElement('div');
+    name.className = 'ai-name';
+    name.appendChild(document.createTextNode(svc.name));
+    if (isLast) {
+      name.appendChild(document.createTextNode(' '));
+      var last = document.createElement('span');
+      last.className = 'ai-auto';
+      last.textContent = 'last';
+      name.appendChild(last);
+    }
+    var desc = document.createElement('div');
+    desc.className = 'ai-desc';
+    desc.textContent = svc.desc;
+    infoWrap.appendChild(name);
+    infoWrap.appendChild(desc);
+    card.appendChild(logo);
+    card.appendChild(infoWrap);
 
     card.addEventListener('click', async function(e) {
       e.preventDefault();

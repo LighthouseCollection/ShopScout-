@@ -33,6 +33,7 @@
         "*://*.alibaba.com/*","*://*.temu.com/*",   "*://*.shein.com/*"
       ],
       "js": [
+        "security/sanitize.js",
         "utils.js",
         "content/confidenceRules.js",
         "content/domUtils.js",

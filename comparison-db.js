@@ -23,6 +23,9 @@
   const truncate = tableUtils.truncate;
 
   function sanitizeProductUrl(value) {
+    if (root.ShopScoutSanitize && typeof root.ShopScoutSanitize.sanitizeUrl === 'function') {
+      return root.ShopScoutSanitize.sanitizeUrl(value);
+    }
     if (root.SS && typeof root.SS.sanitizeUrl === 'function') return root.SS.sanitizeUrl(value);
     const raw = String(value || '').trim();
     if (!raw) return '';
@@ -39,6 +42,14 @@
   function openProductUrl(value) {
     const safeUrl = sanitizeProductUrl(value);
     if (safeUrl && typeof root.open === 'function') root.open(safeUrl, '_blank', 'noopener');
+  }
+
+  function setTrustedHtml(target, html) {
+    if (root.ShopScoutSanitize && typeof root.ShopScoutSanitize.setTrustedHtml === 'function') {
+      root.ShopScoutSanitize.setTrustedHtml(target, html);
+      return;
+    }
+    if (target) target.innerHTML = html == null ? '' : String(html);
   }
 
   let tabulator   = null;
@@ -523,10 +534,10 @@
   /* ===== Grid (Tabulator) ===== */
   async function renderGrid() {
     if (!Tabulator) {
-      document.getElementById('dbViewGrid').innerHTML =
+      setTrustedHtml(document.getElementById('dbViewGrid'),
         '<div class="empty-state"><div class="es-icon">!</div>' +
         '<div class="es-title">Tabulator not loaded</div>' +
-        '<div class="es-body">Drop vendor/tabulator.min.js and vendor/tabulator.min.css per vendor/README.md.</div></div>';
+        '<div class="es-body">Drop vendor/tabulator.min.js and vendor/tabulator.min.css per vendor/README.md.</div></div>');
       return;
     }
     /* Wait for the canonical lookup tables before first render so spec-key
@@ -638,19 +649,19 @@
     const container = document.getElementById('dbViewPivot');
     if (!container) return;
     if (!$ || !$.fn || !$.fn.pivotUI) {
-      container.innerHTML =
+      setTrustedHtml(container,
         '<div class="empty-state"><div class="es-icon">!</div>' +
         '<div class="es-title">PivotTable.js not loaded</div>' +
-        '<div class="es-body">Drop vendor/jquery.min.js, vendor/pivot.min.js and vendor/pivot.min.css per vendor/README.md.</div></div>';
+        '<div class="es-body">Drop vendor/jquery.min.js, vendor/pivot.min.js and vendor/pivot.min.css per vendor/README.md.</div></div>');
       return;
     }
     const rows = await loadRows();
     setStatus(rows.length + ' rows');
     if (!rows.length) {
-      container.innerHTML =
+      setTrustedHtml(container,
         '<div class="empty-state"><div class="es-icon">&#x2261;</div>' +
         '<div class="es-title">Nothing to pivot yet</div>' +
-        '<div class="es-body">Capture products from a product page, then come back here to slice them by source, category, brand, etc.</div></div>';
+        '<div class="es-body">Capture products from a product page, then come back here to slice them by source, category, brand, etc.</div></div>');
       return;
     }
     const data = productRows.flattenForPivot(rows);
@@ -664,10 +675,10 @@
       }, true /* overwrite */);
     } catch (err) {
       console.error('Pivot render failed', err);
-      container.innerHTML =
+      setTrustedHtml(container,
         '<div class="empty-state"><div class="es-icon">!</div>' +
         '<div class="es-title">Pivot view error</div>' +
-        '<div class="es-body">' + escapeHtml(err && err.message ? err.message : String(err)) + '</div></div>';
+        '<div class="es-body">' + escapeHtml(err && err.message ? err.message : String(err)) + '</div></div>');
     }
   }
 
@@ -681,9 +692,9 @@
     const all = await views.listViews(listId);
     const active = await views.getActiveViewId(listId);
     currentViewId = active || null;
-    sel.innerHTML = '<option value="">(All products)</option>' + all.map(v =>
+    setTrustedHtml(sel, '<option value="">(All products)</option>' + all.map(v =>
       `<option value="${v.id}"${v.id === currentViewId ? ' selected' : ''}>${escapeHtml(v.name)} · ${v.mode}</option>`
-    ).join('');
+    ).join(''));
   }
 
   async function onSaveView() {
@@ -805,9 +816,9 @@
     }
     buckets.sort((a, b) => a.label.localeCompare(b.label, undefined, { sensitivity: 'base' }));
     entries.push(...buckets);
-    sel.innerHTML = entries.map(e =>
+    setTrustedHtml(sel, entries.map(e =>
       '<option value="' + escapeHtml(e.value) + '"' + (e.value === current ? ' selected' : '') + '>' + escapeHtml(e.label) + '</option>'
-    ).join('');
+    ).join(''));
   }
 
   function onClearFilters() {
@@ -978,7 +989,7 @@
        respected. getData('active') returns post-filter data. */
     const visible = tabulator ? (tabulator.getData('active') || []) : [];
     if (!visible.length) {
-      container.innerHTML = '<div class="empty-state"><div class="es-title">No products to invert.</div></div>';
+      setTrustedHtml(container, '<div class="empty-state"><div class="es-title">No products to invert.</div></div>');
       return;
     }
     const SH = globalThis.SSSpecHeuristic;
@@ -1141,7 +1152,7 @@
       bodyHtml += '</tr>';
     }
     bodyHtml += '</tbody>';
-    container.innerHTML = '<table class="ss-compare-table">' + head + bodyHtml + '</table>';
+    setTrustedHtml(container, '<table class="ss-compare-table">' + head + bodyHtml + '</table>');
 
     /* ---- Mirror the global filter-toggle state into this view. ---- */
     const gridEl = document.getElementById('dbViewGrid');

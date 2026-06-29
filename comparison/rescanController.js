@@ -32,6 +32,14 @@
 
   let activeScanCancel = null;
 
+  function setTrustedHtml(target, html) {
+    if (root.ShopScoutSanitize && typeof root.ShopScoutSanitize.setTrustedHtml === 'function') {
+      root.ShopScoutSanitize.setTrustedHtml(target, html);
+      return;
+    }
+    if (target) target.innerHTML = html == null ? '' : String(html);
+  }
+
   /* === Begin extracted block (was comparison.js:3968-4307) === */
 
 // --- Rescan single product ---
@@ -100,7 +108,7 @@ async function rescanSingle(idx, btnEl) {
       html += `<div style="font-size:11px;color:var(--muted);margin-top:8px">Spec completeness: ${pct}% (${ca.found.length} found, ${ca.missing.length} missing)</div>`;
     }
 
-    resultsDiv.innerHTML = html;
+    setTrustedHtml(resultsDiv, html);
     modal.classList.add('active');
     toast.show(changes.length ? `Updated ${changes.length} field(s)` : 'No changes found');
   } catch (e) {
@@ -150,12 +158,12 @@ async function rescanList(productIndexes) {
   const resultsDiv = document.getElementById('rescanResults');
   modal.classList.add('active');
 
-  resultsDiv.innerHTML = `<div class="rescan-progress">
+  setTrustedHtml(resultsDiv, `<div class="rescan-progress">
     <div class="spinner"></div>
     <div class="progress-text" id="rescanProgressText">Preparing to scan...</div>
     <div class="progress-bar"><div class="progress-fill" id="rescanProgressFill" style="width:0%"></div></div>
     <button class="tb tb--danger" id="rescanCancelBtn" style="margin-top:12px">Cancel Rescan</button>
-  </div>`;
+  </div>`);
 
   const results = [];
   const progressText = document.getElementById('rescanProgressText');
@@ -359,7 +367,7 @@ function showRescanResults(products, results) {
 
   html += '</div>';
 
-  document.getElementById('rescanResults').innerHTML = html;
+  setTrustedHtml(document.getElementById('rescanResults'), html);
 
   // Accordion toggle
   document.getElementById('rescanResults').addEventListener('click', e => {

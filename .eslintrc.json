@@ -23,6 +23,7 @@
     "SSProductRepo": "readonly",
     "SSDB": "readonly",
     "ShopScoutUI": "readonly",
+    "ShopScoutSanitize": "readonly",
     "ShopScoutAI": "readonly",
     "ShopScoutAIUI": "readonly",
     "ShopScoutAIDevMonitor": "readonly",

@@ -1,47 +1,48 @@
 const params = new URLSearchParams(location.search);
 const provider = ShopScoutAI.getProvider(params.get('provider')) || ShopScoutAI.PROVIDERS[0];
-const keyUrl = sanitizeExternalUrl(provider.keyUrl, '#');
-const docsUrl = sanitizeExternalUrl(provider.docsUrl, '#');
+const Sanitize = globalThis.ShopScoutSanitize;
 
 const guide = document.getElementById('guide');
-guide.innerHTML = `
-  <span class="badge">${escapeHtml(provider.setupType)}</span>
-  <h1>${escapeHtml(provider.name)}</h1>
-  <p class="hint">${escapeHtml(provider.roleHint)}</p>
-  <div class="steps">
-    ${provider.instructions.map(step => `<div class="step">${escapeHtml(step)}</div>`).join('')}
-  </div>
-  <div class="note">
-    Provider account pages often block iframe embedding. ShopScout shows this local guide here and opens the official setup pages in a normal browser tab.
-    ${provider.id === 'copilot' ? '<br><br>Copilot is an enterprise/OAuth path in this version, not a simple consumer API-key setup.' : ''}
-  </div>
-  <p class="role">Suggested use: <strong>${escapeHtml(provider.roleHint)}</strong></p>
-  <p class="role">Default model: <code>${escapeHtml(provider.defaultModel || 'user-selected')}</code></p>
-  <div class="actions">
-    <a class="button primary" href="${escapeAttr(keyUrl)}" target="_blank" rel="noopener">Open Key Page</a>
-    <a class="button" href="${escapeAttr(docsUrl)}" target="_blank" rel="noopener">Open Docs</a>
-  </div>
-`;
+Sanitize.replaceChildren(guide, [
+  el('span', { class: 'badge' }, [provider.setupType]),
+  el('h1', {}, [provider.name]),
+  el('p', { class: 'hint' }, [provider.roleHint]),
+  el('div', { class: 'steps' }, provider.instructions.map(step => el('div', { class: 'step' }, [step]))),
+  el('div', { class: 'note' }, noteChildren(provider)),
+  el('p', { class: 'role' }, ['Suggested use: ', el('strong', {}, [provider.roleHint])]),
+  el('p', { class: 'role' }, ['Default model: ', el('code', {}, [provider.defaultModel || 'user-selected'])]),
+  el('div', { class: 'actions' }, [
+    el('a', {
+      class: 'button primary',
+      href: Sanitize.sanitizeUrl(provider.keyUrl, '#'),
+      target: '_blank',
+      rel: 'noopener'
+    }, ['Open Key Page']),
+    el('a', {
+      class: 'button',
+      href: Sanitize.sanitizeUrl(provider.docsUrl, '#'),
+      target: '_blank',
+      rel: 'noopener'
+    }, ['Open Docs'])
+  ])
+]);
 
-function sanitizeExternalUrl(value, fallback = '') {
-  const raw = String(value || '').trim();
-  if (!raw) return fallback;
-  try {
-    const url = new URL(raw, location.href);
-    return ['http:', 'https:'].includes(url.protocol) ? url.href : fallback;
-  } catch {
-    return fallback;
+function el(tag, attrs = {}, children = []) {
+  const node = document.createElement(tag);
+  for (const [name, value] of Object.entries(attrs)) {
+    if (value == null || value === false) continue;
+    node.setAttribute(name, String(value));
   }
+  Sanitize.replaceChildren(node, children);
+  return node;
 }
 
-function escapeHtml(value) {
-  return String(value ?? '')
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;');
-}
-
-function escapeAttr(value) {
-  return escapeHtml(value).replace(/'/g, '&#39;');
+function noteChildren(selectedProvider) {
+  const children = [
+    'Provider account pages often block iframe embedding. ShopScout shows this local guide here and opens the official setup pages in a normal browser tab.'
+  ];
+  if (selectedProvider.id === 'copilot') {
+    children.push(el('br'), el('br'), 'Copilot is an enterprise/OAuth path in this version, not a simple consumer API-key setup.');
+  }
+  return children;
 }

@@ -42,6 +42,14 @@
           toast } = SS;
   const chrome = root.browser || root.chrome;
 
+  function setTrustedHtml(target, html) {
+    if (root.ShopScoutSanitize && typeof root.ShopScoutSanitize.setTrustedHtml === 'function') {
+      root.ShopScoutSanitize.setTrustedHtml(target, html);
+      return;
+    }
+    if (target) target.innerHTML = html == null ? '' : String(html);
+  }
+
   /* === Begin extracted block (was comparison.js:3145-3405) === */
 
 // --- Edit modal ---
@@ -101,16 +109,16 @@ function switchEditTab(tabName) {
 function renderSpecTable(specs) {
   const container = document.getElementById('editSpecTable');
   if (!specs.length) {
-    container.innerHTML = '<div class="spec-empty">No specifications captured. Click "+ Add Spec" to add one.</div>';
+    setTrustedHtml(container, '<div class="spec-empty">No specifications captured. Click "+ Add Spec" to add one.</div>');
     return;
   }
-  container.innerHTML = specs.map((s, i) =>
+  setTrustedHtml(container, specs.map((s, i) =>
     `<div class="spec-row" data-si="${i}">
       <input class="spec-key" value="${esc(s.key)}" placeholder="Key" data-field="key">
       <input class="spec-val" value="${esc(s.value)}" placeholder="Value" data-field="value">
       <button class="spec-del" title="Remove">&times;</button>
     </div>`
-  ).join('');
+  ).join(''));
 }
 
 function addSpecRow() {
@@ -121,9 +129,9 @@ function addSpecRow() {
   const row = document.createElement('div');
   row.className = 'spec-row';
   row.dataset.si = idx;
-  row.innerHTML = `<input class="spec-key" value="" placeholder="Key" data-field="key">
+  setTrustedHtml(row, `<input class="spec-key" value="" placeholder="Key" data-field="key">
     <input class="spec-val" value="" placeholder="Value" data-field="value">
-    <button class="spec-del" title="Remove">&times;</button>`;
+    <button class="spec-del" title="Remove">&times;</button>`);
   container.appendChild(row);
   row.querySelector('.spec-key').focus();
 }
@@ -132,30 +140,30 @@ function updateImagePreview() {
   const url = document.getElementById('editImage').value.trim();
   const container = document.getElementById('editImagePreview');
   const safeUrl = sanitizeUrl(url);
-  container.innerHTML = safeUrl ? `<img src="${escAttr(safeUrl)}" alt="Preview" data-hide-on-error="1">` : '';
+  setTrustedHtml(container, safeUrl ? `<img src="${escAttr(safeUrl)}" alt="Preview" data-hide-on-error="1">` : '');
 }
 
 function renderImageGallery(urls) {
   const container = document.getElementById('editImageGallery');
   const safeUrls = urls.map(u => sanitizeUrl(u)).filter(Boolean);
-  if (!safeUrls.length) { container.innerHTML = '<span style="font-size:12px;color:var(--muted)">No additional images</span>'; return; }
-  container.innerHTML = safeUrls.map(u =>
+  if (!safeUrls.length) { setTrustedHtml(container, '<span style="font-size:12px;color:var(--muted)">No additional images</span>'); return; }
+  setTrustedHtml(container, safeUrls.map(u =>
     `<div class="img-gallery-item">
       <img src="${escAttr(u)}" alt="" title="${escAttr(u)}" data-hide-parent-on-error="1">
       <button class="img-del" data-url="${escAttr(u)}" title="Remove">&times;</button>
     </div>`
-  ).join('');
+  ).join(''));
 }
 
 function renderReviewImages(urls) {
   const container = document.getElementById('editReviewImages');
   const safeUrls = urls.map(u => sanitizeUrl(u)).filter(Boolean);
-  if (!safeUrls.length) { container.innerHTML = '<span style="font-size:12px;color:var(--muted)">No review photos found</span>'; return; }
-  container.innerHTML = safeUrls.map(u =>
+  if (!safeUrls.length) { setTrustedHtml(container, '<span style="font-size:12px;color:var(--muted)">No review photos found</span>'); return; }
+  setTrustedHtml(container, safeUrls.map(u =>
     `<div class="img-gallery-item">
       <img src="${escAttr(u)}" alt="" title="${escAttr(u)}" data-hide-parent-on-error="1">
     </div>`
-  ).join('');
+  ).join(''));
 }
 
 function collectImageUrls() {
@@ -301,7 +309,7 @@ async function renderDetailAiProviderOptions() {
     }
   } catch {}
   const current = select.value || 'auto';
-  select.innerHTML = options.map(option => `<option value="${escAttr(option.id)}">${esc(option.label)}</option>`).join('');
+  setTrustedHtml(select, options.map(option => `<option value="${escAttr(option.id)}">${esc(option.label)}</option>`).join(''));
   select.value = options.some(option => option.id === current) ? current : 'auto';
 }
 
@@ -535,7 +543,7 @@ async function openProductDetail(idx) {
     ${specsHtml || '<div class="ai-empty">No specifications captured.</div>'}
     ${traceHtml}`;
 
-  content.innerHTML = `${productHeaderHtml}${buildDetailTabsHtml([
+  setTrustedHtml(content, `${productHeaderHtml}${buildDetailTabsHtml([
     { id: 'general', label: 'General', html: overviewHtml },
     { id: 'pricing', label: 'Pricing & Seller', html: pricingHtml },
     { id: 'identifiers', label: 'Identifiers', html: identifiersHtml },
@@ -543,13 +551,13 @@ async function openProductDetail(idx) {
     { id: 'media', label: 'Media', html: imagesHtml },
     { id: 'verification', label: 'Verification', html: renderVerificationHtml(p) },
     { id: 'risks', label: 'Risks & Comparison', html: renderRisksComparisonHtml(p) }
-  ])}`;
+  ])}`);
 
   document.querySelector('.ribbon-shell').style.display = '';
   document.querySelector('.url-bar')?.style && (document.getElementById('urlBar').style.display = 'none');
   document.getElementById('filterBar').style.display = 'none';
   document.querySelector('.controls').style.display = 'none';
-  document.getElementById('content').innerHTML = '';
+  setTrustedHtml(document.getElementById('content'), '');
   document.getElementById('content').style.display = '';
   detailPage.classList.add('active');
   detailPage.style.display = 'block';
@@ -605,7 +613,7 @@ async function openProductDetail(idx) {
             const reviewHtml = result.photos.map(u => sanitizeUrl(u)).filter(Boolean).map(u =>
               `<div class="img-gallery-item"><img src="${escAttr(u)}" alt="" title="${escAttr(u)}" data-hide-parent-on-error="1" style="cursor:pointer"><span class="img-label img-label-review">Review</span></div>`
             ).join('');
-            gallery.innerHTML = reviewHtml;
+            setTrustedHtml(gallery, reviewHtml);
             const reviewCountPill = gallery.closest('.image-group')?.querySelector('.review-pill');
             if (reviewCountPill) reviewCountPill.textContent = String(result.photos.length);
             fetchBtn.textContent = `Done! ${result.photos.length} photos fetched`;

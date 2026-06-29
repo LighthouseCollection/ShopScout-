@@ -14,6 +14,7 @@
     function sanitizeProductUrl(value) {
       const raw = String(value || '').trim();
       if (!raw) return '';
+      if (root.ShopScoutSanitize && typeof root.ShopScoutSanitize.sanitizeUrl === 'function') return root.ShopScoutSanitize.sanitizeUrl(raw);
       if (root.SS && typeof root.SS.sanitizeUrl === 'function') return root.SS.sanitizeUrl(raw);
       try {
         const URLCtor = root.URL || (typeof URL !== 'undefined' ? URL : null);
@@ -23,6 +24,14 @@
       } catch {
         return '';
       }
+    }
+
+    function setTrustedHtml(target, html) {
+      if (root.ShopScoutSanitize && typeof root.ShopScoutSanitize.setTrustedHtml === 'function') {
+        root.ShopScoutSanitize.setTrustedHtml(target, html);
+        return;
+      }
+      if (target) target.innerHTML = html == null ? '' : String(html);
     }
 
     function close() {
@@ -39,12 +48,12 @@
       const menu = doc.createElement('div');
       menu.id = 'dbRowActionsMenu';
       menu.className = 'db-row-actions-menu';
-      menu.innerHTML =
+      setTrustedHtml(menu,
         '<button type="button" data-action="open"   ' + (data.url ? '' : 'disabled') + '><span class="db-row-actions-ico">&#x2197;</span>Open product page</button>' +
         '<button type="button" data-action="edit">  <span class="db-row-actions-ico">&#x270E;</span>Edit details</button>' +
         '<button type="button" data-action="rescan" ' + (data.url ? '' : 'disabled') + '><span class="db-row-actions-ico">&#x21bb;</span>Rescan from page</button>' +
         '<div class="db-row-actions-sep"></div>' +
-        '<button type="button" data-action="delete" class="is-danger"><span class="db-row-actions-ico">&times;</span>Delete row</button>';
+        '<button type="button" data-action="delete" class="is-danger"><span class="db-row-actions-ico">&times;</span>Delete row</button>');
       doc.body.appendChild(menu);
       const rect = anchor.getBoundingClientRect();
       const menuRect = menu.getBoundingClientRect();

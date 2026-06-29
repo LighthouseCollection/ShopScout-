@@ -25,6 +25,14 @@
           formatRatingDisplay, normalizeSpecValue, normalizeProductSpecs,
           getCategoryComparisonSpecKeys, inferCategory, CATEGORY_RUBRICS } = SS;
 
+  function setTrustedHtml(target, html) {
+    if (root.ShopScoutSanitize && typeof root.ShopScoutSanitize.setTrustedHtml === 'function') {
+      root.ShopScoutSanitize.setTrustedHtml(target, html);
+      return;
+    }
+    if (target) target.innerHTML = html == null ? '' : String(html);
+  }
+
   /* === Begin extracted block (was comparison.js:2958-4522) === */
 
 function aiStageLabel(stageId) {
@@ -1567,7 +1575,7 @@ function renderAiResultsPage(run, products = []) {
   if (!page || !body || !run) return;
   if (subtitle) subtitle.textContent = `${run.listName || 'Current list'} · ${run.completedAt ? new Date(run.completedAt).toLocaleString() : 'Latest saved AI run'}`;
   const vm = buildAiResultsViewModel(run, products);
-  body.innerHTML = renderRedesignedAiResultsPage(vm);
+  setTrustedHtml(body, renderRedesignedAiResultsPage(vm));
   bindAiResultsTabs();
   showAiResultsPage();
 }

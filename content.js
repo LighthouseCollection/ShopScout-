@@ -106,7 +106,7 @@ function shopscoutFabBuild() {
     'all:initial;position:fixed;bottom:24px;right:24px;z-index:2147483647;' +
     'pointer-events:auto;');
   const shadow = host.attachShadow({ mode: 'closed' });
-  shadow.innerHTML = [
+  ShopScoutSanitize.setTrustedHtml(shadow, [
     '<style>',
     ':host { all: initial; }',
     '.fab {',
@@ -150,7 +150,7 @@ function shopscoutFabBuild() {
     '</style>',
     '<button class="fab" id="fab" title="Add to ShopScout" aria-label="Add to ShopScout">ShopScout</button>',
     '<div class="toast" id="toast" role="status"></div>'
-  ].join('');
+  ].join(''));
 
   (document.body || document.documentElement).appendChild(host);
 

@@ -2,6 +2,14 @@ var chrome = globalThis.browser || globalThis.chrome;
 
 const { getData, saveData, getProducts, saveProducts, esc, escAttr, escXml, sanitizeUrl, sanitizeProductDescription, parsePrice, normalizeReviewCount, formatRatingDisplay, normalizeSpecKeyLabel, normalizeSpecValue, normalizeProductSpecs, getCategoryComparisonSpecKeys, buildCsv, safeFilename, downloadFile, buildAIText, buildPrompt, inferCategory, detectMissingAttributes, CATEGORY_RUBRICS, buildExportHtml, parseImport, toast } = SS;
 
+function setTrustedHtml(target, html) {
+  if (globalThis.ShopScoutSanitize?.setTrustedHtml) {
+    globalThis.ShopScoutSanitize.setTrustedHtml(target, html);
+    return;
+  }
+  if (target) target.innerHTML = html == null ? '' : String(html);
+}
+
 /* Legacy product-view state vars (currentView, tableSortCol/Asc,
    compactMode, gridlinesEnabled, selectedOnlyFilter, notedOnlyFilter,
    groupBySource, groupByField, groupsCollapsed) were retired with the
@@ -239,9 +247,9 @@ async function renderListSelector() {
   const data = await getData();
   const sel = document.getElementById('listSelect');
   const optionsHtml = Object.keys(data.lists).map(n => `<option value="${esc(n)}"${n === data.activeList ? ' selected' : ''}>${esc(n)}</option>`).join('');
-  sel.innerHTML = optionsHtml;
+  setTrustedHtml(sel, optionsHtml);
   // Mirror the same options + selection to every [data-list-mirror] in the ribbon panes.
-  document.querySelectorAll('[data-list-mirror]').forEach(mirror => { mirror.innerHTML = optionsHtml; });
+  document.querySelectorAll('[data-list-mirror]').forEach(mirror => { setTrustedHtml(mirror, optionsHtml); });
   renderFileRecentLists(data);
 }
 
@@ -266,9 +274,9 @@ function renderFileRecentLists(data) {
   const ordered = listNames
     .sort((a, b) => (a === data.activeList ? -1 : b === data.activeList ? 1 : a.localeCompare(b)))
     .slice(0, 4);
-  stack.innerHTML = ordered.length
+  setTrustedHtml(stack, ordered.length
     ? ordered.map(name => `<button class="rb-btn-sm${name === data.activeList ? ' active' : ''}" data-command="recent-list" data-list-name="${escAttr(name)}"><span class="rb-btn-sm-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg></span><span class="rb-btn-sm-label">${esc(name)}</span></button>`).join('')
-    : '<span class="rb-label">No recent lists</span>';
+    : '<span class="rb-label">No recent lists</span>');
 }
 
 function normalizeSearchFields() {
@@ -369,13 +377,13 @@ function renderColumnControlList() {
     query,
     col => col.label || col.id
   );
-  list.innerHTML = columns.map(col => {
+  setTrustedHtml(list, columns.map(col => {
     const checked = !hiddenCols.has(col.id);
     return `<label class="utility-option" title="${escAttr(col.label || col.id)}">
       <input type="checkbox" data-column-toggle="${escAttr(col.id)}"${checked ? ' checked' : ''}>
       <span>${esc(col.label || col.id)}</span>
     </label>`;
-  }).join('') || '<div class="ai-empty">No matching columns.</div>';
+  }).join('') || '<div class="ai-empty">No matching columns.</div>');
 }
 
 function renderFreezeControlList() {
@@ -391,24 +399,24 @@ function renderFreezeControlList() {
     query,
     col => col.label || col.id
   );
-  list.innerHTML = columns.map(col => `<label class="utility-option" title="${escAttr(col.label || col.id)}">
+  setTrustedHtml(list, columns.map(col => `<label class="utility-option" title="${escAttr(col.label || col.id)}">
     <input type="checkbox" data-freeze-column="${escAttr(col.id)}"${frozenColumnIds.has(col.id) ? ' checked' : ''}>
     <span>${esc(col.label || col.id)}</span>
-  </label>`).join('') || '<div class="ai-empty">No matching fields.</div>';
+  </label>`).join('') || '<div class="ai-empty">No matching fields.</div>');
 }
 
 function renderColumnOrderList() {
   const list = document.getElementById('columnOrderList');
   if (!list) return;
   const columns = getVisibleColumnsForOrdering();
-  list.innerHTML = columns.map((col, index) => {
+  setTrustedHtml(list, columns.map((col, index) => {
     const label = displayColumnLabel(col);
     return `<div class="column-order-item" draggable="true" data-column-order-id="${escAttr(col.id)}" title="${escAttr(label)}">
       <span class="column-order-handle" aria-hidden="true">::</span>
       <span class="column-order-rank">${String(index + 1).padStart(2, '0')}</span>
       <span class="column-order-label">${esc(label)}</span>
     </div>`;
-  }).join('') || '<div class="ai-empty">No visible fields selected.</div>';
+  }).join('') || '<div class="ai-empty">No visible fields selected.</div>');
 }
 
 function getColumnOrderDropTarget(list, y) {
@@ -491,7 +499,7 @@ function restoreInlineCellEdit() {
     activeInlineEdit = null;
     return;
   }
-  activeInlineEdit.cell.innerHTML = activeInlineEdit.originalHtml;
+  setTrustedHtml(activeInlineEdit.cell, activeInlineEdit.originalHtml);
   activeInlineEdit.cell.classList.remove('inline-editing');
   activeInlineEdit = null;
 }
@@ -520,9 +528,9 @@ function startInlineCellEdit(cell) {
 
   cell.classList.add('inline-editing');
   const useTextarea = field === 'description' || field === 'notes' || field === 'bullets';
-  cell.innerHTML = useTextarea
+  setTrustedHtml(cell, useTextarea
     ? `<textarea class="inline-edit-control" rows="3">${esc(value)}</textarea>`
-    : `<input class="inline-edit-control" type="text" value="${escAttr(value)}">`;
+    : `<input class="inline-edit-control" type="text" value="${escAttr(value)}">`);
   const control = cell.querySelector('.inline-edit-control');
   control?.focus();
   control?.select?.();
@@ -603,11 +611,11 @@ function openRowActionMenu(trigger) {
   const menu = document.createElement('div');
   menu.className = 'row-action-panel';
   menu.id = 'activeRowActionMenu';
-  menu.innerHTML = `
+  setTrustedHtml(menu, `
     <button class="icon-btn rescan-btn" data-list="${escAttr(listName)}" data-idx="${escAttr(idx)}" title="Rescan product"><span>&#8635;</span><span>Rescan</span></button>
     <button class="icon-btn open-btn" data-url="${escAttr(productUrl)}" title="Open product page"><span>&#8599;</span><span>Open</span></button>
     <button class="icon-btn edit-btn" data-list="${escAttr(listName)}" data-idx="${escAttr(idx)}" title="Edit product"><span>&#9998;</span><span>Edit</span></button>
-    <button class="icon-btn remove-btn" data-list="${escAttr(listName)}" data-idx="${escAttr(idx)}" title="Delete product"><span>&times;</span><span>Delete</span></button>`;
+    <button class="icon-btn remove-btn" data-list="${escAttr(listName)}" data-idx="${escAttr(idx)}" title="Delete product"><span>&times;</span><span>Delete</span></button>`);
   document.body.appendChild(menu);
   const rect = trigger.getBoundingClientRect();
   const menuRect = menu.getBoundingClientRect();
@@ -1008,7 +1016,7 @@ function bindEvents() {
     if (e.target.classList.contains('img-del')) {
       e.target.closest('.img-gallery-item').remove();
       if (!document.querySelectorAll('#editImageGallery .img-gallery-item').length) {
-        document.getElementById('editImageGallery').innerHTML = '<span style="font-size:12px;color:var(--muted)">No additional images</span>';
+        setTrustedHtml(document.getElementById('editImageGallery'), '<span style="font-size:12px;color:var(--muted)">No additional images</span>');
       }
     }
   });
@@ -1024,8 +1032,8 @@ function bindEvents() {
     item.className = 'img-gallery-item';
     const safeUrl = sanitizeUrl(url);
     if (!safeUrl) { toast.show('Enter a valid http(s) image URL', 'error'); return; }
-    item.innerHTML = `<img src="${escAttr(safeUrl)}" alt="" title="${escAttr(safeUrl)}" data-hide-parent-on-error="1">
-      <button class="img-del" data-url="${escAttr(safeUrl)}" title="Remove">&times;</button>`;
+    setTrustedHtml(item, `<img src="${escAttr(safeUrl)}" alt="" title="${escAttr(safeUrl)}" data-hide-parent-on-error="1">
+      <button class="img-del" data-url="${escAttr(safeUrl)}" title="Remove">&times;</button>`);
     document.getElementById('editImageGallery').appendChild(item);
     input.value = '';
   });
@@ -1052,14 +1060,14 @@ function bindEvents() {
       prev.classList.add('hidden');
       next.classList.add('hidden');
       counter.textContent = '';
-      thumbs.innerHTML = '';
+      setTrustedHtml(thumbs, '');
     } else {
       prev.classList.toggle('hidden', lbIndex === 0);
       next.classList.toggle('hidden', lbIndex === lbImages.length - 1);
       counter.textContent = `${lbIndex + 1} / ${lbImages.length}`;
-      thumbs.innerHTML = lbImages.map((u, i) =>
+      setTrustedHtml(thumbs, lbImages.map((u, i) =>
         `<img src="${escAttr(sanitizeUrl(u))}" class="${i === lbIndex ? 'active' : ''}" data-lbi="${i}" data-hide-on-error="1">`
-      ).join('');
+      ).join(''));
     }
   }
 
@@ -1192,17 +1200,17 @@ async function renderTopbarAiProviderMenu() {
     <button class="menu-item ai-provider-run" data-provider-id="auto" title="Use the configured ShopScout AI pipeline">Auto pipeline</button>
     <div class="menu-separator"></div>
     ${providerItems}`;
-  panels.forEach(panel => { panel.innerHTML = html; });
+  panels.forEach(panel => { setTrustedHtml(panel, html); });
 
   if (sideStack) {
-    sideStack.innerHTML = configuredProviders
+    setTrustedHtml(sideStack, configuredProviders
       .filter(provider => provider.id !== defaultProvider?.id)
       .slice(0, 4)
       .map(provider => {
         const label = provider.shortName || provider.name;
         return `<button class="rb-btn-sm" data-provider-shortcut="${escAttr(provider.id)}" title="Run with ${escAttr(label)}"><span class="rb-btn-sm-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 1 0 18M3 12h18"/></svg></span><span class="rb-btn-sm-label">${esc(label)}</span></button>`;
       })
-      .join('');
+      .join(''));
   }
 }
 
@@ -1423,7 +1431,7 @@ async function loadTextResource(path) {
 
 function openDashboardInfoPage(title, subtitle, bodyHtml) {
   const content = prepareMainContentPage();
-  content.innerHTML = `<section class="dashboard-page">
+  setTrustedHtml(content, `<section class="dashboard-page">
     <header class="dashboard-page-head">
       <div>
         <h2>${esc(title)}</h2>
@@ -1432,7 +1440,7 @@ function openDashboardInfoPage(title, subtitle, bodyHtml) {
       <button class="rb-btn-sm" type="button" data-dashboard-back>Back to Products</button>
     </header>
     <div class="dashboard-page-body">${bodyHtml}</div>
-  </section>`;
+  </section>`);
 }
 
 /* Two distinct pages now: "About" describes what ShopScout IS, "Help"
@@ -1587,7 +1595,7 @@ async function openComparePanel() {
 
 function openCompareInstructions() {
   const body = document.getElementById('compareBody');
-  if (body) body.innerHTML = `
+  if (body) setTrustedHtml(body, `
     <div class="ss-compare-help">
       <h3>How to compare products</h3>
       <ol>
@@ -1596,7 +1604,7 @@ function openCompareInstructions() {
         <li><strong>Click "Selected only" once more</strong> to clear the filter and show every product again.</li>
       </ol>
       <p class="ai-muted">Tip: the default <strong>Compare</strong> view (in the Layout group) lays the products out as columns and specs as rows — perfect for spec-by-spec head-to-head. Switch to <strong>List</strong> if you'd rather see products as rows.</p>
-    </div>`;
+    </div>`);
   showModal('compareModal');
 }
 
@@ -2240,16 +2248,16 @@ function renderAiDevMonitor() {
   const runId = state.runId || state.clientRunId || 'Preparing...';
   const percent = globalThis.ShopScoutAIDevMonitor?.getProgressPercent(activeAiMonitorState) ?? 0;
   const statusText = globalThis.ShopScoutAIDevMonitor?.getCurrentStatusText(activeAiMonitorState) || 'Waiting for AI analysis to start...';
-  meta.innerHTML = `
+  setTrustedHtml(meta, `
     <div><span>Run</span><strong>${esc(runId)}</strong></div>
     <div><span>Status</span><strong>${esc(stageStatusText(state.status))}</strong></div>
     <div><span>Products</span><strong>${esc(state.productIndexesText)} (${esc(String(state.productCount || 0))})</strong></div>
-    <div><span>List</span><strong>${esc(state.listName || 'Current list')}</strong></div>`;
+    <div><span>List</span><strong>${esc(state.listName || 'Current list')}</strong></div>`);
   if (progressText) progressText.textContent = statusText;
   if (progressPercent) progressPercent.textContent = `${percent}%`;
   if (progressFill) progressFill.style.width = `${percent}%`;
   if (progressTrack) progressTrack.setAttribute('aria-valuenow', String(percent));
-  stages.innerHTML = state.stages.map(renderAiDevStage).join('');
+  setTrustedHtml(stages, state.stages.map(renderAiDevStage).join(''));
   if ('value' in log) log.value = buildAiDevEventLogText(state);
   else log.textContent = buildAiDevEventLogText(state);
   if (viewResultsBtn) {

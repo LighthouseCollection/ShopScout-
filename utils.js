@@ -88,8 +88,18 @@ window.SS = (() => {
   }
 
   // --- Escaping ---
-  function esc(str) { const d = document.createElement('div'); d.textContent = str; return d.innerHTML; }
+  function sharedSanitize() {
+    return (typeof globalThis !== 'undefined' && globalThis.ShopScoutSanitize) || null;
+  }
+
+  function esc(str) {
+    const shared = sharedSanitize();
+    if (shared && typeof shared.escapeHtml === 'function') return shared.escapeHtml(str);
+    const d = document.createElement('div'); d.textContent = str; return d.innerHTML;
+  }
   function escAttr(str) {
+    const shared = sharedSanitize();
+    if (shared && typeof shared.escapeAttribute === 'function') return shared.escapeAttribute(str);
     return String(str ?? '')
       .replace(/&/g, '&amp;')
       .replace(/"/g, '&quot;')
@@ -100,6 +110,8 @@ window.SS = (() => {
   function escXml(s) { return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); }
 
   function sanitizeUrl(value, fallback = '') {
+    const shared = sharedSanitize();
+    if (shared && typeof shared.sanitizeUrl === 'function') return shared.sanitizeUrl(value, fallback);
     const raw = String(value || '').trim();
     if (!raw) return fallback;
     try {
@@ -1517,8 +1529,13 @@ a{color:#2563eb;word-break:break-all;text-decoration:none}
       this._hideLegacy();
       const el = document.createElement('div');
       el.className = 'ss-toast ss-toast--' + type;
-      el.innerHTML = `<span class="ss-toast__icon">${type === 'success' ? '&#10003;' : type === 'error' ? '!' : ''}</span><span>${esc(msg)}</span>`;
-      if (type === 'loading') el.innerHTML = `<span class="ss-toast__spinner"></span><span>${esc(msg)}</span>`;
+      const icon = document.createElement('span');
+      icon.className = type === 'loading' ? 'ss-toast__spinner' : 'ss-toast__icon';
+      if (type !== 'loading') icon.textContent = type === 'success' ? '\u2713' : type === 'error' ? '!' : '';
+      const text = document.createElement('span');
+      text.textContent = String(msg ?? '');
+      el.appendChild(icon);
+      el.appendChild(text);
       document.body.appendChild(el);
       requestAnimationFrame(() => el.classList.add('ss-toast--visible'));
       this._el = el;

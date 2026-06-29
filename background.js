@@ -122,6 +122,7 @@ async function ensureContentScript(tabId) {
   await chrome.scripting.executeScript({
     target: { tabId },
     files: [
+      'security/sanitize.js',
       'utils.js',
       /* New pipeline */
       'content/confidenceRules.js',
@@ -1506,7 +1507,7 @@ chrome.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
           } else if (input.getAttribute('contenteditable') !== null || input.isContentEditable) {
             // ContentEditable (Claude, Gemini, some others)
             input.focus();
-            input.innerHTML = '';
+            input.textContent = '';
 
             // Use execCommand for better compatibility with React/ProseMirror
             document.execCommand('insertText', false, prompt);
@@ -1514,7 +1515,13 @@ chrome.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
             // Fallback if execCommand didn't work
             if (!input.textContent.trim()) {
               const lines = prompt.split('\n');
-              input.innerHTML = lines.map(l => '<p>' + l.replace(/</g, '&lt;').replace(/>/g, '&gt;') + '</p>').join('');
+              const fragment = document.createDocumentFragment();
+              lines.forEach(line => {
+                const paragraph = document.createElement('p');
+                paragraph.textContent = line;
+                fragment.appendChild(paragraph);
+              });
+              input.replaceChildren(fragment);
               input.dispatchEvent(new Event('input', { bubbles: true }));
             }
           }

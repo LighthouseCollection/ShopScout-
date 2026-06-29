@@ -1,7 +1,27 @@
 (function initShopScoutColumnsMenu(root) {
   const NS = (root.ShopScoutTable = root.ShopScoutTable || {});
   const utils = NS.utils || {};
-  const escapeHtml = utils.escapeHtml || (value => String(value == null ? '' : value));
+  const escapeHtml = value => {
+    if (root.ShopScoutSanitize?.escapeHtml) return root.ShopScoutSanitize.escapeHtml(value);
+    if (utils.escapeHtml) return utils.escapeHtml(value);
+    return String(value == null ? '' : value)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;');
+  };
+  const escapeAttr = value => {
+    if (root.ShopScoutSanitize?.escapeAttribute) return root.ShopScoutSanitize.escapeAttribute(value);
+    return escapeHtml(value).replace(/'/g, '&#39;');
+  };
+
+  function setTrustedHtml(target, html) {
+    if (root.ShopScoutSanitize?.setTrustedHtml) {
+      root.ShopScoutSanitize.setTrustedHtml(target, html);
+      return;
+    }
+    if (target) target.innerHTML = html == null ? '' : String(html);
+  }
 
   function cssEscape(value) {
     if (root.CSS && typeof root.CSS.escape === 'function') return root.CSS.escape(value);
@@ -38,15 +58,15 @@
         + '<button type="button" data-col-action="all">Show all</button>'
         + '<button type="button" data-col-action="none">Hide all</button>'
         + '</div>';
-      menu.innerHTML = header + entries.map(entry => {
+      setTrustedHtml(menu, header + entries.map(entry => {
         const checked = entry.column.isVisible() ? ' checked' : '';
         const disabled = entry.locked ? ' disabled' : '';
         return '<label class="db-columns-row' + (entry.locked ? ' is-locked' : '') + '">' +
-               '<input type="checkbox" data-col-field="' + escapeHtml(entry.id) + '"' + checked + disabled + '>' +
+               '<input type="checkbox" data-col-field="' + escapeAttr(entry.id) + '"' + checked + disabled + '>' +
                '<span>' + escapeHtml(entry.label) + '</span>' +
                (entry.locked ? '<small>pinned</small>' : '') +
                '</label>';
-      }).join('');
+      }).join(''));
 
       menu.querySelectorAll('[data-col-action]').forEach(button => {
         button.addEventListener('click', () => {
