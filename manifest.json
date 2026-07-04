@@ -8,7 +8,8 @@
     "storage",
     "scripting",
     "tabs",
-    "contextMenus"
+    "contextMenus",
+    "sidePanel"
   ],
   "host_permissions": [
     "<all_urls>"
@@ -54,8 +55,11 @@
     }
   ],
   "options_page": "settings.html",
+  "side_panel": {
+    "default_path": "popup.html"
+  },
   "action": {
-    "default_popup": "popup.html",
+    "default_title": "Open ShopScout capture pane",
     "default_icon": {
       "16": "icons/icon16.png",
       "48": "icons/icon48.png",

@@ -110,6 +110,7 @@ function bindEvents() {
   document.getElementById('newListBtn').addEventListener('click', () => openListModal('new'));
   document.getElementById('renameListBtn').addEventListener('click', () => openListModal('rename'));
   document.getElementById('deleteListBtn').addEventListener('click', deleteList);
+  document.getElementById('dashboardBtn').addEventListener('click', () => chrome.tabs.create({ url: chrome.runtime.getURL('comparison.html') }));
   document.getElementById('settingsBtn').addEventListener('click', () => chrome.tabs.create({ url: chrome.runtime.getURL('settings.html') }));
 
   document.getElementById('addBtn').addEventListener('click', addFromTab);

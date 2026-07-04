@@ -7,6 +7,10 @@ const js = read('popup.js');
 assert.ok(html.includes('id="addBtn"'), 'popup keeps Add Current Product as a gather action');
 assert.ok(html.includes('id="addWindowBtn"'), 'popup keeps Add Products from Open Tabs as a gather action');
 assert.ok(html.includes('id="urlSubmitBtn"'), 'popup keeps Add URL as a gather action');
+assert.ok(html.includes('id="dashboardBtn"'), 'popup header includes the dashboard shortcut');
+assert.ok(html.includes('Open Comparison Dashboard'), 'dashboard shortcut is labeled Open Comparison Dashboard');
+assert.ok(html.indexOf('id="dashboardBtn"') < html.indexOf('id="settingsBtn"'),
+  'dashboard shortcut appears immediately before settings in the popup header');
 assert.ok(!html.includes('AI Analyze'), 'popup gatherer does not render AI analysis controls');
 assert.ok(!html.includes('Auto AI'), 'popup gatherer does not render Auto AI');
 assert.ok(!html.includes('Manual AI'), 'popup gatherer does not render Manual AI');
@@ -28,7 +32,7 @@ assert.ok(html.includes('class="button-icon"'), 'popup action buttons include in
 assert.ok(html.includes('<span>Add Products from Open Tabs</span>'), 'open-tabs capture button uses the shorter label with an icon');
 assert.ok(!html.includes('id="exportToggle"'), 'popup gatherer does not render save/export controls');
 assert.ok(!html.includes('id="importBtn"'), 'popup gatherer does not render import controls');
-assert.ok(!html.includes('id="openComparison"'), 'popup gatherer does not render dashboard launch controls');
+assert.ok(!html.includes('id="openComparison"'), 'popup gatherer does not render the old dashboard launch control');
 assert.ok(!html.includes('id="exiModal"'), 'popup gatherer does not render the save/export modal');
 
 assert.ok(!html.includes('id="quickCompare"'), 'old Quick compare button is removed');
@@ -42,6 +46,8 @@ assert.ok(!js.includes("integratedAnalyze"), 'popup no longer binds integrated A
 assert.ok(!js.includes("manualAnalyze"), 'popup no longer binds manual AI controls');
 assert.ok(!js.includes("action: 'runAIAnalysis'"), 'popup no longer starts the background AI pipeline');
 assert.ok(!js.includes('openDashboardResults'), 'popup no longer opens AI dashboard results');
+assert.ok(js.includes("getElementById('dashboardBtn')"), 'popup binds the dashboard header shortcut');
+assert.ok(js.includes("chrome.runtime.getURL('comparison.html')"), 'dashboard shortcut opens comparison.html');
 assert.ok(!js.includes('buildManualHybridPrompt'), 'popup no longer builds manual AI prompts');
 assert.ok(!js.includes("quickCompare"), 'popup no longer binds the old Quick compare button');
 assert.ok(!js.includes("deepCompare"), 'popup no longer binds the old Deep compare button');

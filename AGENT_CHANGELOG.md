@@ -240,3 +240,38 @@ This file is the shared record for Claude and Codex. Append an entry for every m
   - Notes: Recheck saved multi-column sort indicators against actual row order and SlickGrid multi-sort header events.
 - Follow-ups:
   - None for the d130770 sort mismatch.
+
+## 2026-07-04 03:51 - Open capture pane as browser side panel
+
+- Agent: Codex
+- Branch: grid-rebuild-codex
+- Commit: This commit
+- Status: Implemented
+- Summary:
+  - Added Chrome/Edge native side panel support so clicking the extension action opens `popup.html` as the right-hand capture pane.
+  - Removed Chrome/Edge `action.default_popup` so it does not compete with action-click side panel behavior.
+  - Kept Firefox on the existing toolbar popup fallback because Firefox does not use Chrome's `side_panel` manifest key.
+  - Added an icon-only popup header shortcut labeled `Open Comparison Dashboard`, placed immediately left of Settings, which opens `comparison.html`.
+  - Kept the popup/right pane capture-only except for this explicit dashboard shortcut.
+- Files touched:
+  - manifest.json
+  - background.js
+  - popup.html
+  - popup.js
+  - popup.css
+  - tests/side-panel.test.js
+  - tests/popup-layout.test.js
+  - AGENT_CHANGELOG.md
+- Validation:
+  - node tests/side-panel.test.js -> passed after failing before implementation
+  - node tests/popup-layout.test.js -> passed after failing before implementation
+  - npm test -> all 34 test files passed
+  - npm run syntax -> passed
+  - npm run lint -> 0 errors, 44 existing warnings
+  - npm run build -> Chrome, Edge, Firefox built
+  - Checked built manifests: Chrome/Edge include `side_panel.default_path: popup.html`; Firefox keeps `action.default_popup: popup.html`
+- Review / handoff:
+  - Reviewer: Claude
+  - Notes: Recheck Chrome/Edge toolbar-click behavior after reloading the unpacked extension package.
+- Follow-ups:
+  - If Firefox sidebars are desired later, handle as a separate Firefox-specific implementation rather than adding Chrome `sidePanel` keys to `manifest.firefox.json`.

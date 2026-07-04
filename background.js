@@ -13,11 +13,21 @@ let activeAIAnalysisRun = null;
 
 // --- Context menus ---
 chrome.runtime.onInstalled.addListener(() => {
+  configureSidePanelBehavior();
   chrome.contextMenus.create({ id: 'ss-add', title: 'Add Product to ShopScout', contexts: ['page'] });
   chrome.contextMenus.create({ id: 'ss-copy', title: 'Quick Compare (Copy for AI)', contexts: ['page'] });
   chrome.contextMenus.create({ id: 'ss-deep', title: 'Deep Compare (Copy for AI)', contexts: ['page'] });
   chrome.contextMenus.create({ id: 'ss-open', title: 'Open ShopScout Comparison', contexts: ['page'] });
 });
+
+function configureSidePanelBehavior() {
+  if (!chrome.sidePanel?.setPanelBehavior) return;
+  chrome.sidePanel
+    .setPanelBehavior({ openPanelOnActionClick: true })
+    .catch(error => console.warn('ShopScout side panel setup failed', error));
+}
+
+configureSidePanelBehavior();
 
 chrome.contextMenus.onClicked.addListener(async (info, tab) => {
   if (info.menuItemId === 'ss-add') await addProduct(tab);
