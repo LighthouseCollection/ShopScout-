@@ -48,8 +48,12 @@ assert.match(host.children[0].textContent, /SlickGrid runtime is not available/i
 let capturedGridOptions = null;
 let capturedColumns = null;
 let capturedSortColumns = null;
+let capturedSortComparator = null;
+let capturedOnSort = null;
+let emittedSort = null;
 let destroyed = false;
 const eventStub = { subscribe() {} };
+const sortEventStub = { subscribe(fn) { capturedOnSort = fn; } };
 ctx.Slick = {
   Data: {
     DataView: function DataView() {
@@ -57,7 +61,7 @@ ctx.Slick = {
         beginUpdate() {},
         setItems() {},
         endUpdate() {},
-        sort() {},
+        sort(comparator) { capturedSortComparator = comparator; },
         onRowCountChanged: eventStub,
         onRowsChanged: eventStub,
         destroy() { destroyed = true; }
@@ -68,7 +72,7 @@ ctx.Slick = {
     capturedGridOptions = options;
     capturedColumns = _columns;
     return {
-      onSort: eventStub,
+      onSort: sortEventStub,
       onColumnsReordered: eventStub,
       onColumnsResized: eventStub,
       onCellChange: eventStub,
@@ -86,21 +90,49 @@ ctx.Slick = {
 const liveInstance = adapter.create(host, {
   columns: [
     { id: 'title', name: 'Name', field: 'title' },
+    { id: 'brand', name: 'Brand', field: 'brand' },
     { id: 'actions', name: '', field: '_actions', type: 'actions' }
   ],
-  rows: [{ id: 'p1', title: 'Product' }],
-  sort: [{ field: 'title', dir: 'desc' }]
-}, {});
+  rows: [
+    { id: 'p1', title: 'Beta', brand: 'Acme' },
+    { id: 'p2', title: 'Alpha', brand: 'Acme' }
+  ],
+  sort: [
+    { field: 'brand', dir: 'asc' },
+    { field: 'title', dir: 'asc' }
+  ]
+}, {
+  onSortChange(sort) { emittedSort = sort; }
+});
 assert.equal(capturedGridOptions.enableColumnReorder, false,
   'missing Sortable disables SlickGrid column drag instead of throwing');
 assert.equal(capturedGridOptions.showCellSelection, false,
   'grid does not show a selected-cell border when a cell is clicked');
 const titleColumn = capturedColumns.find(column => column.id === 'title');
+const brandColumn = capturedColumns.find(column => column.id === 'brand');
 const actionsColumn = capturedColumns.find(column => column.id === 'actions');
 assert.equal(titleColumn.sortable, true, 'data columns are sortable from their own headers');
+assert.equal(brandColumn.sortable, true, 'secondary data columns are sortable from their own headers');
 assert.equal(actionsColumn.sortable, false, 'actions column is not sortable');
-assert.deepEqual(capturedSortColumns, [{ columnId: 'title', sortAsc: false }],
-  'projection sort state is shown on the matching column header');
+assert.deepEqual(capturedSortColumns, [
+  { columnId: 'brand', sortAsc: true },
+  { columnId: 'title', sortAsc: true }
+], 'projection sort state is shown on every matching sorted column header');
+assert.equal(
+  capturedSortComparator({ brand: 'Acme', title: 'Alpha' }, { brand: 'Acme', title: 'Beta' }) < 0,
+  true,
+  'DataView sort comparator uses secondary sort fields when primary values tie'
+);
+capturedOnSort(null, {
+  sortCols: [
+    { sortCol: brandColumn, sortAsc: false },
+    { sortCol: titleColumn, sortAsc: true }
+  ]
+});
+assert.deepEqual(emittedSort, [
+  { field: 'brand', dir: 'desc' },
+  { field: 'title', dir: 'asc' }
+], 'SlickGrid multi-sort events emit the full sort chain');
 const actionsHtml = actionsColumn.formatter(0, 1, null, actionsColumn, { id: 'p1' });
 assert.match(actionsHtml, /ss-grid-action-bar/, 'row actions render as a compact icon toolbar');
 assert.doesNotMatch(actionsHtml, /<details|ss-grid-action-panel|<summary/,

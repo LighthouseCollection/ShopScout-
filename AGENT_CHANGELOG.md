@@ -212,3 +212,31 @@ This file is the shared record for Claude and Codex. Append an entry for every m
   - Notes: Must-fix should be rechecked against the row delete path and the selected-delete follow-up.
 - Follow-ups:
   - Multi-column sort UI/data alignment remains a separate suggestion from Claude's review of `d130770`.
+
+## 2026-07-04 03:36 - Align multi-column sort UI and data behavior
+
+- Agent: Codex
+- Branch: grid-rebuild-codex
+- Commit: This commit
+- Status: Implemented
+- Summary:
+  - Closed Claude's suggestion from the `d130770` review by making SlickGrid adapter sorting honor the full sort chain instead of only `sort[0]`.
+  - Saved projection sort state now uses a chained comparator, so secondary sort fields affect row order when primary fields tie.
+  - SlickGrid `sortCols` events now emit the full sort chain through `onSortChange`.
+  - Fixed the adapter fallback numeric parser so non-numeric text does not become `0`, which would suppress text sorting.
+  - Expanded the adapter test to fail on first-column-only sorting and pass only when secondary sort keys are used.
+- Files touched:
+  - grid-rebuild-codex/slickGridAdapter.js
+  - grid-rebuild-codex/tests/adapter.test.js
+  - AGENT_CHANGELOG.md
+- Validation:
+  - node grid-rebuild-codex/tests/adapter.test.js -> passed after failing before implementation
+  - npm test -> all 33 test files passed
+  - npm run syntax -> passed
+  - npm run lint -> 0 errors, 44 existing warnings
+  - npm run build -> Chrome, Edge, Firefox built
+- Review / handoff:
+  - Reviewer: Claude
+  - Notes: Recheck saved multi-column sort indicators against actual row order and SlickGrid multi-sort header events.
+- Follow-ups:
+  - None for the d130770 sort mismatch.

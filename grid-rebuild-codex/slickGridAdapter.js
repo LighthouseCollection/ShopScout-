@@ -132,7 +132,9 @@
     const parseNumeric = typeof values.parseNumeric === 'function'
       ? values.parseNumeric
       : value => {
-        const n = Number(String(value ?? '').replace(/[^0-9.-]/g, ''));
+        const cleaned = String(value ?? '').replace(/[^0-9.-]/g, '');
+        if (!cleaned || /^[-.]+$/.test(cleaned)) return null;
+        const n = Number(cleaned);
         return isFinite(n) ? n : null;
       };
     return (a, b) => {
@@ -145,6 +147,44 @@
       else cmp = textValue(av).localeCompare(textValue(bv));
       return direction === 'desc' ? -cmp : cmp;
     };
+  }
+
+  function normalizeSortChain(sort) {
+    return (Array.isArray(sort) ? sort : [])
+      .map(item => ({
+        field: String(item?.field || '').trim(),
+        dir: item?.dir === 'desc' ? 'desc' : 'asc'
+      }))
+      .filter(item => item.field);
+  }
+
+  function sortableComparatorChain(sort) {
+    const comparators = normalizeSortChain(sort)
+      .map(item => sortableComparator(item.field, item.dir));
+    return (a, b) => {
+      for (const compare of comparators) {
+        const result = compare(a, b);
+        if (result !== 0) return result;
+      }
+      return 0;
+    };
+  }
+
+  function sortChainFromEvent(args) {
+    if (Array.isArray(args?.sortCols) && args.sortCols.length) {
+      return args.sortCols
+        .map(item => ({
+          field: item?.sortCol?.field || item?.sortCol?.id || '',
+          dir: item?.sortAsc === false ? 'desc' : 'asc'
+        }))
+        .filter(item => item.field);
+    }
+    const sortCol = args?.sortCol;
+    if (!sortCol) return [];
+    return [{
+      field: sortCol.field || sortCol.id || '',
+      dir: args.sortAsc === false ? 'desc' : 'asc'
+    }].filter(item => item.field);
   }
 
   function sortIndicatorColumns(projection) {
@@ -210,8 +250,7 @@
     dataView.endUpdate();
     const sort = Array.isArray(projection.sort) ? projection.sort : [];
     if (sort.length) {
-      const first = sort[0];
-      dataView.sort(sortableComparator(first.field, first.dir), true);
+      dataView.sort(sortableComparatorChain(sort), true);
     }
     applySortIndicator(grid, projection);
     grid.resizeCanvas();
@@ -258,11 +297,10 @@
     });
 
     grid.onSort.subscribe((_event, args) => {
-      const sortCol = args.sortCol || (args.sortCols && args.sortCols[0]?.sortCol);
-      if (!sortCol) return;
-      const direction = (args.sortAsc || args.sortCols?.[0]?.sortAsc) ? 'asc' : 'desc';
-      dataView.sort(sortableComparator(sortCol.field, direction), true);
-      if (typeof opts.onSortChange === 'function') opts.onSortChange([{ field: sortCol.field, dir: direction }]);
+      const sort = sortChainFromEvent(args);
+      if (!sort.length) return;
+      dataView.sort(sortableComparatorChain(sort), true);
+      if (typeof opts.onSortChange === 'function') opts.onSortChange(sort);
     });
 
     grid.onColumnsReordered.subscribe(() => {
