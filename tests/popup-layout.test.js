@@ -28,6 +28,16 @@ assert.ok(html.includes('background: var(--menu-bg);'), 'popup header is styled 
 assert.ok(html.includes('background: var(--card);'), 'popup standard buttons use the neutral comparison card treatment');
 assert.ok(html.includes('--button-shade:'), 'popup defines a shaded standard button surface');
 assert.ok(html.includes('font-weight: 400;'), 'popup standard button text is not bold');
+assert.ok(/html,\s*body\s*\{[\s\S]*height:\s*100vh/.test(html),
+  'side-panel popup uses the allocated browser viewport height');
+assert.ok(/body\s*\{[\s\S]*display:\s*flex[\s\S]*flex-direction:\s*column/.test(html),
+  'side-panel popup stacks fixed controls above a flexible product list');
+assert.ok(!/body\s*\{[^}]*max-height:\s*780px/.test(html),
+  'side-panel popup does not keep the old fixed popup max-height');
+assert.ok(/\.product-list\s*\{[\s\S]*flex:\s*1\s+1\s+auto/.test(html),
+  'product list grows to fill remaining side-panel height');
+assert.ok(!/\.product-list\s*\{[^}]*max-height:\s*500px/.test(html),
+  'product list does not keep the old fixed popup max-height');
 assert.ok(html.includes('class="button-icon"'), 'popup action buttons include inline icons');
 assert.ok(html.includes('<span>Add Products from Open Tabs</span>'), 'open-tabs capture button uses the shorter label with an icon');
 assert.ok(!html.includes('id="exportToggle"'), 'popup gatherer does not render save/export controls');

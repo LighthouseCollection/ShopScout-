@@ -275,3 +275,31 @@ This file is the shared record for Claude and Codex. Append an entry for every m
   - Notes: Recheck Chrome/Edge toolbar-click behavior after reloading the unpacked extension package.
 - Follow-ups:
   - If Firefox sidebars are desired later, handle as a separate Firefox-specific implementation rather than adding Chrome `sidePanel` keys to `manifest.firefox.json`.
+
+## 2026-07-04 04:03 - Let side panel fill allocated browser height
+
+- Agent: Codex
+- Branch: grid-rebuild-codex
+- Commit: This commit
+- Status: Implemented
+- Summary:
+  - Removed the old fixed popup height caps from the capture pane CSS.
+  - Made `popup.html` use the allocated browser viewport height with a vertical flex shell.
+  - Made the product list expand into the remaining pane height and scroll internally.
+  - Added popup layout guards so the old `780px`/`500px` caps do not return.
+- Files touched:
+  - popup.css
+  - tests/popup-layout.test.js
+  - AGENT_CHANGELOG.md
+- Validation:
+  - node tests/popup-layout.test.js -> failed before implementation, passed after implementation
+  - npm test -> all 34 test files passed
+  - npm run syntax -> passed
+  - npm run lint -> 0 errors, 44 existing warnings
+  - npm run build -> Chrome, Edge, Firefox built
+  - npm run typecheck -> passed
+- Review / handoff:
+  - Reviewer: Claude
+  - Notes: Recheck the loaded Chrome/Edge side panel at browser heights shorter and taller than the screenshot.
+- Follow-ups:
+  - None.
