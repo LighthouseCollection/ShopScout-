@@ -20,6 +20,12 @@ assert.ok(backgroundJs.includes('openPanelOnActionClick: true'),
   'clicking the extension action opens the side panel');
 assert.ok(/chrome\.sidePanel\?\.setPanelBehavior/.test(backgroundJs),
   'side panel setup is guarded for browsers without the API');
+const extractProductFromTab = backgroundJs.match(/async function extractProductFromTab[\s\S]*?\n}\n/)?.[0] || '';
+assert.ok(
+  extractProductFromTab.indexOf('chrome.tabs.sendMessage') > -1
+    && extractProductFromTab.indexOf('chrome.tabs.sendMessage') < extractProductFromTab.indexOf('ensureContentScript'),
+  'bulk tab capture asks an existing content script first and injects only as fallback'
+);
 
 assert.ok(!firefoxManifest.permissions.includes('sidePanel'),
   'Firefox manifest does not request unsupported sidePanel permission');

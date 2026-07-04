@@ -88,7 +88,8 @@ assert.ok(!/\.pvtUi/.test(css),     'no PivotTable.js .pvtUi CSS rules remain');
 
 /* ---- AI results / detail / settings / feedback flows are preserved --- */
 assert.ok(cmpHtml.includes('id="content"'),       '#content (info pages + detail + AI results host) preserved');
-assert.ok(cmpHtml.includes('id="settingsPage"'),  'embedded settings page preserved');
+assert.ok(cmpHtml.includes('src="settings.js"'),  'settings module is loaded for inline dashboard settings');
+assert.ok(!cmpHtml.includes('id="settingsFrame"'), 'settings iframe is removed');
 assert.ok(cmpHtml.includes('id="aiResultsPage"'), 'AI results page preserved');
 assert.ok(cmpHtml.includes('id="productDetail"'), 'product detail page preserved');
 assert.ok(cmpHtml.includes('id="manualAiModal"'), 'manual AI modal preserved');

@@ -186,6 +186,12 @@ assert.deepEqual(
   ['attribute', 'product:p1', 'product:p2'],
   'matrix has one attribute column plus one column per product'
 );
+assert.equal(matrix.columns[1].image, 'https://example.com/p1.jpg',
+  'matrix product columns carry the product thumbnail for header rendering');
+assert.equal(matrix.columns[1].url, 'https://example.com/p1',
+  'matrix product columns carry the product URL for header/source interactions');
+assert.equal(matrix.columns[1].source, 'Amazon',
+  'matrix product columns carry the product source metadata');
 assert.deepEqual(
   matrix.rows.map(row => row.id),
   ['newPrice', 'rating', 'spec:battery life', 'spec:dpi'],

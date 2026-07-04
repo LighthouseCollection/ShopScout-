@@ -155,7 +155,6 @@ async function ensureContentScript(tabId) {
 }
 
 async function extractProductFromTab(tabId) {
-  await ensureContentScript(tabId);
   /* The new pipeline is async (bot-aware DOM waits etc.), so we go
      through the message bus instead of executeScript({func}). The
      content-script listener handles the async sendResponse via
@@ -164,11 +163,21 @@ async function extractProductFromTab(tabId) {
     const result = await chrome.tabs.sendMessage(tabId, { action: 'extract' });
     return result || null;
   } catch (e) {
-    /* Tab closed mid-extract / receiving end gone. */
-    if (e && e.message && /Could not establish connection|message channel/i.test(e.message)) {
-      return null;
+    const message = e && e.message ? e.message : '';
+    if (!/Could not establish connection|Receiving end does not exist|message channel/i.test(message)) {
+      throw e;
     }
-    throw e;
+    try {
+      await ensureContentScript(tabId);
+      const result = await chrome.tabs.sendMessage(tabId, { action: 'extract' });
+      return result || null;
+    } catch (fallbackError) {
+      const fallbackMessage = fallbackError && fallbackError.message ? fallbackError.message : '';
+      if (/Could not establish connection|Receiving end does not exist|message channel/i.test(fallbackMessage)) {
+        return null;
+      }
+      throw fallbackError;
+    }
   }
 }
 

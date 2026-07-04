@@ -337,16 +337,6 @@
     </div>
 
     <div class="ribbon-pane" data-pane="about">
-      <div class="rb-group rb-group--list-mirror" aria-label="Active list">
-        <div class="rb-group-content">
-          <div class="rb-stack">
-            <label class="rb-mini-label">Product list</label>
-            <select class="rb-select rb-select--wide" data-list-mirror="about"></select>
-          </div>
-        </div>
-        <div class="rb-group-label">Lists</div>
-      </div>
-      <div class="rb-divider" aria-hidden="true"></div>
       <div class="rb-group" aria-label="About">
         <div class="rb-group-content">
           <button class="rb-btn-lg" type="button" title="About ShopScout" data-command="about"><span class="rb-icon-lg"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg></span><span class="rb-btn-lg-label">About</span></button>
@@ -398,20 +388,6 @@
   <div class="ss-grid-status" id="ssGridStatus" aria-live="polite"></div>
   <div class="ss-grid-host slick-default-theme" id="ssGridHost"></div>
 </section>
-
-<!-- Settings page embedded in dashboard -->
-<div class="settings-page" id="settingsPage" aria-hidden="true">
-  <div class="settings-page-shell">
-    <div class="settings-page-header">
-      <div>
-        <h2>Settings</h2>
-        <p>AI providers, preferences, and pipeline setup.</p>
-      </div>
-      <button class="settings-page-close" id="settingsPageClose">Back to Products</button>
-    </div>
-    <iframe id="settingsFrame" title="ShopScout settings"></iframe>
-  </div>
-</div>
 
 <!-- Manual AI modal — sized to host ai-select.html without vertical scroll. -->
 <div class="modal-overlay" id="manualAiModal">
@@ -791,6 +767,7 @@
 <script src="ui/promptDialog.js"></script>
 
 <script src="ai-providers.js"></script>
+<script src="settings.js"></script>
 <script src="ai-dev-monitor.js"></script>
 <script src="ai-ui.js"></script>
 <script src="utils.js"></script>

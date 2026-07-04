@@ -34,7 +34,7 @@
         <label>Your email <span class="dashboard-form-optional">(optional — only if you want a reply)</span><input type="email" id="feedbackFromEmail" placeholder="you@example.com" autocomplete="email"></label>
         <label>Details<textarea id="feedbackDetails" rows="8" placeholder="${isBug ? 'What happened? What did you expect? Steps to reproduce.' : 'What should ShopScout do? How would you use it?'}"></textarea></label>
         <div class="dashboard-page-actions">
-          <button class="btn primary" type="button" data-feedback-action="send">Send</button>
+          <button class="dashboard-primary-action" type="button" data-feedback-action="send">Send</button>
         </div>
       </form>`);
   }

@@ -6,6 +6,7 @@ const vm = require('vm');
 const root = path.join(__dirname, '..', '..');
 const ctx = {
   console,
+  URL,
   globalThis: null,
   location: { href: 'https://example.test/' },
   document: {
@@ -89,8 +90,18 @@ ctx.Slick = {
 
 const liveInstance = adapter.create(host, {
   columns: [
+    { id: 'select', name: '', field: '_selected', type: 'selection', width: 40 },
     { id: 'title', name: 'Name', field: 'title' },
     { id: 'brand', name: 'Brand', field: 'brand' },
+    { id: 'source', name: 'Source', field: 'source', type: 'source' },
+    { id: 'rating', name: 'Rating', field: 'rating', type: 'rating', width: 128 },
+    {
+      id: 'product:p1',
+      name: 'QNAP TS-464CU Long Product Name',
+      field: 'product:p1',
+      type: 'matrixCell',
+      image: 'https://example.com/qnap.jpg'
+    },
     { id: 'actions', name: '', field: '_actions', type: 'actions' }
   ],
   rows: [
@@ -110,10 +121,18 @@ assert.equal(capturedGridOptions.showCellSelection, false,
   'grid does not show a selected-cell border when a cell is clicked');
 const titleColumn = capturedColumns.find(column => column.id === 'title');
 const brandColumn = capturedColumns.find(column => column.id === 'brand');
+const selectColumn = capturedColumns.find(column => column.id === 'select');
+const sourceColumn = capturedColumns.find(column => column.id === 'source');
+const ratingColumn = capturedColumns.find(column => column.id === 'rating');
+const productHeaderColumn = capturedColumns.find(column => column.id === 'product:p1');
 const actionsColumn = capturedColumns.find(column => column.id === 'actions');
 assert.equal(titleColumn.sortable, true, 'data columns are sortable from their own headers');
 assert.equal(brandColumn.sortable, true, 'secondary data columns are sortable from their own headers');
+assert.equal(selectColumn.width, 40, 'checkbox column width follows the checkbox-plus-padding size');
+assert.equal(selectColumn.minWidth, 40, 'checkbox column minWidth does not expand to the adapter default');
 assert.equal(actionsColumn.sortable, false, 'actions column is not sortable');
+assert.match(productHeaderColumn.name, /ss-grid-product-head/, 'comparison columns can render product thumbnails in the header');
+assert.match(productHeaderColumn.name, /qnap\.jpg/, 'comparison header includes the product thumbnail URL');
 assert.deepEqual(capturedSortColumns, [
   { columnId: 'brand', sortAsc: true },
   { columnId: 'title', sortAsc: true }
@@ -134,6 +153,16 @@ assert.deepEqual(emittedSort, [
   { field: 'title', dir: 'asc' }
 ], 'SlickGrid multi-sort events emit the full sort chain');
 const actionsHtml = actionsColumn.formatter(0, 1, null, actionsColumn, { id: 'p1' });
+const sourceHtml = sourceColumn.formatter(0, 2, 'generic', sourceColumn, {
+  source: 'generic',
+  url: 'https://www.amazon.com/dp/B0TEST'
+});
+assert.match(sourceHtml, />Amazon</, 'generic source labels are replaced with the retailer name from the URL');
+assert.match(sourceHtml, /public\/icons\/amazon\/default\.svg/, 'known retailers render the matching SVG logo from the valid theSVG CDN path');
+assert.doesNotMatch(sourceHtml, />generic</i, 'generic source text is not shown when a retailer can be inferred');
+const ratingHtml = ratingColumn.formatter(0, 3, '4.7', ratingColumn, { rating: '4.7', reviewCount: '704' });
+assert.match(ratingHtml, /★★★★★/, 'ratings render a five-star display based on the numeric rating');
+assert.match(ratingHtml, />4\.7</, 'ratings still show the numeric value');
 assert.match(actionsHtml, /ss-grid-action-bar/, 'row actions render as a compact icon toolbar');
 assert.doesNotMatch(actionsHtml, /<details|ss-grid-action-panel|<summary/,
   'row actions do not render an in-cell popup menu that can overlap nearby rows');

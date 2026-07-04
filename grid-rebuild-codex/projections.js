@@ -10,7 +10,7 @@
   const NS = (root.ShopScoutGridCodexProjections = root.ShopScoutGridCodexProjections || {});
 
   const BASE_COLUMNS = [
-    { id: 'select', field: '_selected', name: '', type: 'selection', width: 44, required: true },
+    { id: 'select', field: '_selected', name: '', type: 'selection', width: 40, minWidth: 40, maxWidth: 40, required: true },
     { id: 'thumb', field: 'image', name: '', type: 'image', width: 76, required: true },
     { id: 'title', field: 'title', name: 'Name', type: 'text', minWidth: 260, editable: true, required: true },
     { id: 'brand', field: 'brand', name: 'Brand', type: 'text', minWidth: 120, editable: true },
@@ -400,6 +400,9 @@
       name: row.title || `Product ${idx + 1}`,
       type: 'matrixCell',
       productId: row.id,
+      image: row.image || row.thumb || row.thumbnail || '',
+      source: row.source || '',
+      url: row.url || row._shopScout?.product?.url || '',
       minWidth: 180
     }));
     const rows = uniqueFields.map(field => {

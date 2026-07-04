@@ -379,10 +379,8 @@ function bindEvents() {
   document.getElementById('content').addEventListener('click', async e => {
     const dashboardBack = e.target.closest('[data-dashboard-back]');
     if (dashboardBack) {
-      await renderAll();
-      document.getElementById('urlBar').style.display = '';
-      document.getElementById('filterBar').style.display = '';
-      document.querySelector('.controls').style.display = '';
+      restoreProductListChrome();
+      activateRibbonTab('products');
       return;
     }
 
@@ -809,6 +807,9 @@ function bindRibbonEvents() {
 function activateRibbonTab(target) {
   const shell = document.querySelector('.ribbon-shell');
   if (!shell || !target) return;
+  if (target !== 'about' && document.body.classList.contains('is-info-page')) {
+    restoreProductListChrome();
+  }
   const tabs = shell.querySelectorAll('.ribbon-tab[data-tab], .ribbon-tab[data-ribbon-tab]');
   const panes = shell.querySelectorAll('.ribbon-pane[data-pane]');
   tabs.forEach(tab => tab.classList.toggle('active', (tab.dataset.tab || tab.dataset.ribbonTab) === target));
@@ -1093,32 +1094,28 @@ async function openManualAiModal() {
   showModal('manualAiModal');
 }
 
-function openSettingsPage() {
-  closeAiResultsPage(false);
-  const detailPage = document.getElementById('productDetail');
-  detailPage?.classList.remove('active');
-  if (detailPage) detailPage.style.display = 'none';
-  const frame = document.getElementById('settingsFrame');
-  if (frame && !frame.getAttribute('src')) frame.setAttribute('src', chrome.runtime.getURL('settings.html'));
-  document.getElementById('urlBar').style.display = 'none';
-  document.getElementById('filterBar').style.display = 'none';
-  document.querySelector('.controls').style.display = 'none';
-  document.getElementById('content').style.display = 'none';
-  const settingsPage = document.getElementById('settingsPage');
-  settingsPage?.classList.add('active');
-  settingsPage?.setAttribute('aria-hidden', 'false');
-  window.scrollTo(0, 0);
+async function openSettingsPage() {
+  const content = prepareMainContentPage();
+  if (globalThis.ShopScoutSettings && typeof globalThis.ShopScoutSettings.mount === 'function') {
+    await globalThis.ShopScoutSettings.mount(content);
+    return;
+  }
+  setTrustedHtml(content, `<section class="dashboard-page">
+    <header class="dashboard-page-head">
+      <div>
+        <h2>Settings</h2>
+        <p>Settings could not load in this dashboard session.</p>
+      </div>
+      <button class="rb-btn-sm" type="button" data-dashboard-back>Back to Products</button>
+    </header>
+    <div class="dashboard-page-body"><p>Reload the extension package and open Settings again.</p></div>
+  </section>`);
 }
 
 function closeSettingsPage(shouldRender = true) {
-  const settingsPage = document.getElementById('settingsPage');
-  settingsPage?.classList.remove('active');
-  settingsPage?.setAttribute('aria-hidden', 'true');
-  document.getElementById('urlBar').style.display = '';
-  document.getElementById('filterBar').style.display = '';
-  document.querySelector('.controls').style.display = '';
-  document.getElementById('content').style.display = '';
-  if (shouldRender) renderAll();
+  const content = document.getElementById('content');
+  if (content?.querySelector('[data-settings-root]')) setTrustedHtml(content, '');
+  if (shouldRender) restoreProductListChrome();
 }
 
 function showKeyboardShortcuts() {

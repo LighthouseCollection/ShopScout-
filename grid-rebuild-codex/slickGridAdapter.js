@@ -39,6 +39,78 @@
     return value == null ? '' : String(value);
   }
 
+  const GENERIC_SOURCE_LABELS = new Set([
+    '',
+    'generic',
+    'source',
+    'store',
+    'retailer',
+    'website',
+    'unknown'
+  ]);
+
+  const RETAILER_HOSTS = [
+    { match: 'amazon.', label: 'Amazon', icon: 'amazon' },
+    { match: 'walmart.', label: 'Walmart', icon: 'walmart' },
+    { match: 'target.', label: 'Target', icon: 'target' },
+    { match: 'bestbuy.', label: 'Best Buy', icon: 'bestbuy' },
+    { match: 'newegg.', label: 'Newegg', icon: 'newegg' },
+    { match: 'ebay.', label: 'eBay', icon: 'ebay' },
+    { match: 'alibaba.', label: 'Alibaba', icon: 'alibaba' },
+    { match: 'aliexpress.', label: 'AliExpress', icon: 'aliexpress' },
+    { match: 'etsy.', label: 'Etsy', icon: 'etsy' },
+    { match: 'costco.', label: 'Costco', icon: 'costco' },
+    { match: 'homedepot.', label: 'The Home Depot' },
+    { match: 'lowes.', label: "Lowe's" },
+    { match: 'wayfair.', label: 'Wayfair' },
+    { match: 'shein.', label: 'SHEIN' },
+    { match: 'temu.', label: 'Temu' }
+  ];
+
+  function hostRetailer(urlValue) {
+    const url = safeUrl(urlValue);
+    if (!url) return null;
+    let host = '';
+    try {
+      host = new URL(url).hostname.toLowerCase().replace(/^www\./, '');
+    } catch {
+      return null;
+    }
+    const known = RETAILER_HOSTS.find(retailer => host.includes(retailer.match));
+    if (known) return known;
+    const parts = host.split('.').filter(Boolean);
+    const base = parts.length > 1 ? parts[parts.length - 2] : parts[0];
+    if (!base) return null;
+    return {
+      label: base
+        .replace(/[-_]+/g, ' ')
+        .replace(/\b\w/g, char => char.toUpperCase())
+    };
+  }
+
+  function usefulSourceLabel(value) {
+    const text = textValue(value).trim();
+    if (!text || GENERIC_SOURCE_LABELS.has(text.toLowerCase())) return '';
+    return text;
+  }
+
+  function sourceInfo(value, item) {
+    const url = safeUrl(item?.url);
+    const retailer = hostRetailer(url);
+    const label = retailer?.label || usefulSourceLabel(value || item?.source) || 'Source';
+    return {
+      label,
+      url,
+      icon: retailer?.icon || ''
+    };
+  }
+
+  function retailerIconHtml(icon) {
+    if (!icon) return '';
+    const src = `https://cdn.jsdelivr.net/gh/glincker/thesvg@main/public/icons/${icon}/default.svg`;
+    return `<img class="ss-grid-retailer-logo" src="${escAttr(src)}" alt="" aria-hidden="true" loading="lazy">`;
+  }
+
   function htmlForImage(value, item) {
     const src = safeUrl(value);
     if (!src) return '<span class="ss-grid-no-thumb" aria-label="No image"></span>';
@@ -47,17 +119,21 @@
   }
 
   function htmlForSource(value, item) {
-    const text = textValue(value || item?.source || 'Source');
-    const url = safeUrl(item?.url);
-    if (!url) return `<span class="ss-grid-source-pill">${esc(text)}</span>`;
-    return `<a class="ss-grid-source-pill" href="${escAttr(url)}" target="_blank" rel="noopener noreferrer">${esc(text)}</a>`;
+    const info = sourceInfo(value, item);
+    const content = `${retailerIconHtml(info.icon)}<span>${esc(info.label)}</span>`;
+    if (!info.url) return `<span class="ss-grid-source-pill">${content}</span>`;
+    return `<a class="ss-grid-source-pill" href="${escAttr(info.url)}" target="_blank" rel="noopener noreferrer">${content}</a>`;
   }
 
   function htmlForRating(value, item) {
     const rating = textValue(value).trim();
     const reviews = textValue(item?.reviewCount).trim();
     if (!rating && !reviews) return '<span class="ss-grid-empty">-</span>';
-    return `<span class="ss-grid-rating">★ ${esc(rating || '-')}</span>${reviews ? ` <span class="ss-grid-sub">(${esc(reviews)})</span>` : ''}`;
+    const numeric = Number(String(rating).replace(/[^0-9.]/g, ''));
+    const filled = Number.isFinite(numeric) ? Math.max(0, Math.min(5, Math.round(numeric))) : 0;
+    const stars = '★'.repeat(filled) + '☆'.repeat(5 - filled);
+    const aria = rating ? ` aria-label="${escAttr(`${rating} out of 5`)}"` : '';
+    return `<span class="ss-grid-rating"${aria}><span class="ss-grid-stars" aria-hidden="true">${stars}</span> <span>${esc(rating || '-')}</span></span>${reviews ? ` <span class="ss-grid-sub">(${esc(reviews)})</span>` : ''}`;
   }
 
   function htmlForPrice(value) {
@@ -214,16 +290,28 @@
     }
   }
 
+  function headerNameForColumn(column) {
+    const label = textValue(column?.name).trim();
+    if (column?.type !== 'matrixCell') return column?.name || '';
+    const thumb = safeUrl(column.image);
+    if (!thumb) return esc(label || 'Product');
+    return `<span class="ss-grid-product-head">`
+      + `<img class="ss-grid-header-thumb" src="${escAttr(thumb)}" alt="" aria-hidden="true" loading="lazy">`
+      + `<span class="ss-grid-product-head-title" title="${escAttr(label || 'Product')}">${esc(label || 'Product')}</span>`
+      + `</span>`;
+  }
+
   function toSlickColumns(columns) {
     const Slick = root.Slick || {};
     const TextEditor = Slick.Editors && Slick.Editors.Text;
     return (columns || []).map(column => ({
       id: column.id,
       field: column.field || column.id,
-      name: column.name || '',
+      name: headerNameForColumn(column),
       type: column.type || 'text',
       width: column.width || undefined,
-      minWidth: column.minWidth || 80,
+      minWidth: column.minWidth || column.width || 80,
+      maxWidth: column.maxWidth || undefined,
       resizable: true,
       sortable: column.type !== 'selection' && column.type !== 'actions' && column.type !== 'image',
       selectable: column.type !== 'selection' && column.type !== 'actions',

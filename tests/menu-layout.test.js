@@ -4,6 +4,8 @@ const path = require('path');
 
 const html = fs.readFileSync(path.join(__dirname, '..', 'comparison.html'), 'utf8');
 const js = fs.readFileSync(path.join(__dirname, '..', 'comparison.js'), 'utf8');
+const feedbackJs = fs.readFileSync(path.join(__dirname, '..', 'comparison-feedback.js'), 'utf8');
+const settingsJs = fs.readFileSync(path.join(__dirname, '..', 'settings.js'), 'utf8');
 
 function assertIncludes(value, message) {
   assert.ok(html.includes(value), message);
@@ -103,6 +105,7 @@ assertNotIncludes('class="rb-btn-sm menu-item active" data-search-field="title"'
 assertNotIncludes('Advanced</span>', 'Search tab no longer hides options behind Advanced');
 
 assertIncludes('class="ribbon-pane" data-pane="about"', 'About tab exists as its own ribbon pane');
+assertNotIncludes('data-list-mirror="about"', 'About tab does not repeat the Product List group');
 assertIncludes('<div class="rb-group-label">About</div>', 'About tab includes About group');
 assertIncludes('<div class="rb-group-label">Feedback</div>', 'About tab includes Feedback group');
 assertIncludes('data-command="documentation"', 'About tab exposes Help/documentation');
@@ -125,17 +128,28 @@ assertNotIncludes('id="groupingModal"',    'Old groupingModal removed');
 
 /* Manual AI / Settings / detail flows remain intact. */
 assertIncludes('id="manualAiModal"', 'Manual AI modal shell preserved');
-assertIncludes('id="settingsPage"',  'Settings page preserved');
-assertIncludes('id="settingsFrame"', 'Settings iframe preserved');
+assertIncludes('src="settings.js"', 'Settings module is loaded for embedded dashboard settings');
+assertNotIncludes('id="settingsFrame"', 'Settings no longer opens through an iframe');
 assertIncludes('id="productGrid"',   'Phase 2 grid mount point exists');
 
 assert.ok(js.includes('openSettingsPage'), 'comparison script opens settings inside the dashboard');
+assert.ok(js.includes('ShopScoutSettings.mount'), 'settings render inside the dashboard content area');
 assert.ok(js.includes('openManualAiModal'), 'comparison script opens manual AI in an embedded modal');
 assert.ok(js.includes("activateRibbonTab('products')"), 'open-list command routes to the Products tab');
 assert.ok(js.includes("activateRibbonTab('about')"), 'help/about commands route to the About tab');
+assert.ok(/if\s*\(\s*target\s*!==\s*['"]about['"][\s\S]{0,160}restoreProductListChrome\(\)/.test(js),
+  'switching away from About/info pages restores the product grid');
+assert.ok(/dashboardBack[\s\S]{0,120}restoreProductListChrome\(\)/.test(js),
+  'Back to Products restores the product grid chrome');
 assert.ok(js.includes('renderMarkdownToHtml'), 'markdown help/about files render inside the dashboard');
 assert.ok(js.includes('openDashboardInfoPage'), 'ribbon informational commands open inside the main content area');
 assert.ok(js.includes('openFeedbackPage'), 'suggest feature and report bug open inside the main content area');
+assert.ok(feedbackJs.includes('dashboard-primary-action'), 'feedback Send button uses the dashboard themed action style');
+assert.ok(settingsJs.includes('mount: mount'), 'settings module exposes an embedded dashboard mount');
+assert.ok(settingsJs.includes('One click adds the product to'), 'embedded settings preserves quick-capture guidance');
+assert.ok(settingsJs.includes('No personal data is sent'), 'embedded settings preserves Open*Facts privacy guidance');
+assert.ok(settingsJs.includes('Open Food Facts (groceries)'), 'embedded settings preserves detailed Open*Facts source labels');
+assert.ok(!settingsJs.includes('class="guide-frame"'), 'embedded settings does not restore the old iframe guide');
 assert.ok(js.includes('renderTopbarAiProviderMenu'), 'comparison script renders AI provider choices in the analyze ribbon');
 assert.ok(!js.includes('modelLabel'), 'AI provider menu shows provider names only, not model names');
 

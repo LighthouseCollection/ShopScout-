@@ -30,6 +30,8 @@ assert.ok(html.includes('--button-shade:'), 'popup defines a shaded standard but
 assert.ok(html.includes('font-weight: 400;'), 'popup standard button text is not bold');
 assert.ok(/html,\s*body\s*\{[\s\S]*height:\s*100vh/.test(html),
   'side-panel popup uses the allocated browser viewport height');
+assert.ok(/100dvh/.test(html),
+  'side-panel popup also uses the dynamic browser viewport height');
 assert.ok(/body\s*\{[\s\S]*display:\s*flex[\s\S]*flex-direction:\s*column/.test(html),
   'side-panel popup stacks fixed controls above a flexible product list');
 assert.ok(!/body\s*\{[^}]*max-height:\s*780px/.test(html),

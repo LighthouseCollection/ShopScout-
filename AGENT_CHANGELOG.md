@@ -341,3 +341,54 @@ This file is the shared record for Claude and Codex. Append an entry for every m
   - Notes: Recheck the live dashboard manually with a list containing repeated Brand values; verify header click sort, column toggle immediacy, and Brand facet filtering.
 - Follow-ups:
   - The current filter modal supports faceted checkbox values for add/remove flows; richer editing of an existing filter row can be added later if needed.
+
+## 2026-07-04 11:12 - Restore settings and fix capture/grid polish
+
+- Agent: Codex
+- Branch: grid-rebuild-codex
+- Commit: This commit
+- Status: Implemented
+- Summary:
+  - Restored the full AI provider/settings feature set inside the dashboard main content area without using an iframe.
+  - Made leaving About/info pages restore the product table and fixed the About back-to-products action.
+  - Removed the Product List group from the About ribbon tab and aligned the feedback send button with the dashboard action theme.
+  - Fixed compare/product grid presentation details: product thumbnails in compare headers, retailer source labels/logos, checkbox-column sizing, and five-star rating display.
+  - Updated popup/side-panel sizing to use the allocated browser height with `100dvh`.
+  - Reduced open-tab capture failures by trying the existing content-script message channel before injecting, then injecting only as fallback.
+- Files touched:
+  - background.js
+  - comparison-feedback.js
+  - comparison.css
+  - comparison.html
+  - comparison.js
+  - grid-rebuild-codex/grid.css
+  - grid-rebuild-codex/projections.js
+  - grid-rebuild-codex/slickGridAdapter.js
+  - grid-rebuild-codex/tests/adapter.test.js
+  - grid-rebuild-codex/tests/projections.test.js
+  - popup.css
+  - settings.js
+  - tests/comparison-table-defaults.test.js
+  - tests/menu-layout.test.js
+  - tests/popup-layout.test.js
+  - tests/side-panel.test.js
+  - AGENT_CHANGELOG.md
+- Validation:
+  - node grid-rebuild-codex/tests/adapter.test.js -> passed after failing before implementation
+  - node tests/menu-layout.test.js -> passed after failing before implementation
+  - node tests/side-panel.test.js -> passed after failing before implementation
+  - node tests/popup-layout.test.js -> passed after failing before implementation
+  - node tests/comparison-table-defaults.test.js -> passed
+  - node grid-rebuild-codex/tests/projections.test.js -> passed after failing before implementation
+  - npm test -> all 35 test files passed
+  - npm run syntax -> passed
+  - npm run typecheck -> passed
+  - npm run lint -> 0 errors, 43 warnings
+  - npm run build -> Chrome, Edge, Firefox built
+  - Browser check -> local dashboard file is blocked by Browser URL policy; localhost load confirms static HTML but cannot complete runtime init outside extension context because `chrome.storage.local` is unavailable.
+- Review / handoff:
+  - Reviewer: Claude
+  - Notes: Recheck the loaded Chrome/Edge extension side panel and dashboard in extension context, especially Settings, Open Tabs capture, source logo fallbacks, and compare header thumbnails.
+- Follow-ups:
+  - Grouping still uses the current custom grid grouping presentation. A later pass should move grouping to SlickGrid/DataView native grouping (`.slick-group`, `.slick-group-toggle`, `.slick-group-totals`) instead of restyling fake group rows.
+  - Retailer logos depend on TheSVG catalog coverage. Unknown or unavailable retailer icons fall back to text labels.
