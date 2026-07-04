@@ -287,7 +287,12 @@
     if (searchInput) {
       searchInput.addEventListener('input', () => {
         ensureStore().dispatch({ search: searchInput.value || '' });
+        return refreshGridData();
       });
+    }
+    const searchScope = root.document?.getElementById('productSearchScope');
+    if (searchScope) {
+      searchScope.addEventListener('change', () => render());
     }
   }
 
@@ -337,6 +342,91 @@
     return match?.name || field;
   }
 
+  function cellText(row, field) {
+    const value = row?.[field];
+    if (value == null) return '';
+    if (typeof value === 'object') return String(value.value ?? value.corrected ?? value.raw ?? '');
+    return String(value);
+  }
+
+  function facetValuesForField(field) {
+    if (!field) return [];
+    const rows = state.lastProjection?.allRows
+      || state.lastProjection?.products
+      || state.lastProjection?.rows
+      || [];
+    const values = new Set();
+    for (const row of rows) {
+      if (!row || row._isGroup) continue;
+      const text = cellText(row, field).trim();
+      if (text) values.add(text);
+    }
+    return [...values].sort((a, b) => a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' }));
+  }
+
+  function supportsFacetEditor(op) {
+    return ['contains', 'equals', 'starts'].includes(op || 'contains');
+  }
+
+  function renderFilterValueEditor(slot, filter, onChange) {
+    const ui = root.ShopScoutUI;
+    const dom = ui?.dom;
+    if (!dom || !slot) return;
+    dom.empty(slot);
+    const op = filter.op || 'contains';
+    if (op === 'empty' || op === 'notEmpty') {
+      onChange('');
+      dom.append(slot, dom.elem('span', { class: 'ss-grid-modal-muted', text: 'No value needed' }));
+      return;
+    }
+    const choices = supportsFacetEditor(op) ? facetValuesForField(filter.field) : [];
+    if (choices.length) {
+      const selected = new Set(Array.isArray(filter.value)
+        ? filter.value.map(String)
+        : String(filter.value || '').split('\u0000').filter(Boolean));
+      const search = dom.elem('input', {
+        class: 'ss-grid-modal-input ss-grid-facet-search',
+        attrs: { type: 'search', placeholder: `Search ${fieldLabel(filter.field)} values` }
+      });
+      const options = dom.elem('div', { class: 'ss-grid-facet-options' });
+      const sync = () => onChange([...selected]);
+      function renderOptions() {
+        const q = search.value.trim().toLowerCase();
+        dom.empty(options);
+        choices
+          .filter(choice => !q || choice.toLowerCase().includes(q))
+          .forEach(choice => {
+            const input = dom.elem('input', { attrs: { type: 'checkbox', value: choice } });
+            input.checked = selected.has(choice);
+            input.addEventListener('change', () => {
+              if (input.checked) selected.add(choice);
+              else selected.delete(choice);
+              sync();
+            });
+            dom.append(options, dom.elem('label', {
+              class: 'ss-grid-facet-option',
+              children: [
+                input,
+                dom.elem('span', { text: choice })
+              ]
+            }));
+          });
+      }
+      search.addEventListener('input', renderOptions);
+      dom.append(slot, search);
+      dom.append(slot, options);
+      renderOptions();
+      return;
+    }
+    const input = dom.elem('input', {
+      class: 'ss-grid-modal-input',
+      attrs: { type: ['gt', 'lt'].includes(op) ? 'number' : 'text', placeholder: 'Value' }
+    });
+    input.value = Array.isArray(filter.value) ? filter.value.join(', ') : String(filter.value || '');
+    input.addEventListener('input', () => onChange(input.value || ''));
+    dom.append(slot, input);
+  }
+
   function openFallbackModal(title, text) {
     root.alert?.(`${title}\n\n${text}`);
   }
@@ -365,10 +455,21 @@
       ['gt', 'greater than'],
       ['lt', 'less than']
     ].forEach(([optionValue, label]) => appendOption(op, optionValue, label));
-    const value = dom.elem('input', {
-      class: 'ss-grid-modal-input',
-      attrs: { type: 'text', placeholder: 'Value' }
-    });
+    const pending = { field: '', op: 'contains', value: '' };
+    const valueSlot = dom.elem('div', { class: 'ss-grid-value-editor' });
+    function commitFilters() {
+      ensureStore().dispatch({ filters: localFilters });
+      return refreshGridData();
+    }
+    function updatePendingEditor() {
+      pending.field = field.value || '';
+      pending.op = op.value || 'contains';
+      renderFilterValueEditor(valueSlot, pending, nextValue => {
+        pending.value = nextValue;
+      });
+    }
+    field.addEventListener('change', updatePendingEditor);
+    op.addEventListener('change', updatePendingEditor);
     const add = dom.elem('button', {
       class: 'ssui-btn ssui-btn--primary',
       text: 'Add Filter',
@@ -376,13 +477,14 @@
       on: {
         click() {
           if (!field.value) return;
-          localFilters.push({ field: field.value, op: op.value, value: value.value || '' });
-          value.value = '';
+          localFilters.push({ field: field.value, op: op.value, value: pending.value || '' });
+          pending.value = '';
           renderFilterList();
+          commitFilters();
         }
       }
     });
-    const row = dom.elem('div', { class: 'ss-grid-modal-row', children: [field, op, value, add] });
+    const row = dom.elem('div', { class: 'ss-grid-modal-row', children: [field, op, valueSlot, add] });
     dom.append(body, row);
     dom.append(body, list);
     function renderFilterList() {
@@ -399,25 +501,21 @@
             dom.elem('button', {
               text: 'Remove',
               attrs: { type: 'button' },
-              on: { click() { localFilters.splice(index, 1); renderFilterList(); } }
+              on: { click() { localFilters.splice(index, 1); renderFilterList(); commitFilters(); } }
             })
           ]
         });
         dom.append(list, item);
       });
     }
+    updatePendingEditor();
     renderFilterList();
     ui.modal.open({
       title: 'Filters',
       body,
       width: 'min(760px, 94vw)',
       actions: [
-        { label: 'Cancel', value: false },
-        { label: 'Apply Filters', kind: 'primary', value: true, isDefault: true,
-          onClick: () => {
-            ensureStore().dispatch({ filters: localFilters });
-            render();
-          } }
+        { label: 'Done', kind: 'primary', value: true, isDefault: true }
       ]
     });
   }
@@ -456,6 +554,8 @@
           input.disabled = required;
           input.addEventListener('change', () => {
             localVisibility[field] = input.checked;
+            ensureStore().dispatch({ columnVisibility: Object.assign({}, localVisibility) });
+            return refreshGridData();
           });
           dom.append(list, dom.elem('label', {
             class: 'ss-grid-column-option',
@@ -473,12 +573,7 @@
       body,
       width: 'min(760px, 94vw)',
       actions: [
-        { label: 'Cancel', value: false },
-        { label: 'Apply Columns', kind: 'primary', value: true, isDefault: true,
-          onClick: () => {
-            ensureStore().dispatch({ columnVisibility: localVisibility });
-            render();
-          } }
+        { label: 'Done', kind: 'primary', value: true, isDefault: true }
       ]
     });
   }
@@ -597,6 +692,7 @@
       state.adapter = adapterFactory.create(host, projection, {
         onSortChange(sort) {
           ensureStore().dispatch({ sort });
+          return refreshGridData();
         },
         onColumnOrderChange(columnOrder) {
           ensureStore().dispatch({ columnOrder });

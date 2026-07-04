@@ -303,3 +303,41 @@ This file is the shared record for Claude and Codex. Append an entry for every m
   - Notes: Recheck the loaded Chrome/Edge side panel at browser heights shorter and taller than the screenshot.
 - Follow-ups:
   - None.
+
+## 2026-07-04 04:21 - Make grid sort, filters, and columns live
+
+- Agent: Codex
+- Branch: grid-rebuild-codex
+- Commit: This commit
+- Status: Implemented
+- Summary:
+  - Fixed column-header sorting so SlickGrid sort events refresh the ShopScout projection/state instead of only sorting adapter-local rows.
+  - Fixed the projection fallback numeric parser so non-numeric text columns sort alphabetically instead of being treated as `0`.
+  - Made product search input refresh the grid as the user types and made search scope changes re-render the grid.
+  - Removed Apply-style actions from the Filters and Columns modals; column toggles and filter add/remove actions now update the grid immediately.
+  - Added faceted filter value UI for fields with table values, such as Brand, using searchable checkbox options.
+  - Added multi-value filter support in projections so checkbox-selected values work as OR matches for contains/equals/starts.
+- Files touched:
+  - grid-rebuild-codex/shopscoutGrid.js
+  - grid-rebuild-codex/projections.js
+  - grid-rebuild-codex/grid.css
+  - grid-rebuild-codex/tests/controls.test.js
+  - AGENT_CHANGELOG.md
+- Validation:
+  - node grid-rebuild-codex/tests/controls.test.js -> failed before implementation, passed after implementation
+  - node grid-rebuild-codex/tests/adapter.test.js -> passed
+  - node grid-rebuild-codex/tests/actions.test.js -> passed
+  - node grid-rebuild-codex/tests/state.test.js -> passed
+  - node grid-rebuild-codex/tests/projections.test.js -> passed
+  - node grid-rebuild-codex/tests/wiring.test.js -> passed
+  - node grid-rebuild-codex/tests/editing.test.js -> passed
+  - npm test -> all 35 test files passed
+  - npm run syntax -> passed
+  - npm run typecheck -> passed
+  - npm run lint -> 0 errors, 44 existing warnings
+  - npm run build -> Chrome, Edge, Firefox built
+- Review / handoff:
+  - Reviewer: Claude
+  - Notes: Recheck the live dashboard manually with a list containing repeated Brand values; verify header click sort, column toggle immediacy, and Brand facet filtering.
+- Follow-ups:
+  - The current filter modal supports faceted checkbox values for add/remove flows; richer editing of an existing filter row can be added later if needed.

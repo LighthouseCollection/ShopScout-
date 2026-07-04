@@ -251,6 +251,44 @@
   padding: 0 10px;
 }
 
+.ss-grid-value-editor {
+  min-width: 0;
+}
+
+.ss-grid-facet-search {
+  margin-bottom: 6px;
+}
+
+.ss-grid-facet-options {
+  max-height: 154px;
+  overflow: auto;
+  display: grid;
+  gap: 4px;
+  padding: 5px;
+  border: 1px solid var(--rule, #d1d5db);
+  border-radius: 6px;
+  background: var(--surface, #fff);
+}
+
+.ss-grid-facet-option {
+  min-height: 28px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 6px;
+  border-radius: 4px;
+  color: var(--ink, #0f1419);
+}
+
+.ss-grid-facet-option:hover {
+  background: var(--paper-2, #eaedf1);
+}
+
+.ss-grid-facet-option input {
+  width: 15px;
+  height: 15px;
+}
+
 .ss-grid-filter-list,
 .ss-grid-column-list {
   max-height: min(52vh, 420px);

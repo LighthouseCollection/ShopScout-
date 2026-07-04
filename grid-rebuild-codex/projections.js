@@ -105,7 +105,9 @@
       const parsed = values.parseNumeric(value);
       if (Number.isFinite(parsed)) return parsed;
     }
-    const n = Number(String(value ?? '').replace(/[^0-9.-]/g, ''));
+    const cleaned = String(value ?? '').replace(/[^0-9.-]/g, '');
+    if (!cleaned || /^[-.]+$/.test(cleaned)) return null;
+    const n = Number(cleaned);
     return Number.isFinite(n) ? n : null;
   }
 
@@ -131,6 +133,13 @@
     };
   }
 
+  function normalizeFilterValue(value) {
+    if (Array.isArray(value)) {
+      return [...new Set(value.map(item => String(item ?? '').trim()).filter(Boolean))];
+    }
+    return String(value ?? '').trim();
+  }
+
   function normalizeFilter(filter, scope) {
     if (!filter || typeof filter !== 'object') return null;
     const field = canonicalField(filter.field, scope);
@@ -141,17 +150,20 @@
     return {
       field,
       op,
-      value: String(filter.value ?? '').trim()
+      value: normalizeFilterValue(filter.value)
     };
   }
 
   function filterMatches(row, filter) {
     const text = cellText(row, filter.field).trim();
     const haystack = text.toLowerCase();
-    const needle = String(filter.value || '').toLowerCase();
+    const needles = Array.isArray(filter.value)
+      ? filter.value.map(value => String(value || '').toLowerCase()).filter(Boolean)
+      : [String(filter.value || '').toLowerCase()];
+    const needle = needles[0] || '';
     switch (filter.op) {
-      case 'equals': return haystack === needle;
-      case 'starts': return haystack.startsWith(needle);
+      case 'equals': return needles.length ? needles.some(value => haystack === value) : haystack === needle;
+      case 'starts': return needles.length ? needles.some(value => haystack.startsWith(value)) : haystack.startsWith(needle);
       case 'empty': return !text;
       case 'notEmpty': return !!text;
       case 'gt': {
@@ -164,7 +176,7 @@
         const right = parseNumeric(filter.value);
         return left != null && right != null && left < right;
       }
-      default: return haystack.includes(needle);
+      default: return needles.length ? needles.some(value => haystack.includes(value)) : haystack.includes(needle);
     }
   }
 
@@ -288,6 +300,7 @@
       mode: 'productsRows',
       columns: applyColumnState(allColumns, viewState),
       allColumns,
+      allRows: rows,
       rows: groupedRows,
       productRowCount: filteredRows.length,
       totalProductRowCount: rows.length,
