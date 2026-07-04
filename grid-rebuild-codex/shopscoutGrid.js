@@ -545,6 +545,19 @@
       await root.rescanProductById({ id, url: row._shopScout?.url || row.url });
     }
     if (action === 'delete' && typeof root.deleteProductById === 'function') {
+      const confirm = root.ShopScoutUI?.confirm;
+      if (typeof confirm !== 'function') {
+        const toast = root.SS?.toast || root.toast;
+        toast?.show?.('Delete confirmation is unavailable. Product was not deleted.', 'error');
+        return;
+      }
+      const label = row.title || row._shopScout?.url || row.url || 'this product';
+      const proceed = await confirm(`Delete product?\n\n${label}`, {
+        title: 'Delete product?',
+        okLabel: 'Delete',
+        kind: 'danger'
+      });
+      if (!proceed) return;
       await root.deleteProductById({ id, url: row._shopScout?.url || row.url });
     }
   }

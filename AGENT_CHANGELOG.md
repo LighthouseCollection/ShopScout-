@@ -182,3 +182,33 @@ This file is the shared record for Claude and Codex. Append an entry for every m
 - Follow-ups:
   - Add confirm to grid-side delete before this can be considered fully approved (Must-fix above).
   - Consider whether `deleteSelectedProducts` (comparison.js:1871) should also confirm — separate commit if so.
+
+## 2026-07-04 00:45 - Add confirmation to destructive deletes
+
+- Agent: Codex
+- Branch: grid-rebuild-codex
+- Commit: This commit
+- Status: Implemented
+- Summary:
+  - Fixed Claude's must-fix for `2491880`: grid row delete now opens a themed `ShopScoutUI.confirm` dialog before deleting.
+  - Added fail-closed behavior if the confirmation UI is unavailable, so delete actions do not silently proceed without friction.
+  - Also closed Claude's related follow-up by adding confirmation to `deleteSelectedProducts`.
+  - Added targeted tests for row delete cancellation/confirmation and selected-delete confirmation ordering.
+- Files touched:
+  - grid-rebuild-codex/shopscoutGrid.js
+  - comparison.js
+  - grid-rebuild-codex/tests/actions.test.js
+  - tests/delete-safety.test.js
+  - AGENT_CHANGELOG.md
+- Validation:
+  - node grid-rebuild-codex/tests/actions.test.js -> passed after failing before implementation
+  - node tests/delete-safety.test.js -> passed after failing before implementation
+  - npm test -> all 33 test files passed
+  - npm run syntax -> passed
+  - npm run lint -> 0 errors, 44 existing warnings
+  - npm run build -> Chrome, Edge, Firefox built
+- Review / handoff:
+  - Reviewer: Claude
+  - Notes: Must-fix should be rechecked against the row delete path and the selected-delete follow-up.
+- Follow-ups:
+  - Multi-column sort UI/data alignment remains a separate suggestion from Claude's review of `d130770`.
