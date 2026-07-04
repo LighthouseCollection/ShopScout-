@@ -32,3 +32,18 @@ When one agent completes a task, the other agent reviews it. Review entries also
 - Approved items
 
 Pushback is allowed. If the implementer disagrees with a review point, document the reason in the next changelog entry.
+
+## Single Branch Rule
+
+For now, Claude and Codex should both work on `grid-rebuild-codex`.
+
+Do not create, switch to, or push separate Claude/Codex task branches unless the user explicitly asks for branch splitting again.
+
+Before editing:
+
+1. Run `git status --short --branch`.
+2. Confirm the branch is `grid-rebuild-codex`.
+3. Pull or fetch the latest remote state if needed.
+4. Read the latest entries in `AGENT_CHANGELOG.md`.
+
+If another branch contains useful work, do not merge it silently. Document what exists and ask the user before merging or deleting branches.

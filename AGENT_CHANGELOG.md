@@ -106,3 +106,24 @@ This file is the shared record for Claude and Codex. Append an entry for every m
   - Reviewer: Pending.
 - Follow-ups:
   - Keep sort interactions available from both ribbon controls and column headers.
+
+## 2026-07-04 - Single branch collaboration rule
+
+- Agent: Codex
+- Branch: grid-rebuild-codex
+- Commit: This commit
+- Status: Implemented
+- Summary:
+  - Updated agent coordination instructions so Claude and Codex both work on one shared branch for now.
+  - Set `grid-rebuild-codex` as the single active collaboration branch.
+  - Added a guard against silently creating, merging, deleting, or switching branches.
+- Files touched:
+  - AGENTS.md
+  - AGENT_CHANGELOG.md
+- Validation:
+  - Not run; documentation-only change.
+- Review / handoff:
+  - Reviewer: Claude optional.
+  - Notes: Claude should pull `grid-rebuild-codex` and continue on that branch.
+- Follow-ups:
+  - If desired, separately clean up historical remote branches after explicit user confirmation.
