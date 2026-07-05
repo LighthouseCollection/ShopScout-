@@ -142,7 +142,6 @@
   }
 
   function htmlForSelection(item) {
-    if (item?._isGroup) return '';
     const id = escAttr(item?.id || '');
     const checked = item?._selected ? ' checked' : '';
     return `<input class="ss-grid-select" type="checkbox" data-row-id="${id}"${checked} aria-label="Select product">`;
@@ -182,12 +181,6 @@
   }
 
   function cellFormatter(row, cell, value, column, item) {
-    if (item?._isGroup) {
-      if (column.id === 'title' || column.id === 'attribute') {
-        return `<span class="ss-grid-group-label">${esc(item.title || item._group?.value || 'Group')}</span>`;
-      }
-      return '';
-    }
     switch (column.type) {
       case 'selection': return htmlForSelection(item);
       case 'image':     return htmlForImage(value, item);
@@ -322,6 +315,72 @@
     }));
   }
 
+  function groupCellFormatter(_row, _cell, _value, _columnDef, item) {
+    const collapsed = item?.collapsed ? 'collapsed' : 'expanded';
+    const title = item?.title || item?.value || 'Group';
+    return `<span class="slick-group-toggle ${collapsed}" aria-hidden="true"></span>`
+      + `<span class="ss-grid-group-title">${esc(title)}</span>`;
+  }
+
+  function createGroupItemMetadataProvider() {
+    return {
+      getGroupRowMetadata() {
+        return {
+          selectable: false,
+          focusable: true,
+          cssClasses: 'slick-group ss-grid-native-group',
+          columns: {
+            0: {
+              colspan: '*',
+              formatter: groupCellFormatter,
+              editor: null
+            }
+          }
+        };
+      },
+      getTotalsRowMetadata() {
+        return {
+          selectable: false,
+          focusable: false,
+          cssClasses: 'slick-group-totals ss-grid-native-group-totals'
+        };
+      }
+    };
+  }
+
+  function nativeGroupValue(item, field) {
+    const value = item?.[field];
+    const text = typeof value === 'object'
+      ? textValue(value?.value ?? value?.corrected ?? value?.raw)
+      : textValue(value);
+    return text.trim() || 'Not specified';
+  }
+
+  function groupingInfo(projection) {
+    const grouping = projection?.grouping;
+    const field = String(grouping?.field || projection?.group || '').trim();
+    if (!field) return null;
+    const label = String(grouping?.label || field).trim() || field;
+    return {
+      getter(item) {
+        return nativeGroupValue(item, field);
+      },
+      formatter(group) {
+        const value = textValue(group?.value).trim() || 'Not specified';
+        return `${label}: ${value} (${Number(group?.count) || 0})`;
+      },
+      comparer(a, b) {
+        return textValue(a?.value).localeCompare(textValue(b?.value), undefined, {
+          numeric: true,
+          sensitivity: 'base'
+        });
+      },
+      displayTotalsRow: false,
+      aggregateEmpty: false,
+      collapsed: false
+    };
+  }
+
   function renderMissingRuntime(container) {
     if (!container) return;
     const doc = container.ownerDocument || root.document;
@@ -335,6 +394,7 @@
   function applyProjection(dataView, grid, projection) {
     dataView.beginUpdate();
     dataView.setItems(projection.rows || [], 'id');
+    dataView.setGrouping(groupingInfo(projection));
     dataView.endUpdate();
     const sort = Array.isArray(projection.sort) ? projection.sort : [];
     if (sort.length) {
@@ -356,7 +416,11 @@
     }
 
     const opts = options || {};
-    const dataView = new Slick.Data.DataView({ inlineFilters: true });
+    const groupProvider = createGroupItemMetadataProvider();
+    const dataView = new Slick.Data.DataView({
+      inlineFilters: true,
+      groupItemMetadataProvider: groupProvider
+    });
     const columns = toSlickColumns(projection.columns);
     const gridOptions = {
       autoEdit: false,
@@ -424,6 +488,15 @@
 
     grid.onClick.subscribe((event, args) => {
       const target = event.target;
+      const item = dataView.getItem(args.row);
+      const groupToggle = target?.closest?.('.slick-group-toggle');
+      if (groupToggle && item?.__group) {
+        event.preventDefault();
+        event.stopImmediatePropagation();
+        if (item.collapsed && typeof dataView.expandGroup === 'function') dataView.expandGroup(item.groupingKey);
+        else if (!item.collapsed && typeof dataView.collapseGroup === 'function') dataView.collapseGroup(item.groupingKey);
+        return;
+      }
       const actionButton = target?.closest?.('[data-ss-grid-action]');
       if (actionButton) {
         event.preventDefault();
@@ -434,7 +507,7 @@
         return;
       }
       const checkbox = target?.closest?.('.ss-grid-select');
-      if (checkbox && !dataView.getItem(args.row)?._isGroup) {
+      if (checkbox && !item?.__group) {
         event.stopImmediatePropagation();
         const selected = new Set(grid.getSelectedRows ? grid.getSelectedRows() : []);
         if (checkbox.checked) selected.add(args.row);
@@ -444,7 +517,9 @@
     });
 
     grid.onDblClick.subscribe((_event, args) => {
-      if (typeof opts.onAction === 'function') opts.onAction('open', dataView.getItem(args.row));
+      const item = dataView.getItem(args.row);
+      if (item?.__group || item?.__groupTotals) return;
+      if (typeof opts.onAction === 'function') opts.onAction('open', item);
     });
 
     applyProjection(dataView, grid, projection);

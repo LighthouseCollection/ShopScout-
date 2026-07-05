@@ -200,29 +200,6 @@
     });
   }
 
-  function groupRows(rows, groupField) {
-    if (!groupField) return rows;
-    const groups = new Map();
-    for (const row of rows) {
-      const raw = cellText(row, groupField).trim();
-      const value = raw || 'Not specified';
-      if (!groups.has(value)) groups.set(value, []);
-      groups.get(value).push(row);
-    }
-    const out = [];
-    for (const value of [...groups.keys()].sort((a, b) => a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' }))) {
-      const items = groups.get(value);
-      out.push({
-        id: `group:${groupField}:${value}`,
-        _isGroup: true,
-        _group: { field: groupField, label: fieldLabel(groupField), value, count: items.length },
-        title: `${fieldLabel(groupField)}: ${value} (${items.length})`
-      });
-      out.push(...items);
-    }
-    return out;
-  }
-
   function applyColumnState(columns, viewState) {
     const state = viewState || {};
     const visibility = state.columnVisibility || {};
@@ -295,19 +272,22 @@
     const allColumns = BASE_COLUMNS.concat(specColumns, [ACTIONS_COLUMN]);
     const filteredRows = applyFilters(rows, viewState.filters, scope);
     const sortedRows = applySort(filteredRows, viewState.sort);
-    const groupedRows = groupRows(sortedRows, viewState.group);
+    const grouping = viewState.group
+      ? { field: viewState.group, label: fieldLabel(viewState.group) }
+      : null;
     return {
       mode: 'productsRows',
       columns: applyColumnState(allColumns, viewState),
       allColumns,
       allRows: rows,
-      rows: groupedRows,
+      rows: sortedRows,
       productRowCount: filteredRows.length,
       totalProductRowCount: rows.length,
       specFields,
-      sort: viewState.group ? [] : Array.isArray(viewState.sort) ? viewState.sort.slice() : [],
+      sort: Array.isArray(viewState.sort) ? viewState.sort.slice() : [],
       filters: Array.isArray(viewState.filters) ? viewState.filters.slice() : [],
-      group: viewState.group || null
+      group: viewState.group || null,
+      grouping
     };
   }
 

@@ -212,15 +212,32 @@
   color: var(--danger, #b91c1c);
 }
 
-.ss-grid-group-label {
-  display: inline-flex;
+.ss-grid .slick-row.slick-group,
+.ss-grid .slick-row.ss-grid-native-group {
+  background: #e8edf3;
+  border-top: 1px solid #c7d0da;
+  border-bottom: 1px solid #c7d0da;
+}
+
+.ss-grid .slick-row.slick-group .slick-cell {
+  display: flex;
   align-items: center;
-  min-height: 30px;
-  padding: 0 10px;
-  border-radius: 5px;
-  background: var(--primary-tint, #e6eef1);
+  padding: 0 12px;
+  color: var(--ink, #16202b);
+  font-weight: 650;
+}
+
+.ss-grid .slick-group-toggle {
+  flex: 0 0 auto;
+  margin-right: 8px;
   color: var(--primary, #0b3d4f);
-  font-weight: 700;
+}
+
+.ss-grid-group-title {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .ss-grid-matrix-cell {

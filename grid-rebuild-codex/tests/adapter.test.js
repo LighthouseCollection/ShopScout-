@@ -51,6 +51,8 @@ let capturedColumns = null;
 let capturedSortColumns = null;
 let capturedSortComparator = null;
 let capturedOnSort = null;
+let capturedGrouping = null;
+let groupingCalls = [];
 let emittedSort = null;
 let destroyed = false;
 const eventStub = { subscribe() {} };
@@ -61,6 +63,7 @@ ctx.Slick = {
       return {
         beginUpdate() {},
         setItems() {},
+        setGrouping(grouping) { capturedGrouping = grouping; groupingCalls.push(grouping); },
         endUpdate() {},
         sort(comparator) { capturedSortComparator = comparator; },
         onRowCountChanged: eventStub,
@@ -81,6 +84,7 @@ ctx.Slick = {
       onClick: eventStub,
       onDblClick: eventStub,
       setSortColumns(columns) { capturedSortColumns = columns; },
+      setColumns(columns) { capturedColumns = columns; },
       resizeCanvas() {},
       render() {},
       destroy() {}
@@ -111,7 +115,8 @@ const liveInstance = adapter.create(host, {
   sort: [
     { field: 'brand', dir: 'asc' },
     { field: 'title', dir: 'asc' }
-  ]
+  ],
+  grouping: { field: 'brand', label: 'Brand' }
 }, {
   onSortChange(sort) { emittedSort = sort; }
 });
@@ -142,6 +147,12 @@ assert.equal(
   true,
   'DataView sort comparator uses secondary sort fields when primary values tie'
 );
+assert.equal(typeof capturedGrouping.getter, 'function', 'native DataView grouping uses a value-normalizing getter');
+assert.equal(capturedGrouping.getter({ brand: 'Acme' }), 'Acme', 'native grouping getter reads the projection grouping field');
+assert.equal(capturedGrouping.getter({ brand: '' }), 'Not specified', 'native grouping getter normalizes blank group values');
+assert.equal(capturedGrouping.displayTotalsRow, false, 'native grouping does not add unused totals rows');
+assert.equal(capturedGrouping.formatter({ value: 'Acme', count: 2 }), 'Brand: Acme (2)',
+  'native group formatter shows label, value, and count');
 capturedOnSort(null, {
   sortCols: [
     { sortCol: brandColumn, sortAsc: false },
@@ -172,6 +183,18 @@ assert.match(actionsHtml, /data-ss-grid-action="delete"/, 'row actions include d
 assert.match(actionsHtml, /aria-label="Open product"/, 'open action is icon-only with an accessible label');
 assert.match(actionsHtml, /aria-label="Rescan product"/, 'rescan action is icon-only with an accessible label');
 assert.match(actionsHtml, /aria-label="Delete product"/, 'delete action is icon-only with an accessible label');
+liveInstance.update({
+  columns: [
+    { id: 'title', name: 'Name', field: 'title' }
+  ],
+  rows: [
+    { id: 'p1', title: 'Beta' }
+  ],
+  sort: [],
+  grouping: null
+});
+assert.equal(groupingCalls[groupingCalls.length - 1], null,
+  'adapter clears native DataView grouping when the projection is ungrouped');
 liveInstance.destroy();
 assert.equal(destroyed, true, 'live instance still destroys the DataView');
 

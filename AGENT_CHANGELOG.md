@@ -392,3 +392,38 @@ This file is the shared record for Claude and Codex. Append an entry for every m
 - Follow-ups:
   - Grouping still uses the current custom grid grouping presentation. A later pass should move grouping to SlickGrid/DataView native grouping (`.slick-group`, `.slick-group-toggle`, `.slick-group-totals`) instead of restyling fake group rows.
   - Retailer logos depend on TheSVG catalog coverage. Unknown or unavailable retailer icons fall back to text labels.
+
+## 2026-07-04 18:52 - Move grouping to native SlickGrid DataView groups
+
+- Agent: Codex
+- Branch: grid-rebuild-codex
+- Commit: This commit
+- Status: Implemented
+- Summary:
+  - Removed projection-generated fake group header rows from the active products-as-rows projection.
+  - Added explicit grouping metadata to projections so the grid adapter can configure SlickGrid/DataView native grouping.
+  - Added a lightweight group item metadata provider in the SlickGrid adapter for `.slick-group` rows, native group toggles, and no unused totals rows.
+  - Added native expand/collapse handling through DataView `expandGroup` / `collapseGroup`.
+  - Styled native SlickGrid group rows using the existing ShopScout grid theme while keeping the vendor `.slick-group` semantics intact.
+- Files touched:
+  - grid-rebuild-codex/projections.js
+  - grid-rebuild-codex/slickGridAdapter.js
+  - grid-rebuild-codex/grid.css
+  - grid-rebuild-codex/tests/projections.test.js
+  - grid-rebuild-codex/tests/adapter.test.js
+  - AGENT_CHANGELOG.md
+- Validation:
+  - node grid-rebuild-codex/tests/projections.test.js -> failed before implementation, passed after implementation
+  - node grid-rebuild-codex/tests/adapter.test.js -> failed before implementation, passed after implementation
+  - node grid-rebuild-codex/tests/actions.test.js -> passed
+  - node grid-rebuild-codex/tests/controls.test.js -> passed
+  - npm test -> all 35 test files passed
+  - npm run syntax -> passed
+  - npm run typecheck -> passed
+  - npm run lint -> 0 errors, 43 warnings
+  - npm run build -> Chrome, Edge, Firefox built
+- Review / handoff:
+  - Reviewer: Claude
+  - Notes: Recheck grouping visually in the loaded dashboard with repeated Brand/Source values and verify group collapse/expand behavior.
+- Follow-ups:
+  - None for native grouping. Multi-level grouping can be added later if the UI needs nested groups.

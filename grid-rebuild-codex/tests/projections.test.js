@@ -164,15 +164,17 @@ const groupedProjection = projections.buildProductsRowsProjection(products, {
     sort: [{ field: 'newPrice', dir: 'asc' }]
   }
 });
-assert.equal(groupedProjection.rows[0]._isGroup, true, 'grouping inserts visible group header rows');
-assert.equal(groupedProjection.rows[0]._group.field, 'source');
-assert.equal(groupedProjection.rows[0]._group.value, 'Amazon');
-assert.equal(groupedProjection.rows[0].title, 'Source: Amazon (1)');
 assert.deepEqual(
   groupedProjection.rows.map(row => row.id),
-  ['group:source:Amazon', 'p1', 'group:source:Walmart', 'p2'],
-  'group headers wrap the rows for each grouped value'
+  ['p2', 'p1'],
+  'projection leaves grouped rows as product rows so SlickGrid DataView can render native groups'
 );
+assert.deepEqual(groupedProjection.sort, [{ field: 'newPrice', dir: 'asc' }],
+  'grouped projections keep active sort metadata for the grid header');
+assert.deepEqual(groupedProjection.grouping, {
+  field: 'source',
+  label: 'Source'
+}, 'grouped projections expose native grouping metadata instead of fake rows');
 
 const matrix = projections.buildComparisonMatrixProjection(products, {
   matrixMode: 'detailed',
