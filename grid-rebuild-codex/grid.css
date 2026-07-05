@@ -59,6 +59,7 @@
 .ss-grid-host .slick-cell {
   display: flex;
   align-items: center;
+  justify-content: center;
   border-right: 1px solid var(--rule-soft, #d1d5db);
   border-bottom: 1px solid var(--rule, #d1d5db);
   color: var(--ink, #0f1419);
@@ -89,6 +90,7 @@
 
 .ss-grid-host .slick-cell.ss-grid-cell-title {
   align-items: center;
+  justify-content: center;
   line-height: 1.35;
   overflow: hidden;
   overflow-wrap: anywhere;

@@ -41,6 +41,12 @@ assert.ok(/\.ss-grid-host \.slick-row\.odd[\s\S]{0,80}background:\s*#f5f5f5/.tes
   'odd alternating grid rows use the requested #f5f5f5 background');
 assert.ok(!gridCss.includes('#e5e7eb'),
   'grid border fallbacks use #d1d5db instead of #e5e7eb');
+assert.ok(/\.ss-grid-host \.slick-cell[\s\S]{0,180}align-items:\s*center/.test(gridCss),
+  'grid cells vertically center their contents');
+assert.ok(/\.ss-grid-host \.slick-cell[\s\S]{0,220}justify-content:\s*center/.test(gridCss),
+  'grid cells horizontally center their contents by default');
+assert.ok(/\.ss-grid-host \.slick-cell\.ss-grid-cell-title[\s\S]{0,180}justify-content:\s*center/.test(gridCss),
+  'product-name cells center the title wrapper while preserving the two-line clamp');
 assert.ok(/\.ss-grid-logo-token[\s\S]{0,320}text-decoration:\s*none/.test(gridCss),
   'source and brand logo tokens suppress link underlines');
 assert.ok(/\.ss-grid-logo-token[\s\S]{0,360}width:\s*clamp\(56px,\s*8vw,\s*80px\)/.test(gridCss),

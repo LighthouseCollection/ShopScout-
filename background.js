@@ -52,9 +52,18 @@ chrome.tabs.onActivated.addListener(async (activeInfo) => {
 
 function updateBadge(tabId, url) {
   const is = isProductUrl(url);
-  chrome.action.setBadgeText({ tabId, text: is ? '!' : '' });
-  chrome.action.setBadgeBackgroundColor({ tabId, color: '#2563eb' });
-  if (chrome.action.setBadgeTextColor) chrome.action.setBadgeTextColor({ tabId, color: '#fff' });
+  safeSetBadge(tabId, is);
+}
+
+async function safeSetBadge(tabId, isProduct) {
+  try {
+    await chrome.action.setBadgeText({ tabId, text: isProduct ? '!' : '' });
+    await chrome.action.setBadgeBackgroundColor({ tabId, color: '#2563eb' });
+    if (chrome.action.setBadgeTextColor) await chrome.action.setBadgeTextColor({ tabId, color: '#fff' });
+  } catch (error) {
+    if (isMissingTabError(error)) return;
+    throw error;
+  }
 }
 
 function isProductUrl(url) {
@@ -116,11 +125,16 @@ function waitForTabComplete(tabId, timeoutMs, settleMs) {
   });
 }
 
+function isMissingTabError(error) {
+  const message = error && error.message ? error.message : '';
+  return /No tab with id|Cannot access|Invalid tab ID/i.test(message);
+}
+
 async function safeExecScript(tabId, func, args) {
   try {
     return await chrome.scripting.executeScript({ target: { tabId }, func, ...(args ? { args } : {}) });
   } catch (e) {
-    if (e.message?.includes('No tab with id') || e.message?.includes('Cannot access')) return null;
+    if (isMissingTabError(e)) return null;
     throw e;
   }
 }
@@ -1563,6 +1577,7 @@ chrome.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
       args: [job.prompt, job.inputSel]
     });
   } catch (e) {
+    if (isMissingTabError(e)) return;
     console.error('ShopScout auto-paste error:', e);
   }
 });
@@ -1578,5 +1593,8 @@ function showToast(tabId, msg, isError = false) {
       setTimeout(() => { t.style.opacity = '0'; setTimeout(() => t.remove(), 300); }, 2500);
     },
     args: [msg, isError]
+  }).catch(error => {
+    if (isMissingTabError(error)) return;
+    console.warn('ShopScout toast failed', error);
   });
 }

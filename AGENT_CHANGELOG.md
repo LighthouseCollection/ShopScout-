@@ -671,3 +671,35 @@ This file is the shared record for Claude and Codex. Append an entry for every m
 - Follow-ups:
   - Add more packaged logos as real product/source data exposes recurring brands and retailers.
   - Verify individual logo licensing before expanding the production logo cache.
+
+## 2026-07-04 23:52 - Center grid cells and suppress stale tab errors
+
+- Agent: Codex
+- Branch: grid-rebuild-codex
+- Commit: This commit
+- Status: Implemented
+- Summary:
+  - Confirmed prior logo/cache issues were implemented in commit `822905a` and remain in the changelog.
+  - Centered SlickGrid cell contents horizontally while preserving vertical middle alignment.
+  - Kept the product-name cell on the same centered alignment path with its two-line clamp.
+  - Added a shared background-worker stale-tab error classifier for `No tab with id`, inaccessible tab, and invalid tab errors.
+  - Wrapped badge updates, delayed AI auto-paste injection, and toast injection so closed-tab races do not leave unhandled promise errors in `background.js`.
+- Files touched:
+  - background.js
+  - grid-rebuild-codex/grid.css
+  - grid-rebuild-codex/tests/wiring.test.js
+  - tests/background-tab-race.test.js
+  - AGENT_CHANGELOG.md
+- Validation:
+  - node grid-rebuild-codex/tests/wiring.test.js -> failed before implementation, passed after implementation
+  - node tests/background-tab-race.test.js -> failed before implementation, passed after implementation
+  - npm test -> all 36 test files passed
+  - npm run syntax -> passed
+  - npm run typecheck -> passed
+  - npm run lint -> 0 errors, 42 warnings
+  - npm run build -> Chrome, Edge, Firefox built
+- Review / handoff:
+  - Reviewer: Claude
+  - Notes: This handles expected closed-tab races. If a different background stack trace appears, capture the exact function/line so the next guard can be placed at the true async boundary.
+- Follow-ups:
+  - Consider converting remaining direct `chrome.scripting.executeScript` calls to a single shared safe helper in a later background cleanup pass.
