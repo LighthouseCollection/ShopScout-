@@ -1,9 +1,12 @@
 const assert = require('assert');
+const fs = require('fs');
+const path = require('path');
 const { read } = require('../../tests/_helpers');
 
 const html = read('comparison.html');
 const gridCss = read('grid-rebuild-codex/grid.css');
 const buildScript = read('scripts/build-extension.ps1');
+const root = path.join(__dirname, '..', '..');
 
 function indexOfRequired(value, label) {
   const idx = html.indexOf(value);
@@ -40,6 +43,14 @@ assert.ok(!gridCss.includes('#e5e7eb'),
   'grid border fallbacks use #d1d5db instead of #e5e7eb');
 assert.ok(/\.ss-grid-logo-token[\s\S]{0,320}text-decoration:\s*none/.test(gridCss),
   'source and brand logo tokens suppress link underlines');
+assert.ok(/\.ss-grid-logo-token[\s\S]{0,360}width:\s*clamp\(56px,\s*8vw,\s*80px\)/.test(gridCss),
+  'source and brand logos render inside a fluid slot capped at 80px wide');
+assert.ok(/\.ss-grid-logo-token[\s\S]{0,360}height:\s*24px/.test(gridCss),
+  'source and brand logo slots use a consistent 24px height');
+assert.ok(/\.ss-grid-logo-img[\s\S]{0,220}max-width:\s*100%/.test(gridCss),
+  'logo SVGs scale proportionally inside the slot width');
+assert.ok(/\.ss-grid-logo-img[\s\S]{0,220}max-height:\s*24px/.test(gridCss),
+  'logo SVGs scale proportionally inside the 24px slot height');
 assert.ok(/\.ss-grid-title-text[\s\S]{0,260}-webkit-line-clamp:\s*2/.test(gridCss),
   'product-name text uses a dedicated two-line title wrapper instead of being clipped by the cell');
 assert.ok(/\.ss-grid-column-list[\s\S]{0,220}grid-template-columns:\s*repeat\(auto-fit,\s*minmax\(240px,\s*1fr\)\)/.test(gridCss),
@@ -85,5 +96,13 @@ assert.ok(gridIndex < comparisonIndex, 'ShopScoutGrid is registered before compa
 
 assert.ok(buildScript.includes("'grid-rebuild-codex'"),
   'extension build copies the Codex grid directory into browser dists');
+assert.ok(buildScript.includes("'logos'"),
+  'extension build copies packaged local logos into browser dists');
+assert.ok(fs.existsSync(path.join(root, 'logos', 'README.md')),
+  'logos directory documents provider and reuse policy');
+assert.ok(fs.existsSync(path.join(root, 'logos', 'amazon.svg')),
+  'Amazon logo is packaged locally for source cells');
+assert.ok(fs.existsSync(path.join(root, 'logos', 'microsoft.svg')),
+  'Microsoft logo is packaged locally for brand and compare cells');
 
 console.log('grid-codex-wiring.test.js: all assertions passed');

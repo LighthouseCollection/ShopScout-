@@ -110,23 +110,26 @@
   ]);
 
   const LOGO_CATALOGS = new Map([
-    ['alibaba', { brandbirdName: 'Alibaba' }],
-    ['aliexpress', { brandbirdName: 'AliExpress' }],
-    ['amazon', { brandbirdName: 'Amazon' }],
+    ['alibaba', { thesvg: 'alibaba' }],
+    ['aliexpress', { thesvg: 'aliexpress' }],
+    ['amazon', { worldVectorLogo: 'amazon-2', svglogos: 'amazon', thesvg: 'amazon' }],
     ['apple', { svglogos: 'apple' }],
-    ['ebay', { brandbirdName: 'eBay' }],
-    ['etsy', { brandbirdName: 'Etsy' }],
-    ['google', { brandbirdName: 'Google' }],
-    ['ibm', { brandbirdName: 'IBM' }],
+    ['ebay', { thesvg: 'ebay' }],
+    ['etsy', { thesvg: 'etsy' }],
+    ['google', { svglogos: 'google', thesvg: 'google' }],
+    ['ibm', { thesvg: 'ibm' }],
+    ['logitech', { worldVectorLogo: 'logitech-2', svglogos: 'logitech', thesvg: 'logitech' }],
     ['microsoft', {
       svglogos: 'microsoft',
       svgl: 'microsoft',
-      worldVectorLogo: 'microsoft-2'
+      worldVectorLogo: 'microsoft-2',
+      thesvg: 'microsoft'
     }],
-    ['openai', { brandbirdName: 'OpenAI' }],
-    ['samsung', { svglogos: 'samsung' }],
-    ['shopify', { brandbirdName: 'Shopify' }],
-    ['stripe', { brandbirdName: 'Stripe' }]
+    ['newegg', { thesvg: 'newegg' }],
+    ['openai', { thesvg: 'openai' }],
+    ['samsung', { svglogos: 'samsung', thesvg: 'samsung' }],
+    ['shopify', { thesvg: 'shopify' }],
+    ['stripe', { thesvg: 'stripe' }]
   ]);
 
   const PROSE_FIELDS = new Set([
@@ -179,12 +182,13 @@
     };
   }
 
-  function brandbirdUrl(name, kind) {
-    const text = textValue(name).trim();
-    if (!text) return '';
-    const folder = kind === 'logomark' ? 'Logomark' : 'Logotypes';
-    const suffix = kind === 'logomark' ? 'Logomark' : 'Logotype';
-    return `https://storage.googleapis.com/brandbird/assets/company-logos/${folder}/${encodeURIComponent(`${text} ${suffix}.svg`)}`;
+  function logoKey(value) {
+    return textValue(value).trim().toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+  }
+
+  function localLogoUrl(key) {
+    const slug = logoKey(key);
+    return slug ? `logos/${slug}.svg` : '';
   }
 
   function thesvgUrl(icon) {
@@ -194,13 +198,14 @@
   function logoCandidateUrls(icon, catalogKey) {
     const key = textValue(catalogKey || icon).trim().toLowerCase();
     const meta = LOGO_CATALOGS.get(key) || LOGO_CATALOGS.get(icon) || {};
+    const localKey = meta.local || key || icon;
+    const svgIcon = meta.thesvg || icon;
     const urls = [
-      brandbirdUrl(meta.brandbirdName, 'logotype'),
+      localLogoUrl(localKey),
       meta.worldVectorLogo ? `https://cdn.worldvectorlogo.com/logos/${encodeURIComponent(meta.worldVectorLogo)}.svg` : '',
       meta.svglogos ? `https://cdn.svglogos.dev/logos/${encodeURIComponent(meta.svglogos)}.svg` : '',
       meta.svgl ? `https://svgl.app/library/${encodeURIComponent(meta.svgl)}.svg` : '',
-      brandbirdUrl(meta.brandbirdName, 'logomark'),
-      thesvgUrl(icon)
+      thesvgUrl(svgIcon)
     ].filter(Boolean);
     return [...new Set(urls)];
   }

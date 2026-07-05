@@ -128,14 +128,13 @@
 }
 
 .ss-grid-logo-token {
-  display: inline-grid;
-  grid-auto-flow: column;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: fit-content;
+  width: clamp(56px, 8vw, 80px);
   max-width: 100%;
-  min-width: 34px;
-  min-height: 26px;
+  height: 24px;
+  flex: 0 1 80px;
   text-decoration: none;
   color: var(--primary, #0b3d4f);
 }
@@ -151,8 +150,11 @@ a.ss-grid-logo-token:visited {
 }
 
 .ss-grid-logo-img {
-  max-width: 54px;
-  max-height: 22px;
+  display: block;
+  max-width: 100%;
+  max-height: 24px;
+  width: auto;
+  height: auto;
   flex: 0 0 auto;
   object-fit: contain;
 }
@@ -173,7 +175,10 @@ a.ss-grid-logo-token:visited {
   height: auto;
   overflow: visible;
   clip: auto;
-  white-space: normal;
+  max-width: 100%;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
   padding: 2px 6px;
   border-radius: 5px;
   background: var(--primary-tint, #e6eef1);

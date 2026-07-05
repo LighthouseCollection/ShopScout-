@@ -190,17 +190,20 @@ assert.match(sourceHtml, /ss-grid-logo-img/, 'source renders as a logo image, no
 assert.match(sourceHtml, /title="Amazon"/, 'source logo keeps the retailer label as a tooltip');
 assert.match(sourceHtml, /aria-label="Amazon"/, 'source logo keeps the retailer label for assistive tech');
 assert.match(sourceHtml, /ss-grid-logo-fallback/, 'source logo includes text fallback for missing SVGs');
-assert.match(sourceHtml, /brandbird\/assets\/company-logos\/Logotypes\/Amazon%20Logotype\.svg/, 'known retailers try Brandbird logotype SVGs before icon-only fallbacks');
+assert.match(sourceHtml, /src="logos\/amazon\.svg"/, 'known retailers try the packaged local SVG before remote providers');
 assert.match(sourceHtml, /data-logo-fallback-srcs=/, 'source logos carry fallback candidates when the first provider misses');
 assert.match(sourceHtml, /public\/icons\/amazon\/default\.svg/, 'known retailers keep the valid theSVG CDN path as a fallback');
+assert.doesNotMatch(sourceHtml, /brandbird/i, 'runtime source logo candidates do not use Brandbird placeholder-prone URLs');
 assert.doesNotMatch(sourceHtml, />generic</i, 'generic source text is not shown when a retailer can be inferred');
 assert.doesNotMatch(sourceHtml, /ss-grid-source-pill/, 'source is not rendered as a pill/button');
 const brandHtml = brandColumn.formatter(0, 3, 'Microsoft', brandColumn, { brand: 'Microsoft' });
 assert.doesNotMatch(brandHtml, /brandfetch/i, 'runtime brand logo candidates do not use Brandfetch placeholder URLs');
+assert.match(brandHtml, /src="logos\/microsoft\.svg"/, 'known brands try the packaged local SVG before remote providers');
 assert.match(brandHtml, /cdn\.worldvectorlogo\.com\/logos\/microsoft-2\.svg/, 'Microsoft includes a rectangular wordmark fallback');
 assert.match(brandHtml, /cdn\.svglogos\.dev\/logos\/microsoft\.svg/, 'Microsoft includes the SVG Logos fallback');
 assert.match(brandHtml, /svgl\.app\/library\/microsoft\.svg/, 'Microsoft includes the SVGL catalog fallback');
 assert.match(brandHtml, /public\/icons\/microsoft\/default\.svg/, 'known brands keep theSVG CDN path as a final fallback');
+assert.doesNotMatch(brandHtml, /brandbird/i, 'runtime brand logo candidates do not use Brandbird placeholder-prone URLs');
 assert.match(brandHtml, /title="Microsoft"/, 'brand logo keeps the brand name as a tooltip');
 assert.match(brandHtml, /ss-grid-logo-fallback/, 'brand logo includes text fallback for missing SVGs');
 assert.doesNotMatch(brandHtml, /\shref=/, 'brand logos do not link to the current page when no brand URL exists');
@@ -258,6 +261,7 @@ assert.match(longTitleHtml, /title="Dremel 4300-5\/40 High-Performance Rotary To
   'product title wrapper keeps the full title available as a tooltip');
 const matrixBrandHtml = productHeaderColumn.formatter(0, 7, { field: 'brand', value: 'Microsoft' }, productHeaderColumn, {});
 assert.match(matrixBrandHtml, /ss-grid-brand-logo/, 'compare matrix Brand rows use the same SVG logo renderer');
+assert.match(matrixBrandHtml, /src="logos\/microsoft\.svg"/, 'compare matrix Brand rows try packaged SVGs before remote providers');
 assert.match(matrixBrandHtml, /cdn\.worldvectorlogo\.com\/logos\/microsoft-2\.svg/, 'compare matrix Brand rows include rectangular logo candidates');
 const matrixSourceHtml = productHeaderColumn.formatter(0, 7, {
   field: 'source',
@@ -265,7 +269,7 @@ const matrixSourceHtml = productHeaderColumn.formatter(0, 7, {
   url: 'https://www.amazon.com/dp/B0TEST'
 }, productHeaderColumn, {});
 assert.match(matrixSourceHtml, /ss-grid-source-logo/, 'compare matrix Source rows use the same retailer SVG renderer');
-assert.match(matrixSourceHtml, /Amazon%20Logotype\.svg/, 'compare matrix Source rows prefer rectangular retailer logos first');
+assert.match(matrixSourceHtml, /src="logos\/amazon\.svg"/, 'compare matrix Source rows try packaged retailer SVGs before remote providers');
 assert.match(actionsHtml, /ss-grid-action-bar/, 'row actions render as a compact icon toolbar');
 assert.doesNotMatch(actionsHtml, /<details|ss-grid-action-panel|<summary/,
   'row actions do not render an in-cell popup menu that can overlap nearby rows');

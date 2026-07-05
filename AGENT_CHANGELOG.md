@@ -629,3 +629,45 @@ This file is the shared record for Claude and Codex. Append an entry for every m
   - Notes: The `Remove` option removes fields from the active grid/view metadata state. It does not physically delete metadata values from product records in IndexedDB because that would be destructive and should require a separate explicit confirmation flow.
 - Follow-ups:
   - If the user wants permanent metadata deletion, add a separate destructive action with preview, confirmation, undo/export safety, and product-record migration tests.
+
+## 2026-07-04 23:38 - Add local logo cache and normalize logo slots
+
+- Agent: Codex
+- Branch: grid-rebuild-codex
+- Commit: This commit
+- Status: Implemented
+- Summary:
+  - Added a packaged `logos/` cache for source and brand SVGs so known logos can be reused locally instead of relying on runtime provider lookups.
+  - Added starter local SVGs for Amazon, Microsoft, Logitech, and Newegg.
+  - Documented logo sourcing, reuse, sizing, and licensing cautions in `logos/README.md`.
+  - Changed source/brand logo rendering to try local `logos/<key>.svg` first, then remote provider fallbacks, then readable text fallback.
+  - Removed Brandbird from runtime logo candidates to avoid placeholder-prone provider output.
+  - Normalized source and brand logo cells to a fluid rectangular slot capped at 80px wide and 24px high, with proportional SVG scaling.
+  - Updated the extension build script so `logos/` is copied into Chrome, Edge, and Firefox packages.
+- Files touched:
+  - logos/README.md
+  - logos/amazon.svg
+  - logos/logitech.svg
+  - logos/microsoft.svg
+  - logos/newegg.svg
+  - grid-rebuild-codex/grid.css
+  - grid-rebuild-codex/slickGridAdapter.js
+  - grid-rebuild-codex/tests/adapter.test.js
+  - grid-rebuild-codex/tests/wiring.test.js
+  - scripts/build-extension.ps1
+  - AGENT_CHANGELOG.md
+- Validation:
+  - node grid-rebuild-codex/tests/adapter.test.js -> failed before implementation, passed after implementation
+  - node grid-rebuild-codex/tests/wiring.test.js -> failed before implementation, passed after implementation
+  - npm test -> all 35 test files passed
+  - npm run syntax -> passed
+  - npm run typecheck -> passed
+  - npm run lint -> 0 errors, 42 warnings
+  - npm run build -> Chrome, Edge, Firefox built and each dist contains `logos/`
+  - Local browser/HTTP check -> confirmed loaded logo slot CSS and `logos/amazon.svg` served as SVG
+- Review / handoff:
+  - Reviewer: Claude
+  - Notes: Local logo assets are curated starter files. The adapter still supports remote fallbacks for missing local files, then text fallback if every logo candidate fails.
+- Follow-ups:
+  - Add more packaged logos as real product/source data exposes recurring brands and retailers.
+  - Verify individual logo licensing before expanding the production logo cache.
