@@ -23,6 +23,11 @@ const ctx = {
 ctx.globalThis = ctx;
 vm.createContext(ctx);
 vm.runInContext(
+  fs.readFileSync(path.join(root, 'shared/values/cellValues.js'), 'utf8'),
+  ctx,
+  { filename: 'shared/values/cellValues.js' }
+);
+vm.runInContext(
   fs.readFileSync(path.join(root, 'grid-rebuild-codex/slickGridAdapter.js'), 'utf8'),
   ctx,
   { filename: 'grid-rebuild-codex/slickGridAdapter.js' }
@@ -96,8 +101,10 @@ const liveInstance = adapter.create(host, {
   columns: [
     { id: 'select', name: '', field: '_selected', type: 'selection', width: 40 },
     { id: 'title', name: 'Name', field: 'title' },
-    { id: 'brand', name: 'Brand', field: 'brand' },
+    { id: 'brand', name: 'Brand', field: 'brand', type: 'brand' },
     { id: 'source', name: 'Source', field: 'source', type: 'source' },
+    { id: 'devices', name: 'Compatible Devices', field: 'devices', type: 'spec' },
+    { id: 'notes', name: 'Notes', field: 'notes', type: 'text' },
     { id: 'rating', name: 'Rating', field: 'rating', type: 'rating', width: 128 },
     {
       id: 'product:p1',
@@ -128,6 +135,8 @@ const titleColumn = capturedColumns.find(column => column.id === 'title');
 const brandColumn = capturedColumns.find(column => column.id === 'brand');
 const selectColumn = capturedColumns.find(column => column.id === 'select');
 const sourceColumn = capturedColumns.find(column => column.id === 'source');
+const devicesColumn = capturedColumns.find(column => column.id === 'devices');
+const notesColumn = capturedColumns.find(column => column.id === 'notes');
 const ratingColumn = capturedColumns.find(column => column.id === 'rating');
 const productHeaderColumn = capturedColumns.find(column => column.id === 'product:p1');
 const actionsColumn = capturedColumns.find(column => column.id === 'actions');
@@ -138,6 +147,10 @@ assert.equal(selectColumn.minWidth, 40, 'checkbox column minWidth does not expan
 assert.equal(actionsColumn.sortable, false, 'actions column is not sortable');
 assert.match(productHeaderColumn.name, /ss-grid-product-head/, 'comparison columns can render product thumbnails in the header');
 assert.match(productHeaderColumn.name, /qnap\.jpg/, 'comparison header includes the product thumbnail URL');
+assert.ok(
+  productHeaderColumn.name.indexOf('ss-grid-header-thumb') < productHeaderColumn.name.indexOf('ss-grid-product-head-title'),
+  'comparison header places the product thumbnail before the product title'
+);
 assert.deepEqual(capturedSortColumns, [
   { columnId: 'brand', sortAsc: true },
   { columnId: 'title', sortAsc: true }
@@ -168,9 +181,26 @@ const sourceHtml = sourceColumn.formatter(0, 2, 'generic', sourceColumn, {
   source: 'generic',
   url: 'https://www.amazon.com/dp/B0TEST'
 });
-assert.match(sourceHtml, />Amazon</, 'generic source labels are replaced with the retailer name from the URL');
+assert.match(sourceHtml, /ss-grid-logo-img/, 'source renders as a logo image, not a button-style pill');
+assert.match(sourceHtml, /title="Amazon"/, 'source logo keeps the retailer label as a tooltip');
+assert.match(sourceHtml, /aria-label="Amazon"/, 'source logo keeps the retailer label for assistive tech');
+assert.match(sourceHtml, /ss-grid-logo-fallback/, 'source logo includes text fallback for missing SVGs');
 assert.match(sourceHtml, /public\/icons\/amazon\/default\.svg/, 'known retailers render the matching SVG logo from the valid theSVG CDN path');
 assert.doesNotMatch(sourceHtml, />generic</i, 'generic source text is not shown when a retailer can be inferred');
+assert.doesNotMatch(sourceHtml, /ss-grid-source-pill/, 'source is not rendered as a pill/button');
+const brandHtml = brandColumn.formatter(0, 3, 'Microsoft', brandColumn, { brand: 'Microsoft' });
+assert.match(brandHtml, /public\/icons\/microsoft\/default\.svg/, 'known brands render a matching SVG logo');
+assert.match(brandHtml, /title="Microsoft"/, 'brand logo keeps the brand name as a tooltip');
+assert.match(brandHtml, /ss-grid-logo-fallback/, 'brand logo includes text fallback for missing SVGs');
+const unknownBrandHtml = brandColumn.formatter(0, 3, 'Small Unknown Brand', brandColumn, { brand: 'Small Unknown Brand' });
+assert.match(unknownBrandHtml, />Small Unknown Brand</, 'unknown brands render readable text when no SVG mapping exists');
+const devicesHtml = devicesColumn.formatter(0, 4, 'Laptop, PC, Smartphone, Tablet', devicesColumn, {});
+assert.match(devicesHtml, /ss-grid-pill-list/, 'list-like spec values render as pills');
+for (const label of ['Laptop', 'PC', 'Smartphone', 'Tablet']) {
+  assert.match(devicesHtml, new RegExp(`>${label}<`), `${label} appears as a pill`);
+}
+const notesHtml = notesColumn.formatter(0, 5, 'Fast, quiet, and easy to use.', notesColumn, {});
+assert.doesNotMatch(notesHtml, /ss-grid-pill-list/, 'description-like text fields keep sentence commas as prose');
 const ratingHtml = ratingColumn.formatter(0, 3, '4.7', ratingColumn, { rating: '4.7', reviewCount: '704' });
 assert.match(ratingHtml, /★★★★★/, 'ratings render a five-star display based on the numeric rating');
 assert.match(ratingHtml, />4\.7</, 'ratings still show the numeric value');

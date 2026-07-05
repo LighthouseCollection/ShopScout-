@@ -427,3 +427,41 @@ This file is the shared record for Claude and Codex. Append an entry for every m
   - Notes: Recheck grouping visually in the loaded dashboard with repeated Brand/Source values and verify group collapse/expand behavior.
 - Follow-ups:
   - None for native grouping. Multi-level grouping can be added later if the UI needs nested groups.
+
+## 2026-07-04 19:02 - Refine grid logos, names, pills, and group options
+
+- Agent: Codex
+- Branch: grid-rebuild-codex
+- Commit: This commit
+- Status: Implemented
+- Summary:
+  - Changed Source cells from button-style source pills to logo-first source links with accessible text labels and visible fallback text when an SVG fails.
+  - Added known-brand logo rendering for Brand cells while preserving raw brand text for sorting/filtering and fallback display.
+  - Added pill rendering for list-like spec/text values while excluding product names and prose/description-style fields.
+  - Simplified grid product names to `Maker/Brand/Manufacturer | Model Number`, deduping repeated maker text and falling back to the captured title when structured identity is missing.
+  - Kept Group By options field-based in Compare view by carrying row-field columns through the matrix projection.
+  - Changed compare headers to stack a larger product thumbnail above the truncated product name.
+  - Fixed the adapter comparator so `ShopScoutValues.parseNumeric()` returning `NaN` does not break secondary text sorting.
+- Files touched:
+  - grid-rebuild-codex/projections.js
+  - grid-rebuild-codex/slickGridAdapter.js
+  - grid-rebuild-codex/shopscoutGrid.js
+  - grid-rebuild-codex/grid.css
+  - grid-rebuild-codex/tests/projections.test.js
+  - grid-rebuild-codex/tests/adapter.test.js
+  - grid-rebuild-codex/tests/controls.test.js
+  - AGENT_CHANGELOG.md
+- Validation:
+  - node grid-rebuild-codex/tests/projections.test.js -> failed before implementation, passed after implementation
+  - node grid-rebuild-codex/tests/adapter.test.js -> failed before implementation, passed after implementation
+  - node grid-rebuild-codex/tests/controls.test.js -> failed before implementation, passed after implementation
+  - npm test -> all 35 test files passed
+  - npm run syntax -> passed
+  - npm run typecheck -> passed
+  - npm run lint -> 0 errors, 43 warnings
+  - npm run build -> Chrome, Edge, Firefox built
+- Review / handoff:
+  - Reviewer: Claude
+  - Notes: Recheck source/brand SVG availability in the loaded dashboard. Icons depend on TheSVG catalog coverage; text fallbacks remain present.
+- Follow-ups:
+  - Consider expanding the brand icon map as real product lists expose additional high-value brands.

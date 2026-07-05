@@ -13,7 +13,7 @@
     { id: 'select', field: '_selected', name: '', type: 'selection', width: 40, minWidth: 40, maxWidth: 40, required: true },
     { id: 'thumb', field: 'image', name: '', type: 'image', width: 76, required: true },
     { id: 'title', field: 'title', name: 'Name', type: 'text', minWidth: 260, editable: true, required: true },
-    { id: 'brand', field: 'brand', name: 'Brand', type: 'text', minWidth: 120, editable: true },
+    { id: 'brand', field: 'brand', name: 'Brand', type: 'brand', minWidth: 120, editable: true },
     { id: 'newPrice', field: 'newPrice', name: 'Price', type: 'price', width: 104, editable: true },
     { id: 'source', field: 'source', name: 'Source', type: 'source', width: 118 },
     { id: 'modelName', field: 'modelName', name: 'Model', type: 'text', minWidth: 160, editable: true },
@@ -79,6 +79,53 @@
 
   function productIdOf(product, idx) {
     return String(product?.id || product?.url || `row-${idx + 1}`);
+  }
+
+  function normalizedIdentityPart(value) {
+    return String(value || '')
+      .trim()
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, ' ')
+      .replace(/\s+/g, ' ')
+      .trim();
+  }
+
+  function firstText(...values) {
+    for (const value of values) {
+      const text = String(value || '').trim();
+      if (text) return text;
+    }
+    return '';
+  }
+
+  function uniqueIdentityParts(parts) {
+    const out = [];
+    const seen = new Set();
+    for (const part of parts) {
+      const text = String(part || '').trim();
+      const key = normalizedIdentityPart(text);
+      if (!text || !key || seen.has(key)) continue;
+      seen.add(key);
+      out.push(text);
+    }
+    return out;
+  }
+
+  function stripLeadingIdentity(text, maker) {
+    const value = String(text || '').trim();
+    const head = String(maker || '').trim();
+    if (!value || !head) return value;
+    const escaped = head.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    return value.replace(new RegExp(`^${escaped}\\s*[|:-]?\\s*`, 'i'), '').trim();
+  }
+
+  function productDisplayName(product) {
+    const fallback = firstText(product?.title, product?.productName, product?.listingTitle);
+    const maker = firstText(product?.brand, product?.manufacturer, product?.maker);
+    const model = stripLeadingIdentity(firstText(product?.modelNumber, product?.modelName), maker);
+    const parts = uniqueIdentityParts([maker, model]);
+    if (parts.length >= 2 || (parts.length === 1 && model)) return parts.join(' | ');
+    return fallback || parts[0] || '';
   }
 
   function flattenProducts(products, options) {
@@ -240,7 +287,7 @@
     const id = productIdOf(product, idx);
     const row = Object.assign({}, product, flattened);
     row.id = id;
-    row.title = product?.title || product?.productName || product?.listingTitle || '';
+    row.title = productDisplayName(product);
     row.image = product?.image || product?.thumb || product?.thumbnail || '';
     row._shopScout = {
       productId: id,
@@ -403,6 +450,7 @@
         .concat(productColumns),
       rows,
       products: rowProjection.rows,
+      groupColumns: rowProjection.allColumns,
       sort: Array.isArray(opts.viewState?.sort) ? opts.viewState.sort.slice() : []
     };
   }

@@ -184,6 +184,13 @@
     return columns.filter(column => column && !['selection', 'image', 'actions'].includes(column.type));
   }
 
+  function groupableColumns(projection) {
+    const columns = projection?.groupColumns || projection?.allColumns || projection?.columns || state.lastProjection?.groupColumns || [];
+    return columns.filter(column => column
+      && !['selection', 'image', 'actions', 'matrixCell', 'attribute'].includes(column.type)
+      && !(String(column.id || '').startsWith('product:')));
+  }
+
   function optionSignature(columns, placeholder) {
     return JSON.stringify({
       placeholder: placeholder || 'None',
@@ -213,8 +220,9 @@
   function updateRibbonControls(projection) {
     const viewState = ensureStore().getState();
     const columns = usableColumns(projection);
+    const groupColumns = groupableColumns(projection);
     setSelectOptions(root.document?.querySelector('[data-ss-grid-sort-field]'), columns, 'No sort', viewState.sort?.[0]?.field || '');
-    setSelectOptions(root.document?.querySelector('[data-ss-grid-group-field]'), columns, 'No grouping', viewState.group || '');
+    setSelectOptions(root.document?.querySelector('[data-ss-grid-group-field]'), groupColumns, 'No grouping', viewState.group || '');
     root.document?.querySelectorAll('[data-ss-grid-command="mode-rows"]').forEach(button => {
       button.classList.toggle('active', viewState.mode !== 'matrix');
       button.setAttribute('aria-pressed', viewState.mode !== 'matrix' ? 'true' : 'false');

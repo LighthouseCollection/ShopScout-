@@ -109,38 +109,67 @@
   font-weight: 700;
 }
 
-.ss-grid-source-pill {
-  display: inline-flex;
+.ss-grid-logo-token {
+  display: inline-grid;
+  grid-auto-flow: column;
   align-items: center;
-  gap: 6px;
+  justify-content: center;
   width: fit-content;
   max-width: 100%;
-  padding: 4px 8px;
-  border-radius: 5px;
-  background: var(--primary-tint, #e6eef1);
-  color: var(--primary, #0b3d4f);
+  min-width: 34px;
+  min-height: 26px;
   text-decoration: none;
-  font-size: 12px;
+  color: var(--primary, #0b3d4f);
 }
 
-.ss-grid-retailer-logo {
-  width: 15px;
-  height: 15px;
+.ss-grid-logo-img {
+  max-width: 54px;
+  max-height: 22px;
   flex: 0 0 auto;
   object-fit: contain;
 }
 
+.ss-grid-logo-fallback {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+}
+
+.ss-grid-logo-fallback.is-visible,
+.ss-grid-logo-token.is-logo-missing .ss-grid-logo-fallback {
+  position: static;
+  width: auto;
+  height: auto;
+  overflow: visible;
+  clip: auto;
+  white-space: normal;
+  padding: 2px 6px;
+  border-radius: 5px;
+  background: var(--primary-tint, #e6eef1);
+  font-size: 12px;
+}
+
+.ss-grid-logo-token.is-logo-missing .ss-grid-logo-img {
+  display: none;
+}
+
 .ss-grid-product-head {
   display: inline-flex;
+  flex-direction: column;
   align-items: center;
-  gap: 7px;
+  justify-content: center;
+  gap: 4px;
   min-width: 0;
   max-width: 100%;
+  width: 100%;
 }
 
 .ss-grid-header-thumb {
-  width: 26px;
-  height: 26px;
+  width: 58px;
+  height: 44px;
   flex: 0 0 auto;
   object-fit: contain;
   border: 1px solid var(--rule, #d1d5db);
@@ -149,10 +178,22 @@
 }
 
 .ss-grid-product-head-title {
+  display: block;
+  width: 100%;
   min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  text-align: center;
+}
+
+.ss-grid-host.ss-grid-is-matrix .slick-header-column {
+  min-height: 78px;
+  line-height: 1.2;
+}
+
+.ss-grid-host.ss-grid-is-matrix .slick-header-column.ui-state-default {
+  height: 78px;
 }
 
 .ss-grid-rating {
@@ -171,6 +212,27 @@
 .ss-grid-sub,
 .ss-grid-empty {
   color: var(--ink-3, #5a6470);
+}
+
+.ss-grid-pill-list {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  flex-wrap: wrap;
+  min-width: 0;
+}
+
+.ss-grid-value-pill {
+  display: inline-flex;
+  align-items: center;
+  max-width: 100%;
+  padding: 2px 7px;
+  border: 1px solid var(--rule-soft, #e5e7eb);
+  border-radius: 999px;
+  background: var(--paper-2, #eaedf1);
+  color: var(--ink-2, #2a3441);
+  font-size: 12px;
+  line-height: 1.35;
 }
 
 .ss-grid-select {

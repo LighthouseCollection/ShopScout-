@@ -85,6 +85,21 @@ const products = [
   }
 ];
 
+const identityProducts = [
+  {
+    id: 'p3',
+    title: 'Microsoft Microsoft ANB-00001 Full Marketplace Title',
+    brand: 'Microsoft',
+    manufacturer: 'Microsoft',
+    maker: 'Microsoft',
+    modelNumber: 'ANB-00001'
+  },
+  {
+    id: 'p4',
+    title: 'Generic fallback title with no structured identity'
+  }
+];
+
 const original = JSON.stringify(products);
 const ctx = createContext();
 const projections = ctx.ShopScoutGridCodexProjections;
@@ -132,6 +147,12 @@ assert.equal(rowsProjection.rows[0]._shopScout.revision, 7);
 assert.equal(rowsProjection.rows[0]['spec:battery life'], '2 hours');
 assert.equal(rowsProjection.rows[0]['spec:dpi'], '800 DPI');
 assert.equal(rowsProjection.rows[1]['spec:battery life'], '90 minutes');
+
+const identityProjection = projections.buildProductsRowsProjection(identityProducts, {});
+assert.equal(identityProjection.rows[0].title, 'Microsoft | ANB-00001',
+  'name field uses one maker/brand/manufacturer value plus model number without duplicate maker text');
+assert.equal(identityProjection.rows[1].title, 'Generic fallback title with no structured identity',
+  'name field falls back to captured title when structured maker/model fields are unavailable');
 
 const filteredProjection = projections.buildProductsRowsProjection(products, {
   visibleSpecKeys: ['battery life'],
@@ -194,6 +215,10 @@ assert.equal(matrix.columns[1].url, 'https://example.com/p1',
   'matrix product columns carry the product URL for header/source interactions');
 assert.equal(matrix.columns[1].source, 'Amazon',
   'matrix product columns carry the product source metadata');
+assert.ok(Array.isArray(matrix.groupColumns), 'matrix projection carries field columns for group-by controls');
+assert.ok(matrix.groupColumns.some(column => column.id === 'brand'), 'matrix group columns include Brand');
+assert.ok(!matrix.groupColumns.some(column => column.id.startsWith('product:')),
+  'matrix group columns are fields, not product columns');
 assert.deepEqual(
   matrix.rows.map(row => row.id),
   ['newPrice', 'rating', 'spec:battery life', 'spec:dpi'],

@@ -67,6 +67,58 @@
     { match: 'temu.', label: 'Temu' }
   ];
 
+  const BRAND_ICONS = new Map([
+    ['acer', 'acer'],
+    ['adidas', 'adidas'],
+    ['amazon', 'amazon'],
+    ['anker', 'anker'],
+    ['apple', 'apple'],
+    ['asus', 'asus'],
+    ['belkin', 'belkin'],
+    ['brother', 'brother'],
+    ['canon', 'canon'],
+    ['corsair', 'corsair'],
+    ['dell', 'dell'],
+    ['dyson', 'dyson'],
+    ['ecovacs', 'ecovacs'],
+    ['epson', 'epson'],
+    ['garmin', 'garmin'],
+    ['google', 'google'],
+    ['hp', 'hp'],
+    ['irobot', 'irobot'],
+    ['jbl', 'jbl'],
+    ['lenovo', 'lenovo'],
+    ['lg', 'lg'],
+    ['logitech', 'logitech'],
+    ['microsoft', 'microsoft'],
+    ['msi', 'msi'],
+    ['netgear', 'netgear'],
+    ['nike', 'nike'],
+    ['nintendo', 'nintendo'],
+    ['panasonic', 'panasonic'],
+    ['philips', 'philips'],
+    ['qnap', 'qnap'],
+    ['samsung', 'samsung'],
+    ['shark', 'shark'],
+    ['sony', 'sony'],
+    ['synology', 'synology'],
+    ['tp-link', 'tp-link'],
+    ['tplink', 'tp-link'],
+    ['western digital', 'western-digital'],
+    ['wd', 'western-digital']
+  ]);
+
+  const PROSE_FIELDS = new Set([
+    'title',
+    'productName',
+    'listingTitle',
+    'description',
+    'notes',
+    'category',
+    'availability',
+    'sellerName'
+  ]);
+
   function hostRetailer(urlValue) {
     const url = safeUrl(urlValue);
     if (!url) return null;
@@ -105,10 +157,31 @@
     };
   }
 
-  function retailerIconHtml(icon) {
+  function logoUrl(icon) {
     if (!icon) return '';
-    const src = `https://cdn.jsdelivr.net/gh/glincker/thesvg@main/public/icons/${icon}/default.svg`;
-    return `<img class="ss-grid-retailer-logo" src="${escAttr(src)}" alt="" aria-hidden="true" loading="lazy">`;
+    return `https://cdn.jsdelivr.net/gh/glincker/thesvg@main/public/icons/${icon}/default.svg`;
+  }
+
+  function logoTokenHtml(label, icon, href, className) {
+    const text = textValue(label).trim();
+    const safeHref = safeUrl(href);
+    if (!text) return '<span class="ss-grid-empty">-</span>';
+    const logo = logoUrl(icon);
+    const body = logo
+      ? `<img class="ss-grid-logo-img" src="${escAttr(logo)}" alt="${escAttr(text)}" loading="lazy">`
+        + `<span class="ss-grid-logo-fallback">${esc(text)}</span>`
+      : `<span class="ss-grid-logo-fallback is-visible">${esc(text)}</span>`;
+    const attrs = `class="ss-grid-logo-token ${escAttr(className || '')}" title="${escAttr(text)}" aria-label="${escAttr(text)}"`;
+    if (safeHref) return `<a ${attrs} href="${escAttr(safeHref)}" target="_blank" rel="noopener noreferrer">${body}</a>`;
+    return `<span ${attrs}>${body}</span>`;
+  }
+
+  function normalizedName(value) {
+    return textValue(value).trim().toLowerCase().replace(/[^a-z0-9]+/g, ' ').replace(/\s+/g, ' ').trim();
+  }
+
+  function brandIcon(value) {
+    return BRAND_ICONS.get(normalizedName(value)) || '';
   }
 
   function htmlForImage(value, item) {
@@ -120,9 +193,12 @@
 
   function htmlForSource(value, item) {
     const info = sourceInfo(value, item);
-    const content = `${retailerIconHtml(info.icon)}<span>${esc(info.label)}</span>`;
-    if (!info.url) return `<span class="ss-grid-source-pill">${content}</span>`;
-    return `<a class="ss-grid-source-pill" href="${escAttr(info.url)}" target="_blank" rel="noopener noreferrer">${content}</a>`;
+    return logoTokenHtml(info.label, info.icon, info.url, 'ss-grid-source-logo');
+  }
+
+  function htmlForBrand(value) {
+    const label = textValue(value).trim();
+    return logoTokenHtml(label, brandIcon(label), '', 'ss-grid-brand-logo');
   }
 
   function htmlForRating(value, item) {
@@ -139,6 +215,27 @@
   function htmlForPrice(value) {
     const text = textValue(value).trim();
     return text ? `<span class="ss-grid-price">${esc(text)}</span>` : '<span class="ss-grid-empty">-</span>';
+  }
+
+  function shouldRenderPills(column, field) {
+    const key = String(field || column?.field || column?.id || '').replace(/^spec:/, '');
+    if (PROSE_FIELDS.has(key)) return false;
+    return ['spec', 'text', 'matrixCell'].includes(column?.type || 'text');
+  }
+
+  function pillsHtml(value, column, field) {
+    if (!shouldRenderPills(column, field)) return '';
+    const splitter = root.ShopScoutValues?.splitToPills;
+    if (typeof splitter !== 'function') return '';
+    const parts = splitter(value);
+    if (!Array.isArray(parts) || parts.length < 2) return '';
+    return `<span class="ss-grid-pill-list">${parts.map(part => `<span class="ss-grid-value-pill">${esc(part)}</span>`).join('')}</span>`;
+  }
+
+  function plainCellHtml(value, column) {
+    const text = textValue(value).trim();
+    if (!text) return '<span class="ss-grid-empty">-</span>';
+    return pillsHtml(text, column, column?.field || column?.id) || esc(text);
   }
 
   function htmlForSelection(item) {
@@ -174,38 +271,44 @@
       ? `<span class="ss-grid-source-dot"${sourceTitle}>source</span>`
       : '';
     if (corrected) {
-      return `<span class="ss-grid-matrix-cell"><span class="ss-grid-corrected">${esc(corrected)}</span>`
+      const correctedPills = pillsHtml(corrected, { type: 'matrixCell' }, value.field);
+      return `<span class="ss-grid-matrix-cell"><span class="ss-grid-corrected">${correctedPills || esc(corrected)}</span>`
         + `${raw ? `<span class="ss-grid-was">was ${esc(raw)}</span>` : ''}${confidence}${source}</span>`;
     }
-    return `<span class="ss-grid-matrix-cell"><span>${shown ? esc(shown) : '<span class="ss-grid-empty">-</span>'}</span>${confidence}${source}</span>`;
+    const shownHtml = shown
+      ? (pillsHtml(shown, { type: 'matrixCell' }, value.field) || esc(shown))
+      : '<span class="ss-grid-empty">-</span>';
+    return `<span class="ss-grid-matrix-cell"><span>${shownHtml}</span>${confidence}${source}</span>`;
   }
 
   function cellFormatter(row, cell, value, column, item) {
     switch (column.type) {
       case 'selection': return htmlForSelection(item);
       case 'image':     return htmlForImage(value, item);
+      case 'brand':     return htmlForBrand(value);
       case 'source':    return htmlForSource(value, item);
       case 'price':     return htmlForPrice(value);
       case 'rating':    return htmlForRating(value, item);
       case 'matrixCell':return htmlForMatrixCell(value);
       case 'actions':   return htmlForActions();
       default: {
-        const text = textValue(value).trim();
-        return text ? esc(text) : '<span class="ss-grid-empty">-</span>';
+        return plainCellHtml(value, column);
       }
     }
   }
 
   function sortableComparator(field, direction) {
     const values = root.ShopScoutValues || {};
-    const parseNumeric = typeof values.parseNumeric === 'function'
-      ? values.parseNumeric
-      : value => {
+    const parseNumeric = value => {
+      if (typeof values.parseNumeric === 'function') {
+        const parsed = values.parseNumeric(value);
+        return Number.isFinite(parsed) ? parsed : null;
+      }
         const cleaned = String(value ?? '').replace(/[^0-9.-]/g, '');
         if (!cleaned || /^[-.]+$/.test(cleaned)) return null;
         const n = Number(cleaned);
         return isFinite(n) ? n : null;
-      };
+    };
     return (a, b) => {
       const av = a?.[field];
       const bv = b?.[field];
@@ -392,6 +495,7 @@
   }
 
   function applyProjection(dataView, grid, projection) {
+    grid.getContainerNode?.()?.classList?.toggle?.('ss-grid-is-matrix', projection?.mode === 'comparisonMatrix');
     dataView.beginUpdate();
     dataView.setItems(projection.rows || [], 'id');
     dataView.setGrouping(groupingInfo(projection));
@@ -434,6 +538,17 @@
       showCellSelection: false
     };
     const grid = new Slick.Grid(container, dataView, columns, gridOptions);
+    if (container?.classList) container.classList.toggle('ss-grid-is-matrix', projection?.mode === 'comparisonMatrix');
+
+    function handleLogoError(event) {
+      const img = event?.target;
+      if (!img?.classList?.contains?.('ss-grid-logo-img')) return;
+      const parent = img.closest?.('.ss-grid-logo-token');
+      if (parent?.classList) parent.classList.add('is-logo-missing');
+    }
+    if (typeof container?.addEventListener === 'function') {
+      container.addEventListener('error', handleLogoError, true);
+    }
 
     if (Slick.RowSelectionModel) {
       grid.setSelectionModel(new Slick.RowSelectionModel({ selectActiveRow: false }));
@@ -547,6 +662,9 @@
         setTimeout(() => node.classList.remove('ss-grid-cell-conflict'), 1800);
       },
       destroy() {
+        if (typeof container?.removeEventListener === 'function') {
+          container.removeEventListener('error', handleLogoError, true);
+        }
         if (grid && typeof grid.destroy === 'function') grid.destroy();
         if (dataView && typeof dataView.destroy === 'function') dataView.destroy();
       }

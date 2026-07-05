@@ -268,6 +268,18 @@ function createHarness() {
   {
     const harness = createHarness();
     await harness.ctx.ShopScoutGrid.render();
+    await harness.ctx.ShopScoutGrid.setMode('matrix');
+    const groupSelect = harness.document.elements.get('groupSelect');
+    const groupValues = (groupSelect.children || []).map(option => option.value);
+    assert.ok(groupValues.includes('brand'), 'group-by options include Brand in Compare view');
+    assert.ok(groupValues.includes('source'), 'group-by options include Source in Compare view');
+    assert.equal(groupValues.some(value => String(value).startsWith('product:')), false,
+      'group-by options list fields, not product columns, in Compare view');
+  }
+
+  {
+    const harness = createHarness();
+    await harness.ctx.ShopScoutGrid.render();
     harness.ctx.ShopScoutGrid.openColumnsModal();
     const body = harness.getModalConfig().body;
     const brandCheckbox = findAll(body, node => node.tagName === 'INPUT' && node.value === 'brand')[0];
