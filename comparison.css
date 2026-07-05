@@ -1804,11 +1804,44 @@
     min-width: 0;
     box-shadow: var(--shadow-sm);
   }
+  .dashboard-settings-left,
   .dashboard-settings-providers,
   .dashboard-settings-side {
     display: flex;
     flex-direction: column;
     gap: 10px;
+  }
+  .dashboard-settings-nav {
+    gap: 6px;
+  }
+  .dashboard-settings-nav a {
+    display: block;
+    padding: 9px 10px;
+    border: 1px solid transparent;
+    border-radius: var(--radius-sm);
+    color: var(--ink);
+    text-decoration: none;
+  }
+  .dashboard-settings-nav a:hover,
+  .dashboard-settings-nav a:focus {
+    border-color: var(--rule);
+    background: var(--paper-2);
+    outline: 0;
+  }
+  .dashboard-settings-nav strong,
+  .dashboard-settings-nav span {
+    display: block;
+  }
+  .dashboard-settings-nav strong {
+    font-size: 13px;
+    font-weight: 650;
+    line-height: 1.25;
+  }
+  .dashboard-settings-nav span {
+    margin-top: 3px;
+    color: var(--ink-3);
+    font-size: 12px;
+    line-height: 1.35;
   }
   .dashboard-settings-side {
     min-width: 0;

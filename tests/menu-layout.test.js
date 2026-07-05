@@ -7,6 +7,7 @@ const js = fs.readFileSync(path.join(__dirname, '..', 'comparison.js'), 'utf8');
 const css = fs.readFileSync(path.join(__dirname, '..', 'comparison.css'), 'utf8');
 const feedbackJs = fs.readFileSync(path.join(__dirname, '..', 'comparison-feedback.js'), 'utf8');
 const settingsJs = fs.readFileSync(path.join(__dirname, '..', 'settings.js'), 'utf8');
+const settingsHtml = fs.readFileSync(path.join(__dirname, '..', 'settings.html'), 'utf8');
 
 function assertIncludes(value, message) {
   assert.ok(html.includes(value), message);
@@ -173,6 +174,12 @@ assert.ok(feedbackJs.includes('dashboard-primary-action'), 'feedback Send button
 assert.ok(settingsJs.includes('class="dashboard-primary-action" id="saveProvider"'),
   'embedded settings Save button uses the dashboard primary action style');
 assert.ok(settingsJs.includes('mount: mount'), 'settings module exposes an embedded dashboard mount');
+assert.ok(settingsJs.includes('data-settings-nav="ai-providers"'), 'embedded settings has a left-pane AI Providers navigation item');
+assert.ok(settingsJs.includes('data-settings-nav="quick-capture"'), 'embedded settings has a left-pane Quick Capture Button navigation item');
+assert.ok(settingsJs.includes('data-settings-nav="open-facts"'), 'embedded settings has a left-pane Open*Facts Enrichment navigation item');
+assert.ok(settingsHtml.includes('data-settings-nav="ai-providers"'), 'standalone settings has a left-pane AI Providers navigation item');
+assert.ok(settingsHtml.includes('data-settings-nav="quick-capture"'), 'standalone settings has a left-pane Quick Capture Button navigation item');
+assert.ok(settingsHtml.includes('data-settings-nav="open-facts"'), 'standalone settings has a left-pane Open*Facts Enrichment navigation item');
 assert.ok(settingsJs.includes('One click adds the product to'), 'embedded settings preserves quick-capture guidance');
 assert.ok(settingsJs.includes('No personal data is sent'), 'embedded settings preserves Open*Facts privacy guidance');
 assert.ok(settingsJs.includes('Open Food Facts (groceries)'), 'embedded settings preserves detailed Open*Facts source labels');

@@ -25,7 +25,21 @@
 
   <div class="layout">
     <aside class="providers">
-      <h2>AI Providers</h2>
+      <nav class="settings-nav" aria-label="Settings sections">
+        <a href="#aiProvidersCard" data-settings-nav="ai-providers">
+          <strong>AI Providers</strong>
+          <span>Enable one or more providers and choose the model ShopScout should use.</span>
+        </a>
+        <a href="#captureButtonCard" data-settings-nav="quick-capture">
+          <strong>Quick Capture Button</strong>
+        </a>
+        <a href="#openFactsCard" data-settings-nav="open-facts">
+          <strong>Open*Facts Enrichment</strong>
+        </a>
+      </nav>
+      <section id="aiProvidersCard">
+        <h2>AI Providers</h2>
+      </section>
       <div id="providerList"></div>
       <div class="role-panel">
         <h2>Pipeline Roles</h2>

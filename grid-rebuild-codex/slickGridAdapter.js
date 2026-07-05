@@ -131,6 +131,7 @@
     ['shopify', { thesvg: 'shopify' }],
     ['stripe', { thesvg: 'stripe' }]
   ]);
+  const LOCAL_LOGO_CACHE_VERSION = '2026-07-05a';
 
   const PROSE_FIELDS = new Set([
     'title',
@@ -188,7 +189,7 @@
 
   function localLogoUrl(key) {
     const slug = logoKey(key);
-    return slug ? `logos/${slug}.svg` : '';
+    return slug ? `logos/${slug}.svg?v=${LOCAL_LOGO_CACHE_VERSION}` : '';
   }
 
   function thesvgUrl(icon) {

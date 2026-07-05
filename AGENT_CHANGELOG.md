@@ -732,3 +732,46 @@ This file is the shared record for Claude and Codex. Append an entry for every m
   - Notes: The visual slot remains `80 x 24` CSS pixels. Screenshot tools may still report approximately `120 x 36` physical pixels on a 150% scaled display.
 - Follow-ups:
   - If the desired cap is `80 x 24` physical screenshot pixels on a 150% scaled display, the CSS slot would need to be intentionally reduced to about `53 x 16` CSS pixels, which would make it too small on normal 100% CSS-pixel rendering.
+
+## 2026-07-05 00:26 - Normalize cached logo assets and settings navigation
+
+- Agent: Codex
+- Branch: grid-rebuild-codex
+- Commit: This commit
+- Status: Implemented
+- Summary:
+  - Normalized packaged SVG logo roots to intrinsic `80 x 24` dimensions while preserving viewBox-based proportional scaling.
+  - Added a version query to local logo URLs so old browser-cached SVG files are bypassed after logo asset changes.
+  - Kept product-name cells left-aligned while preserving centered vertical alignment for the rest of the grid.
+  - Added left-pane settings navigation items for `AI Providers`, `Quick Capture Button`, and `Open*Facts Enrichment` in both embedded dashboard settings and standalone settings.
+  - Added focused tests for versioned logo paths, normalized logo root dimensions, product-title left alignment, and settings navigation.
+- Files touched:
+  - logos/amazon.svg
+  - logos/logitech.svg
+  - logos/microsoft.svg
+  - logos/newegg.svg
+  - grid-rebuild-codex/grid.css
+  - grid-rebuild-codex/slickGridAdapter.js
+  - grid-rebuild-codex/tests/adapter.test.js
+  - grid-rebuild-codex/tests/wiring.test.js
+  - settings.html
+  - settings.js
+  - settings.css
+  - comparison.css
+  - tests/menu-layout.test.js
+  - AGENT_CHANGELOG.md
+  - Removed untracked duplicate folder: ShopScout/
+- Validation:
+  - node grid-rebuild-codex/tests/wiring.test.js -> failed before implementation, passed after implementation
+  - node grid-rebuild-codex/tests/adapter.test.js -> failed before implementation, passed after implementation
+  - node tests/menu-layout.test.js -> failed before implementation, passed after implementation
+  - npm test -> all 36 test files passed
+  - npm run syntax -> passed
+  - npm run typecheck -> passed
+  - npm run lint -> 0 errors, 42 warnings
+  - npm run build -> Chrome, Edge, Firefox built
+- Review / handoff:
+  - Reviewer: Claude
+  - Notes: The displayed CSS logo slot remains capped at `80 x 24` CSS pixels. The packaged SVG files now also declare `80 x 24` intrinsic dimensions to avoid asset-level measurements reporting oversized source dimensions.
+- Follow-ups:
+  - None for this slice.

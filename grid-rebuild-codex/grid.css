@@ -90,7 +90,8 @@
 
 .ss-grid-host .slick-cell.ss-grid-cell-title {
   align-items: center;
-  justify-content: center;
+  justify-content: flex-start;
+  text-align: left;
   line-height: 1.35;
   overflow: hidden;
   overflow-wrap: anywhere;
@@ -101,9 +102,11 @@
   display: -webkit-box;
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 2;
+  width: 100%;
   max-height: calc(1.35em * 2);
   overflow: hidden;
   line-height: 1.35;
+  text-align: left;
   overflow-wrap: anywhere;
 }
 

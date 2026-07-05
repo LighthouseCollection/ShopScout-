@@ -33,12 +33,27 @@ function settingsShellHtml() {
     <div id="savedPill" class="saved-pill" role="status" aria-live="polite">Saved</div>
 
     <div class="dashboard-settings-layout">
-      <aside class="dashboard-settings-card dashboard-settings-providers">
-        <div class="dashboard-settings-section-head">
-          <h3>AI Providers</h3>
-          <p>Enable one or more providers and choose the model ShopScout should use.</p>
-        </div>
-        <div id="providerList" class="dashboard-settings-provider-list"></div>
+      <aside class="dashboard-settings-left">
+        <nav class="dashboard-settings-card dashboard-settings-nav" aria-label="Settings sections">
+          <a href="#aiProvidersCard" data-settings-nav="ai-providers">
+            <strong>AI Providers</strong>
+            <span>Enable one or more providers and choose the model ShopScout should use.</span>
+          </a>
+          <a href="#captureButtonCard" data-settings-nav="quick-capture">
+            <strong>Quick Capture Button</strong>
+          </a>
+          <a href="#openFactsCard" data-settings-nav="open-facts">
+            <strong>Open*Facts Enrichment</strong>
+          </a>
+        </nav>
+
+        <section class="dashboard-settings-card dashboard-settings-providers" id="aiProvidersCard">
+          <div class="dashboard-settings-section-head">
+            <h3>AI Providers</h3>
+            <p>Enable one or more providers and choose the model ShopScout should use.</p>
+          </div>
+          <div id="providerList" class="dashboard-settings-provider-list"></div>
+        </section>
       </aside>
 
       <main class="dashboard-settings-card dashboard-settings-setup">

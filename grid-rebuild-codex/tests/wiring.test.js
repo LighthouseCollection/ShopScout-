@@ -45,8 +45,10 @@ assert.ok(/\.ss-grid-host \.slick-cell[\s\S]{0,180}align-items:\s*center/.test(g
   'grid cells vertically center their contents');
 assert.ok(/\.ss-grid-host \.slick-cell[\s\S]{0,220}justify-content:\s*center/.test(gridCss),
   'grid cells horizontally center their contents by default');
-assert.ok(/\.ss-grid-host \.slick-cell\.ss-grid-cell-title[\s\S]{0,180}justify-content:\s*center/.test(gridCss),
-  'product-name cells center the title wrapper while preserving the two-line clamp');
+assert.ok(/\.ss-grid-host \.slick-cell\.ss-grid-cell-title[\s\S]{0,180}justify-content:\s*flex-start/.test(gridCss),
+  'product-name cells keep the title wrapper left aligned');
+assert.ok(/\.ss-grid-host \.slick-cell\.ss-grid-cell-title[\s\S]{0,220}text-align:\s*left/.test(gridCss),
+  'product-name cells keep product names left aligned');
 assert.ok(/\.ss-grid-logo-token[\s\S]{0,320}text-decoration:\s*none/.test(gridCss),
   'source and brand logo tokens suppress link underlines');
 assert.ok(/\.ss-grid-logo-token[\s\S]{0,360}width:\s*clamp\(56px,\s*8vw,\s*80px\)/.test(gridCss),
@@ -73,6 +75,13 @@ assert.ok(/\.ss-grid \.slick-row\.slick-group \.slick-cell[\s\S]{0,180}padding:\
   'native grouping rows keep top spacing while reducing bottom padding');
 assert.ok(/\.ss-grid-group-title[\s\S]{0,160}font-weight:\s*700/.test(gridCss),
   'native grouping titles are bold');
+
+for (const logoName of ['amazon.svg', 'logitech.svg', 'microsoft.svg', 'newegg.svg']) {
+  const logo = fs.readFileSync(path.join(root, 'logos', logoName), 'utf8');
+  assert.ok(/<svg\b[^>]*\bwidth="80"/.test(logo), `${logoName} has an 80px intrinsic width`);
+  assert.ok(/<svg\b[^>]*\bheight="24"/.test(logo), `${logoName} has a 24px intrinsic height`);
+  assert.ok(/<svg\b[^>]*\bviewBox=/.test(logo), `${logoName} keeps a viewBox for proportional scaling`);
+}
 
 const cssIndex = indexOfRequired('vendor/slickgrid/slick.grid.css', 'SlickGrid core CSS');
 const themeIndex = indexOfRequired('vendor/slickgrid/slick-default-theme.css', 'SlickGrid default theme CSS');
