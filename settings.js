@@ -192,6 +192,12 @@ async function init() {
   await initCaptureButtonSettings();
 }
 
+function currentSettingsRoot(startNode) {
+  return startNode?.closest?.('[data-settings-root]')
+    || document.querySelector('[data-settings-root]')
+    || document;
+}
+
 /* =============================================================
    Quick Capture Button (FAB) settings
    Stored at chrome.storage.local.shopscout_capture_button:
@@ -438,20 +444,21 @@ function bindEvents() {
 }
 
 function bindSettingsNav() {
-  document.querySelectorAll('[data-settings-nav]').forEach(link => {
+  const rootEl = currentSettingsRoot();
+  rootEl.querySelectorAll('[data-settings-nav]').forEach(link => {
     link.addEventListener('click', event => {
       event.preventDefault();
-      showSettingsPanel(link.getAttribute('data-settings-nav'));
+      showSettingsPanel(link.getAttribute('data-settings-nav'), rootEl);
     });
   });
 }
 
-function showSettingsPanel(panelId) {
+function showSettingsPanel(panelId, rootEl = currentSettingsRoot()) {
   const id = panelId || 'ai-providers';
-  document.querySelectorAll('[data-settings-panel]').forEach(panel => {
+  rootEl.querySelectorAll('[data-settings-panel]').forEach(panel => {
     panel.hidden = panel.getAttribute('data-settings-panel') !== id;
   });
-  document.querySelectorAll('[data-settings-nav]').forEach(link => {
+  rootEl.querySelectorAll('[data-settings-nav]').forEach(link => {
     const active = link.getAttribute('data-settings-nav') === id;
     link.classList.toggle('active', active);
     if (active) link.setAttribute('aria-current', 'page');

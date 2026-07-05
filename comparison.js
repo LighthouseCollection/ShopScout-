@@ -1007,6 +1007,7 @@ function openExportPage() {
         <label><input type="checkbox" data-export-field="rating"> Rating</label>
         <label><input type="checkbox" data-export-field="notes"> Notes</label>
         <label><input type="checkbox" data-export-field="specs"> Specs</label>
+        <label><input type="checkbox" data-export-field="aiPrompt"> AI Prompt</label>
       </div>
     </section>
 
@@ -1982,7 +1983,8 @@ const EXPORT_FIELDS = [
   { id: 'source', label: 'Source' },
   { id: 'rating', label: 'Rating' },
   { id: 'notes', label: 'Notes' },
-  { id: 'specs', label: 'Specs' }
+  { id: 'specs', label: 'Specs' },
+  { id: 'aiPrompt', label: 'AI Prompt', exportSection: true }
 ];
 
 function localDateStamp(date = new Date()) {
@@ -2041,6 +2043,17 @@ function exportRecords(products, fields) {
   return products.map(product => exportRecord(product, fields));
 }
 
+function buildExportAiPrompt(products) {
+  try {
+    const promptText = buildManualHybridPrompt(products, null, null)
+      + buildManualAnalysisOptionsInstructions(null, null);
+    return String(promptText || '').trim();
+  } catch (err) {
+    console.warn('Could not build export AI prompt', err);
+    return '';
+  }
+}
+
 function exportRecordLines(record) {
   const lines = [];
   for (const field of EXPORT_FIELDS) {
@@ -2063,6 +2076,11 @@ function buildExportText(records) {
   return records.map(record => exportRecordLines(record).join('\n')).filter(Boolean).join('\n\n');
 }
 
+function appendAiPromptText(content, aiPrompt) {
+  if (!aiPrompt) return content;
+  return [content, `AI Prompt:\n${aiPrompt}`].filter(Boolean).join('\n\n');
+}
+
 function buildSelectedCsv(records, fields) {
   const headers = EXPORT_FIELDS.filter(field => fields.includes(field.id) && field.id !== 'specs');
   if (fields.includes('specs')) headers.push({ id: 'specs', label: 'Specs' });
@@ -2076,8 +2094,9 @@ function buildSelectedCsv(records, fields) {
   return '\u{FEFF}' + [headers.map(field => csvEscape(field.label)).join(','), ...rows].join('\n');
 }
 
-function buildSelectedXml(records, listName) {
+function buildSelectedXml(records, listName, aiPrompt = '') {
   let xml = `<?xml version="1.0" encoding="UTF-8"?>\n<shopscout list="${escXml(listName)}" exported="${new Date().toISOString()}">\n`;
+  if (aiPrompt) xml += `  <aiPrompt>${escXml(aiPrompt)}</aiPrompt>\n`;
   for (const record of records) {
     xml += '  <product>\n';
     for (const [key, value] of Object.entries(record)) {
@@ -2098,7 +2117,7 @@ function buildSelectedXml(records, listName) {
   return xml + '</shopscout>';
 }
 
-function buildSelectedHtml(records, listName) {
+function buildSelectedHtml(records, listName, aiPrompt = '') {
   const date = localDateStamp();
   const cards = records.map(record => {
     const rows = exportRecordLines(record)
@@ -2113,26 +2132,35 @@ function buildSelectedHtml(records, listName) {
     const title = record.name || 'Product';
     return `<section class="card"><h3>${esc(title)}</h3><table>${rows}</table></section>`;
   }).join('');
+  const promptSection = aiPrompt
+    ? `<section class="card"><h2>AI Prompt</h2><pre>${esc(aiPrompt)}</pre></section>`
+    : '';
   return `<!DOCTYPE html><html><head><meta charset="utf-8"><title>${esc(safeExportFileStem(listName))}</title>
-<style>*{box-sizing:border-box}body{font-family:Segoe UI,Arial,sans-serif;margin:0;background:#f6f7f9;color:#111827;padding:32px}.hdr{margin-bottom:24px}.hdr h1{font-size:24px;margin:0 0 4px}.hdr p{margin:0;color:#667085}.grid{display:grid;gap:14px;max-width:980px}.card{background:#fff;border:1px solid #d9dee7;border-radius:8px;padding:16px}.card h3{margin:0 0 10px;font-size:15px}table{width:100%;border-collapse:collapse}td{padding:4px 8px;border-top:1px solid #edf0f4;vertical-align:top}.l{width:120px;color:#667085;font-weight:600}@media print{body{background:#fff;padding:18px}.card{break-inside:avoid}}</style></head>
-<body><div class="hdr"><h1>ShopScout</h1><p>${esc(listName)} — ${date} — ${records.length} product(s)</p></div><div class="grid">${cards}</div></body></html>`;
+<style>*{box-sizing:border-box}body{font-family:Segoe UI,Arial,sans-serif;margin:0;background:#f6f7f9;color:#111827;padding:32px}.hdr{margin-bottom:24px}.hdr h1{font-size:24px;margin:0 0 4px}.hdr p{margin:0;color:#667085}.grid{display:grid;gap:14px;max-width:980px}.card{background:#fff;border:1px solid #d9dee7;border-radius:8px;padding:16px}.card h2{margin:0 0 10px;font-size:18px}.card h3{margin:0 0 10px;font-size:15px}pre{white-space:pre-wrap;font:12px/1.5 Consolas,monospace;background:#f1f5f9;border:1px solid #d9dee7;border-radius:6px;padding:12px}table{width:100%;border-collapse:collapse}td{padding:4px 8px;border-top:1px solid #edf0f4;vertical-align:top}.l{width:120px;color:#667085;font-weight:600}@media print{body{background:#fff;padding:18px}.card{break-inside:avoid}}</style></head>
+<body><div class="hdr"><h1>ShopScout</h1><p>${esc(listName)} — ${date} — ${records.length} product(s)</p></div><div class="grid">${promptSection}${cards}</div></body></html>`;
 }
 
 function buildExportContent(format, products, listName, fields) {
-  const records = exportRecords(products, fields);
+  const includeAiPrompt = fields.includes('aiPrompt');
+  const recordFields = fields.filter(field => field !== 'aiPrompt');
+  const records = exportRecords(products, recordFields);
+  const aiPrompt = includeAiPrompt ? buildExportAiPrompt(products) : '';
   if (format === 'json') {
     return {
-      content: JSON.stringify({ list: listName, exported: new Date().toISOString(), products: records }, null, 2),
+      content: JSON.stringify(Object.assign(
+        { list: listName, exported: new Date().toISOString(), products: records },
+        aiPrompt ? { aiPrompt } : {}
+      ), null, 2),
       mime: 'application/json',
       extension: 'json'
     };
   }
-  if (format === 'csv') return { content: buildSelectedCsv(records, fields), mime: 'text/csv', extension: 'csv' };
-  if (format === 'xml') return { content: buildSelectedXml(records, listName), mime: 'application/xml', extension: 'xml' };
+  if (format === 'csv') return { content: appendAiPromptText(buildSelectedCsv(records, recordFields), aiPrompt), mime: 'text/csv', extension: 'csv' };
+  if (format === 'xml') return { content: buildSelectedXml(records, listName, aiPrompt), mime: 'application/xml', extension: 'xml' };
   if (format === 'html' || format === 'pdf') {
-    return { content: buildSelectedHtml(records, listName), mime: 'text/html', extension: format === 'pdf' ? 'html' : 'html' };
+    return { content: buildSelectedHtml(records, listName, aiPrompt), mime: 'text/html', extension: format === 'pdf' ? 'html' : 'html' };
   }
-  return { content: buildExportText(records), mime: 'text/plain', extension: 'txt' };
+  return { content: appendAiPromptText(buildExportText(records), aiPrompt), mime: 'text/plain', extension: 'txt' };
 }
 
 async function runDashboardExport() {
@@ -2203,7 +2231,7 @@ async function doExport(format, opts = {}) {
   if (!products.length) { toast.show('No products to export', 'error'); return; }
   const fields = Array.isArray(opts.fields) && opts.fields.length
     ? opts.fields
-    : EXPORT_FIELDS.map(field => field.id);
+    : EXPORT_FIELDS.filter(field => !field.exportSection).map(field => field.id);
   const destination = opts.destination || 'file';
   const normalizedFormat = ['json', 'csv', 'xml', 'html', 'pdf', 'txt'].includes(format) ? format : 'json';
   const payload = buildExportContent(normalizedFormat, products, name, fields);

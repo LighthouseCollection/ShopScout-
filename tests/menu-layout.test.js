@@ -25,6 +25,11 @@ assertIncludes('data-tab="products">Products</button>', 'Products tab exists');
 assertIncludes('data-tab="analyze">Analyze</button>', 'Analyze tab exists');
 assertIncludes('data-tab="view">Products Table View</button>', 'Products Table View tab exists');
 assertNotIncludes('data-tab="view">View</button>', 'old View tab label is replaced');
+assert.ok(
+  html.indexOf('data-tab="products"') < html.indexOf('data-tab="view"')
+    && html.indexOf('data-tab="view"') < html.indexOf('data-tab="analyze"'),
+  'Products Table View tab appears immediately after Products and before Analyze'
+);
 assertIncludes('data-tab="search">Search</button>', 'Search tab exists');
 assertIncludes('data-tab="about">About</button>', 'About tab replaces Help');
 assertNotIncludes('data-tab="home">', 'old Home/Shortcuts tab is removed');
@@ -40,6 +45,9 @@ assertNotIncludes('data-export-format=', 'File tab no longer exports directly fr
 assert.ok(js.includes('data-export-destination="clipboard"'), 'Save As page offers copy-to-clipboard destination');
 assert.ok(js.includes('data-export-destination="file"'), 'Save As page offers save-as-file destination');
 assert.ok(js.includes('data-export-format="txt"'), 'Save As page offers plain-text output as a format');
+assert.ok(js.includes('data-export-field="aiPrompt"'), 'Save As page can include the AI Prompt payload');
+assert.ok(js.includes("id: 'aiPrompt', label: 'AI Prompt'"), 'export field registry includes AI Prompt');
+assert.ok(js.includes('function buildExportAiPrompt'), 'exports can build the AI Prompt payload');
 assert.ok(js.includes('ShopScout - '), 'exports use the ShopScout list-name date filename convention');
 assert.ok(js.includes('class="dashboard-primary-action" data-export-apply'),
   'Save As Export uses the dashboard primary action style');
@@ -182,6 +190,8 @@ assert.ok(settingsJs.includes('data-settings-panel="quick-capture"'), 'embedded 
 assert.ok(settingsJs.includes('data-settings-panel="open-facts"'), 'embedded settings has a main Open*Facts panel');
 assert.ok(settingsJs.includes('openSetupGuideModal'), 'embedded settings opens the setup guide in a modal');
 assert.ok(settingsJs.includes('bindSettingsNav'), 'embedded settings binds left navigation to main content panels');
+assert.ok(settingsJs.includes('function currentSettingsRoot'), 'settings panel switching is scoped to the mounted settings root');
+assert.ok(settingsJs.includes('showSettingsPanel(link.getAttribute(\'data-settings-nav\'), rootEl)'), 'settings nav click updates the local settings main panel');
 assert.ok(!settingsJs.includes('dashboard-settings-side'), 'embedded settings does not render a duplicate right-side settings pane');
 assert.ok(!settingsJs.includes('id="savedPill"'), 'embedded settings does not render the floating Saved label');
 assert.ok(!settingsJs.includes('id="guideInstructions"'), 'embedded settings does not render an inline setup guide panel');

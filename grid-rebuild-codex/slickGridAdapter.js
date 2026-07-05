@@ -386,6 +386,7 @@
     const collapsed = item?.collapsed ? 'collapsed' : 'expanded';
     const title = item?.title || item?.value || 'Group';
     return `<span class="slick-group-toggle ${collapsed}" aria-hidden="true"></span>`
+      + '<span class="ss-grid-group-label">Group</span>'
       + `<span class="ss-grid-group-title">${esc(title)}</span>`;
   }
 

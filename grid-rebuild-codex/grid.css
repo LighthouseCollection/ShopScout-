@@ -309,6 +309,21 @@ a.ss-grid-logo-token:visited {
   white-space: nowrap;
 }
 
+.ss-grid-group-label {
+  display: inline-flex;
+  align-items: center;
+  margin-right: 8px;
+  padding: 1px 6px;
+  border: 1px solid var(--rule, #d1d5db);
+  border-radius: 999px;
+  background: var(--surface, #fff);
+  color: var(--ink-3, #5a6470);
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 1.4;
+  text-transform: uppercase;
+}
+
 .ss-grid-matrix-cell {
   display: inline-flex;
   flex-direction: column;
@@ -421,13 +436,17 @@ a.ss-grid-logo-token:visited {
 .ss-grid-column-list {
   max-height: min(52vh, 420px);
   overflow: auto;
-  display: grid;
   gap: 8px;
 }
 
+.ss-grid-filter-list {
+  display: grid;
+}
+
 .ss-grid-column-list {
-  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-  align-items: start;
+  display: block;
+  column-count: 3;
+  column-gap: 12px;
 }
 
 .ss-grid-column-help {
@@ -450,6 +469,8 @@ a.ss-grid-logo-token:visited {
   display: grid;
   gap: 6px;
   min-width: 0;
+  break-inside: avoid;
+  margin: 0 0 12px;
 }
 
 .ss-grid-column-letter {

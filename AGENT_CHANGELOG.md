@@ -820,3 +820,38 @@ This file is the shared record for Claude and Codex. Append an entry for every m
   - Notes: The logo-image feature is intentionally removed, not resized. Reintroducing logos should be a separate explicit feature with a stricter asset pipeline and visual QA.
 - Follow-ups:
   - None for this slice.
+
+## 2026-07-05 07:52 - Fix settings navigation, table-view order, grouping label, and AI prompt export
+
+- Agent: Codex
+- Branch: grid-rebuild-codex
+- Commit: This commit
+- Status: Implemented
+- Summary:
+  - Moved `Products Table View` so it appears immediately after `Products` in the ribbon.
+  - Scoped settings left-menu navigation to the mounted settings root so selecting `AI Providers`, `Quick Capture Button`, or `Open*Facts Enrichment` changes the main settings panel reliably.
+  - Changed the columns modal from CSS-grid placement to masonry-style columns so alphabet letter headers do not create uneven top gaps.
+  - Added an explicit `Group` label pill to native SlickGrid group rows while keeping the actual group title bold.
+  - Added `AI Prompt` as an optional field in the dashboard `Save As` page and included it as a dedicated export section when selected.
+- Files touched:
+  - comparison.html
+  - comparison.js
+  - settings.js
+  - grid-rebuild-codex/grid.css
+  - grid-rebuild-codex/slickGridAdapter.js
+  - grid-rebuild-codex/tests/wiring.test.js
+  - tests/menu-layout.test.js
+  - AGENT_CHANGELOG.md
+- Validation:
+  - node tests\menu-layout.test.js -> failed before implementation, passed after implementation
+  - node grid-rebuild-codex\tests\wiring.test.js -> failed before implementation, passed after implementation
+  - node grid-rebuild-codex\tests\adapter.test.js -> passed
+  - npm test -> all 36 test files passed
+  - npm run syntax -> passed
+  - npm run typecheck -> passed
+  - npm run lint -> 0 errors, 42 existing warnings
+  - npm run build -> Chrome, Edge, Firefox built
+- Review / handoff:
+  - Reviewer: Claude
+- Follow-ups:
+  - None for this slice.

@@ -57,14 +57,18 @@ assert.ok(!gridCss.includes('.ss-grid-logo-img'),
   'grid CSS does not define logo image rules');
 assert.ok(/\.ss-grid-title-text[\s\S]{0,260}-webkit-line-clamp:\s*2/.test(gridCss),
   'product-name text uses a dedicated two-line title wrapper instead of being clipped by the cell');
-assert.ok(/\.ss-grid-column-list[\s\S]{0,220}grid-template-columns:\s*repeat\(auto-fit,\s*minmax\(240px,\s*1fr\)\)/.test(gridCss),
-  'columns modal lays field groups out across multiple columns');
+assert.ok(/\.ss-grid-column-list[\s\S]{0,220}column-count:\s*3/.test(gridCss),
+  'columns modal uses masonry-style columns so alphabet headers do not leave uneven top gaps');
+assert.ok(/\.ss-grid-column-group[\s\S]{0,220}break-inside:\s*avoid/.test(gridCss),
+  'columns modal keeps each alphabet group intact inside a masonry column');
 assert.ok(/\.ss-grid-column-letter[\s\S]{0,180}letter-spacing:\s*0\.08em/.test(gridCss),
   'columns modal has alphabet letter headers for grouped fields');
 assert.ok(/\.ss-grid \.slick-row\.slick-group \.slick-cell[\s\S]{0,180}padding:\s*14px 12px 6px/.test(gridCss),
   'native grouping rows keep top spacing while reducing bottom padding');
 assert.ok(/\.ss-grid-group-title[\s\S]{0,160}font-weight:\s*700/.test(gridCss),
   'native grouping titles are bold');
+assert.ok(gridCss.includes('.ss-grid-group-label'),
+  'native grouping title includes an explicit Group label element');
 
 for (const logoName of ['amazon.svg', 'logitech.svg', 'microsoft.svg', 'newegg.svg']) {
   assert.ok(!fs.existsSync(path.join(root, 'logos', logoName)), `${logoName} is removed from the local logo cache`);
