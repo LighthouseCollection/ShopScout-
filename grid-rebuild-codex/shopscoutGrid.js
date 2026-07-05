@@ -191,6 +191,10 @@
       && !(String(column.id || '').startsWith('product:')));
   }
 
+  function filterableColumns(projection) {
+    return groupableColumns(projection);
+  }
+
   function optionSignature(columns, placeholder) {
     return JSON.stringify({
       placeholder: placeholder || 'None',
@@ -345,7 +349,7 @@
   }
 
   function fieldLabel(field) {
-    const columns = usableColumns(state.lastProjection);
+    const columns = filterableColumns(state.lastProjection);
     const match = columns.find(column => (column.field || column.id) === field);
     return match?.name || field;
   }
@@ -448,7 +452,7 @@
     }
     const viewState = ensureStore().getState();
     let localFilters = Array.isArray(viewState.filters) ? viewState.filters.slice() : [];
-    const columns = usableColumns(state.lastProjection);
+    const columns = filterableColumns(state.lastProjection);
     const body = dom.elem('div', { class: 'ss-grid-modal-body' });
     const list = dom.elem('div', { class: 'ss-grid-filter-list' });
     const field = dom.elem('select', { class: 'ss-grid-modal-select' });

@@ -196,25 +196,42 @@
   .dashboard-page-body p { margin: 0 0 10px; }
   .dashboard-page-body ul, .dashboard-page-body ol { margin: 0 0 14px 22px; }
   .dashboard-page-body code { padding: 1px 4px; border-radius: 3px; background: var(--paper-2); font-family: var(--font-mono); font-size: 12px; }
-  .dashboard-page-actions { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-top: 14px; }
-  .dashboard-primary-action {
+  .dashboard-page-actions {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-top: 14px;
+  }
+  .dashboard-primary-action,
+  .dashboard-secondary-action {
     min-height: 34px;
     display: inline-flex;
     align-items: center;
     justify-content: center;
     padding: 0 14px;
-    border: 1px solid var(--primary);
     border-radius: var(--radius-sm);
-    background: var(--primary);
-    color: #fff;
     font: inherit;
     font-size: 12px;
     font-weight: 600;
     cursor: pointer;
     box-shadow: var(--shadow-sm);
   }
+  .dashboard-primary-action {
+    border: 1px solid var(--primary);
+    background: var(--primary);
+    color: #fff;
+  }
   .dashboard-primary-action:hover { background: #092f3d; border-color: #092f3d; }
-  .dashboard-primary-action:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .dashboard-secondary-action {
+    border: 1px solid var(--rule);
+    background: var(--surface);
+    color: var(--ink);
+  }
+  .dashboard-secondary-action:hover { background: var(--paper-2); border-color: #b8c2ce; }
+  .dashboard-primary-action:focus-visible,
+  .dashboard-secondary-action:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
   .dashboard-form { display: grid; gap: 10px; }
   .dashboard-form label { display: grid; gap: 4px; color: var(--ink-3); font-size: 12px; font-weight: 650; }
   .dashboard-form input, .dashboard-form textarea { width: 100%; padding: 9px 10px; border: 1px solid var(--rule); border-radius: var(--radius-sm); background: #fff; color: var(--ink); font: inherit; }
@@ -244,7 +261,7 @@
   .dashboard-copy-picker-title { font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: var(--ink-3); font-weight: 600; margin-bottom: 10px; }
   .dashboard-copy-picker-options { display: flex; flex-wrap: wrap; gap: 8px 22px; margin-bottom: 14px; }
   .dashboard-copy-picker-options label { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; cursor: pointer; }
-  .dashboard-copy-picker-actions { display: flex; gap: 8px; }
+  .dashboard-copy-picker-actions { display: flex; justify-content: flex-end; gap: 8px; }
 
   /* Card grid */
   .card-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 16px; }
@@ -1894,9 +1911,14 @@
   .dashboard-settings .actions,
   .dashboard-settings .guide-actions {
     display: flex;
+    justify-content: flex-end;
     gap: 8px;
     flex-wrap: wrap;
     margin-top: 12px;
+  }
+  .dashboard-settings .dashboard-primary-action,
+  .dashboard-settings .dashboard-secondary-action {
+    min-height: 32px;
   }
   .dashboard-settings .btn {
     min-height: 32px;

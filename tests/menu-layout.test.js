@@ -39,10 +39,18 @@ assert.ok(js.includes('data-export-destination="clipboard"'), 'Save As page offe
 assert.ok(js.includes('data-export-destination="file"'), 'Save As page offers save-as-file destination');
 assert.ok(js.includes('data-export-format="txt"'), 'Save As page offers plain-text output as a format');
 assert.ok(js.includes('ShopScout - '), 'exports use the ShopScout list-name date filename convention');
+assert.ok(js.includes('class="dashboard-primary-action" data-export-apply'),
+  'Save As Export uses the dashboard primary action style');
+assert.ok(js.includes('class="dashboard-secondary-action" data-export-reset'),
+  'Save As Reset uses the dashboard secondary action style');
 assert.ok(/\.dashboard-export-panel[\s\S]{0,160}max-width:\s*none/.test(css),
   'Save As content panel fills the available main-content width');
 assert.ok(/\.dashboard-format-grid[\s\S]{0,180}grid-template-columns:\s*repeat\(auto-fit,\s*minmax\(180px,\s*1fr\)\)/.test(css),
   'Save As format cards distribute across the available content width');
+assert.ok(/\.dashboard-page-actions[\s\S]{0,160}justify-content:\s*flex-end/.test(css),
+  'dashboard form actions align to the right side');
+assert.ok(/\.dashboard-secondary-action[\s\S]{0,360}background:\s*var\(--surface\)/.test(css),
+  'dashboard secondary action style exists for reset/cancel-style buttons');
 assertNotIncludes('<div class="rb-group-label">New</div>', 'File tab no longer owns list creation');
 assertNotIncludes('<div class="rb-group-label">Existing Lists</div>', 'File tab no longer shows recent/existing lists');
 
@@ -153,6 +161,8 @@ assert.ok(js.includes('renderMarkdownToHtml'), 'markdown help/about files render
 assert.ok(js.includes('openDashboardInfoPage'), 'ribbon informational commands open inside the main content area');
 assert.ok(js.includes('openFeedbackPage'), 'suggest feature and report bug open inside the main content area');
 assert.ok(feedbackJs.includes('dashboard-primary-action'), 'feedback Send button uses the dashboard themed action style');
+assert.ok(settingsJs.includes('class="dashboard-primary-action" id="saveProvider"'),
+  'embedded settings Save button uses the dashboard primary action style');
 assert.ok(settingsJs.includes('mount: mount'), 'settings module exposes an embedded dashboard mount');
 assert.ok(settingsJs.includes('One click adds the product to'), 'embedded settings preserves quick-capture guidance');
 assert.ok(settingsJs.includes('No personal data is sent'), 'embedded settings preserves Open*Facts privacy guidance');

@@ -99,7 +99,7 @@ function settingsShellHtml() {
         </div>
 
         <div class="actions">
-          <button class="btn primary" id="saveProvider" type="button">Save Provider</button>
+          <button class="dashboard-primary-action" id="saveProvider" type="button">Save Provider</button>
           <button class="btn success" id="testProvider" type="button">Test Connection</button>
           <button class="btn" id="openKeyPage" type="button">Open Key Page</button>
           <button class="btn" id="openDocs" type="button">Docs</button>

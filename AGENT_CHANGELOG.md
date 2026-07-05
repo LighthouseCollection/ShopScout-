@@ -546,3 +546,37 @@ This file is the shared record for Claude and Codex. Append an entry for every m
   - Notes: Visually recheck logo fallback behavior in the loaded extension. Brandfetch is intentionally removed from runtime rendering; direct SVG provider failures now fall through to text.
 - Follow-ups:
   - Consider packaging critical retailer/brand logos locally if external CDN reliability remains inconsistent.
+
+## 2026-07-04 22:38 - Fix filter fields and dashboard action styling
+
+- Agent: Codex
+- Branch: grid-rebuild-codex
+- Commit: This commit
+- Status: Implemented
+- Summary:
+  - Changed the Filters modal field dropdown to use metadata/filterable fields in Compare view instead of product/model columns.
+  - Preserved facet value dropdown behavior so fields like Brand still show checkbox options from the visible product data.
+  - Replaced Save As Export/Reset buttons with shared dashboard primary/secondary action styles.
+  - Updated the embedded Settings Save button to use the shared dashboard primary action style.
+  - Right-aligned dashboard form/action rows so submit/reset buttons sit on the right side of forms.
+- Files touched:
+  - comparison.css
+  - comparison.js
+  - grid-rebuild-codex/shopscoutGrid.js
+  - grid-rebuild-codex/tests/controls.test.js
+  - settings.js
+  - tests/menu-layout.test.js
+  - AGENT_CHANGELOG.md
+- Validation:
+  - node grid-rebuild-codex/tests/controls.test.js -> failed before implementation, passed after implementation
+  - node tests/menu-layout.test.js -> failed before implementation, passed after implementation
+  - npm test -> all 35 test files passed
+  - npm run syntax -> passed
+  - npm run typecheck -> passed
+  - npm run lint -> 0 errors, 42 warnings
+  - npm run build -> Chrome, Edge, Firefox built
+- Review / handoff:
+  - Reviewer: Claude
+  - Notes: Recheck the Compare-mode filter field dropdown visually and confirm Settings/Save As/Feedback action buttons match the intended dashboard control styling.
+- Follow-ups:
+  - Consider converting remaining embedded settings utility buttons to the same dashboard action primitives if the settings page gets a broader visual pass.

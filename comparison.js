@@ -1031,8 +1031,8 @@ function openExportPage() {
     </section>
 
     <div class="dashboard-copy-picker-actions">
-      <button type="button" class="btn primary" data-export-apply>Export</button>
-      <button type="button" class="btn" data-export-reset>Reset</button>
+      <button type="button" class="dashboard-primary-action" data-export-apply>Export</button>
+      <button type="button" class="dashboard-secondary-action" data-export-reset>Reset</button>
     </div>
   </div>`);
 }

@@ -280,6 +280,20 @@ function createHarness() {
   {
     const harness = createHarness();
     await harness.ctx.ShopScoutGrid.render();
+    await harness.ctx.ShopScoutGrid.setMode('matrix');
+    harness.ctx.ShopScoutGrid.openFiltersModal();
+    const body = harness.getModalConfig().body;
+    const fieldSelect = findAll(body, node => node.tagName === 'SELECT')[0];
+    const filterValues = (fieldSelect.children || []).map(option => option.value);
+    assert.ok(filterValues.includes('brand'), 'filter field options include Brand in Compare view');
+    assert.ok(filterValues.includes('source'), 'filter field options include Source in Compare view');
+    assert.equal(filterValues.some(value => String(value).startsWith('product:')), false,
+      'filter field options list metadata fields, not product/model columns, in Compare view');
+  }
+
+  {
+    const harness = createHarness();
+    await harness.ctx.ShopScoutGrid.render();
     harness.ctx.ShopScoutGrid.openColumnsModal();
     const body = harness.getModalConfig().body;
     const brandCheckbox = findAll(body, node => node.tagName === 'INPUT' && node.value === 'brand')[0];
