@@ -27,6 +27,7 @@
   function safeUrl(value) {
     const SS = root.SS;
     if (SS && typeof SS.sanitizeUrl === 'function') return SS.sanitizeUrl(value, '');
+    if (!String(value || '').trim()) return '';
     try {
       const url = new URL(String(value || ''), root.location?.href || 'https://example.test/');
       return ['http:', 'https:'].includes(url.protocol) ? url.href : '';
@@ -109,28 +110,24 @@
   ]);
 
   const LOGO_CATALOGS = new Map([
-    ['alibaba', { brandbirdName: 'Alibaba', brandfetchDomain: 'alibaba.com' }],
-    ['aliexpress', { brandbirdName: 'AliExpress', brandfetchDomain: 'aliexpress.com' }],
-    ['amazon', { brandbirdName: 'Amazon', brandfetchDomain: 'amazon.com' }],
-    ['apple', { brandfetchDomain: 'apple.com', svglogos: 'apple' }],
-    ['ebay', { brandbirdName: 'eBay', brandfetchDomain: 'ebay.com' }],
-    ['etsy', { brandbirdName: 'Etsy', brandfetchDomain: 'etsy.com' }],
-    ['google', { brandbirdName: 'Google', brandfetchDomain: 'google.com' }],
-    ['ibm', { brandbirdName: 'IBM', brandfetchDomain: 'ibm.com' }],
+    ['alibaba', { brandbirdName: 'Alibaba' }],
+    ['aliexpress', { brandbirdName: 'AliExpress' }],
+    ['amazon', { brandbirdName: 'Amazon' }],
+    ['apple', { svglogos: 'apple' }],
+    ['ebay', { brandbirdName: 'eBay' }],
+    ['etsy', { brandbirdName: 'Etsy' }],
+    ['google', { brandbirdName: 'Google' }],
+    ['ibm', { brandbirdName: 'IBM' }],
     ['microsoft', {
-      brandfetchDomain: 'microsoft.com',
-      brandfetchAsset: 'idu208UKm2',
       svglogos: 'microsoft',
       svgl: 'microsoft',
       worldVectorLogo: 'microsoft-2'
     }],
-    ['openai', { brandbirdName: 'OpenAI', brandfetchDomain: 'openai.com' }],
-    ['samsung', { brandfetchDomain: 'samsung.com', svglogos: 'samsung' }],
-    ['shopify', { brandbirdName: 'Shopify', brandfetchDomain: 'shopify.com' }],
-    ['stripe', { brandbirdName: 'Stripe', brandfetchDomain: 'stripe.com' }]
+    ['openai', { brandbirdName: 'OpenAI' }],
+    ['samsung', { svglogos: 'samsung' }],
+    ['shopify', { brandbirdName: 'Shopify' }],
+    ['stripe', { brandbirdName: 'Stripe' }]
   ]);
-
-  const BRANDFETCH_PUBLIC_CLIENT_ID = '1bfwsmEH20zzEfSNTed';
 
   const PROSE_FIELDS = new Set([
     'title',
@@ -190,15 +187,6 @@
     return `https://storage.googleapis.com/brandbird/assets/company-logos/${folder}/${encodeURIComponent(`${text} ${suffix}.svg`)}`;
   }
 
-  function brandfetchUrl(domain, variant) {
-    const text = textValue(domain).trim().toLowerCase();
-    if (!text) return '';
-    const clientId = root.ShopScoutLogoConfig?.brandfetchClientId || BRANDFETCH_PUBLIC_CLIENT_ID;
-    const type = variant === 'icon' ? 'icon' : 'logo';
-    const size = type === 'logo' ? '/h/128/w/512' : '/h/128/w/128';
-    return `https://cdn.brandfetch.io/domain/${encodeURIComponent(text)}/fallback/lettermark/theme/light${size}/${type}?c=${encodeURIComponent(clientId)}`;
-  }
-
   function thesvgUrl(icon) {
     return icon ? `https://cdn.jsdelivr.net/gh/glincker/thesvg@main/public/icons/${icon}/default.svg` : '';
   }
@@ -208,7 +196,6 @@
     const meta = LOGO_CATALOGS.get(key) || LOGO_CATALOGS.get(icon) || {};
     const urls = [
       brandbirdUrl(meta.brandbirdName, 'logotype'),
-      brandfetchUrl(meta.brandfetchDomain, 'logo'),
       meta.worldVectorLogo ? `https://cdn.worldvectorlogo.com/logos/${encodeURIComponent(meta.worldVectorLogo)}.svg` : '',
       meta.svglogos ? `https://cdn.svglogos.dev/logos/${encodeURIComponent(meta.svglogos)}.svg` : '',
       meta.svgl ? `https://svgl.app/library/${encodeURIComponent(meta.svgl)}.svg` : '',

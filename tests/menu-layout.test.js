@@ -4,6 +4,7 @@ const path = require('path');
 
 const html = fs.readFileSync(path.join(__dirname, '..', 'comparison.html'), 'utf8');
 const js = fs.readFileSync(path.join(__dirname, '..', 'comparison.js'), 'utf8');
+const css = fs.readFileSync(path.join(__dirname, '..', 'comparison.css'), 'utf8');
 const feedbackJs = fs.readFileSync(path.join(__dirname, '..', 'comparison-feedback.js'), 'utf8');
 const settingsJs = fs.readFileSync(path.join(__dirname, '..', 'settings.js'), 'utf8');
 
@@ -38,6 +39,10 @@ assert.ok(js.includes('data-export-destination="clipboard"'), 'Save As page offe
 assert.ok(js.includes('data-export-destination="file"'), 'Save As page offers save-as-file destination');
 assert.ok(js.includes('data-export-format="txt"'), 'Save As page offers plain-text output as a format');
 assert.ok(js.includes('ShopScout - '), 'exports use the ShopScout list-name date filename convention');
+assert.ok(/\.dashboard-export-panel[\s\S]{0,160}max-width:\s*none/.test(css),
+  'Save As content panel fills the available main-content width');
+assert.ok(/\.dashboard-format-grid[\s\S]{0,180}grid-template-columns:\s*repeat\(auto-fit,\s*minmax\(180px,\s*1fr\)\)/.test(css),
+  'Save As format cards distribute across the available content width');
 assertNotIncludes('<div class="rb-group-label">New</div>', 'File tab no longer owns list creation');
 assertNotIncludes('<div class="rb-group-label">Existing Lists</div>', 'File tab no longer shows recent/existing lists');
 

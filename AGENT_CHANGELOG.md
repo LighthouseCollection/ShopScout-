@@ -509,3 +509,40 @@ This file is the shared record for Claude and Codex. Append an entry for every m
 - Follow-ups:
   - Add local or packaged logo assets later if external logo CDN dependencies prove unreliable.
   - Consider formal export tests for generated HTML/CSV/XML/JSON payloads if the Save As page expands further.
+
+## 2026-07-04 22:15 - Fix grid logo placeholders and Save As spacing
+
+- Agent: Codex
+- Branch: grid-rebuild-codex
+- Commit: This commit
+- Status: Implemented
+- Summary:
+  - Removed Brandfetch runtime logo candidates because the CDN fallback can render a Brandfetch placeholder/watermark instead of the target brand.
+  - Kept stable direct SVG logo candidates and text fallbacks for source and brand cells.
+  - Fixed blank logo href handling so brand logos do not become links to the current page when no brand URL exists.
+  - Removed visible underline/border styling from source and brand logo links.
+  - Tightened SlickGrid native group row bottom spacing while keeping top spacing, and made group titles bold.
+  - Adjusted product-name cell line-height/wrapping so name text is not vertically clipped.
+  - Expanded the Save As page layout so format cards use the available main-content width instead of staying capped at a narrow max width.
+- Files touched:
+  - comparison.css
+  - grid-rebuild-codex/grid.css
+  - grid-rebuild-codex/slickGridAdapter.js
+  - grid-rebuild-codex/tests/adapter.test.js
+  - grid-rebuild-codex/tests/wiring.test.js
+  - tests/menu-layout.test.js
+  - AGENT_CHANGELOG.md
+- Validation:
+  - node grid-rebuild-codex/tests/adapter.test.js -> failed before implementation, passed after implementation
+  - node grid-rebuild-codex/tests/wiring.test.js -> failed before implementation, passed after implementation
+  - node tests/menu-layout.test.js -> failed before implementation, passed after implementation
+  - npm test -> all 35 test files passed
+  - npm run syntax -> passed
+  - npm run typecheck -> passed
+  - npm run lint -> 0 errors, 42 warnings
+  - npm run build -> Chrome, Edge, Firefox built
+- Review / handoff:
+  - Reviewer: Claude
+  - Notes: Visually recheck logo fallback behavior in the loaded extension. Brandfetch is intentionally removed from runtime rendering; direct SVG provider failures now fall through to text.
+- Follow-ups:
+  - Consider packaging critical retailer/brand logos locally if external CDN reliability remains inconsistent.

@@ -87,6 +87,14 @@
   font-weight: 600;
 }
 
+.ss-grid-host .slick-cell.ss-grid-cell-title {
+  align-items: center;
+  line-height: 1.45;
+  overflow: visible;
+  overflow-wrap: anywhere;
+  text-overflow: clip;
+}
+
 .ss-grid-thumb {
   width: 58px;
   height: 58px;
@@ -120,6 +128,16 @@
   min-height: 26px;
   text-decoration: none;
   color: var(--primary, #0b3d4f);
+}
+
+a.ss-grid-logo-token,
+a.ss-grid-logo-token:hover,
+a.ss-grid-logo-token:focus,
+a.ss-grid-logo-token:active,
+a.ss-grid-logo-token:visited {
+  text-decoration: none;
+  border-bottom: 0;
+  box-shadow: none;
 }
 
 .ss-grid-logo-img {
@@ -283,8 +301,8 @@
 
 .ss-grid .slick-row.slick-group .slick-cell {
   display: flex;
-  align-items: center;
-  padding: 0 12px;
+  align-items: flex-start;
+  padding: 14px 12px 6px;
   color: var(--ink, #16202b);
   font-weight: 650;
 }
@@ -296,6 +314,7 @@
 }
 
 .ss-grid-group-title {
+  font-weight: 700;
   min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;

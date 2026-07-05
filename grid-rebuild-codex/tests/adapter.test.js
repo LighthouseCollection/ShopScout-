@@ -196,13 +196,14 @@ assert.match(sourceHtml, /public\/icons\/amazon\/default\.svg/, 'known retailers
 assert.doesNotMatch(sourceHtml, />generic</i, 'generic source text is not shown when a retailer can be inferred');
 assert.doesNotMatch(sourceHtml, /ss-grid-source-pill/, 'source is not rendered as a pill/button');
 const brandHtml = brandColumn.formatter(0, 3, 'Microsoft', brandColumn, { brand: 'Microsoft' });
-assert.match(brandHtml, /cdn\.brandfetch\.io\/domain\/microsoft\.com/, 'Microsoft uses the Brandfetch domain mapping before generic icon fallbacks');
+assert.doesNotMatch(brandHtml, /brandfetch/i, 'runtime brand logo candidates do not use Brandfetch placeholder URLs');
 assert.match(brandHtml, /cdn\.worldvectorlogo\.com\/logos\/microsoft-2\.svg/, 'Microsoft includes a rectangular wordmark fallback');
 assert.match(brandHtml, /cdn\.svglogos\.dev\/logos\/microsoft\.svg/, 'Microsoft includes the SVG Logos fallback');
 assert.match(brandHtml, /svgl\.app\/library\/microsoft\.svg/, 'Microsoft includes the SVGL catalog fallback');
 assert.match(brandHtml, /public\/icons\/microsoft\/default\.svg/, 'known brands keep theSVG CDN path as a final fallback');
 assert.match(brandHtml, /title="Microsoft"/, 'brand logo keeps the brand name as a tooltip');
 assert.match(brandHtml, /ss-grid-logo-fallback/, 'brand logo includes text fallback for missing SVGs');
+assert.doesNotMatch(brandHtml, /\shref=/, 'brand logos do not link to the current page when no brand URL exists');
 assert.equal(typeof capturedLogoErrorHandler, 'function', 'adapter registers an image-error fallback handler');
 let missingLogoFallbackShown = false;
 const fakeLogoAttributes = new Map([
