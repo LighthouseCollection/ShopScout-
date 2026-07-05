@@ -703,3 +703,32 @@ This file is the shared record for Claude and Codex. Append an entry for every m
   - Notes: This handles expected closed-tab races. If a different background stack trace appears, capture the exact function/line so the next guard can be placed at the true async boundary.
 - Follow-ups:
   - Consider converting remaining direct `chrome.scripting.executeScript` calls to a single shared safe helper in a later background cleanup pass.
+
+## 2026-07-05 00:04 - Tighten grid logo slot sizing
+
+- Agent: Codex
+- Branch: grid-rebuild-codex
+- Commit: This commit
+- Status: Implemented
+- Summary:
+  - Investigated why a logo measured as roughly `119 x 36px` despite the requested `80 x 24px` cap.
+  - Confirmed the current CSS cap is in CSS pixels; `119 x 36` is consistent with an `80 x 24` CSS slot measured in physical/screenshot pixels at roughly 150% device scaling.
+  - Tightened the grid logo slot with `box-sizing: border-box`, `min-width: 0`, and `overflow: hidden` so padding, borders, SVGs, or fallback content cannot expand beyond the slot.
+  - Changed logo image boxes to fill the normalized slot while preserving proportional SVG rendering with `object-fit: contain`.
+  - Added wiring-test assertions for the stricter slot and image sizing contract.
+- Files touched:
+  - grid-rebuild-codex/grid.css
+  - grid-rebuild-codex/tests/wiring.test.js
+  - AGENT_CHANGELOG.md
+- Validation:
+  - node grid-rebuild-codex/tests/wiring.test.js -> failed before implementation, passed after implementation
+  - npm test -> all 36 test files passed
+  - npm run syntax -> passed
+  - npm run typecheck -> passed
+  - npm run lint -> 0 errors, 42 warnings
+  - npm run build -> Chrome, Edge, Firefox built
+- Review / handoff:
+  - Reviewer: Claude
+  - Notes: The visual slot remains `80 x 24` CSS pixels. Screenshot tools may still report approximately `120 x 36` physical pixels on a 150% scaled display.
+- Follow-ups:
+  - If the desired cap is `80 x 24` physical screenshot pixels on a 150% scaled display, the CSS slot would need to be intentionally reduced to about `53 x 16` CSS pixels, which would make it too small on normal 100% CSS-pixel rendering.

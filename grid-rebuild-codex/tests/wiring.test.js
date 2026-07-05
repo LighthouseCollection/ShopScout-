@@ -53,10 +53,16 @@ assert.ok(/\.ss-grid-logo-token[\s\S]{0,360}width:\s*clamp\(56px,\s*8vw,\s*80px\
   'source and brand logos render inside a fluid slot capped at 80px wide');
 assert.ok(/\.ss-grid-logo-token[\s\S]{0,360}height:\s*24px/.test(gridCss),
   'source and brand logo slots use a consistent 24px height');
-assert.ok(/\.ss-grid-logo-img[\s\S]{0,220}max-width:\s*100%/.test(gridCss),
-  'logo SVGs scale proportionally inside the slot width');
-assert.ok(/\.ss-grid-logo-img[\s\S]{0,220}max-height:\s*24px/.test(gridCss),
-  'logo SVGs scale proportionally inside the 24px slot height');
+assert.ok(/\.ss-grid-logo-token[\s\S]{0,360}box-sizing:\s*border-box/.test(gridCss),
+  'source and brand logo slots include padding and borders inside the capped width');
+assert.ok(/\.ss-grid-logo-token[\s\S]{0,360}overflow:\s*hidden/.test(gridCss),
+  'source and brand logo slots do not let SVG or fallback content overflow the cap');
+assert.ok(/\.ss-grid-logo-img[\s\S]{0,260}width:\s*100%/.test(gridCss),
+  'logo image boxes fill the normalized slot width');
+assert.ok(/\.ss-grid-logo-img[\s\S]{0,260}height:\s*100%/.test(gridCss),
+  'logo image boxes fill the normalized slot height');
+assert.ok(/\.ss-grid-logo-img[\s\S]{0,260}object-fit:\s*contain/.test(gridCss),
+  'logo SVGs scale proportionally inside the normalized slot');
 assert.ok(/\.ss-grid-title-text[\s\S]{0,260}-webkit-line-clamp:\s*2/.test(gridCss),
   'product-name text uses a dedicated two-line title wrapper instead of being clipped by the cell');
 assert.ok(/\.ss-grid-column-list[\s\S]{0,220}grid-template-columns:\s*repeat\(auto-fit,\s*minmax\(240px,\s*1fr\)\)/.test(gridCss),
