@@ -51,10 +51,17 @@
     });
     if (o.width) dialog.style.width = o.width;
 
-    const titleEl = dom.elem('div', { class: 'ssui-modal-title', text: o.title || '' });
-    if (dialog.getAttribute('aria-labelledby')) {
-      titleEl.id = dialog.getAttribute('aria-labelledby');
-    }
+    const titleEl = dom.elem('div', { class: 'ssui-modal-title' });
+    const titleText = dom.elem('span', { class: 'ssui-modal-title-text', text: o.title || '' });
+    if (dialog.getAttribute('aria-labelledby')) titleText.id = dialog.getAttribute('aria-labelledby');
+    const closeButton = dom.elem('button', {
+      class: 'ssui-modal-close',
+      text: '×',
+      attrs: { type: 'button', 'aria-label': 'Close dialog' },
+      on: { click: () => closeWith(undefined) }
+    });
+    dom.mount(titleEl, titleText);
+    dom.mount(titleEl, closeButton);
     const bodyEl   = dom.elem('div', { class: 'ssui-modal-body' });
     const footerEl = dom.elem('div', { class: 'ssui-modal-footer' });
 

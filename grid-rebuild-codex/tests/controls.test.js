@@ -296,18 +296,41 @@ function createHarness() {
     await harness.ctx.ShopScoutGrid.render();
     harness.ctx.ShopScoutGrid.openColumnsModal();
     const body = harness.getModalConfig().body;
-    const brandCheckbox = findAll(body, node => node.tagName === 'INPUT' && node.value === 'brand')[0];
-    assert.ok(brandCheckbox, 'columns modal renders a Brand checkbox');
-    brandCheckbox.checked = false;
-    await brandCheckbox.dispatch('change');
+    const modalActions = harness.getModalConfig().actions || [];
+    assert.ok(modalActions.some(action => action.label === 'Cancel'),
+      'columns modal exposes a bottom Cancel action');
+    assert.ok(modalActions.some(action => action.label === 'Done'),
+      'columns modal exposes a bottom Done action');
+    const helpText = findAll(body, node => /Hide hides the column/.test(node.textContent || ''))[0];
+    assert.ok(helpText, 'columns modal explains Hide versus Remove');
+    const letters = findAll(body, node => String(node.className || '').includes('ss-grid-column-letter'))
+      .map(node => node.textContent);
+    assert.deepEqual(letters, [...letters].sort(),
+      'columns modal alphabet headers are sorted alphabetically');
+    assert.ok(letters.includes('B'), 'columns modal includes a B group for Brand');
+    assert.ok(letters.includes('S'), 'columns modal includes an S group for Source');
+    const brandHide = findAll(body, node => node.tagName === 'INPUT' && node.value === 'brand')[0];
+    assert.ok(brandHide, 'columns modal renders a Brand hide checkbox');
+    brandHide.checked = true;
+    await brandHide.dispatch('change');
     assert.equal(harness.ctx.ShopScoutGrid.getState().columnVisibility.brand, false,
-      'column checkbox changes are saved immediately');
+      'Hide marks the column hidden in current view state');
     assert.ok(harness.getUpdateCount() > 0,
       'column checkbox changes refresh the grid immediately');
     assert.equal(
       harness.getLatestProjection().columns.some(column => column.id === 'brand'),
       false,
       'hidden column leaves the visible projection without waiting for Apply'
+    );
+    const sourceRemove = findAll(body, node => node.tagName === 'BUTTON' && node.dataset.columnRemove === 'source')[0];
+    assert.ok(sourceRemove, 'columns modal renders a Remove action for removable fields');
+    await sourceRemove.dispatch('click');
+    assert.ok(harness.ctx.ShopScoutGrid.getState().removedColumns.includes('source'),
+      'Remove stores the field in removedColumns');
+    assert.equal(
+      harness.getLatestProjection().allColumns.some(column => column.id === 'source'),
+      false,
+      'removed columns leave the full projection model, not only the visible columns'
     );
     assert.equal(
       (harness.getModalConfig().actions || []).some(action => /apply/i.test(action.label || '')),
@@ -321,6 +344,11 @@ function createHarness() {
     await harness.ctx.ShopScoutGrid.render();
     harness.ctx.ShopScoutGrid.openFiltersModal();
     const body = harness.getModalConfig().body;
+    const modalActions = harness.getModalConfig().actions || [];
+    assert.ok(modalActions.some(action => action.label === 'Cancel'),
+      'filters modal exposes a bottom Cancel action');
+    assert.ok(modalActions.some(action => action.label === 'Done'),
+      'filters modal exposes a bottom Done action');
     const fieldSelect = findAll(body, node => node.tagName === 'SELECT')[0];
     assert.ok(fieldSelect, 'filters modal renders a field selector');
     fieldSelect.value = 'brand';

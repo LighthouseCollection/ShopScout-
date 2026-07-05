@@ -527,6 +527,7 @@
       body,
       width: 'min(760px, 94vw)',
       actions: [
+        { label: 'Cancel', value: false },
         { label: 'Done', kind: 'primary', value: true, isDefault: true }
       ]
     });
@@ -540,43 +541,111 @@
       return;
     }
     const viewState = ensureStore().getState();
-    const columns = state.lastProjection?.allColumns || state.lastProjection?.columns || [];
     const body = dom.elem('div', { class: 'ss-grid-modal-body' });
+    const help = dom.elem('div', {
+      class: 'ss-grid-column-help',
+      children: [
+        dom.elem('p', { text: 'Hide hides the column in the current view only. Metadata remains available.' }),
+        dom.elem('p', { text: 'Remove removes the metadata field from this table view, including columns, filters, grouping, and compare rows.' })
+      ]
+    });
     const search = dom.elem('input', {
       class: 'ss-grid-modal-input',
       attrs: { type: 'search', placeholder: 'Search columns' }
     });
     const list = dom.elem('div', { class: 'ss-grid-column-list' });
     const localVisibility = Object.assign({}, viewState.columnVisibility || {});
+    dom.append(body, help);
     dom.append(body, search);
     dom.append(body, list);
+
+    function availableColumns() {
+      return filterableColumns(state.lastProjection)
+        .slice()
+        .sort((a, b) => String(a.name || a.id).localeCompare(String(b.name || b.id), undefined, {
+          numeric: true,
+          sensitivity: 'base'
+        }));
+    }
+
+    function columnLetter(column) {
+      const label = String(column.name || column.id || '').trim();
+      const first = label.charAt(0).toUpperCase();
+      return /^[A-Z]$/.test(first) ? first : '#';
+    }
+
     function renderColumnList() {
       const q = search.value.trim().toLowerCase();
       dom.empty(list);
-      columns
+      const groups = new Map();
+      availableColumns()
         .filter(column => !q || String(column.name || column.id).toLowerCase().includes(q))
         .forEach(column => {
+          const letter = columnLetter(column);
+          if (!groups.has(letter)) groups.set(letter, []);
+          groups.get(letter).push(column);
+        });
+      if (!groups.size) {
+        dom.append(list, dom.elem('p', { class: 'ss-grid-modal-muted', text: 'No matching columns.' }));
+        return;
+      }
+      for (const [letter, groupColumns] of groups.entries()) {
+        const group = dom.elem('div', { class: 'ss-grid-column-group' });
+        dom.append(group, dom.elem('div', { class: 'ss-grid-column-letter', text: letter }));
+        groupColumns.forEach(column => {
           const field = column.id;
           const required = !!column.required;
-          const checked = required || localVisibility[field] !== false;
-          const input = dom.elem('input', {
+          const hidden = !required && localVisibility[field] === false;
+          const hideInput = dom.elem('input', {
             attrs: { type: 'checkbox', value: field }
           });
-          input.checked = checked;
-          input.disabled = required;
-          input.addEventListener('change', () => {
-            localVisibility[field] = input.checked;
+          hideInput.checked = hidden;
+          hideInput.disabled = required;
+          hideInput.addEventListener('change', () => {
+            if (hideInput.checked) localVisibility[field] = false;
+            else delete localVisibility[field];
             ensureStore().dispatch({ columnVisibility: Object.assign({}, localVisibility) });
             return refreshGridData();
           });
-          dom.append(list, dom.elem('label', {
+          const remove = dom.elem('button', {
+            class: 'ss-grid-column-remove',
+            text: 'Remove',
+            attrs: { type: 'button', 'data-column-remove': field },
+            on: {
+              click() {
+                if (required) return;
+                const current = ensureStore().getState();
+                const removed = new Set(Array.isArray(current.removedColumns) ? current.removedColumns : []);
+                removed.add(field);
+                delete localVisibility[field];
+                ensureStore().dispatch({
+                  removedColumns: [...removed],
+                  columnVisibility: Object.assign({}, localVisibility),
+                  columnOrder: (current.columnOrder || []).filter(id => id !== field),
+                  pinnedColumns: (current.pinnedColumns || []).filter(id => id !== field),
+                  sort: (current.sort || []).filter(item => item.field !== field),
+                  filters: (current.filters || []).filter(item => item.field !== field),
+                  group: current.group === field ? null : current.group
+                });
+                return refreshGridData().then(renderColumnList);
+              }
+            }
+          });
+          remove.disabled = required;
+          dom.append(group, dom.elem('div', {
             class: 'ss-grid-column-option',
             children: [
-              input,
-              dom.elem('span', { text: `${column.name || column.id}${required ? ' (required)' : ''}` })
+              dom.elem('span', { class: 'ss-grid-column-name', text: `${column.name || column.id}${required ? ' (required)' : ''}` }),
+              dom.elem('label', {
+                class: 'ss-grid-column-toggle',
+                children: [hideInput, dom.elem('span', { text: 'Hide' })]
+              }),
+              remove
             ]
           }));
         });
+        dom.append(list, group);
+      }
     }
     search.addEventListener('input', renderColumnList);
     renderColumnList();
@@ -585,6 +654,7 @@
       body,
       width: 'min(760px, 94vw)',
       actions: [
+        { label: 'Cancel', value: false },
         { label: 'Done', kind: 'primary', value: true, isDefault: true }
       ]
     });

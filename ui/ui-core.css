@@ -32,10 +32,36 @@
   outline: none;
 }
 .ssui-modal-title {
-  padding: 16px 20px 8px;
+  padding: 16px 16px 8px 20px;
   font-size: 15px;
   font-weight: 700;
   letter-spacing: -0.005em;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.ssui-modal-title-text {
+  min-width: 0;
+}
+.ssui-modal-close {
+  width: 30px;
+  height: 30px;
+  display: inline-grid;
+  place-items: center;
+  flex: 0 0 auto;
+  border: 1px solid var(--rule, #d1d5db);
+  border-radius: 5px;
+  background: var(--paper, #fff);
+  color: var(--ink-3, #5a6470);
+  font: inherit;
+  font-size: 20px;
+  line-height: 1;
+  cursor: pointer;
+}
+.ssui-modal-close:hover {
+  background: var(--paper-2, #f5f5f5);
+  color: var(--ink, #0f172a);
 }
 .ssui-modal-body {
   padding: 8px 20px 16px;
@@ -49,13 +75,13 @@
   justify-content: flex-end;
   gap: 8px;
   padding: 12px 16px 16px;
-  border-top: 1px solid var(--rule-soft, #eef0f4);
+  border-top: 1px solid var(--rule, #d1d5db);
 }
 
 /* ===== Buttons inside modals ===== */
 .ssui-btn {
   padding: 7px 14px;
-  border: 1px solid var(--rule, #e5e7eb);
+  border: 1px solid var(--rule, #d1d5db);
   border-radius: 5px;
   background: var(--paper, #fff);
   color: var(--ink, #0f172a);
@@ -111,7 +137,7 @@
 .ssui-prompt-input {
   width: 100%;
   padding: 8px 10px;
-  border: 1px solid var(--rule, #e5e7eb);
+  border: 1px solid var(--rule, #d1d5db);
   border-radius: 5px;
   font: inherit;
   font-size: 13px;

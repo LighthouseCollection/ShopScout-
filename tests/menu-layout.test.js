@@ -22,7 +22,8 @@ assertIncludes('class="ribbon-pane active" data-pane="products"', 'Products ribb
 assertIncludes('data-tab="file">File</button>', 'File tab exists');
 assertIncludes('data-tab="products">Products</button>', 'Products tab exists');
 assertIncludes('data-tab="analyze">Analyze</button>', 'Analyze tab exists');
-assertIncludes('data-tab="view">View</button>', 'View tab exists');
+assertIncludes('data-tab="view">Products Table View</button>', 'Products Table View tab exists');
+assertNotIncludes('data-tab="view">View</button>', 'old View tab label is replaced');
 assertIncludes('data-tab="search">Search</button>', 'Search tab exists');
 assertIncludes('data-tab="about">About</button>', 'About tab replaces Help');
 assertNotIncludes('data-tab="home">', 'old Home/Shortcuts tab is removed');
@@ -49,8 +50,16 @@ assert.ok(/\.dashboard-format-grid[\s\S]{0,180}grid-template-columns:\s*repeat\(
   'Save As format cards distribute across the available content width');
 assert.ok(/\.dashboard-page-actions[\s\S]{0,160}justify-content:\s*flex-end/.test(css),
   'dashboard form actions align to the right side');
+assert.ok(/\.dashboard-page-actions[\s\S]{0,220}border-top:\s*1px solid var\(--rule,\s*#d1d5db\)/.test(css),
+  'dashboard page action rows have a soft top rule above form buttons');
+assert.ok(/\.dashboard-copy-picker-actions[\s\S]{0,220}border-top:\s*1px solid var\(--rule,\s*#d1d5db\)/.test(css),
+  'Save As copy/action rows have a soft top rule above buttons');
 assert.ok(/\.dashboard-secondary-action[\s\S]{0,360}background:\s*var\(--surface\)/.test(css),
   'dashboard secondary action style exists for reset/cancel-style buttons');
+assert.ok(/--rule-soft:\s*#d1d5db/.test(css),
+  'page soft border token uses #d1d5db');
+assert.ok(!/border[^;{]*#[eE]5[eE]7[eE][bB]/.test(css),
+  'container border fallbacks do not use #e5e7eb');
 assertNotIncludes('<div class="rb-group-label">New</div>', 'File tab no longer owns list creation');
 assertNotIncludes('<div class="rb-group-label">Existing Lists</div>', 'File tab no longer shows recent/existing lists');
 

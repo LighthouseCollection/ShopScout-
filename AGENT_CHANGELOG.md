@@ -580,3 +580,52 @@ This file is the shared record for Claude and Codex. Append an entry for every m
   - Notes: Recheck the Compare-mode filter field dropdown visually and confirm Settings/Save As/Feedback action buttons match the intended dashboard control styling.
 - Follow-ups:
   - Consider converting remaining embedded settings utility buttons to the same dashboard action primitives if the settings page gets a broader visual pass.
+
+## 2026-07-04 23:17 - Refine grid styling and column modal behavior
+
+- Agent: Codex
+- Branch: grid-rebuild-codex
+- Commit: This commit
+- Status: Implemented
+- Summary:
+  - Renamed the ribbon tab from `View` to `Products Table View`.
+  - Changed the grid alternating row override from `#eaeaea` to `#f5f5f5`.
+  - Updated relevant container border fallbacks from `#e5e7eb` to `#d1d5db`.
+  - Fixed long product names in the grid by adding a two-line clamped title span with the full title in the tooltip.
+  - Added themed modal close buttons and ensured grid Filters/Columns modals expose bottom Cancel and Done actions.
+  - Added soft top divider lines above dashboard/form/modal action rows.
+  - Reworked the Columns modal into an alphabetical multi-column layout with letter headers, search, Hide, and Remove controls.
+  - Added grid/view state support for removed columns so removed metadata fields leave columns, filters, grouping, sorting, pinned columns, and compare rows for the current table view.
+- Files touched:
+  - comparison.css
+  - comparison.html
+  - grid-rebuild-codex/grid.css
+  - grid-rebuild-codex/projections.js
+  - grid-rebuild-codex/shopscoutGrid.js
+  - grid-rebuild-codex/slickGridAdapter.js
+  - grid-rebuild-codex/state.js
+  - grid-rebuild-codex/tests/adapter.test.js
+  - grid-rebuild-codex/tests/controls.test.js
+  - grid-rebuild-codex/tests/wiring.test.js
+  - tests/menu-layout.test.js
+  - tests/ui-core.test.js
+  - ui/modal.js
+  - ui/ui-core.css
+  - AGENT_CHANGELOG.md
+- Validation:
+  - node grid-rebuild-codex/tests/wiring.test.js -> passed
+  - node grid-rebuild-codex/tests/adapter.test.js -> passed
+  - node grid-rebuild-codex/tests/controls.test.js -> passed
+  - node tests/menu-layout.test.js -> passed
+  - node tests/ui-core.test.js -> passed
+  - npm test -> all 35 test files passed
+  - npm run syntax -> passed
+  - npm run typecheck -> passed
+  - npm run lint -> 0 errors, 42 warnings
+  - npm run build -> Chrome, Edge, Firefox built
+  - Local browser check via temporary localhost server -> confirmed `Products Table View` label, `--rule-soft: #d1d5db`, loaded title-clamp CSS, loaded column-modal grid CSS, and loaded `#f5f5f5` odd-row override
+- Review / handoff:
+  - Reviewer: Claude
+  - Notes: The `Remove` option removes fields from the active grid/view metadata state. It does not physically delete metadata values from product records in IndexedDB because that would be destructive and should require a separate explicit confirmation flow.
+- Follow-ups:
+  - If the user wants permanent metadata deletion, add a separate destructive action with preview, confirmation, undo/export safety, and product-record migration tests.

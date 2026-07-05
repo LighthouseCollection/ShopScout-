@@ -206,6 +206,9 @@ assert.strictEqual(mix.childNodes.length, 2, 'string + node appended; null/false
      be inside it. */
   const overlay = handle.root;
   const dialog = overlay.children[0];
+  const titleContainer = dialog.children[0];
+  assert.ok(titleContainer.children.some(child => child.classList && child.classList.has('ssui-modal-close')),
+    'modal title bar includes a top-right close button');
   const bodyContainer = dialog.children[1];
   assert.strictEqual(bodyContainer.children.length, 1, 'modal body mounted exactly one child');
   assert.strictEqual(bodyContainer.children[0], bodyNode, 'modal body uses the passed Node directly');

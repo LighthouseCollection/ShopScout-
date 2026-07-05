@@ -77,6 +77,12 @@
     return titleCase(field);
   }
 
+  function removedColumnSet(viewState) {
+    return new Set((Array.isArray(viewState?.removedColumns) ? viewState.removedColumns : [])
+      .map(String)
+      .filter(Boolean));
+  }
+
   function productIdOf(product, idx) {
     return String(product?.id || product?.url || `row-${idx + 1}`);
   }
@@ -253,7 +259,9 @@
     const widths = state.columnWidths || {};
     const order = Array.isArray(state.columnOrder) ? state.columnOrder : [];
     const pinned = new Set(Array.isArray(state.pinnedColumns) ? state.pinnedColumns : []);
+    const removed = removedColumnSet(state);
     const prepared = columns
+      .filter(column => column.required || !removed.has(column.id))
       .map(column => {
         const next = Object.assign({}, column);
         if (widths[next.id] != null && Number(widths[next.id]) > 0) next.width = Number(widths[next.id]);
@@ -306,7 +314,9 @@
     const input = Array.isArray(products) ? products : [];
     const flattened = flattenProducts(input, opts);
     const rows = input.map((product, idx) => makeRow(product, flattened[idx] || product, idx));
-    const specFields = normalizeVisibleSpecFields(opts.visibleSpecKeys, rows, scope);
+    const removed = removedColumnSet(viewState);
+    const specFields = normalizeVisibleSpecFields(opts.visibleSpecKeys, rows, scope)
+      .filter(field => !removed.has(field));
     const specColumns = specFields.map(field => ({
       id: field,
       field,
@@ -316,7 +326,8 @@
       editable: true,
       specKey: field.slice(5)
     }));
-    const allColumns = BASE_COLUMNS.concat(specColumns, [ACTIONS_COLUMN]);
+    const allColumns = BASE_COLUMNS.concat(specColumns, [ACTIONS_COLUMN])
+      .filter(column => column.required || !removed.has(column.id));
     const filteredRows = applyFilters(rows, viewState.filters, scope);
     const sortedRows = applySort(filteredRows, viewState.sort);
     const grouping = viewState.group
@@ -403,14 +414,17 @@
   }
 
   function fieldsForMatrix(rowProjection, opts, scope) {
+    const removed = removedColumnSet(opts.viewState);
     if (Array.isArray(opts.fields) && opts.fields.length) {
-      return opts.fields.map(field => canonicalField(field, scope)).filter(Boolean);
+      return opts.fields.map(field => canonicalField(field, scope))
+        .filter(field => field && !removed.has(field));
     }
     const visibleSpecs = normalizeVisibleSpecFields(opts.visibleSpecKeys, rowProjection.rows, scope);
+    const withoutRemoved = fields => fields.filter(field => !removed.has(field));
     if (opts.matrixMode === 'detailed') {
-      return BASIC_MATRIX_FIELDS.concat(rowProjection.specFields);
+      return withoutRemoved(BASIC_MATRIX_FIELDS.concat(rowProjection.specFields));
     }
-    return BASIC_MATRIX_FIELDS.concat(visibleSpecs);
+    return withoutRemoved(BASIC_MATRIX_FIELDS.concat(visibleSpecs));
   }
 
   function buildComparisonMatrixProjection(products, options) {

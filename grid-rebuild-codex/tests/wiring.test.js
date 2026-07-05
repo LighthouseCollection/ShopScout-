@@ -32,10 +32,20 @@ assert.ok(html.includes('data-ss-grid-command="open-columns"'),
   'View ribbon exposes columns chooser command');
 assert.ok(gridCss.includes('.ss-grid-header-thumb') && gridCss.includes('width: 100px'),
   'compare headers reserve a 100px-wide thumbnail area');
+assert.ok(!gridCss.includes('#eaeaea'),
+  'grid overrides do not use the darker #eaeaea alternating row color');
+assert.ok(/\.ss-grid-host \.slick-row\.odd[\s\S]{0,80}background:\s*#f5f5f5/.test(gridCss),
+  'odd alternating grid rows use the requested #f5f5f5 background');
+assert.ok(!gridCss.includes('#e5e7eb'),
+  'grid border fallbacks use #d1d5db instead of #e5e7eb');
 assert.ok(/\.ss-grid-logo-token[\s\S]{0,320}text-decoration:\s*none/.test(gridCss),
   'source and brand logo tokens suppress link underlines');
-assert.ok(/\.ss-grid-host \.slick-cell\.ss-grid-cell-title[\s\S]{0,260}overflow-wrap:\s*anywhere/.test(gridCss),
-  'product-name cells allow full readable text instead of vertical clipping');
+assert.ok(/\.ss-grid-title-text[\s\S]{0,260}-webkit-line-clamp:\s*2/.test(gridCss),
+  'product-name text uses a dedicated two-line title wrapper instead of being clipped by the cell');
+assert.ok(/\.ss-grid-column-list[\s\S]{0,220}grid-template-columns:\s*repeat\(auto-fit,\s*minmax\(240px,\s*1fr\)\)/.test(gridCss),
+  'columns modal lays field groups out across multiple columns');
+assert.ok(/\.ss-grid-column-letter[\s\S]{0,180}letter-spacing:\s*0\.08em/.test(gridCss),
+  'columns modal has alphabet letter headers for grouped fields');
 assert.ok(/\.ss-grid \.slick-row\.slick-group \.slick-cell[\s\S]{0,180}padding:\s*14px 12px 6px/.test(gridCss),
   'native grouping rows keep top spacing while reducing bottom padding');
 assert.ok(/\.ss-grid-group-title[\s\S]{0,160}font-weight:\s*700/.test(gridCss),

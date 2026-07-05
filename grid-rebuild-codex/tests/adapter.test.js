@@ -248,6 +248,14 @@ assert.match(singleSpecHtml, />Bluetooth</, 'single non-sentence spec value text
 const ratingHtml = ratingColumn.formatter(0, 3, '4.7', ratingColumn, { rating: '4.7', reviewCount: '704' });
 assert.match(ratingHtml, /★★★★★/, 'ratings render a five-star display based on the numeric rating');
 assert.match(ratingHtml, />4\.7</, 'ratings still show the numeric value');
+const longTitleHtml = titleColumn.formatter(0, 1,
+  'Dremel 4300-5/40 High-Performance Rotary Tool Kit with LED Light and Flex Shaft',
+  titleColumn,
+  {});
+assert.match(longTitleHtml, /ss-grid-title-text/,
+  'product titles render through a dedicated title wrapper');
+assert.match(longTitleHtml, /title="Dremel 4300-5\/40 High-Performance Rotary Tool Kit with LED Light and Flex Shaft"/,
+  'product title wrapper keeps the full title available as a tooltip');
 const matrixBrandHtml = productHeaderColumn.formatter(0, 7, { field: 'brand', value: 'Microsoft' }, productHeaderColumn, {});
 assert.match(matrixBrandHtml, /ss-grid-brand-logo/, 'compare matrix Brand rows use the same SVG logo renderer');
 assert.match(matrixBrandHtml, /cdn\.worldvectorlogo\.com\/logos\/microsoft-2\.svg/, 'compare matrix Brand rows include rectangular logo candidates');

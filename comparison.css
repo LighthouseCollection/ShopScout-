@@ -52,7 +52,7 @@
 
 :root {
     --ink: #0f1419; --ink-2: #2a3441; --ink-3: #5a6470; --ink-4: #8b95a1;
-    --rule: #d1d5db; --rule-soft: #e5e7eb; --rule-strong: #9ca3af; --paper: #f6f7f9; --paper-2: #eaedf1; --card: #ffffff;
+    --rule: #d1d5db; --rule-soft: #d1d5db; --rule-strong: #9ca3af; --paper: #f6f7f9; --paper-2: #eaedf1; --card: #ffffff;
     --bg: var(--paper); --surface: var(--card); --surface-muted: var(--paper-2);
     --text: var(--ink); --muted: var(--ink-3); --border: var(--rule); --border-strong: var(--rule-strong);
     --primary: #0b3d4f; --primary-tint: #e6eef1; --primary-light: #e6eef1; --primary-dark: #1e2937;
@@ -203,6 +203,8 @@
     gap: 8px;
     flex-wrap: wrap;
     margin-top: 14px;
+    padding-top: 12px;
+    border-top: 1px solid var(--rule, #d1d5db);
   }
   .dashboard-primary-action,
   .dashboard-secondary-action {
@@ -261,7 +263,13 @@
   .dashboard-copy-picker-title { font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: var(--ink-3); font-weight: 600; margin-bottom: 10px; }
   .dashboard-copy-picker-options { display: flex; flex-wrap: wrap; gap: 8px 22px; margin-bottom: 14px; }
   .dashboard-copy-picker-options label { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; cursor: pointer; }
-  .dashboard-copy-picker-actions { display: flex; justify-content: flex-end; gap: 8px; }
+  .dashboard-copy-picker-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+    padding-top: 12px;
+    border-top: 1px solid var(--rule, #d1d5db);
+  }
 
   /* Card grid */
   .card-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 16px; }
@@ -399,7 +407,7 @@
   .modal textarea { resize: vertical; height: 48px; }
   .modal-row { display: flex; gap: 10px; }
   .modal-row > div { flex: 1; }
-  .modal-actions { display: flex; gap: 8px; margin-top: 16px; justify-content: flex-end; }
+  .modal-actions { display: flex; gap: 8px; margin-top: 16px; padding-top: 12px; border-top: 1px solid var(--rule, #d1d5db); justify-content: flex-end; }
   .modal-actions button { padding: 8px 18px; border: 1px solid var(--border); border-radius: var(--radius-sm); font-size: 13px; cursor: pointer; background: var(--surface); }
   .modal-actions .btn-save { background: var(--primary); color: #fff; border-color: var(--primary); }
   .modal-actions .btn-save:hover { background: #1d4ed8; }
@@ -491,7 +499,7 @@
     width: 100%; height: 100%;
     object-fit: contain; cursor: pointer;
     padding: 4px; background: #fff; box-sizing: border-box;
-    border: 1px solid var(--rule, #e5e7eb);
+    border: 1px solid var(--rule, #d1d5db);
     border-radius: 4px;
   }
   .img-gallery-item img:hover { opacity: 0.8; }
@@ -1915,6 +1923,8 @@
     gap: 8px;
     flex-wrap: wrap;
     margin-top: 12px;
+    padding-top: 12px;
+    border-top: 1px solid var(--rule, #d1d5db);
   }
   .dashboard-settings .dashboard-primary-action,
   .dashboard-settings .dashboard-secondary-action {

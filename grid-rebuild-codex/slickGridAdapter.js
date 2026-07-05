@@ -299,6 +299,12 @@
     return pillsHtml(text, column, column?.field || column?.id) || esc(text);
   }
 
+  function titleCellHtml(value) {
+    const text = textValue(value).trim();
+    if (!text) return '<span class="ss-grid-empty">-</span>';
+    return `<span class="ss-grid-title-text" title="${escAttr(text)}">${esc(text)}</span>`;
+  }
+
   function htmlForSelection(item) {
     const id = escAttr(item?.id || '');
     const checked = item?._selected ? ' checked' : '';
@@ -346,6 +352,7 @@
   }
 
   function cellFormatter(row, cell, value, column, item) {
+    if ((column.field || column.id) === 'title') return titleCellHtml(value);
     switch (column.type) {
       case 'selection': return htmlForSelection(item);
       case 'image':     return htmlForImage(value, item);
