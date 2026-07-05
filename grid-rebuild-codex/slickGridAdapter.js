@@ -51,87 +51,22 @@
   ]);
 
   const RETAILER_HOSTS = [
-    { match: 'amazon.', label: 'Amazon', icon: 'amazon', catalog: 'amazon' },
-    { match: 'walmart.', label: 'Walmart', icon: 'walmart' },
-    { match: 'target.', label: 'Target', icon: 'target' },
-    { match: 'bestbuy.', label: 'Best Buy', icon: 'bestbuy' },
-    { match: 'newegg.', label: 'Newegg', icon: 'newegg' },
-    { match: 'ebay.', label: 'eBay', icon: 'ebay', catalog: 'ebay' },
-    { match: 'alibaba.', label: 'Alibaba', icon: 'alibaba', catalog: 'alibaba' },
-    { match: 'aliexpress.', label: 'AliExpress', icon: 'aliexpress', catalog: 'aliexpress' },
-    { match: 'etsy.', label: 'Etsy', icon: 'etsy', catalog: 'etsy' },
-    { match: 'costco.', label: 'Costco', icon: 'costco' },
+    { match: 'amazon.', label: 'Amazon' },
+    { match: 'walmart.', label: 'Walmart' },
+    { match: 'target.', label: 'Target' },
+    { match: 'bestbuy.', label: 'Best Buy' },
+    { match: 'newegg.', label: 'Newegg' },
+    { match: 'ebay.', label: 'eBay' },
+    { match: 'alibaba.', label: 'Alibaba' },
+    { match: 'aliexpress.', label: 'AliExpress' },
+    { match: 'etsy.', label: 'Etsy' },
+    { match: 'costco.', label: 'Costco' },
     { match: 'homedepot.', label: 'The Home Depot' },
     { match: 'lowes.', label: "Lowe's" },
     { match: 'wayfair.', label: 'Wayfair' },
     { match: 'shein.', label: 'SHEIN' },
     { match: 'temu.', label: 'Temu' }
   ];
-
-  const BRAND_ICONS = new Map([
-    ['acer', 'acer'],
-    ['adidas', 'adidas'],
-    ['amazon', 'amazon'],
-    ['anker', 'anker'],
-    ['apple', 'apple'],
-    ['asus', 'asus'],
-    ['belkin', 'belkin'],
-    ['brother', 'brother'],
-    ['canon', 'canon'],
-    ['corsair', 'corsair'],
-    ['dell', 'dell'],
-    ['dyson', 'dyson'],
-    ['ecovacs', 'ecovacs'],
-    ['epson', 'epson'],
-    ['garmin', 'garmin'],
-    ['google', 'google'],
-    ['hp', 'hp'],
-    ['irobot', 'irobot'],
-    ['jbl', 'jbl'],
-    ['lenovo', 'lenovo'],
-    ['lg', 'lg'],
-    ['logitech', 'logitech'],
-    ['microsoft', 'microsoft'],
-    ['msi', 'msi'],
-    ['netgear', 'netgear'],
-    ['nike', 'nike'],
-    ['nintendo', 'nintendo'],
-    ['panasonic', 'panasonic'],
-    ['philips', 'philips'],
-    ['qnap', 'qnap'],
-    ['samsung', 'samsung'],
-    ['shark', 'shark'],
-    ['sony', 'sony'],
-    ['synology', 'synology'],
-    ['tp-link', 'tp-link'],
-    ['tplink', 'tp-link'],
-    ['western digital', 'western-digital'],
-    ['wd', 'western-digital']
-  ]);
-
-  const LOGO_CATALOGS = new Map([
-    ['alibaba', { thesvg: 'alibaba' }],
-    ['aliexpress', { thesvg: 'aliexpress' }],
-    ['amazon', { worldVectorLogo: 'amazon-2', svglogos: 'amazon', thesvg: 'amazon' }],
-    ['apple', { svglogos: 'apple' }],
-    ['ebay', { thesvg: 'ebay' }],
-    ['etsy', { thesvg: 'etsy' }],
-    ['google', { svglogos: 'google', thesvg: 'google' }],
-    ['ibm', { thesvg: 'ibm' }],
-    ['logitech', { worldVectorLogo: 'logitech-2', svglogos: 'logitech', thesvg: 'logitech' }],
-    ['microsoft', {
-      svglogos: 'microsoft',
-      svgl: 'microsoft',
-      worldVectorLogo: 'microsoft-2',
-      thesvg: 'microsoft'
-    }],
-    ['newegg', { thesvg: 'newegg' }],
-    ['openai', { thesvg: 'openai' }],
-    ['samsung', { svglogos: 'samsung', thesvg: 'samsung' }],
-    ['shopify', { thesvg: 'shopify' }],
-    ['stripe', { thesvg: 'stripe' }]
-  ]);
-  const LOCAL_LOGO_CACHE_VERSION = '2026-07-05a';
 
   const PROSE_FIELDS = new Set([
     'title',
@@ -177,64 +112,17 @@
     const label = retailer?.label || usefulSourceLabel(value || item?.source) || 'Source';
     return {
       label,
-      url,
-      icon: retailer?.icon || '',
-      catalog: retailer?.catalog || retailer?.icon || ''
+      url
     };
   }
 
-  function logoKey(value) {
-    return textValue(value).trim().toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
-  }
-
-  function localLogoUrl(key) {
-    const slug = logoKey(key);
-    return slug ? `logos/${slug}.svg?v=${LOCAL_LOGO_CACHE_VERSION}` : '';
-  }
-
-  function thesvgUrl(icon) {
-    return icon ? `https://cdn.jsdelivr.net/gh/glincker/thesvg@main/public/icons/${icon}/default.svg` : '';
-  }
-
-  function logoCandidateUrls(icon, catalogKey) {
-    const key = textValue(catalogKey || icon).trim().toLowerCase();
-    const meta = LOGO_CATALOGS.get(key) || LOGO_CATALOGS.get(icon) || {};
-    const localKey = meta.local || key || icon;
-    const svgIcon = meta.thesvg || icon;
-    const urls = [
-      localLogoUrl(localKey),
-      meta.worldVectorLogo ? `https://cdn.worldvectorlogo.com/logos/${encodeURIComponent(meta.worldVectorLogo)}.svg` : '',
-      meta.svglogos ? `https://cdn.svglogos.dev/logos/${encodeURIComponent(meta.svglogos)}.svg` : '',
-      meta.svgl ? `https://svgl.app/library/${encodeURIComponent(meta.svgl)}.svg` : '',
-      thesvgUrl(svgIcon)
-    ].filter(Boolean);
-    return [...new Set(urls)];
-  }
-
-  function logoTokenHtml(label, icon, href, className, catalogKey) {
+  function logoTokenHtml(label, href, className) {
     const text = textValue(label).trim();
     const safeHref = safeUrl(href);
     if (!text) return '<span class="ss-grid-empty">-</span>';
-    const logos = logoCandidateUrls(icon, catalogKey);
-    const logo = logos[0] || '';
-    const fallbacks = logos.slice(1);
-    const fallbackAttr = fallbacks.length ? ` data-logo-fallback-srcs="${escAttr(fallbacks.join('|'))}"` : '';
-    const sourceAttr = icon ? ` data-logo-key="${escAttr(catalogKey || icon)}"` : '';
-    const body = logo
-      ? `<img class="ss-grid-logo-img" src="${escAttr(logo)}" alt="${escAttr(text)}" loading="lazy"${fallbackAttr}${sourceAttr}>`
-        + `<span class="ss-grid-logo-fallback">${esc(text)}</span>`
-      : `<span class="ss-grid-logo-fallback is-visible">${esc(text)}</span>`;
     const attrs = `class="ss-grid-logo-token ${escAttr(className || '')}" title="${escAttr(text)}" aria-label="${escAttr(text)}"`;
-    if (safeHref) return `<a ${attrs} href="${escAttr(safeHref)}" target="_blank" rel="noopener noreferrer">${body}</a>`;
-    return `<span ${attrs}>${body}</span>`;
-  }
-
-  function normalizedName(value) {
-    return textValue(value).trim().toLowerCase().replace(/[^a-z0-9]+/g, ' ').replace(/\s+/g, ' ').trim();
-  }
-
-  function brandIcon(value) {
-    return BRAND_ICONS.get(normalizedName(value)) || '';
+    if (safeHref) return `<a ${attrs} href="${escAttr(safeHref)}" target="_blank" rel="noopener noreferrer">${esc(text)}</a>`;
+    return `<span ${attrs}>${esc(text)}</span>`;
   }
 
   function htmlForImage(value, item) {
@@ -246,13 +134,12 @@
 
   function htmlForSource(value, item) {
     const info = sourceInfo(value, item);
-    return logoTokenHtml(info.label, info.icon, info.url, 'ss-grid-source-logo', info.catalog);
+    return logoTokenHtml(info.label, info.url, 'ss-grid-source-logo');
   }
 
   function htmlForBrand(value) {
     const label = textValue(value).trim();
-    const icon = brandIcon(label);
-    return logoTokenHtml(label, icon, '', 'ss-grid-brand-logo', icon);
+    return logoTokenHtml(label, '', 'ss-grid-brand-logo');
   }
 
   function htmlForRating(value, item) {
@@ -617,26 +504,6 @@
     const grid = new Slick.Grid(container, dataView, columns, gridOptions);
     if (container?.classList) container.classList.toggle('ss-grid-is-matrix', projection?.mode === 'comparisonMatrix');
 
-    function handleLogoError(event) {
-      const img = event?.target;
-      if (!img?.classList?.contains?.('ss-grid-logo-img')) return;
-      const remaining = String(img.getAttribute?.('data-logo-fallback-srcs') || '')
-        .split('|')
-        .map(value => value.trim())
-        .filter(Boolean);
-      const next = remaining.shift();
-      if (next) {
-        img.setAttribute?.('data-logo-fallback-srcs', remaining.join('|'));
-        img.src = next;
-        return;
-      }
-      const parent = img.closest?.('.ss-grid-logo-token');
-      if (parent?.classList) parent.classList.add('is-logo-missing');
-    }
-    if (typeof container?.addEventListener === 'function') {
-      container.addEventListener('error', handleLogoError, true);
-    }
-
     if (Slick.RowSelectionModel) {
       grid.setSelectionModel(new Slick.RowSelectionModel({ selectActiveRow: false }));
     }
@@ -749,9 +616,6 @@
         setTimeout(() => node.classList.remove('ss-grid-cell-conflict'), 1800);
       },
       destroy() {
-        if (typeof container?.removeEventListener === 'function') {
-          container.removeEventListener('error', handleLogoError, true);
-        }
         if (grid && typeof grid.destroy === 'function') grid.destroy();
         if (dataView && typeof dataView.destroy === 'function') dataView.destroy();
       }

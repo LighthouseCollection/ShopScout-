@@ -775,3 +775,48 @@ This file is the shared record for Claude and Codex. Append an entry for every m
   - Notes: The displayed CSS logo slot remains capped at `80 x 24` CSS pixels. The packaged SVG files now also declare `80 x 24` intrinsic dimensions to avoid asset-level measurements reporting oversized source dimensions.
 - Follow-ups:
   - None for this slice.
+
+## 2026-07-05 00:56 - Remove logo images and simplify settings panels
+
+- Agent: Codex
+- Branch: grid-rebuild-codex
+- Commit: This commit
+- Status: Implemented
+- Summary:
+  - Removed all cached SVG logo image files from `logos/` and updated the logo README to document that logo images are disabled.
+  - Removed grid source/brand logo image rendering, remote logo fallbacks, image error fallback handling, and logo-image CSS.
+  - Source and brand cells now render readable text tokens only, eliminating the remaining logo image sizing issue.
+  - Reworked embedded settings into a two-column layout: left menu plus one main content panel.
+  - Left-menu items now open the matching main panel instead of duplicating content on the right.
+  - Removed the right settings pane, inline setup guide panel, old setup-guide iframe, and random floating `Saved` label.
+  - Restored setup guide access as a `Setup Guide` button that opens the selected provider instructions in a themed modal.
+- Files touched:
+  - logos/amazon.svg
+  - logos/logitech.svg
+  - logos/microsoft.svg
+  - logos/newegg.svg
+  - logos/README.md
+  - grid-rebuild-codex/slickGridAdapter.js
+  - grid-rebuild-codex/grid.css
+  - grid-rebuild-codex/tests/adapter.test.js
+  - grid-rebuild-codex/tests/wiring.test.js
+  - settings.js
+  - settings.html
+  - settings.css
+  - comparison.css
+  - tests/menu-layout.test.js
+  - AGENT_CHANGELOG.md
+- Validation:
+  - node grid-rebuild-codex/tests/adapter.test.js -> failed before implementation, passed after implementation
+  - node grid-rebuild-codex/tests/wiring.test.js -> failed before implementation, passed after implementation
+  - node tests/menu-layout.test.js -> failed before implementation, passed after implementation
+  - npm test -> all 36 test files passed
+  - npm run syntax -> passed
+  - npm run typecheck -> passed
+  - npm run lint -> 0 errors, 42 warnings
+  - npm run build -> Chrome, Edge, Firefox built
+- Review / handoff:
+  - Reviewer: Claude
+  - Notes: The logo-image feature is intentionally removed, not resized. Reintroducing logos should be a separate explicit feature with a stricter asset pipeline and visual QA.
+- Follow-ups:
+  - None for this slice.

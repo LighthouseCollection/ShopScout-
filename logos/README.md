@@ -1,13 +1,14 @@
 # ShopScout Logo Cache
 
-This folder stores curated SVG logo assets used by the product grid for `Brand` and `Source` cells.
+This folder is reserved for future curated SVG logo assets.
 
-Runtime behavior:
+Current runtime behavior:
 
-- ShopScout renders packaged files from this folder first, for example `logos/amazon.svg`.
-- If a packaged logo is missing or fails to load, the grid falls back to provider URLs from the adapter.
-- If all SVG candidates fail, the readable brand or source text is shown instead.
-- Files in this folder are kept and reused so the extension does not have to search for the same logo every time.
+- ShopScout does **not** render logo images in the product grid.
+- `Brand` and `Source` cells render readable text tokens only.
+- The previous cached SVG files were removed because asset-level SVG sizing kept producing inconsistent measured dimensions.
+
+Do not add logo files back unless the grid logo-image feature is explicitly restored.
 
 Preferred provider order for new assets:
 
@@ -29,7 +30,4 @@ Logo files may represent third-party trademarks. Before adding new production as
 
 Current packaged assets:
 
-- `amazon.svg` — retrieved from theSVG CDN after rectangular CDN candidates were unavailable.
-- `microsoft.svg` — retrieved from WorldVectorLogo CDN.
-- `logitech.svg` — retrieved from WorldVectorLogo CDN.
-- `newegg.svg` — retrieved from theSVG CDN after rectangular CDN candidates were unavailable.
+- None.

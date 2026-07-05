@@ -1791,7 +1791,7 @@
   }
   .dashboard-settings-layout {
     display: grid;
-    grid-template-columns: 280px minmax(420px, 1fr) 360px;
+    grid-template-columns: 280px minmax(520px, 1fr);
     gap: 14px;
     padding: 14px;
     background: var(--paper);
@@ -1805,8 +1805,8 @@
     box-shadow: var(--shadow-sm);
   }
   .dashboard-settings-left,
-  .dashboard-settings-providers,
-  .dashboard-settings-side {
+  .dashboard-settings-main,
+  .dashboard-settings-panel {
     display: flex;
     flex-direction: column;
     gap: 10px;
@@ -1823,7 +1823,9 @@
     text-decoration: none;
   }
   .dashboard-settings-nav a:hover,
-  .dashboard-settings-nav a:focus {
+  .dashboard-settings-nav a:focus,
+  .dashboard-settings-nav a.active,
+  .dashboard-settings-nav a[aria-current="page"] {
     border-color: var(--rule);
     background: var(--paper-2);
     outline: 0;
@@ -1843,9 +1845,7 @@
     font-size: 12px;
     line-height: 1.35;
   }
-  .dashboard-settings-side {
-    min-width: 0;
-  }
+  .dashboard-settings-panel[hidden] { display: none !important; }
   .dashboard-settings-section-head {
     margin-bottom: 10px;
   }
@@ -2052,16 +2052,10 @@
     .dashboard-settings-layout {
       grid-template-columns: 260px minmax(0, 1fr);
     }
-    .dashboard-settings-side {
-      grid-column: 1 / -1;
-      display: grid;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-    }
   }
   @media (max-width: 820px) {
     .dashboard-settings-layout,
-    .dashboard-settings-two-col,
-    .dashboard-settings-side {
+    .dashboard-settings-two-col {
       grid-template-columns: 1fr;
     }
   }

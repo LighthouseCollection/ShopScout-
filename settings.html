@@ -18,38 +18,31 @@
     <div class="spacer"></div>
     <button id="openDashboard">Open Dashboard</button>
   </div>
-  <!-- Floating "Saved" pill — fades in for ~1.5s each time a setting is
-       persisted. Auto-save means no explicit Save button, but the user
-       gets visible confirmation. -->
-  <div id="savedPill" class="saved-pill" role="status" aria-live="polite">Saved</div>
-
   <div class="layout">
     <aside class="providers">
-      <nav class="settings-nav" aria-label="Settings sections">
-        <a href="#aiProvidersCard" data-settings-nav="ai-providers">
+      <nav class="settings-nav dashboard-settings-nav" aria-label="Settings sections">
+        <a href="#aiProvidersCard" data-settings-nav="ai-providers" aria-current="page">
           <strong>AI Providers</strong>
           <span>Enable one or more providers and choose the model ShopScout should use.</span>
         </a>
         <a href="#captureButtonCard" data-settings-nav="quick-capture">
           <strong>Quick Capture Button</strong>
+          <span>Show or hide the one-click capture button on product pages.</span>
         </a>
         <a href="#openFactsCard" data-settings-nav="open-facts">
           <strong>Open*Facts Enrichment</strong>
+          <span>Use GTIN/UPC/EAN enrichment from open product databases.</span>
         </a>
       </nav>
-      <section id="aiProvidersCard">
-        <h2>AI Providers</h2>
-      </section>
-      <div id="providerList"></div>
-      <div class="role-panel">
-        <h2>Pipeline Roles</h2>
-        <div id="roleRows"></div>
-      </div>
     </aside>
 
-    <main class="panel">
-      <h2>Selected AI Setup</h2>
-      <section class="setup-card">
+    <main class="panel dashboard-settings-main">
+      <section class="settings-panel" id="aiProvidersCard" data-settings-panel="ai-providers">
+        <h2>AI Providers</h2>
+        <div id="providerList"></div>
+
+        <h2>Selected AI Setup</h2>
+        <section class="setup-card">
         <div class="setup-head">
           <div>
             <h3 id="providerTitle">Provider</h3>
@@ -107,6 +100,7 @@
         <div class="actions">
           <button class="btn primary" id="saveProvider">Save Provider</button>
           <button class="btn success" id="testProvider">Test Connection</button>
+          <button class="btn" id="setupGuideBtn" type="button">Setup Guide</button>
           <button class="btn" id="openKeyPage">Open Key Page</button>
           <button class="btn" id="openDocs">Docs</button>
           <button class="btn" id="resetTokenUsage">Reset Usage</button>
@@ -116,6 +110,13 @@
         <div class="security-note">
           API keys are stored in browser extension storage on this machine. Browser storage is convenient, not a password vault. Remove keys anytime from this screen.
         </div>
+        </section>
+
+        <section class="setup-card role-panel">
+          <h2>Pipeline Roles</h2>
+          <p class="setup-help">Choose which provider handles each stage. Auto uses your enabled providers.</p>
+          <div id="roleRows"></div>
+        </section>
       </section>
 
       <!-- =============================================================
@@ -123,8 +124,8 @@
            Shows an orange "+" button on the lower-right of any detected
            product page. One click adds the product to the active list.
            ============================================================= -->
-      <h2>Quick Capture Button</h2>
-      <section class="setup-card" id="captureButtonCard">
+      <section class="settings-panel setup-card" id="captureButtonCard" data-settings-panel="quick-capture" hidden>
+        <h2>Quick Capture Button</h2>
         <p class="setup-help">
           Shows a small orange button in the lower-right corner whenever
           ShopScout detects a product page. One click adds the product to
@@ -153,8 +154,8 @@
            data (ingredients, nutrition, allergens, etc.) and merges any
            missing fields into the captured product.
            ============================================================= -->
-      <h2>Open*Facts Enrichment</h2>
-      <section class="setup-card" id="openFactsCard">
+      <section class="settings-panel setup-card" id="openFactsCard" data-settings-panel="open-facts" hidden>
+        <h2>Open*Facts Enrichment</h2>
         <p class="setup-help">
           Optional. When a product page has a GTIN/UPC/EAN, ShopScout can ask the
           open Open*Facts databases for richer structured data and merge missing
@@ -174,14 +175,6 @@
         </fieldset>
       </section>
     </main>
-
-    <aside class="guide">
-      <h2>Side-by-side Setup Guide</h2>
-      <div class="guide-actions">
-        <button class="btn" id="refreshGuide">Refresh Guide</button>
-      </div>
-      <iframe class="guide-frame" id="guideFrame" src="ai-provider-guide.html?provider=openai"></iframe>
-    </aside>
   </div>
 
   <!-- UI core — themed confirm/toast for settings.js. -->

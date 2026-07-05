@@ -51,20 +51,10 @@ assert.ok(/\.ss-grid-host \.slick-cell\.ss-grid-cell-title[\s\S]{0,220}text-alig
   'product-name cells keep product names left aligned');
 assert.ok(/\.ss-grid-logo-token[\s\S]{0,320}text-decoration:\s*none/.test(gridCss),
   'source and brand logo tokens suppress link underlines');
-assert.ok(/\.ss-grid-logo-token[\s\S]{0,360}width:\s*clamp\(56px,\s*8vw,\s*80px\)/.test(gridCss),
-  'source and brand logos render inside a fluid slot capped at 80px wide');
-assert.ok(/\.ss-grid-logo-token[\s\S]{0,360}height:\s*24px/.test(gridCss),
-  'source and brand logo slots use a consistent 24px height');
-assert.ok(/\.ss-grid-logo-token[\s\S]{0,360}box-sizing:\s*border-box/.test(gridCss),
-  'source and brand logo slots include padding and borders inside the capped width');
-assert.ok(/\.ss-grid-logo-token[\s\S]{0,360}overflow:\s*hidden/.test(gridCss),
-  'source and brand logo slots do not let SVG or fallback content overflow the cap');
-assert.ok(/\.ss-grid-logo-img[\s\S]{0,260}width:\s*100%/.test(gridCss),
-  'logo image boxes fill the normalized slot width');
-assert.ok(/\.ss-grid-logo-img[\s\S]{0,260}height:\s*100%/.test(gridCss),
-  'logo image boxes fill the normalized slot height');
-assert.ok(/\.ss-grid-logo-img[\s\S]{0,260}object-fit:\s*contain/.test(gridCss),
-  'logo SVGs scale proportionally inside the normalized slot');
+assert.ok(/\.ss-grid-logo-token[\s\S]{0,360}max-width:\s*80px/.test(gridCss),
+  'source and brand text tokens are capped without image sizing');
+assert.ok(!gridCss.includes('.ss-grid-logo-img'),
+  'grid CSS does not define logo image rules');
 assert.ok(/\.ss-grid-title-text[\s\S]{0,260}-webkit-line-clamp:\s*2/.test(gridCss),
   'product-name text uses a dedicated two-line title wrapper instead of being clipped by the cell');
 assert.ok(/\.ss-grid-column-list[\s\S]{0,220}grid-template-columns:\s*repeat\(auto-fit,\s*minmax\(240px,\s*1fr\)\)/.test(gridCss),
@@ -77,10 +67,7 @@ assert.ok(/\.ss-grid-group-title[\s\S]{0,160}font-weight:\s*700/.test(gridCss),
   'native grouping titles are bold');
 
 for (const logoName of ['amazon.svg', 'logitech.svg', 'microsoft.svg', 'newegg.svg']) {
-  const logo = fs.readFileSync(path.join(root, 'logos', logoName), 'utf8');
-  assert.ok(/<svg\b[^>]*\bwidth="80"/.test(logo), `${logoName} has an 80px intrinsic width`);
-  assert.ok(/<svg\b[^>]*\bheight="24"/.test(logo), `${logoName} has a 24px intrinsic height`);
-  assert.ok(/<svg\b[^>]*\bviewBox=/.test(logo), `${logoName} keeps a viewBox for proportional scaling`);
+  assert.ok(!fs.existsSync(path.join(root, 'logos', logoName)), `${logoName} is removed from the local logo cache`);
 }
 
 const cssIndex = indexOfRequired('vendor/slickgrid/slick.grid.css', 'SlickGrid core CSS');
@@ -118,12 +105,10 @@ assert.ok(gridIndex < comparisonIndex, 'ShopScoutGrid is registered before compa
 assert.ok(buildScript.includes("'grid-rebuild-codex'"),
   'extension build copies the Codex grid directory into browser dists');
 assert.ok(buildScript.includes("'logos'"),
-  'extension build copies packaged local logos into browser dists');
+  'extension build copies the reserved logos directory into browser dists');
 assert.ok(fs.existsSync(path.join(root, 'logos', 'README.md')),
-  'logos directory documents provider and reuse policy');
-assert.ok(fs.existsSync(path.join(root, 'logos', 'amazon.svg')),
-  'Amazon logo is packaged locally for source cells');
-assert.ok(fs.existsSync(path.join(root, 'logos', 'microsoft.svg')),
-  'Microsoft logo is packaged locally for brand and compare cells');
+  'logos directory documents that image cache is disabled');
+assert.ok(!fs.readdirSync(path.join(root, 'logos')).some(name => name.toLowerCase().endsWith('.svg')),
+  'logos directory has no cached SVG image files');
 
 console.log('grid-codex-wiring.test.js: all assertions passed');
