@@ -395,6 +395,8 @@
       sources: sourceList(entry),
       missing: value == null || value === '',
       productId: productRow?.id || '',
+      url: productRow?.url || product?.url || '',
+      source: productRow?.source || product?.source || '',
       revision: productRow?._shopScout?.revision || 0,
       field
     };

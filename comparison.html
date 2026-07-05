@@ -72,13 +72,6 @@
             <span class="rb-icon-lg"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M7 10l5 5 5-5"/><path d="M12 15V3"/></svg></span>
             <span class="rb-btn-lg-label">Save As</span>
           </button>
-          <div class="rb-save-grid">
-            <button class="rb-btn-sm" data-export-format="pdf"><span class="rb-btn-sm-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg></span><span class="rb-btn-sm-label">PDF</span></button>
-            <button class="rb-btn-sm" data-export-format="html"><span class="rb-btn-sm-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg></span><span class="rb-btn-sm-label">HTML</span></button>
-            <button class="rb-btn-sm" data-export-format="csv"><span class="rb-btn-sm-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M8 13h8M8 17h6"/></svg></span><span class="rb-btn-sm-label">CSV</span></button>
-            <button class="rb-btn-sm" data-export-format="json"><span class="rb-btn-sm-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg></span><span class="rb-btn-sm-label">JSON</span></button>
-            <button class="rb-btn-sm" data-export-format="xml"><span class="rb-btn-sm-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="m9 15 2 2 4-5"/></svg></span><span class="rb-btn-sm-label">XML</span></button>
-          </div>
         </div>
         <div class="rb-group-label">Save</div>
       </div>
@@ -554,9 +547,9 @@
         <button class="exi-tile" id="exportXml"><span class="exi-icon">&lt;/&gt;</span><span class="exi-label">XML</span><span class="exi-desc">Structured data for integrations and APIs</span></button>
         <button class="exi-tile" id="exportHtml"><span class="exi-icon">&#9782;</span><span class="exi-label">HTML</span><span class="exi-desc">Interactive report with images, sorting &amp; filtering</span></button>
         <button class="exi-tile" id="exportPdf"><span class="exi-icon">&#9112;</span><span class="exi-label">PDF</span><span class="exi-desc">Static document — print or share as-is</span></button>
-        <button class="exi-tile" id="exportCopy"><span class="exi-icon">&#9112;&#x2398;</span><span class="exi-label">Copy</span><span class="exi-desc">Plain text to clipboard — no AI prompt wrapper</span></button>
+        <button class="exi-tile" id="exportCopy"><span class="exi-icon">&#9112;&#x2398;</span><span class="exi-label">Copy</span><span class="exi-desc">Copy selected product fields</span></button>
       </div>
-      <!-- Inline picker for the Copy tile. Shown after the user clicks Copy.
+      <!-- Legacy inline picker for the older modal path. Shown after the user clicks Copy.
            Lets the user choose which fields to include before the clipboard
            write. Defaults match the user's stated minimum: Name + URL. -->
       <div id="exiCopyPicker" class="exi-copy-picker" hidden>

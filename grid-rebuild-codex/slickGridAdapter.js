@@ -50,15 +50,15 @@
   ]);
 
   const RETAILER_HOSTS = [
-    { match: 'amazon.', label: 'Amazon', icon: 'amazon' },
+    { match: 'amazon.', label: 'Amazon', icon: 'amazon', catalog: 'amazon' },
     { match: 'walmart.', label: 'Walmart', icon: 'walmart' },
     { match: 'target.', label: 'Target', icon: 'target' },
     { match: 'bestbuy.', label: 'Best Buy', icon: 'bestbuy' },
     { match: 'newegg.', label: 'Newegg', icon: 'newegg' },
-    { match: 'ebay.', label: 'eBay', icon: 'ebay' },
-    { match: 'alibaba.', label: 'Alibaba', icon: 'alibaba' },
-    { match: 'aliexpress.', label: 'AliExpress', icon: 'aliexpress' },
-    { match: 'etsy.', label: 'Etsy', icon: 'etsy' },
+    { match: 'ebay.', label: 'eBay', icon: 'ebay', catalog: 'ebay' },
+    { match: 'alibaba.', label: 'Alibaba', icon: 'alibaba', catalog: 'alibaba' },
+    { match: 'aliexpress.', label: 'AliExpress', icon: 'aliexpress', catalog: 'aliexpress' },
+    { match: 'etsy.', label: 'Etsy', icon: 'etsy', catalog: 'etsy' },
     { match: 'costco.', label: 'Costco', icon: 'costco' },
     { match: 'homedepot.', label: 'The Home Depot' },
     { match: 'lowes.', label: "Lowe's" },
@@ -108,6 +108,30 @@
     ['wd', 'western-digital']
   ]);
 
+  const LOGO_CATALOGS = new Map([
+    ['alibaba', { brandbirdName: 'Alibaba', brandfetchDomain: 'alibaba.com' }],
+    ['aliexpress', { brandbirdName: 'AliExpress', brandfetchDomain: 'aliexpress.com' }],
+    ['amazon', { brandbirdName: 'Amazon', brandfetchDomain: 'amazon.com' }],
+    ['apple', { brandfetchDomain: 'apple.com', svglogos: 'apple' }],
+    ['ebay', { brandbirdName: 'eBay', brandfetchDomain: 'ebay.com' }],
+    ['etsy', { brandbirdName: 'Etsy', brandfetchDomain: 'etsy.com' }],
+    ['google', { brandbirdName: 'Google', brandfetchDomain: 'google.com' }],
+    ['ibm', { brandbirdName: 'IBM', brandfetchDomain: 'ibm.com' }],
+    ['microsoft', {
+      brandfetchDomain: 'microsoft.com',
+      brandfetchAsset: 'idu208UKm2',
+      svglogos: 'microsoft',
+      svgl: 'microsoft',
+      worldVectorLogo: 'microsoft-2'
+    }],
+    ['openai', { brandbirdName: 'OpenAI', brandfetchDomain: 'openai.com' }],
+    ['samsung', { brandfetchDomain: 'samsung.com', svglogos: 'samsung' }],
+    ['shopify', { brandbirdName: 'Shopify', brandfetchDomain: 'shopify.com' }],
+    ['stripe', { brandbirdName: 'Stripe', brandfetchDomain: 'stripe.com' }]
+  ]);
+
+  const BRANDFETCH_PUBLIC_CLIENT_ID = '1bfwsmEH20zzEfSNTed';
+
   const PROSE_FIELDS = new Set([
     'title',
     'productName',
@@ -153,22 +177,58 @@
     return {
       label,
       url,
-      icon: retailer?.icon || ''
+      icon: retailer?.icon || '',
+      catalog: retailer?.catalog || retailer?.icon || ''
     };
   }
 
-  function logoUrl(icon) {
-    if (!icon) return '';
-    return `https://cdn.jsdelivr.net/gh/glincker/thesvg@main/public/icons/${icon}/default.svg`;
+  function brandbirdUrl(name, kind) {
+    const text = textValue(name).trim();
+    if (!text) return '';
+    const folder = kind === 'logomark' ? 'Logomark' : 'Logotypes';
+    const suffix = kind === 'logomark' ? 'Logomark' : 'Logotype';
+    return `https://storage.googleapis.com/brandbird/assets/company-logos/${folder}/${encodeURIComponent(`${text} ${suffix}.svg`)}`;
   }
 
-  function logoTokenHtml(label, icon, href, className) {
+  function brandfetchUrl(domain, variant) {
+    const text = textValue(domain).trim().toLowerCase();
+    if (!text) return '';
+    const clientId = root.ShopScoutLogoConfig?.brandfetchClientId || BRANDFETCH_PUBLIC_CLIENT_ID;
+    const type = variant === 'icon' ? 'icon' : 'logo';
+    const size = type === 'logo' ? '/h/128/w/512' : '/h/128/w/128';
+    return `https://cdn.brandfetch.io/domain/${encodeURIComponent(text)}/fallback/lettermark/theme/light${size}/${type}?c=${encodeURIComponent(clientId)}`;
+  }
+
+  function thesvgUrl(icon) {
+    return icon ? `https://cdn.jsdelivr.net/gh/glincker/thesvg@main/public/icons/${icon}/default.svg` : '';
+  }
+
+  function logoCandidateUrls(icon, catalogKey) {
+    const key = textValue(catalogKey || icon).trim().toLowerCase();
+    const meta = LOGO_CATALOGS.get(key) || LOGO_CATALOGS.get(icon) || {};
+    const urls = [
+      brandbirdUrl(meta.brandbirdName, 'logotype'),
+      brandfetchUrl(meta.brandfetchDomain, 'logo'),
+      meta.worldVectorLogo ? `https://cdn.worldvectorlogo.com/logos/${encodeURIComponent(meta.worldVectorLogo)}.svg` : '',
+      meta.svglogos ? `https://cdn.svglogos.dev/logos/${encodeURIComponent(meta.svglogos)}.svg` : '',
+      meta.svgl ? `https://svgl.app/library/${encodeURIComponent(meta.svgl)}.svg` : '',
+      brandbirdUrl(meta.brandbirdName, 'logomark'),
+      thesvgUrl(icon)
+    ].filter(Boolean);
+    return [...new Set(urls)];
+  }
+
+  function logoTokenHtml(label, icon, href, className, catalogKey) {
     const text = textValue(label).trim();
     const safeHref = safeUrl(href);
     if (!text) return '<span class="ss-grid-empty">-</span>';
-    const logo = logoUrl(icon);
+    const logos = logoCandidateUrls(icon, catalogKey);
+    const logo = logos[0] || '';
+    const fallbacks = logos.slice(1);
+    const fallbackAttr = fallbacks.length ? ` data-logo-fallback-srcs="${escAttr(fallbacks.join('|'))}"` : '';
+    const sourceAttr = icon ? ` data-logo-key="${escAttr(catalogKey || icon)}"` : '';
     const body = logo
-      ? `<img class="ss-grid-logo-img" src="${escAttr(logo)}" alt="${escAttr(text)}" loading="lazy">`
+      ? `<img class="ss-grid-logo-img" src="${escAttr(logo)}" alt="${escAttr(text)}" loading="lazy"${fallbackAttr}${sourceAttr}>`
         + `<span class="ss-grid-logo-fallback">${esc(text)}</span>`
       : `<span class="ss-grid-logo-fallback is-visible">${esc(text)}</span>`;
     const attrs = `class="ss-grid-logo-token ${escAttr(className || '')}" title="${escAttr(text)}" aria-label="${escAttr(text)}"`;
@@ -193,12 +253,13 @@
 
   function htmlForSource(value, item) {
     const info = sourceInfo(value, item);
-    return logoTokenHtml(info.label, info.icon, info.url, 'ss-grid-source-logo');
+    return logoTokenHtml(info.label, info.icon, info.url, 'ss-grid-source-logo', info.catalog);
   }
 
   function htmlForBrand(value) {
     const label = textValue(value).trim();
-    return logoTokenHtml(label, brandIcon(label), '', 'ss-grid-brand-logo');
+    const icon = brandIcon(label);
+    return logoTokenHtml(label, icon, '', 'ss-grid-brand-logo', icon);
   }
 
   function htmlForRating(value, item) {
@@ -223,12 +284,25 @@
     return ['spec', 'text', 'matrixCell'].includes(column?.type || 'text');
   }
 
+  function sentenceLike(value) {
+    const text = textValue(value).trim();
+    if (!text) return true;
+    if (text.length > 90) return true;
+    if (/[.!?]\s*$/.test(text)) return true;
+    if (/[.!?]\s+\w/.test(text)) return true;
+    if (/[,;:]\s+(and|or|but|because|with|for|to|from|that|which|when)\b/i.test(text)) return true;
+    return false;
+  }
+
   function pillsHtml(value, column, field) {
     if (!shouldRenderPills(column, field)) return '';
+    const text = textValue(value).trim();
+    if (!text || sentenceLike(text)) return '';
     const splitter = root.ShopScoutValues?.splitToPills;
-    if (typeof splitter !== 'function') return '';
-    const parts = splitter(value);
-    if (!Array.isArray(parts) || parts.length < 2) return '';
+    const splitParts = typeof splitter === 'function' ? splitter(text) : null;
+    const parts = Array.isArray(splitParts) && splitParts.length
+      ? splitParts
+      : [text];
     return `<span class="ss-grid-pill-list">${parts.map(part => `<span class="ss-grid-value-pill">${esc(part)}</span>`).join('')}</span>`;
   }
 
@@ -255,12 +329,15 @@
   function htmlForMatrixCell(value) {
     if (!value || typeof value !== 'object') {
       const text = textValue(value).trim();
-      return text ? esc(text) : '<span class="ss-grid-empty">Missing</span>';
+      return text ? (pillsHtml(text, { type: 'matrixCell' }, '') || esc(text)) : '<span class="ss-grid-empty">Missing</span>';
     }
     if (value.missing) return '<span class="ss-grid-missing">Missing</span>';
     const shown = textValue(value.value || value.corrected || value.raw).trim();
     const raw = textValue(value.raw).trim();
     const corrected = textValue(value.corrected).trim();
+    const field = String(value.field || '').replace(/^spec:/, '');
+    if (shown && !corrected && field === 'brand') return htmlForBrand(shown);
+    if (shown && !corrected && field === 'source') return htmlForSource(shown, { source: shown, url: value.url });
     const sourceTitle = Array.isArray(value.sources) && value.sources.length
       ? ` title="${escAttr(value.sources.join(', '))}"`
       : '';
@@ -543,6 +620,16 @@
     function handleLogoError(event) {
       const img = event?.target;
       if (!img?.classList?.contains?.('ss-grid-logo-img')) return;
+      const remaining = String(img.getAttribute?.('data-logo-fallback-srcs') || '')
+        .split('|')
+        .map(value => value.trim())
+        .filter(Boolean);
+      const next = remaining.shift();
+      if (next) {
+        img.setAttribute?.('data-logo-fallback-srcs', remaining.join('|'));
+        img.src = next;
+        return;
+      }
       const parent = img.closest?.('.ss-grid-logo-token');
       if (parent?.classList) parent.classList.add('is-logo-missing');
     }

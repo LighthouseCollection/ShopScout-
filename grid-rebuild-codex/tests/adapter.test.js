@@ -60,8 +60,13 @@ let capturedGrouping = null;
 let groupingCalls = [];
 let emittedSort = null;
 let destroyed = false;
+let capturedLogoErrorHandler = null;
 const eventStub = { subscribe() {} };
 const sortEventStub = { subscribe(fn) { capturedOnSort = fn; } };
+host.addEventListener = function addEventListener(type, fn) {
+  if (type === 'error') capturedLogoErrorHandler = fn;
+};
+host.removeEventListener = function removeEventListener() {};
 ctx.Slick = {
   Data: {
     DataView: function DataView() {
@@ -185,13 +190,48 @@ assert.match(sourceHtml, /ss-grid-logo-img/, 'source renders as a logo image, no
 assert.match(sourceHtml, /title="Amazon"/, 'source logo keeps the retailer label as a tooltip');
 assert.match(sourceHtml, /aria-label="Amazon"/, 'source logo keeps the retailer label for assistive tech');
 assert.match(sourceHtml, /ss-grid-logo-fallback/, 'source logo includes text fallback for missing SVGs');
-assert.match(sourceHtml, /public\/icons\/amazon\/default\.svg/, 'known retailers render the matching SVG logo from the valid theSVG CDN path');
+assert.match(sourceHtml, /brandbird\/assets\/company-logos\/Logotypes\/Amazon%20Logotype\.svg/, 'known retailers try Brandbird logotype SVGs before icon-only fallbacks');
+assert.match(sourceHtml, /data-logo-fallback-srcs=/, 'source logos carry fallback candidates when the first provider misses');
+assert.match(sourceHtml, /public\/icons\/amazon\/default\.svg/, 'known retailers keep the valid theSVG CDN path as a fallback');
 assert.doesNotMatch(sourceHtml, />generic</i, 'generic source text is not shown when a retailer can be inferred');
 assert.doesNotMatch(sourceHtml, /ss-grid-source-pill/, 'source is not rendered as a pill/button');
 const brandHtml = brandColumn.formatter(0, 3, 'Microsoft', brandColumn, { brand: 'Microsoft' });
-assert.match(brandHtml, /public\/icons\/microsoft\/default\.svg/, 'known brands render a matching SVG logo');
+assert.match(brandHtml, /cdn\.brandfetch\.io\/domain\/microsoft\.com/, 'Microsoft uses the Brandfetch domain mapping before generic icon fallbacks');
+assert.match(brandHtml, /cdn\.worldvectorlogo\.com\/logos\/microsoft-2\.svg/, 'Microsoft includes a rectangular wordmark fallback');
+assert.match(brandHtml, /cdn\.svglogos\.dev\/logos\/microsoft\.svg/, 'Microsoft includes the SVG Logos fallback');
+assert.match(brandHtml, /svgl\.app\/library\/microsoft\.svg/, 'Microsoft includes the SVGL catalog fallback');
+assert.match(brandHtml, /public\/icons\/microsoft\/default\.svg/, 'known brands keep theSVG CDN path as a final fallback');
 assert.match(brandHtml, /title="Microsoft"/, 'brand logo keeps the brand name as a tooltip');
 assert.match(brandHtml, /ss-grid-logo-fallback/, 'brand logo includes text fallback for missing SVGs');
+assert.equal(typeof capturedLogoErrorHandler, 'function', 'adapter registers an image-error fallback handler');
+let missingLogoFallbackShown = false;
+const fakeLogoAttributes = new Map([
+  ['data-logo-fallback-srcs', 'https://example.test/next-logo.svg|https://example.test/final-logo.svg']
+]);
+const fakeLogoImg = {
+  src: 'https://example.test/missing-logo.svg',
+  classList: { contains(name) { return name === 'ss-grid-logo-img'; } },
+  getAttribute(name) { return fakeLogoAttributes.get(name) || ''; },
+  setAttribute(name, value) { fakeLogoAttributes.set(name, value); },
+  closest() {
+    return {
+      classList: {
+        add(name) {
+          if (name === 'is-logo-missing') missingLogoFallbackShown = true;
+        }
+      }
+    };
+  }
+};
+capturedLogoErrorHandler({ target: fakeLogoImg });
+assert.equal(fakeLogoImg.src, 'https://example.test/next-logo.svg',
+  'logo image errors advance to the next provider before falling back to text');
+assert.equal(fakeLogoAttributes.get('data-logo-fallback-srcs'), 'https://example.test/final-logo.svg',
+  'used logo fallback candidates are removed after each retry');
+capturedLogoErrorHandler({ target: fakeLogoImg });
+capturedLogoErrorHandler({ target: fakeLogoImg });
+assert.equal(missingLogoFallbackShown, true,
+  'logo text fallback is shown only after every provider candidate fails');
 const unknownBrandHtml = brandColumn.formatter(0, 3, 'Small Unknown Brand', brandColumn, { brand: 'Small Unknown Brand' });
 assert.match(unknownBrandHtml, />Small Unknown Brand</, 'unknown brands render readable text when no SVG mapping exists');
 const devicesHtml = devicesColumn.formatter(0, 4, 'Laptop, PC, Smartphone, Tablet', devicesColumn, {});
@@ -201,9 +241,22 @@ for (const label of ['Laptop', 'PC', 'Smartphone', 'Tablet']) {
 }
 const notesHtml = notesColumn.formatter(0, 5, 'Fast, quiet, and easy to use.', notesColumn, {});
 assert.doesNotMatch(notesHtml, /ss-grid-pill-list/, 'description-like text fields keep sentence commas as prose');
+const singleSpecHtml = devicesColumn.formatter(0, 4, 'Bluetooth', devicesColumn, {});
+assert.match(singleSpecHtml, /ss-grid-pill-list/, 'single non-sentence spec values render as pills');
+assert.match(singleSpecHtml, />Bluetooth</, 'single non-sentence spec value text appears inside its pill');
 const ratingHtml = ratingColumn.formatter(0, 3, '4.7', ratingColumn, { rating: '4.7', reviewCount: '704' });
 assert.match(ratingHtml, /★★★★★/, 'ratings render a five-star display based on the numeric rating');
 assert.match(ratingHtml, />4\.7</, 'ratings still show the numeric value');
+const matrixBrandHtml = productHeaderColumn.formatter(0, 7, { field: 'brand', value: 'Microsoft' }, productHeaderColumn, {});
+assert.match(matrixBrandHtml, /ss-grid-brand-logo/, 'compare matrix Brand rows use the same SVG logo renderer');
+assert.match(matrixBrandHtml, /cdn\.worldvectorlogo\.com\/logos\/microsoft-2\.svg/, 'compare matrix Brand rows include rectangular logo candidates');
+const matrixSourceHtml = productHeaderColumn.formatter(0, 7, {
+  field: 'source',
+  value: 'generic',
+  url: 'https://www.amazon.com/dp/B0TEST'
+}, productHeaderColumn, {});
+assert.match(matrixSourceHtml, /ss-grid-source-logo/, 'compare matrix Source rows use the same retailer SVG renderer');
+assert.match(matrixSourceHtml, /Amazon%20Logotype\.svg/, 'compare matrix Source rows prefer rectangular retailer logos first');
 assert.match(actionsHtml, /ss-grid-action-bar/, 'row actions render as a compact icon toolbar');
 assert.doesNotMatch(actionsHtml, /<details|ss-grid-action-panel|<summary/,
   'row actions do not render an in-cell popup menu that can overlap nearby rows');

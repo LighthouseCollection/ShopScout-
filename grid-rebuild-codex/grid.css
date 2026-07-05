@@ -168,8 +168,8 @@
 }
 
 .ss-grid-header-thumb {
-  width: 58px;
-  height: 44px;
+  width: 100px;
+  height: 70px;
   flex: 0 0 auto;
   object-fit: contain;
   border: 1px solid var(--rule, #d1d5db);

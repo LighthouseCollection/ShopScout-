@@ -31,10 +31,13 @@ assertIncludes('<div class="rb-group-label">Open · Import</div>', 'File tab inc
 assertIncludes('id="openBtn"', 'File tab exposes Open (load as new list)');
 assertIncludes('<div class="rb-group-label">Save</div>', 'File tab includes Save group');
 assertIncludes('Import List', 'File tab imports a list');
-assertIncludes('class="rb-save-grid"', 'File tab save formats are arranged in a compact grid');
-assertIncludes('data-export-format="json"', 'File tab exposes JSON export');
-assertIncludes('data-export-format="xml"', 'File tab exposes XML export separately');
-assertNotIncludes('JSON/XML', 'File tab no longer combines JSON and XML into one command');
+assertIncludes('id="exportToggle"', 'File tab exposes a single Save As command');
+assertNotIncludes('class="rb-save-grid"', 'File tab does not expose individual export formats in the ribbon');
+assertNotIncludes('data-export-format=', 'File tab no longer exports directly from ribbon format buttons');
+assert.ok(js.includes('data-export-destination="clipboard"'), 'Save As page offers copy-to-clipboard destination');
+assert.ok(js.includes('data-export-destination="file"'), 'Save As page offers save-as-file destination');
+assert.ok(js.includes('data-export-format="txt"'), 'Save As page offers plain-text output as a format');
+assert.ok(js.includes('ShopScout - '), 'exports use the ShopScout list-name date filename convention');
 assertNotIncludes('<div class="rb-group-label">New</div>', 'File tab no longer owns list creation');
 assertNotIncludes('<div class="rb-group-label">Existing Lists</div>', 'File tab no longer shows recent/existing lists');
 

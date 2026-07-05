@@ -465,3 +465,47 @@ This file is the shared record for Claude and Codex. Append an entry for every m
   - Notes: Recheck source/brand SVG availability in the loaded dashboard. Icons depend on TheSVG catalog coverage; text fallbacks remain present.
 - Follow-ups:
   - Consider expanding the brand icon map as real product lists expose additional high-value brands.
+
+## 2026-07-04 19:53 - Add logo source fallback priority, broader pills, and shared Save As options
+
+- Agent: Codex
+- Branch: grid-rebuild-codex
+- Commit: This commit
+- Status: Implemented
+- Summary:
+  - Added prioritized logo candidates for source and brand cells, trying rectangular/full-name sources first where stable URLs exist: Brandbird logotypes, Brandfetch domain logo URLs, WorldVectorLogo, SVG Logos, SVGL, then TheSVG icon fallback.
+  - Added Microsoft-specific rectangular fallback candidates, including the user-provided Brandfetch asset context and stable WorldVectorLogo / SVG Logos / SVGL fallback paths.
+  - Updated logo error handling so failed SVGs advance to the next candidate before showing text fallback.
+  - Rendered single non-sentence spec values as pills, not only comma-separated values, while keeping names, notes, prices, ratings, and sentence-like prose unpilled.
+  - Applied source/brand SVG rendering and pill rendering inside Compare view matrix cells.
+  - Enlarged Compare view product header thumbnails to a 100px-wide image area.
+  - Simplified the File ribbon Save group to a single Save As command and moved all format choices into the main Save As page.
+  - Rebuilt Save As around shared field selection, output format, and destination options so all exports can use the same selected fields and can be copied to clipboard or saved/exported.
+  - Added the filename convention `ShopScout - List Name - YYYY-MM-DD`.
+- Files touched:
+  - comparison.css
+  - comparison.html
+  - comparison.js
+  - grid-rebuild-codex/grid.css
+  - grid-rebuild-codex/projections.js
+  - grid-rebuild-codex/slickGridAdapter.js
+  - grid-rebuild-codex/tests/adapter.test.js
+  - grid-rebuild-codex/tests/projections.test.js
+  - grid-rebuild-codex/tests/wiring.test.js
+  - tests/menu-layout.test.js
+  - AGENT_CHANGELOG.md
+- Validation:
+  - node grid-rebuild-codex/tests/adapter.test.js -> failed before implementation, passed after implementation
+  - node grid-rebuild-codex/tests/wiring.test.js -> failed before implementation, passed after implementation
+  - node tests/menu-layout.test.js -> failed before implementation, passed after implementation
+  - npm test -> all 35 test files passed
+  - npm run syntax -> passed
+  - npm run typecheck -> passed
+  - npm run lint -> 0 errors, 42 warnings
+  - npm run build -> Chrome, Edge, Firefox built
+- Review / handoff:
+  - Reviewer: Claude
+  - Notes: Verify logo fallbacks visually in the extension context. Brandbird has direct Google Storage catalog SVGs for some brands/retailers, Brandfetch asset pages are not scraped, and Brandfetch CDN behavior may depend on provider terms/client-id behavior.
+- Follow-ups:
+  - Add local or packaged logo assets later if external logo CDN dependencies prove unreliable.
+  - Consider formal export tests for generated HTML/CSV/XML/JSON payloads if the Save As page expands further.

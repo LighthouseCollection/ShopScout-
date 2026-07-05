@@ -1,6 +1,6 @@
 var chrome = globalThis.browser || globalThis.chrome;
 
-const { getData, saveData, getProducts, saveProducts, esc, escAttr, escXml, sanitizeUrl, sanitizeProductDescription, parsePrice, normalizeReviewCount, formatRatingDisplay, normalizeSpecKeyLabel, normalizeSpecValue, normalizeProductSpecs, getCategoryComparisonSpecKeys, buildCsv, safeFilename, downloadFile, buildAIText, buildPrompt, inferCategory, detectMissingAttributes, CATEGORY_RUBRICS, buildExportHtml, parseImport, toast } = SS;
+const { getData, saveData, getProducts, saveProducts, esc, escAttr, escXml, sanitizeUrl, sanitizeProductDescription, parsePrice, normalizeReviewCount, formatRatingDisplay, normalizeSpecKeyLabel, normalizeSpecValue, normalizeProductSpecs, getCategoryComparisonSpecKeys, escapeCsvField, downloadFile, buildAIText, buildPrompt, inferCategory, detectMissingAttributes, CATEGORY_RUBRICS, parseImport, toast } = SS;
 
 function setTrustedHtml(target, html) {
   if (globalThis.ShopScoutSanitize?.setTrustedHtml) {
@@ -373,8 +373,8 @@ function bindEvents() {
     btn.addEventListener('click', () => closeModal(btn.dataset.closeModal));
   });
 
-  // Content delegation — info-page interactions (export, copy picker,
-  // feedback, dashboard back). Old table header sort and column-menu
+  // Content delegation — info-page interactions (export, feedback,
+  // dashboard back). Old table header sort and column-menu
   // triggers were retired in Task 8 (Tabulator owns those now).
   document.getElementById('content').addEventListener('click', async e => {
     const dashboardBack = e.target.closest('[data-dashboard-back]');
@@ -384,35 +384,21 @@ function bindEvents() {
       return;
     }
 
-    const dashboardExport = e.target.closest('[data-dashboard-export]');
-    if (dashboardExport) {
-      const fmt = dashboardExport.dataset.dashboardExport || 'json';
-      if (fmt === 'copy') {
-        const picker = document.getElementById('dashCopyPicker');
-        if (picker) picker.hidden = false;
-      } else {
-        await doExport(fmt);
-      }
+    const exportFormat = e.target.closest('[data-export-format]');
+    if (exportFormat && exportFormat.closest('.dashboard-export-panel')) {
+      exportFormat.closest('.dashboard-format-grid')?.querySelectorAll('[data-export-format]').forEach(btn => {
+        btn.classList.toggle('active', btn === exportFormat);
+      });
       return;
     }
 
-    /* Copy-picker action buttons (Apply / Cancel). Wired through the same
-       delegated click handler so we don't need separate listeners. */
-    const copyApply = e.target.closest('[data-copy-apply]');
-    if (copyApply) {
-      const picker = document.getElementById('dashCopyPicker');
-      const get = id => !!picker?.querySelector(`[data-copyopt="${id}"]`)?.checked;
-      await doCopyPlain({
-        name:  get('name'),  url:   get('url'),
-        brand: get('brand'), price: get('price'),
-        specs: get('specs')
-      });
-      if (picker) picker.hidden = true;
+    const exportApply = e.target.closest('[data-export-apply]');
+    if (exportApply) {
+      await runDashboardExport();
       return;
     }
-    if (e.target.closest('[data-copy-cancel]')) {
-      const picker = document.getElementById('dashCopyPicker');
-      if (picker) picker.hidden = true;
+    if (e.target.closest('[data-export-reset]')) {
+      openExportPage();
       return;
     }
 
@@ -982,8 +968,8 @@ async function openHelpPage() {
       </ul>
       <h3>Exporting</h3>
       <ul>
-        <li>File ribbon → Save As → pick PDF / HTML / CSV / JSON / XML / Copy.</li>
-        <li>"Copy" is plain text — no AI prompt wrapper — with a field picker.</li>
+        <li>File ribbon → Save As → choose fields, format, and destination.</li>
+        <li>Exports can be copied to the clipboard or saved as a file.</li>
       </ul>
       <h3>AI analysis</h3>
       <ul>
@@ -1008,29 +994,45 @@ async function openShopScoutDocumentation(title = 'Help') {
 }
 
 function openExportPage() {
-  openDashboardInfoPage('Save As', 'Export the current product list.', `<div class="dashboard-format-grid">
-    <button type="button" data-dashboard-export="pdf"><strong>PDF</strong><span>Printable product report.</span></button>
-    <button type="button" data-dashboard-export="html"><strong>HTML</strong><span>Self-contained browser page.</span></button>
-    <button type="button" data-dashboard-export="csv"><strong>CSV</strong><span>Spreadsheet-friendly table.</span></button>
-    <button type="button" data-dashboard-export="json"><strong>JSON</strong><span>Full ShopScout data backup.</span></button>
-    <button type="button" data-dashboard-export="xml"><strong>XML</strong><span>Structured data export.</span></button>
-    <button type="button" data-dashboard-export="copy"><strong>Copy</strong><span>Plain text to clipboard — no AI prompt wrapper.</span></button>
-  </div>
-  <!-- Inline picker for the Copy tile. Hidden until the user clicks
-       Copy. Matches the user's stated minimum (name + url + optional specs);
-       brand and price added because they're cheap to include and useful. -->
-  <div id="dashCopyPicker" class="dashboard-copy-picker" hidden>
-    <div class="dashboard-copy-picker-title">What to copy</div>
-    <div class="dashboard-copy-picker-options">
-      <label><input type="checkbox" data-copyopt="name"  checked> Product name</label>
-      <label><input type="checkbox" data-copyopt="url"   checked> URL</label>
-      <label><input type="checkbox" data-copyopt="brand">         Brand</label>
-      <label><input type="checkbox" data-copyopt="price">         Price</label>
-      <label><input type="checkbox" data-copyopt="specs">         Include specs</label>
-    </div>
+  openDashboardInfoPage('Save As', 'Choose what to include, then copy it or save it as a file.', `
+  <div class="dashboard-export-panel">
+    <section class="dashboard-export-section">
+      <h3>What to include</h3>
+      <div class="dashboard-copy-picker-options">
+        <label><input type="checkbox" data-export-field="name" checked> Product name</label>
+        <label><input type="checkbox" data-export-field="url" checked> URL</label>
+        <label><input type="checkbox" data-export-field="brand" checked> Brand</label>
+        <label><input type="checkbox" data-export-field="price" checked> Price</label>
+        <label><input type="checkbox" data-export-field="source"> Source</label>
+        <label><input type="checkbox" data-export-field="rating"> Rating</label>
+        <label><input type="checkbox" data-export-field="notes"> Notes</label>
+        <label><input type="checkbox" data-export-field="specs"> Specs</label>
+      </div>
+    </section>
+
+    <section class="dashboard-export-section">
+      <h3>Format</h3>
+      <div class="dashboard-format-grid">
+        <button type="button" class="active" data-export-format="txt"><strong>Plain text</strong><span>Simple product list.</span></button>
+        <button type="button" data-export-format="html"><strong>HTML</strong><span>Self-contained browser page.</span></button>
+        <button type="button" data-export-format="csv"><strong>CSV</strong><span>Spreadsheet-friendly table.</span></button>
+        <button type="button" data-export-format="json"><strong>JSON</strong><span>Structured ShopScout data.</span></button>
+        <button type="button" data-export-format="xml"><strong>XML</strong><span>Structured data export.</span></button>
+        <button type="button" data-export-format="pdf"><strong>PDF</strong><span>Printable report.</span></button>
+      </div>
+    </section>
+
+    <section class="dashboard-export-section">
+      <h3>Destination</h3>
+      <div class="dashboard-destination-grid">
+        <label><input type="radio" name="dashboardExportDestination" data-export-destination="clipboard" checked> Copy to clipboard</label>
+        <label><input type="radio" name="dashboardExportDestination" data-export-destination="file"> Save as file</label>
+      </div>
+    </section>
+
     <div class="dashboard-copy-picker-actions">
-      <button type="button" class="btn primary" data-copy-apply>Copy to clipboard</button>
-      <button type="button" class="btn" data-copy-cancel>Cancel</button>
+      <button type="button" class="btn primary" data-export-apply>Export</button>
+      <button type="button" class="btn" data-export-reset>Reset</button>
     </div>
   </div>`);
 }
@@ -1972,6 +1974,177 @@ globalThis.setSelectedProductsFromIds = async function setSelectedProductsFromId
    [{key, value, source?}] ready for the detail table. */
 
 // --- Export ---
+const EXPORT_FIELDS = [
+  { id: 'name', label: 'Product name' },
+  { id: 'url', label: 'URL' },
+  { id: 'brand', label: 'Brand' },
+  { id: 'price', label: 'Price' },
+  { id: 'source', label: 'Source' },
+  { id: 'rating', label: 'Rating' },
+  { id: 'notes', label: 'Notes' },
+  { id: 'specs', label: 'Specs' }
+];
+
+function localDateStamp(date = new Date()) {
+  const yyyy = date.getFullYear();
+  const mm = String(date.getMonth() + 1).padStart(2, '0');
+  const dd = String(date.getDate()).padStart(2, '0');
+  return `${yyyy}-${mm}-${dd}`;
+}
+
+function safeExportFileStem(listName) {
+  const safeList = String(listName || 'List')
+    .replace(/[<>:"/\\|?*\x00-\x1F]/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim() || 'List';
+  return `ShopScout - ${safeList} - ${localDateStamp()}`;
+}
+
+function selectedExportFields(rootNode) {
+  const container = rootNode || document;
+  const selected = EXPORT_FIELDS
+    .filter(field => !!container.querySelector(`[data-export-field="${field.id}"]`)?.checked)
+    .map(field => field.id);
+  return selected.length ? selected : ['name', 'url'];
+}
+
+function productDisplayName(product) {
+  const raw = String(product?.productName || product?.structuredProductName || product?.title || '(untitled)');
+  return SS.dedupProductName ? SS.dedupProductName(raw) : raw;
+}
+
+function exportSpecEntries(product) {
+  const SH = globalThis.SSSpecHeuristic;
+  const list = SH && SH.specListOf ? SH.specListOf(product) : (Array.isArray(product?.rawSpecs) ? product.rawSpecs : []);
+  return (Array.isArray(list) ? list : [])
+    .filter(spec => spec && spec.key != null && spec.value != null && spec.value !== '')
+    .map(spec => ({ key: String(spec.key), value: String(spec.value) }));
+}
+
+function exportRecord(product, fields) {
+  const record = {};
+  if (fields.includes('name')) record.name = productDisplayName(product);
+  if (fields.includes('url')) record.url = product?.url && SS.canonicalizeProductUrl ? SS.canonicalizeProductUrl(product.url) : (product?.url || '');
+  if (fields.includes('brand')) record.brand = product?.brand || '';
+  if (fields.includes('price')) {
+    record.price = product?.newPrice || '';
+    if (product?.usedPrice) record.usedPrice = product.usedPrice;
+  }
+  if (fields.includes('source')) record.source = product?.source || '';
+  if (fields.includes('rating')) record.rating = formatRatingDisplay(product?.rating || '', product?.reviewCount || '');
+  if (fields.includes('notes')) record.notes = product?.notes || '';
+  if (fields.includes('specs')) record.specs = exportSpecEntries(product);
+  return record;
+}
+
+function exportRecords(products, fields) {
+  return products.map(product => exportRecord(product, fields));
+}
+
+function exportRecordLines(record) {
+  const lines = [];
+  for (const field of EXPORT_FIELDS) {
+    const value = record[field.id];
+    if (field.id === 'specs') {
+      if (Array.isArray(record.specs) && record.specs.length) {
+        lines.push('Specs:');
+        record.specs.forEach(spec => lines.push(`  ${spec.key}: ${spec.value}`));
+      }
+      continue;
+    }
+    if (value == null || value === '') continue;
+    lines.push(`${field.label}: ${value}`);
+  }
+  if (record.usedPrice) lines.push(`Used price: ${record.usedPrice}`);
+  return lines;
+}
+
+function buildExportText(records) {
+  return records.map(record => exportRecordLines(record).join('\n')).filter(Boolean).join('\n\n');
+}
+
+function buildSelectedCsv(records, fields) {
+  const headers = EXPORT_FIELDS.filter(field => fields.includes(field.id) && field.id !== 'specs');
+  if (fields.includes('specs')) headers.push({ id: 'specs', label: 'Specs' });
+  const csvEscape = typeof escapeCsvField === 'function' ? escapeCsvField : value => String(value ?? '');
+  const rows = records.map(record => headers.map(field => {
+    if (field.id === 'specs') {
+      return csvEscape((record.specs || []).map(spec => `${spec.key}: ${spec.value}`).join('; '));
+    }
+    return csvEscape(record[field.id] || '');
+  }).join(','));
+  return '\u{FEFF}' + [headers.map(field => csvEscape(field.label)).join(','), ...rows].join('\n');
+}
+
+function buildSelectedXml(records, listName) {
+  let xml = `<?xml version="1.0" encoding="UTF-8"?>\n<shopscout list="${escXml(listName)}" exported="${new Date().toISOString()}">\n`;
+  for (const record of records) {
+    xml += '  <product>\n';
+    for (const [key, value] of Object.entries(record)) {
+      if (key === 'specs') {
+        if (Array.isArray(value) && value.length) {
+          xml += '    <specs>\n';
+          for (const spec of value) {
+            xml += `      <spec key="${escXml(spec.key)}">${escXml(spec.value)}</spec>\n`;
+          }
+          xml += '    </specs>\n';
+        }
+      } else if (value != null && value !== '') {
+        xml += `    <${key}>${escXml(value)}</${key}>\n`;
+      }
+    }
+    xml += '  </product>\n';
+  }
+  return xml + '</shopscout>';
+}
+
+function buildSelectedHtml(records, listName) {
+  const date = localDateStamp();
+  const cards = records.map(record => {
+    const rows = exportRecordLines(record)
+      .map(line => {
+        const idx = line.indexOf(':');
+        if (idx < 0) return `<tr><td colspan="2">${esc(line)}</td></tr>`;
+        const key = line.slice(0, idx);
+        const value = line.slice(idx + 1).trim();
+        return `<tr><td class="l">${esc(key)}</td><td>${esc(value)}</td></tr>`;
+      })
+      .join('');
+    const title = record.name || 'Product';
+    return `<section class="card"><h3>${esc(title)}</h3><table>${rows}</table></section>`;
+  }).join('');
+  return `<!DOCTYPE html><html><head><meta charset="utf-8"><title>${esc(safeExportFileStem(listName))}</title>
+<style>*{box-sizing:border-box}body{font-family:Segoe UI,Arial,sans-serif;margin:0;background:#f6f7f9;color:#111827;padding:32px}.hdr{margin-bottom:24px}.hdr h1{font-size:24px;margin:0 0 4px}.hdr p{margin:0;color:#667085}.grid{display:grid;gap:14px;max-width:980px}.card{background:#fff;border:1px solid #d9dee7;border-radius:8px;padding:16px}.card h3{margin:0 0 10px;font-size:15px}table{width:100%;border-collapse:collapse}td{padding:4px 8px;border-top:1px solid #edf0f4;vertical-align:top}.l{width:120px;color:#667085;font-weight:600}@media print{body{background:#fff;padding:18px}.card{break-inside:avoid}}</style></head>
+<body><div class="hdr"><h1>ShopScout</h1><p>${esc(listName)} — ${date} — ${records.length} product(s)</p></div><div class="grid">${cards}</div></body></html>`;
+}
+
+function buildExportContent(format, products, listName, fields) {
+  const records = exportRecords(products, fields);
+  if (format === 'json') {
+    return {
+      content: JSON.stringify({ list: listName, exported: new Date().toISOString(), products: records }, null, 2),
+      mime: 'application/json',
+      extension: 'json'
+    };
+  }
+  if (format === 'csv') return { content: buildSelectedCsv(records, fields), mime: 'text/csv', extension: 'csv' };
+  if (format === 'xml') return { content: buildSelectedXml(records, listName), mime: 'application/xml', extension: 'xml' };
+  if (format === 'html' || format === 'pdf') {
+    return { content: buildSelectedHtml(records, listName), mime: 'text/html', extension: format === 'pdf' ? 'html' : 'html' };
+  }
+  return { content: buildExportText(records), mime: 'text/plain', extension: 'txt' };
+}
+
+async function runDashboardExport() {
+  const panel = document.querySelector('.dashboard-export-panel');
+  const format = panel?.querySelector('[data-export-format].active')?.dataset.exportFormat || 'txt';
+  const destination = panel?.querySelector('[data-export-destination]:checked')?.dataset.exportDestination || 'clipboard';
+  await doExport(format, {
+    destination,
+    fields: selectedExportFields(panel)
+  });
+}
+
 /* Copy a plain-text product list to the clipboard. Unlike the AI Manual
    modal, NO prompt wrapper is added — just the fields the user picked.
    One product per block, blocks separated by a blank line.
@@ -2023,36 +2196,45 @@ async function doCopyPlain(opts) {
   }
 }
 
-async function doExport(format) {
+async function doExport(format, opts = {}) {
   const data = await getData();
   const products = data.lists[data.activeList] || [];
   const name = data.activeList;
   if (!products.length) { toast.show('No products to export', 'error'); return; }
-  const fn = safeFilename(name);
+  const fields = Array.isArray(opts.fields) && opts.fields.length
+    ? opts.fields
+    : EXPORT_FIELDS.map(field => field.id);
+  const destination = opts.destination || 'file';
+  const normalizedFormat = ['json', 'csv', 'xml', 'html', 'pdf', 'txt'].includes(format) ? format : 'json';
+  const payload = buildExportContent(normalizedFormat, products, name, fields);
+  const stem = safeExportFileStem(name);
 
-  if (format === 'json') {
-    downloadFile(JSON.stringify({ list: name, exported: new Date().toISOString(), products }, null, 2), `${fn}.json`, 'application/json');
-  } else if (format === 'csv') {
-    downloadFile(buildCsv(products), `${fn}.csv`, 'text/csv');
-  } else if (format === 'xml') {
-    let xml = `<?xml version="1.0" encoding="UTF-8"?>\n<shopscout list="${escXml(name)}" exported="${new Date().toISOString()}">\n`;
-    products.forEach(p => {
-      xml += '  <product>\n';
-      for (const k of ['title','brand','newPrice','usedPrice','source','modelNumber','rating','reviewCount','url','image','notes']) {
-        if (p[k]) xml += `    <${k}>${escXml(p[k])}</${k}>\n`;
-      }
-      xml += '  </product>\n';
-    });
-    xml += '</shopscout>';
-    downloadFile(xml, `${fn}.xml`, 'application/xml');
-  } else if (format === 'html') {
-    downloadFile(buildExportHtml(products, name), `${fn}.html`, 'text/html');
-  } else if (format === 'pdf') {
-    const w = window.open(''); w.document.write(buildExportHtml(products, name)); w.document.close();
-    setTimeout(() => w.print(), 400);
+  if (destination === 'clipboard') {
+    const clipboardText = normalizedFormat === 'pdf' ? payload.content : payload.content;
+    try {
+      await navigator.clipboard.writeText(clipboardText);
+      toast.show(`Copied ${normalizedFormat.toUpperCase()} export to clipboard`);
+    } catch (err) {
+      console.warn('Clipboard export failed', err);
+      toast.show('Could not copy export', 'error');
+    }
+    return;
   }
-  document.getElementById('exiModal').classList.remove('active');
-  if (format !== 'pdf') toast.show(`Exported as ${format.toUpperCase()}`);
+
+  if (normalizedFormat === 'pdf') {
+    const w = window.open('');
+    if (!w) {
+      toast.show('Could not open print window', 'error');
+      return;
+    }
+    w.document.write(payload.content);
+    w.document.close();
+    setTimeout(() => w.print(), 400);
+  } else {
+    downloadFile(payload.content, `${stem}.${payload.extension}`, payload.mime);
+    toast.show(`Exported as ${normalizedFormat.toUpperCase()}`);
+  }
+  document.getElementById('exiModal')?.classList.remove('active');
 }
 
 // --- Open: load a saved file as a NEW list (does not touch the active list) ---

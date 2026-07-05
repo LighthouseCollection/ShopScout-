@@ -226,14 +226,16 @@ assert.deepEqual(
 );
 assert.deepEqual(
   Object.keys(matrix.rows[2]['product:p1']).sort(),
-  ['confidence', 'corrected', 'field', 'missing', 'productId', 'raw', 'revision', 'sources', 'value'].sort(),
-  'matrix cells carry raw/corrected/confidence/source/missing metadata'
+  ['confidence', 'corrected', 'field', 'missing', 'productId', 'raw', 'revision', 'source', 'sources', 'url', 'value'].sort(),
+  'matrix cells carry raw/corrected/confidence/source/url/missing metadata'
 );
 assert.equal(matrix.rows[2]['product:p1'].raw, '2 hrs');
 assert.equal(matrix.rows[2]['product:p1'].corrected, '2 hours');
 assert.equal(matrix.rows[2]['product:p1'].value, '2 hours');
 assert.equal(matrix.rows[2]['product:p1'].confidence, 0.82);
 assert.deepEqual(matrix.rows[2]['product:p1'].sources, ['official']);
+assert.equal(matrix.rows[2]['product:p1'].source, 'Amazon');
+assert.equal(matrix.rows[2]['product:p1'].url, 'https://example.com/p1');
 assert.equal(matrix.rows[2]['product:p1'].missing, false);
 assert.equal(matrix.rows[2]['product:p2'].value, '90 minutes');
 assert.equal(matrix.rows[3]['product:p1'].value, '800 DPI');
