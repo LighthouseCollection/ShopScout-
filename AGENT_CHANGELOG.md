@@ -1450,3 +1450,29 @@ This file is the shared record for Claude and Codex. Append an entry for every m
   - Reviewer: Claude
 - Follow-ups:
   - User may need to reload the extension/dashboard file to see the updated JS/CSS.
+
+## 2026-07-07 16:07 - Split multi-value feature review items
+
+- Agent: Codex
+- Branch: grid-rebuild-codex
+- Commit: Uncommitted
+- Status: Implemented
+- Summary:
+  - Fixed Normalization Review treating comma-separated feature lists as one approval item.
+  - `Additional Features`, `Features`, `Special Features`, `Included Items`, `Compatible Devices`, and `Recommended Use` now split comma/semicolon/pipe-delimited values into individual review rows.
+  - Each split value gets its own review key, so Accept alias / Ignore actions apply to one feature at a time instead of approving or hiding the entire combined phrase.
+- Files touched:
+  - AGENT_CHANGELOG.md
+  - normalization/review.js
+  - tests/normalization-review.test.js
+- Validation:
+  - node tests\normalization-review.test.js -> failed before implementation, passed after implementation
+  - node tests\user-rules-normalization.test.js -> passed
+  - node tests\product-repo.test.js -> passed
+  - node tests\menu-layout.test.js -> passed
+  - npm run syntax -> passed
+  - git diff --check -- normalization\review.js tests\normalization-review.test.js -> passed with expected CRLF warnings only
+- Review / handoff:
+  - Reviewer: Claude
+- Follow-ups:
+  - If users need different splitting behavior per category, add category-aware split rules rather than broadening generic punctuation splitting.

@@ -47,6 +47,32 @@
     ].map(keyPart).join('|');
   }
 
+  function isListLikeFeatureField(field) {
+    const key = keyPart(field);
+    return key === 'additional features'
+      || key === 'features'
+      || key === 'special features'
+      || key === 'included items'
+      || key === 'compatible devices'
+      || key === 'recommended use';
+  }
+
+  function splitReviewValues(field, raw, normalized) {
+    if (!isListLikeFeatureField(field)) {
+      return [{ raw, normalized }];
+    }
+    const rawParts = text(raw).split(/\s*(?:[,;|])\s*/).map(text).filter(Boolean);
+    if (rawParts.length <= 1) {
+      return [{ raw, normalized }];
+    }
+    const normalizedParts = text(normalized).split(/\s*(?:[,;|])\s*/).map(text).filter(Boolean);
+    const sameShape = normalizedParts.length === rawParts.length;
+    return rawParts.map((part, index) => ({
+      raw: part,
+      normalized: sameShape ? normalizedParts[index] : part
+    }));
+  }
+
   function collectNormalizationReviewItems(products) {
     const rows = Array.isArray(products) ? products : [];
     const out = [];
@@ -55,24 +81,28 @@
       if (!attrs || typeof attrs !== 'object') return;
       for (const [field, entry] of Object.entries(attrs)) {
         if (!needsReview(entry)) continue;
-        const row = {
-          productId: text(product.id || product.url || `product-${productIndex + 1}`),
-          productIndex,
-          productTitle: text(product.title || product.productName || product.listingTitle || 'Untitled product'),
-          source: text(product.source || product.retailer || ''),
-          category: categoryLeaf(product),
-          field,
-          rawField: text(entry.rawField || field),
-          raw: text(entry.raw),
-          normalized: text(entry.normalized),
-          confidence: Number(entry.confidence) || 0,
-          rule: text(entry.rule || ''),
-          fieldRule: text(entry.fieldRule || ''),
-          fieldSource: text(entry.fieldSource || ''),
-          reason: reasonFor(entry)
-        };
-        row.reviewKey = reviewItemKey(row);
-        out.push(row);
+        const rawField = text(entry.rawField || field);
+        const splitValues = splitReviewValues(field, entry.raw, entry.normalized);
+        for (const value of splitValues) {
+          const row = {
+            productId: text(product.id || product.url || `product-${productIndex + 1}`),
+            productIndex,
+            productTitle: text(product.title || product.productName || product.listingTitle || 'Untitled product'),
+            source: text(product.source || product.retailer || ''),
+            category: categoryLeaf(product),
+            field,
+            rawField,
+            raw: value.raw,
+            normalized: value.normalized,
+            confidence: Number(entry.confidence) || 0,
+            rule: text(entry.rule || ''),
+            fieldRule: text(entry.fieldRule || ''),
+            fieldSource: text(entry.fieldSource || ''),
+            reason: reasonFor(entry)
+          };
+          row.reviewKey = reviewItemKey(row);
+          out.push(row);
+        }
       }
     });
     const userRules = root.ShopScoutUserNormalizationRules;

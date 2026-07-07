@@ -75,4 +75,36 @@ assert.deepStrictEqual(JSON.parse(JSON.stringify(items[0])), {
   reviewKey: 'p1|connectivity tech|connectivity technology|bluetooth|bluetooth'
 }, 'review item includes provenance and product context');
 
+const featureItems = review.collectNormalizationReviewItems([
+  {
+    id: 'p3',
+    title: 'Keyboard with feature list',
+    source: 'Amazon',
+    _normalizationContext: {
+      category: { leaf: 'Keyboards' }
+    },
+    _normalizedAttributes: {
+      'Additional Features': {
+        rawField: 'Additional Features',
+        raw: 'Backlit, Low-Profile Key, Rechargeable',
+        normalized: 'Backlit, Low-Profile Key, Rechargeable',
+        confidence: 0,
+        rule: 'unmapped'
+      }
+    }
+  }
+]);
+
+assert.deepStrictEqual(
+  JSON.parse(JSON.stringify(featureItems.map(item => item.raw))),
+  ['Backlit', 'Low-Profile Key', 'Rechargeable'],
+  'comma-separated additional features are reviewed as individual line items'
+);
+
+assert.deepStrictEqual(
+  JSON.parse(JSON.stringify(featureItems.map(item => item.normalized))),
+  ['Backlit', 'Low-Profile Key', 'Rechargeable'],
+  'split feature review items keep raw and normalized values aligned'
+);
+
 console.log('normalization-review.test.js: assertions passed');
