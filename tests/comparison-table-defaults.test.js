@@ -61,6 +61,10 @@ assert.ok(cmpHtml.indexOf('src="normalization/attributes.js"') > -1,
   'normalization/attributes.js is loaded on comparison page');
 assert.ok(cmpHtml.indexOf('src="normalization/attributes.js"') < cmpHtml.indexOf('src="data/productRepo.js"'),
   'attribute normalization loads before productRepo on comparison page');
+assert.ok(cmpHtml.indexOf('src="normalization/matching.js"') > -1,
+  'normalization/matching.js is loaded on comparison page');
+assert.ok(cmpHtml.indexOf('src="normalization/matching.js"') < cmpHtml.indexOf('src="data/productRepo.js"'),
+  'dedupe matching loads before productRepo on comparison page');
 assert.ok(cmpHtml.includes('src="shared/projections/specProjection.js"'),
   'shared/projections/specProjection.js is loaded for the new grid');
 assert.ok(cmpHtml.includes('src="shared/edits/ratingWriter.js"'),

@@ -1,0 +1,188 @@
+/* =============================================================
+   ShopScout — duplicate candidate detection
+
+   Deterministic matcher for likely duplicate products. This module only
+   reports candidates. It never merges, deletes, or mutates product data.
+
+   Public API on window.ShopScoutMatching:
+     extractIdentifiers(product)
+     scorePair(a, b)
+     detectDuplicateCandidates(products, options)
+   ============================================================= */
+(function initShopScoutMatching(root) {
+  const NS = (root.ShopScoutMatching = root.ShopScoutMatching || {});
+
+  const STOP_WORDS = new Set([
+    'a', 'an', 'and', 'or', 'the', 'with', 'for', 'to', 'of', 'by', 'in', 'on',
+    'new', 'latest', 'generic', 'product', 'item', 'pack', 'pcs', 'piece'
+  ]);
+
+  function compact(value) {
+    return String(value || '').trim().toLowerCase().replace(/[^a-z0-9]+/g, '');
+  }
+
+  function normalizeText(value) {
+    return String(value || '')
+      .trim()
+      .toLowerCase()
+      .replace(/&/g, ' and ')
+      .replace(/[^a-z0-9]+/g, ' ')
+      .replace(/\s+/g, ' ')
+      .trim();
+  }
+
+  function productId(product, idx) {
+    return String(product && (product.id || product.url || product.title) || `product-${idx + 1}`);
+  }
+
+  function titleOf(product) {
+    return String(product && (product.title || product.productName || product.listingTitle) || '').trim();
+  }
+
+  function brandOf(product) {
+    return normalizeText(product && (product.brand || product.manufacturer || product.maker));
+  }
+
+  function candidateIdentifierValues(product) {
+    const direct = [
+      product && product.asin,
+      product && product.upc,
+      product && product.gtin,
+      product && product.ean,
+      product && product.mpn,
+      product && product.sku,
+      product && product.modelNumber,
+      product && product.modelName
+    ];
+    const specs = Array.isArray(product && product.specs) ? product.specs
+      : Array.isArray(product && product.rawSpecs) ? product.rawSpecs
+        : [];
+    for (const spec of specs) {
+      const key = normalizeText(spec && spec.key);
+      if (/(asin|upc|gtin|ean|mpn|model|part number|sku)/.test(key)) direct.push(spec && spec.value);
+    }
+    return direct;
+  }
+
+  function extractIdentifiers(product) {
+    const out = [];
+    const seen = new Set();
+    for (const value of candidateIdentifierValues(product || {})) {
+      const id = compact(value);
+      if (!id || id.length < 4 || seen.has(id)) continue;
+      seen.add(id);
+      out.push(id);
+    }
+    return out;
+  }
+
+  function tokenSet(product) {
+    const raw = [
+      titleOf(product),
+      product && product.brand,
+      product && product.manufacturer,
+      product && product.modelNumber,
+      product && product.modelName
+    ].join(' ');
+    const tokens = normalizeText(raw).split(' ').filter(token => {
+      if (!token || STOP_WORDS.has(token)) return false;
+      if (token.length < 2 && !/\d/.test(token)) return false;
+      return true;
+    });
+    return new Set(tokens);
+  }
+
+  function jaccard(a, b) {
+    if (!a.size && !b.size) return 0;
+    let intersection = 0;
+    for (const value of a) if (b.has(value)) intersection++;
+    const union = new Set([...a, ...b]).size;
+    return union ? intersection / union : 0;
+  }
+
+  function normalizedBrandMatch(a, b) {
+    const left = brandOf(a);
+    const right = brandOf(b);
+    if (!left || !right) return false;
+    if (left === right) return true;
+    if (compact(left) === compact(right)) return true;
+    return left.includes(right) || right.includes(left);
+  }
+
+  function modelMatch(a, b) {
+    const left = extractIdentifiers(a);
+    const right = new Set(extractIdentifiers(b));
+    return left.some(value => right.has(value));
+  }
+
+  function scorePair(a, b) {
+    const aIds = extractIdentifiers(a);
+    const bIds = extractIdentifiers(b);
+    const bIdSet = new Set(bIds);
+    const sharedIds = aIds.filter(id => bIdSet.has(id));
+    const tokenSimilarity = jaccard(tokenSet(a), tokenSet(b));
+    const brandMatch = normalizedBrandMatch(a, b);
+    const hasModelMatch = sharedIds.length > 0 || modelMatch(a, b);
+
+    let score = 0;
+    const evidence = [];
+    let reason = 'low-similarity';
+
+    if (sharedIds.length) {
+      score += 0.62;
+      evidence.push('shared identifier: ' + sharedIds[0]);
+    }
+    if (brandMatch) {
+      score += 0.18;
+      evidence.push('brand/manufacturer match');
+    }
+    if (tokenSimilarity >= 0.35) {
+      score += Math.min(0.28, tokenSimilarity * 0.4);
+      evidence.push('title token similarity');
+    }
+
+    if (sharedIds.length && tokenSimilarity >= 0.25) reason = 'shared-identifier-and-token-match';
+    else if (hasModelMatch && brandMatch) reason = 'brand-model-title-match';
+    else if (brandMatch && tokenSimilarity >= 0.5) {
+      score += 0.14;
+      reason = 'brand-model-title-match';
+      evidence.push('brand and title similarity');
+    }
+
+    return {
+      score: Math.round(Math.min(score, 0.99) * 100) / 100,
+      reason,
+      evidence,
+      sharedIdentifiers: sharedIds,
+      tokenSimilarity: Math.round(tokenSimilarity * 100) / 100
+    };
+  }
+
+  function detectDuplicateCandidates(products, options) {
+    const input = Array.isArray(products) ? products : [];
+    const threshold = Number(options && options.threshold) || 0.72;
+    const out = [];
+    for (let i = 0; i < input.length; i++) {
+      for (let j = i + 1; j < input.length; j++) {
+        const result = scorePair(input[i], input[j]);
+        if (result.score < threshold) continue;
+        out.push({
+          productIds: [productId(input[i], i), productId(input[j], j)],
+          titles: [titleOf(input[i]), titleOf(input[j])],
+          score: result.score,
+          reason: result.reason,
+          evidence: result.evidence,
+          sharedIdentifiers: result.sharedIdentifiers
+        });
+      }
+    }
+    out.sort((a, b) => b.score - a.score || a.productIds.join('|').localeCompare(b.productIds.join('|')));
+    return out;
+  }
+
+  Object.assign(NS, {
+    extractIdentifiers,
+    scorePair,
+    detectDuplicateCandidates
+  });
+})(globalThis);

@@ -877,6 +877,45 @@ This file is the shared record for Claude and Codex. Append an entry for every m
 - Follow-ups:
   - Next ordered slices: dedupe candidate detection, richer provenance review UI, and AI-assisted vocabulary expansion.
 
+## 2026-07-07 03:45 - Add deterministic duplicate candidate detection
+
+- Agent: Codex
+- Branch: normalization-local-units
+- Commit: This commit
+- Status: Implemented
+- Summary:
+  - Added `ShopScoutMatching` as a deterministic duplicate-candidate matcher.
+  - Detects likely duplicates from exact and normalized identifiers, brand/manufacturer similarity, and title token overlap.
+  - Normalizes part/model separators so values like `6204-2RS`, `6204 2RS`, and `62042rs` can match.
+  - Added `SSProductRepo.findDuplicateCandidates(listId, options)` for list-level candidate reporting.
+  - Candidate detection is read-only: it does not merge, delete, or mutate products.
+  - Added popup and comparison script loading for `normalization/matching.js` before `data/productRepo.js`.
+  - Added tests for direct matcher behavior, repo-level candidate detection, non-mutation, and script load order.
+- Files touched:
+  - normalization/matching.js
+  - data/productRepo.js
+  - comparison.html
+  - popup.html
+  - tests/dedupe-candidates.test.js
+  - tests/product-repo.test.js
+  - tests/comparison-table-defaults.test.js
+  - tests/popup-layout.test.js
+  - AGENT_CHANGELOG.md
+- Validation:
+  - node tests\dedupe-candidates.test.js -> failed before implementation, passed after implementation
+  - node tests\product-repo.test.js -> failed before implementation, passed after implementation
+  - node tests\popup-layout.test.js -> passed
+  - node tests\comparison-table-defaults.test.js -> passed
+  - npm test -> all 32 test files passed
+  - npm run syntax -> passed
+  - npm run typecheck -> passed
+  - npm run lint -> 0 errors, 42 existing warnings
+  - npm run build -> Chrome, Edge, Firefox built
+- Review / handoff:
+  - Reviewer: Claude
+- Follow-ups:
+  - Add a review UI for duplicate candidates before any merge workflow is considered.
+
 ## 2026-07-05 00:56 - Remove logo images and simplify settings panels
 
 - Agent: Codex

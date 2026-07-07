@@ -12,6 +12,7 @@ Dexie.dependencies.indexedDB = indexedDB;
 Dexie.dependencies.IDBKeyRange = IDBKeyRange;
 const dbSrc = fs.readFileSync(path.join(__dirname, '..', 'data', 'db.js'), 'utf8');
 const attrSrc = fs.readFileSync(path.join(__dirname, '..', 'normalization', 'attributes.js'), 'utf8');
+const matchingSrc = fs.readFileSync(path.join(__dirname, '..', 'normalization', 'matching.js'), 'utf8');
 const repoSrc = fs.readFileSync(path.join(__dirname, '..', 'data', 'productRepo.js'), 'utf8');
 
 function plain(value) {
@@ -36,6 +37,7 @@ async function createRepoContext() {
   vm.runInContext(dbSrc, ctx, { filename: 'data/db.js' });
   await ctx.SSDB.db.open();
   vm.runInContext(attrSrc, ctx, { filename: 'normalization/attributes.js' });
+  vm.runInContext(matchingSrc, ctx, { filename: 'normalization/matching.js' });
   vm.runInContext(repoSrc, ctx, { filename: 'data/productRepo.js' });
   return ctx;
 }
@@ -149,6 +151,22 @@ async function seedProducts(repo, listId) {
     const stored = await repo.getProduct(added.id);
     assert.strictEqual(stored._normalizedAttributes.Color.normalized, 'Navy Blue',
       'normalized attributes are persisted in IndexedDB');
+  });
+
+  await withRepo(async (repo) => {
+    const listId = await repo.ensureDefaultList();
+    await repo.addProducts(listId, [
+      { title: 'Bearing, Ball, 6204-2RS', brand: 'ACME', modelNumber: '6204-2RS' },
+      { title: '6204 2RS Ball Bearing', brand: 'Acme Tools', modelNumber: '6204 2RS' },
+      { title: '3/4 IN NPT Brass Elbow', brand: 'ACME', modelNumber: 'NPT-ELBOW-075' }
+    ]);
+
+    const candidates = await repo.findDuplicateCandidates(listId);
+    assert.strictEqual(candidates.length, 1, 'repo reports one duplicate candidate pair');
+    assert.deepStrictEqual(plain(candidates[0].titles.slice().sort()), ['6204 2RS Ball Bearing', 'Bearing, Ball, 6204-2RS'],
+      'repo duplicate candidate reports the matching product titles');
+    assert.strictEqual(await repo.countProducts(listId), 3,
+      'duplicate detection does not merge or delete products');
   });
 
   console.log('product-repo.test.js: Dexie/fake-indexeddb assertions passed');

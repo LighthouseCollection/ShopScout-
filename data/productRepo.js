@@ -253,6 +253,13 @@
     return rows;
   }
 
+  async function findDuplicateCandidates(listId, options) {
+    const matcher = root.ShopScoutMatching;
+    if (!matcher || typeof matcher.detectDuplicateCandidates !== 'function') return [];
+    const rows = await listProducts(listId);
+    return matcher.detectDuplicateCandidates(rows, options);
+  }
+
   function evalFilters(row, filters) {
     /* Conjunctions: first row has no conj; later rows AND/OR with previous accumulator. */
     let acc = true;
@@ -318,6 +325,7 @@
     getProduct,
     listProducts,
     countProducts,
-    query
+    query,
+    findDuplicateCandidates
   };
 })(globalThis);

@@ -11,6 +11,10 @@ assert.ok(html.indexOf('src="normalization/attributes.js"') > -1,
   'popup loads attribute normalization for captured products');
 assert.ok(html.indexOf('src="normalization/attributes.js"') < html.indexOf('src="data/productRepo.js"'),
   'attribute normalization loads before productRepo in the popup');
+assert.ok(html.indexOf('src="normalization/matching.js"') > -1,
+  'popup loads dedupe matching helpers for product lists');
+assert.ok(html.indexOf('src="normalization/matching.js"') < html.indexOf('src="data/productRepo.js"'),
+  'dedupe matching loads before productRepo in the popup');
 assert.ok(html.includes('id="dashboardBtn"'), 'popup header includes the dashboard shortcut');
 assert.ok(html.includes('Open Comparison Dashboard'), 'dashboard shortcut is labeled Open Comparison Dashboard');
 assert.ok(html.indexOf('id="dashboardBtn"') < html.indexOf('id="settingsBtn"'),
