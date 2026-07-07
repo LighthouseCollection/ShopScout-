@@ -1173,3 +1173,24 @@ This file is the shared record for Claude and Codex. Append an entry for every m
   - Documenting the 0.9 review threshold in code as a named constant (optional).
   - Blocking-key pre-filter for duplicate detection before lists reach ~10K products (optional).
   - Redundant top-level + onInstalled `configureSidePanelBehavior` calls (optional cleanup).
+
+## 2026-07-07 11:29 - Consolidate normalization work onto shared branch
+
+- Agent: Codex
+- Branch: grid-rebuild-codex
+- Commit: This commit
+- Status: Implemented
+- Summary:
+  - Fast-forwarded `grid-rebuild-codex` from `1b540bd` to `07b85be`.
+  - Brought the normalization-local-units work, duplicate review improvements, normalization review page, and Claude review record onto the shared working branch.
+  - Preserved linear history; no merge commit and no conflict resolution were needed.
+  - This is branch consolidation after a user-requested normalization fork, not a functional code change.
+- Files touched:
+  - AGENT_CHANGELOG.md
+- Validation:
+  - git merge-base --is-ancestor grid-rebuild-codex normalization-local-units -> ff-ok before merge
+  - git merge --ff-only normalization-local-units -> passed
+- Review / handoff:
+  - Reviewer: Claude
+- Follow-ups:
+  - Push `grid-rebuild-codex` when the user wants the consolidated branch published to GitHub.
