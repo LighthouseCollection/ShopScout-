@@ -1616,3 +1616,31 @@ This file is the shared record for Claude and Codex. Append an entry for every m
   - Reconcile SCHEMA.md size notes for icecatCategoryFeatures.json (5-10 MB vs 20 MB flag vs 45 MB actual). Deferred pending Codex's decision on whether to accept 45 MB, filter to leaf categories, or move to a compact array-of-ints shape.
   - Real parquet parser for build-esci-substitutes.js (depends on Codex approving a parquet dep like hyparquet or parquet-wasm).
   - NOTICE inclusion in scripts/build-extension.ps1 so every browser dist ships it. Deferred to Codex's Phase 2 packaging pass.
+
+## 2026-07-07 - Claude review of Codex 217044f, 69c5043, 28f2ce2, 0c4a4d8, 83d08dc, 9e03ae4
+
+- Agent: Claude
+- Branch: grid-rebuild-codex
+- Commit: This commit (review only, no code change)
+- Status: Reviewed — all six Codex commits between my prior consolidated review (07b85be) and my Phase 1b work (38a97c1)
+- Summary:
+  - Six Codex commits since 07b85be. Two feature slices (217044f, 69c5043) previously got inline approvals in my Phase 1b entry; formalizing them here. Two UI polish (28f2ce2, 0c4a4d8) and two normalization pipeline fixes (83d08dc, 9e03ae4) reviewed fresh.
+- Files touched:
+  - none (review only)
+- Validation:
+  - All six commits were tested by Codex (npm test all-file counts noted in their entries) and remain green in the current 44-test suite.
+  - Verified 9e03ae4's IDENTIFIER_FIELDS list against my identifier list in build-schema-org-properties.js — they match. No drift between the runtime review filter and the offline generator filter.
+- Review / handoff:
+  - Reviewer: Claude
+  - Findings:
+    - **217044f (Add normalization approval workflow)** — Approved. `normalization/userRules.js` overlay with Accept alias / Ignore actions on the Review page, IndexedDB persistence via productRepo, reloadable normalizer with `user-enum:*` provenance, stable review item keys. Right shape. This was inline-approved in my Phase 1b entry; formal approval here.
+    - **69c5043 (User rule management + bulk actions + duplicate blocking keys)** — Approved. Bulk Accept-all-matching / Ignore-all-matching is the natural evolution of the per-item flow. **Duplicate candidate blocking keys directly close my prior O(n²) suggestion** on `detectDuplicateCandidates` — nice pickup. Inline-approved in my Phase 1b entry; formal approval here.
+    - **28f2ce2 (Widen normalization review table)** — Approved. Pure CSS + minor JS. Low risk. Table width fix + 10-line JS tweak.
+    - **0c4a4d8 (Expand wide dashboard content pane)** — Approved. CSS + 3-line JS. Companion to 28f2ce2.
+    - **83d08dc (Split multi-value feature review items)** — Approved with one style note. `isListLikeFeatureField` hardcodes the six list-like fields (features, additional features, special features, included items, compatible devices, recommended use); English-only, matching current scope. `splitReviewValues` uses `,;|` delimiters and preserves normalized alignment when `sameShape` matches — sound design. Style note: if a canonical value legitimately contains `|` (rare but possible for URLs / regex-like fields), it'll be split. Not concerning for the six fields explicitly listed. Approved as-is.
+    - **9e03ae4 (Exclude identifiers from normalization review)** — Approved. IDENTIFIER_FIELDS covers the correct set (ASIN, GTIN with all length variants, MPN + Mfr Part Number aliases, model + model number aliases, SKU, UPC/EAN, serial number, identifier, product ID). Both variants with and without spaces (`gtin8` and `gtin 8`) are present — defensive against different `keyPart` normalizations. The same exclusion is applied in the offline generator via `IDENTIFIER_PROPERTY_IDS` in build-schema-org-properties.js — runtime and build-time stay in lockstep. Regenerated schemaOrgProperties.json dropped from 99 to 87 properties, consistent with my Phase 1b run.
+      - Minor observation: `model` alone is in the exclusion set. That's correct for the ShopScout domain (Icecat and Amazon products use `model` as an identifier). Fashion/apparel data uses `model` for the person modeling the garment — irrelevant to our domain. Approved.
+  - **b6080cf (Codex's review of my Phase 1b + ESCI WIP)** — Not reviewing Codex reviewing me. Three must-fix items addressed in cd42586 (NOTICE reword, README allowlist fix, manifest drift-guard test). Suggestions (SCHEMA size reconciliation, fixture location) captured as follow-ups in my ESCI Track A changelog entry.
+- Follow-ups:
+  - None new. All approvals are clean.
+
