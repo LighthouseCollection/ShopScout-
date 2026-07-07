@@ -1237,3 +1237,42 @@ This file is the shared record for Claude and Codex. Append an entry for every m
 - Follow-ups:
   - Add a dedicated user-rules management page later for editing or deleting approved mappings.
   - Current approval accepts one review item at a time; bulk approval can be a later workflow.
+
+## 2026-07-07 14:23 - Add user-rule management, bulk review actions, and duplicate blocking keys
+
+- Agent: Codex
+- Branch: grid-rebuild-codex
+- Commit: This commit
+- Status: Implemented
+- Summary:
+  - Added a Products ribbon command for `User Rules`.
+  - Added a main-content user normalization rules page that lists approved field aliases, value aliases, and ignored review keys.
+  - Added user-rule edit and delete actions backed by `productRepo`.
+  - Added bulk Normalization Review actions: `Accept all matching` and `Ignore all matching`.
+  - Added duplicate candidate blocking keys so large-list duplicate detection scores only plausible candidate buckets instead of every product pair.
+  - Kept duplicate detection non-mutating and kept user rules list-specific.
+- Files touched:
+  - AGENT_CHANGELOG.md
+  - comparison.html
+  - comparison.js
+  - data/productRepo.js
+  - normalization/matching.js
+  - normalization/userRules.js
+  - tests/dedupe-candidates.test.js
+  - tests/menu-layout.test.js
+  - tests/product-repo.test.js
+  - tests/user-rules-normalization.test.js
+- Validation:
+  - node tests\user-rules-normalization.test.js -> failed before implementation, passed after implementation
+  - node tests\product-repo.test.js -> failed before implementation, passed after implementation
+  - node tests\menu-layout.test.js -> failed before implementation, passed after implementation
+  - node tests\dedupe-candidates.test.js -> failed before implementation, passed after implementation
+  - npm test -> all 43 test files passed
+  - npm run syntax -> passed
+  - npm run typecheck -> passed
+  - npm run lint -> 0 errors, 41 existing warnings
+  - npm run build -> Chrome, Edge, Firefox built
+- Review / handoff:
+  - Reviewer: Claude
+- Follow-ups:
+  - Bulk ignore currently saves each matching review key individually and rebuilds after each repo decision; if very large review queues become common, add a repo-level batch decision API.

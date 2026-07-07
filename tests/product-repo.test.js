@@ -316,6 +316,20 @@ async function seedProducts(repo, listId) {
     });
     rules = await repo.getUserNormalizationRules(listId);
     assert.ok(rules.ignored.includes(ignore.reviewKey), 'ignored review item key is persisted');
+
+    await repo.deleteUserNormalizationRule(listId, {
+      field: 'Connectivity Technology',
+      rawField: 'Connectivity Tech',
+      raw: 'Bluetooth LE',
+      normalized: 'Bluetooth',
+      reviewKey: ignore.reviewKey
+    });
+    rules = await repo.getUserNormalizationRules(listId);
+    assert.ok(!rules.fieldAliases['connectivity technology']?.includes('Connectivity Tech'),
+      'delete rule removes accepted field alias');
+    assert.ok(!rules.enums['Connectivity Technology']?.Bluetooth?.includes('Bluetooth LE'),
+      'delete rule removes accepted enum alias');
+    assert.ok(!rules.ignored.includes(ignore.reviewKey), 'delete rule removes ignored review key');
   });
 
   console.log('product-repo.test.js: Dexie/fake-indexeddb assertions passed');

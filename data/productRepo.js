@@ -402,6 +402,36 @@
     return result;
   }
 
+  async function deleteUserNormalizationRule(listId, item) {
+    if (!listId) return { ok: false, reason: 'missing-list' };
+    const userRules = root.ShopScoutUserNormalizationRules;
+    if (!userRules || typeof userRules.removeUserRulePatch !== 'function') {
+      return { ok: false, reason: 'missing-user-rules' };
+    }
+    const result = await withListLock(listId, async () => {
+      const current = await getUserNormalizationRules(listId);
+      const saved = await saveUserNormalizationRules(listId, userRules.removeUserRulePatch(current, item || {}));
+      return { ok: true, rules: saved };
+    });
+    if (result?.ok) await rebuildNormalizationForList(listId);
+    return result;
+  }
+
+  async function updateUserNormalizationRule(listId, fromItem, toItem) {
+    if (!listId) return { ok: false, reason: 'missing-list' };
+    const userRules = root.ShopScoutUserNormalizationRules;
+    if (!userRules || typeof userRules.replaceUserRulePatch !== 'function') {
+      return { ok: false, reason: 'missing-user-rules' };
+    }
+    const result = await withListLock(listId, async () => {
+      const current = await getUserNormalizationRules(listId);
+      const saved = await saveUserNormalizationRules(listId, userRules.replaceUserRulePatch(current, fromItem || {}, toItem || {}));
+      return { ok: true, rules: saved };
+    });
+    if (result?.ok) await rebuildNormalizationForList(listId);
+    return result;
+  }
+
   function evalFilters(row, filters) {
     /* Conjunctions: first row has no conj; later rows AND/OR with previous accumulator. */
     let acc = true;
@@ -475,6 +505,8 @@
     saveUserNormalizationRules,
     loadUserNormalizationRules,
     saveNormalizationReviewDecision,
+    deleteUserNormalizationRule,
+    updateUserNormalizationRule,
     rebuildNormalizationForList,
     ensureNormalizationReady,
     normalizeProductForStorage: normalizeIncoming

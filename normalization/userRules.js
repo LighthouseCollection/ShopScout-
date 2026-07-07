@@ -165,6 +165,48 @@
     return out;
   }
 
+  function removeFromArray(values, value) {
+    const target = normalizeToken(value);
+    return uniqueArray(values).filter(item => normalizeToken(item) !== target);
+  }
+
+  function pruneEmptyRules(rules) {
+    const out = normalizeRuleSet(rules);
+    for (const key of Object.keys(out.fieldAliases)) {
+      if (!out.fieldAliases[key].length) delete out.fieldAliases[key];
+    }
+    for (const field of Object.keys(out.enums)) {
+      for (const canonical of Object.keys(out.enums[field])) {
+        if (!out.enums[field][canonical].length) delete out.enums[field][canonical];
+      }
+      if (!Object.keys(out.enums[field]).length) delete out.enums[field];
+    }
+    return out;
+  }
+
+  function removeUserRulePatch(base, item) {
+    const out = normalizeRuleSet(base);
+    const fieldKey = normalizeToken(item?.field || item?.rawField || '');
+    const rawField = String(item?.rawField || '').trim();
+    const field = String(item?.field || '').trim();
+    const raw = String(item?.raw || '').trim();
+    const normalized = String(item?.normalized || '').trim();
+    const reviewKey = String(item?.reviewKey || '').trim();
+
+    if (fieldKey && rawField && out.fieldAliases[fieldKey]) {
+      out.fieldAliases[fieldKey] = removeFromArray(out.fieldAliases[fieldKey], rawField);
+    }
+    if (field && normalized && raw && out.enums[field]?.[normalized]) {
+      out.enums[field][normalized] = removeFromArray(out.enums[field][normalized], raw);
+    }
+    if (reviewKey) out.ignored = removeFromArray(out.ignored, reviewKey);
+    return pruneEmptyRules(out);
+  }
+
+  function replaceUserRulePatch(base, fromItem, toItem) {
+    return mergeRuleSets(removeUserRulePatch(base, fromItem), buildUserRulePatch(toItem));
+  }
+
   function ignoredSet() {
     return new Set(uniqueArray(BASE.userIgnored || []));
   }
@@ -188,6 +230,8 @@
     normalizeRuleSet,
     buildUserRulePatch,
     mergeRuleSets,
+    removeUserRulePatch,
+    replaceUserRulePatch,
     applyUserRulePatch,
     loadUserRules,
     ignoredSet,

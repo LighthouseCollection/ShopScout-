@@ -463,6 +463,72 @@ function bindEvents() {
       return;
     }
 
+    const normalizationBulkAction = e.target.closest('[data-normalization-bulk-action]');
+    if (normalizationBulkAction) {
+      const repo = globalThis.SSProductRepo;
+      const action = normalizationBulkAction.dataset.normalizationBulkAction || '';
+      if (!repo || typeof repo.getActiveListId !== 'function' || typeof repo.saveNormalizationReviewDecision !== 'function') {
+        toast.show('Normalization rule storage is not available.', 'error');
+        return;
+      }
+      const listId = await repo.getActiveListId();
+      const seed = normalizationItemFromDataset(normalizationBulkAction.dataset);
+      const items = (await collectCurrentNormalizationReviewItems()).filter(item => sameNormalizationSignature(item, seed));
+      if (!items.length) {
+        toast.show('No matching review items found.', 'error');
+        return;
+      }
+      if (action === 'accept-alias') {
+        const result = await repo.saveNormalizationReviewDecision(listId, { action, item: seed });
+        if (!result?.ok) {
+          toast.show('Could not save normalization decision.', 'error');
+          return;
+        }
+        toast.show(`Alias saved for ${items.length} matching item${items.length === 1 ? '' : 's'}.`);
+      } else if (action === 'ignore') {
+        let saved = 0;
+        for (const item of items) {
+          const result = await repo.saveNormalizationReviewDecision(listId, { action, item });
+          if (result?.ok) saved++;
+        }
+        toast.show(`Ignored ${saved} matching item${saved === 1 ? '' : 's'}.`);
+      }
+      await openNormalizationReviewPage();
+      return;
+    }
+
+    const userRuleAction = e.target.closest('[data-user-rule-action]');
+    if (userRuleAction) {
+      const repo = globalThis.SSProductRepo;
+      const action = userRuleAction.dataset.userRuleAction || '';
+      if (!repo || typeof repo.getActiveListId !== 'function') {
+        toast.show('User rule storage is not available.', 'error');
+        return;
+      }
+      const listId = await repo.getActiveListId();
+      const item = normalizationItemFromDataset(userRuleAction.dataset);
+      let result;
+      if (action === 'delete' && typeof repo.deleteUserNormalizationRule === 'function') {
+        result = await repo.deleteUserNormalizationRule(listId, item);
+      } else if (action === 'edit' && typeof repo.updateUserNormalizationRule === 'function') {
+        const nextAlias = await globalThis.ShopScoutUI?.prompt?.('Replacement raw alias/value', {
+          title: 'Edit user rule',
+          defaultValue: item.raw || item.rawField || '',
+          okLabel: 'Save'
+        });
+        if (nextAlias == null) return;
+        const next = Object.assign({}, item, item.raw ? { raw: nextAlias } : { rawField: nextAlias });
+        result = await repo.updateUserNormalizationRule(listId, item, next);
+      }
+      if (!result?.ok) {
+        toast.show('Could not update user rule.', 'error');
+        return;
+      }
+      toast.show(action === 'delete' ? 'User rule deleted.' : 'User rule updated.');
+      await openNormalizationRulesPage();
+      return;
+    }
+
     const selector = e.target.closest('.product-select-input');
     if (selector) {
       if (selector.disabled) return;
@@ -1270,6 +1336,13 @@ async function openDuplicateReviewPage() {
 function normalizationReviewRow(item) {
   const confidence = Math.round(Number(item.confidence || 0) * 100);
   const reason = item.reason || 'review';
+  const signatureAttrs = `
+    data-review-key="${escAttr(item.reviewKey || '')}"
+    data-product-id="${escAttr(item.productId || '')}"
+    data-raw-field="${escAttr(item.rawField || '')}"
+    data-field="${escAttr(item.field || '')}"
+    data-raw-value="${escAttr(item.raw || '')}"
+    data-normalized-value="${escAttr(item.normalized || '')}"`;
   return `<tr>
     <td>
       <strong title="${escAttr(item.productTitle)}">${esc(truncateText(item.productTitle, 64))}</strong>
@@ -1296,24 +1369,48 @@ function normalizationReviewRow(item) {
       <div class="normalization-review-actions">
         <button class="dashboard-primary-action dashboard-secondary-action--small" type="button"
           data-normalization-action="accept-alias"
-          data-review-key="${escAttr(item.reviewKey || '')}"
-          data-product-id="${escAttr(item.productId || '')}"
-          data-raw-field="${escAttr(item.rawField || '')}"
-          data-field="${escAttr(item.field || '')}"
-          data-raw-value="${escAttr(item.raw || '')}"
-          data-normalized-value="${escAttr(item.normalized || '')}">Accept alias</button>
+          ${signatureAttrs}>Accept alias</button>
+        <button class="dashboard-secondary-action dashboard-secondary-action--small" type="button"
+          data-normalization-bulk-action="accept-alias"
+          ${signatureAttrs}>Accept all matching</button>
         <button class="dashboard-secondary-action dashboard-secondary-action--small" type="button"
           data-normalization-action="ignore"
-          data-review-key="${escAttr(item.reviewKey || '')}"
-          data-product-id="${escAttr(item.productId || '')}"
-          data-raw-field="${escAttr(item.rawField || '')}"
-          data-field="${escAttr(item.field || '')}"
-          data-raw-value="${escAttr(item.raw || '')}"
-          data-normalized-value="${escAttr(item.normalized || '')}">Ignore</button>
+          ${signatureAttrs}>Ignore</button>
+        <button class="dashboard-secondary-action dashboard-secondary-action--small" type="button"
+          data-normalization-bulk-action="ignore"
+          ${signatureAttrs}>Ignore all matching</button>
         ${item.productId ? `<button class="dashboard-secondary-action dashboard-secondary-action--small" type="button" data-duplicate-open="${escAttr(item.productId)}">Open</button>` : ''}
       </div>
     </td>
   </tr>`;
+}
+
+function normalizationItemFromDataset(dataset) {
+  return {
+    reviewKey: dataset.reviewKey || '',
+    productId: dataset.productId || '',
+    rawField: dataset.rawField || '',
+    field: dataset.field || '',
+    raw: dataset.rawValue || '',
+    normalized: dataset.normalizedValue || ''
+  };
+}
+
+function sameNormalizationSignature(a, b) {
+  const fields = ['rawField', 'field', 'raw', 'normalized'];
+  return fields.every(field => String(a?.[field] || '').trim().toLowerCase() === String(b?.[field] || '').trim().toLowerCase());
+}
+
+async function collectCurrentNormalizationReviewItems() {
+  const repo = globalThis.SSProductRepo;
+  const listId = repo && typeof repo.getActiveListId === 'function' ? await repo.getActiveListId() : '';
+  const products = listId && repo && typeof repo.listProducts === 'function'
+    ? await repo.listProducts(listId)
+    : await getProducts();
+  const reviewer = globalThis.ShopScoutNormalizationReview;
+  return reviewer && typeof reviewer.collectNormalizationReviewItems === 'function'
+    ? reviewer.collectNormalizationReviewItems(products)
+    : [];
 }
 
 async function openNormalizationReviewPage() {
@@ -1323,13 +1420,7 @@ async function openNormalizationReviewPage() {
   if (listId && repo && typeof repo.rebuildNormalizationForList === 'function') {
     await repo.rebuildNormalizationForList(listId);
   }
-  const products = listId && repo && typeof repo.listProducts === 'function'
-    ? await repo.listProducts(listId)
-    : await getProducts();
-  const reviewer = globalThis.ShopScoutNormalizationReview;
-  const items = reviewer && typeof reviewer.collectNormalizationReviewItems === 'function'
-    ? reviewer.collectNormalizationReviewItems(products)
-    : [];
+  const items = await collectCurrentNormalizationReviewItems();
   const body = !items.length
     ? `<div class="dashboard-empty">
         <h3>No normalization items need review</h3>
@@ -1363,6 +1454,105 @@ async function openNormalizationReviewPage() {
     'Normalization Review',
     `${data.activeList || 'Current list'} · deterministic review queue`,
     body
+  );
+}
+
+function userRuleRowsHtml(rules) {
+  const rows = [];
+  for (const [key, aliases] of Object.entries(rules.fieldAliases || {})) {
+    const canonical = rules.canonicalFields?.[key] || key;
+    for (const alias of aliases || []) {
+      rows.push({
+        type: 'Field alias',
+        field: canonical,
+        rawField: alias,
+        raw: '',
+        normalized: '',
+        reviewKey: ''
+      });
+    }
+  }
+  for (const [field, values] of Object.entries(rules.enums || {})) {
+    for (const [normalized, aliases] of Object.entries(values || {})) {
+      for (const alias of aliases || []) {
+        rows.push({
+          type: 'Value alias',
+          field,
+          rawField: field,
+          raw: alias,
+          normalized,
+          reviewKey: ''
+        });
+      }
+    }
+  }
+  for (const reviewKey of rules.ignored || []) {
+    rows.push({
+      type: 'Ignored review item',
+      field: '',
+      rawField: '',
+      raw: '',
+      normalized: '',
+      reviewKey
+    });
+  }
+  if (!rows.length) {
+    return `<div class="dashboard-empty">
+      <h3>No user rules yet</h3>
+      <p>Accept aliases or ignore items from Normalization Review to build this list-specific library.</p>
+    </div>`;
+  }
+  return `<div class="normalization-review-table-wrap">
+    <table class="normalization-review-table">
+      <thead>
+        <tr><th>Type</th><th>Field</th><th>Raw alias</th><th>Normalized value</th><th>Rule key</th><th></th></tr>
+      </thead>
+      <tbody>${rows.map(row => `<tr>
+        <td>${esc(row.type)}</td>
+        <td>${esc(row.field || '-')}</td>
+        <td>${esc(row.raw || row.rawField || '-')}</td>
+        <td>${esc(row.normalized || '-')}</td>
+        <td><code>${esc(row.reviewKey || row.rawField || row.raw || '-')}</code></td>
+        <td>
+          <div class="normalization-review-actions">
+            ${row.type !== 'Ignored review item' ? `<button class="dashboard-secondary-action dashboard-secondary-action--small" type="button"
+              data-user-rule-action="edit"
+              data-raw-field="${escAttr(row.rawField)}"
+              data-field="${escAttr(row.field)}"
+              data-raw-value="${escAttr(row.raw)}"
+              data-normalized-value="${escAttr(row.normalized)}">Edit</button>` : ''}
+            <button class="dashboard-secondary-action dashboard-secondary-action--small" type="button"
+              data-user-rule-action="delete"
+              data-review-key="${escAttr(row.reviewKey)}"
+              data-raw-field="${escAttr(row.rawField)}"
+              data-field="${escAttr(row.field)}"
+              data-raw-value="${escAttr(row.raw)}"
+              data-normalized-value="${escAttr(row.normalized)}">Delete</button>
+          </div>
+        </td>
+      </tr>`).join('')}</tbody>
+    </table>
+  </div>`;
+}
+
+async function openNormalizationRulesPage() {
+  const repo = globalThis.SSProductRepo;
+  const data = await getData();
+  if (!repo || typeof repo.getActiveListId !== 'function' || typeof repo.getUserNormalizationRules !== 'function') {
+    openDashboardInfoPage('User Normalization Rules', data.activeList || 'Current list', '<div class="dashboard-empty"><h3>User rules are unavailable</h3></div>');
+    return;
+  }
+  const listId = await repo.getActiveListId();
+  const rules = await repo.getUserNormalizationRules(listId);
+  openDashboardInfoPage(
+    'User Normalization Rules',
+    `${data.activeList || 'Current list'} · list-specific approved mappings`,
+    `<div class="normalization-review-page">
+      <div class="normalization-review-note">
+        Edit or delete mappings approved from Normalization Review. These rules apply only to this product list.
+      </div>
+      ${userRuleRowsHtml(rules)}
+    </div>`
   );
 }
 
@@ -1467,6 +1657,7 @@ function bindRibbonCommandEvents() {
     else if (command === 'settings') openSettingsPage();
     else if (command === 'duplicate-review') openDuplicateReviewPage();
     else if (command === 'normalization-review') openNormalizationReviewPage();
+    else if (command === 'normalization-rules') openNormalizationRulesPage();
     else if (command === 'show-view-tab') activateRibbonTab('view');
     else if (command === 'show-help-tab') activateRibbonTab('about');
     else if (command === 'export') openExportPage();

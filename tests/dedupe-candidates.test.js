@@ -81,4 +81,21 @@ assert.deepStrictEqual(
   'dedupe detection does not mutate or remove products'
 );
 
+const bigList = [];
+for (let i = 0; i < 80; i++) {
+  bigList.push({
+    id: 'large-' + i,
+    title: i < 2 ? `Canon Camera Model X100 ${i}` : `Unrelated Product ${i}`,
+    brand: i < 2 ? 'Canon' : 'Brand' + i,
+    modelNumber: i < 2 ? 'X100' : 'MODEL-' + i
+  });
+}
+const largeCandidates = plain(M.detectDuplicateCandidates(bigList));
+assert.deepStrictEqual(
+  largeCandidates.map(candidate => candidate.productIds),
+  [['large-0', 'large-1']],
+  'blocking keys keep duplicate detection focused without losing real same-bucket candidates'
+);
+assert.ok(M.blockingKey(bigList[0]), 'matcher exposes blocking keys for large-list candidate bucketing');
+
 console.log('dedupe-candidates.test.js: assertions passed');

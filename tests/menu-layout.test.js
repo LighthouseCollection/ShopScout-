@@ -84,6 +84,7 @@ assertIncludes('Delete Product(s)', 'Products tab exposes Delete Product(s)');
 assertIncludes('Rescan Products', 'Products tab exposes Rescan Products');
 assertIncludes('data-command="duplicate-review"', 'Products tab exposes possible-duplicate review');
 assertIncludes('data-command="normalization-review"', 'Products tab exposes normalization review');
+assertIncludes('data-command="normalization-rules"', 'Products tab exposes user normalization rules');
 assert.ok(js.includes('openDuplicateReviewPage'), 'comparison script renders possible duplicate candidates in main content');
 assert.ok(js.includes('findDuplicateCandidates'), 'duplicate review uses the repo candidate detector');
 assert.ok(js.includes('data-duplicate-decision="not-duplicate"'), 'duplicate review can mark candidate groups as not duplicate');
@@ -94,7 +95,11 @@ assert.ok(js.includes('collectNormalizationReviewItems'), 'normalization review 
 assert.ok(js.includes('rebuildNormalizationForList'), 'normalization review backfills existing captured products before rendering');
 assert.ok(js.includes('data-normalization-action="accept-alias"'), 'normalization review exposes accept-alias workflow');
 assert.ok(js.includes('data-normalization-action="ignore"'), 'normalization review exposes ignore workflow');
+assert.ok(js.includes('data-normalization-bulk-action="accept-alias"'), 'normalization review exposes bulk accept workflow');
+assert.ok(js.includes('data-normalization-bulk-action="ignore"'), 'normalization review exposes bulk ignore workflow');
 assert.ok(js.includes('saveNormalizationReviewDecision'), 'normalization review persists decisions through productRepo');
+assert.ok(js.includes('openNormalizationRulesPage'), 'comparison script renders user normalization rules page');
+assert.ok(js.includes('deleteUserNormalizationRule'), 'user rules page deletes approved mappings through productRepo');
 assertNotIncludes('data-command="cancel-run"', 'Cancel Scan is removed from the ribbon (per UX cleanup)');
 assertNotIncludes('data-command="keyboard-shortcuts"', 'Keyboard Shortcuts button is removed from the About group');
 

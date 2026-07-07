@@ -115,6 +115,23 @@
     return left.some(value => right.has(value));
   }
 
+  function blockingKeys(product) {
+    const keys = [];
+    for (const id of extractIdentifiers(product)) {
+      if (id) keys.push('id:' + id);
+    }
+    const brand = compact(brandOf(product));
+    const tokens = Array.from(tokenSet(product)).filter(token => token.length >= 3).slice(0, 3);
+    if (brand && tokens.length) keys.push('bt:' + brand + ':' + tokens[0]);
+    if (brand) keys.push('brand:' + brand);
+    if (!keys.length && tokens.length) keys.push('tok:' + tokens[0]);
+    return Array.from(new Set(keys));
+  }
+
+  function blockingKey(product) {
+    return blockingKeys(product)[0] || '';
+  }
+
   function scorePair(a, b) {
     const aIds = extractIdentifiers(a);
     const bIds = extractIdentifiers(b);
@@ -161,9 +178,26 @@
   function detectDuplicateCandidates(products, options) {
     const input = Array.isArray(products) ? products : [];
     const threshold = Number(options && options.threshold) || 0.72;
+    const bucketLimit = Math.max(2, Number(options && options.bucketLimit) || 300);
+    const buckets = new Map();
+    input.forEach((product, index) => {
+      const keys = blockingKeys(product);
+      for (const key of keys) {
+        if (!buckets.has(key)) buckets.set(key, []);
+        const bucket = buckets.get(key);
+        if (bucket.length < bucketLimit) bucket.push(index);
+      }
+    });
+    const pairKeys = new Set();
     const out = [];
-    for (let i = 0; i < input.length; i++) {
-      for (let j = i + 1; j < input.length; j++) {
+    for (const indexes of buckets.values()) {
+      for (let left = 0; left < indexes.length; left++) {
+        for (let right = left + 1; right < indexes.length; right++) {
+          const i = indexes[left];
+          const j = indexes[right];
+          const pairKey = i < j ? `${i}:${j}` : `${j}:${i}`;
+          if (pairKeys.has(pairKey)) continue;
+          pairKeys.add(pairKey);
         const result = scorePair(input[i], input[j]);
         if (result.score < threshold) continue;
         const productIds = [productId(input[i], i), productId(input[j], j)];
@@ -178,12 +212,15 @@
         });
       }
     }
+    }
     out.sort((a, b) => b.score - a.score || a.productIds.join('|').localeCompare(b.productIds.join('|')));
     return out;
   }
 
   Object.assign(NS, {
     extractIdentifiers,
+    blockingKey,
+    blockingKeys,
     scorePair,
     detectDuplicateCandidates
   });

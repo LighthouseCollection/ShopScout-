@@ -84,4 +84,28 @@ const items = review.collectNormalizationReviewItems([
 
 assert.strictEqual(items.length, 0, 'ignored review items are omitted from the review queue');
 
+const managed = userRules.removeUserRulePatch(userRules.normalizeRuleSet({
+  fieldAliases: { 'connectivity technology': ['Connectivity Tech', 'Wireless Mode'] },
+  canonicalFields: { 'connectivity technology': 'Connectivity Technology' },
+  enums: { 'Connectivity Technology': { Bluetooth: ['Bluetooth LE', 'BT 5.0'] } },
+  ignored: ['p1|supplier shade|supplier shade|marketing gray|marketing gray']
+}), {
+  field: 'Connectivity Technology',
+  rawField: 'Connectivity Tech',
+  raw: 'Bluetooth LE',
+  normalized: 'Bluetooth',
+  reviewKey: 'p1|supplier shade|supplier shade|marketing gray|marketing gray'
+});
+
+assert.deepStrictEqual(
+  JSON.parse(JSON.stringify(managed)),
+  {
+    fieldAliases: { 'connectivity technology': ['Wireless Mode'] },
+    canonicalFields: { 'connectivity technology': 'Connectivity Technology' },
+    enums: { 'Connectivity Technology': { Bluetooth: ['BT 5.0'] } },
+    ignored: []
+  },
+  'user rule removal deletes the selected alias and ignored review key without removing unrelated mappings'
+);
+
 console.log('user-rules-normalization.test.js: assertions passed');
