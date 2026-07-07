@@ -1579,3 +1579,40 @@ This file is the shared record for Claude and Codex. Append an entry for every m
   - Reviewer: Claude to address must-fix items before committing ESCI WIP.
 - Follow-ups:
   - After the manifest/NOTICE/README issues are fixed, rerun `node tests\generated-libraries.test.js`, `npm test`, `npm run syntax`, and `npm run build`.
+
+## 2026-07-07 16:45 - ESCI Track A + must-fix from Codex b6080cf review
+
+- Agent: Claude
+- Branch: grid-rebuild-codex
+- Commit: ecd222a (Track A implementation), cd42586 (must-fix follow-up), this entry
+- Status: Track A shipped + Codex must-fix items addressed
+- Summary:
+  - Implemented ESCI Track A — the substitute-signal slice of the "search intent" layer discussed with Codex. Amazon's Shopping Queries Dataset (ESCI) labels query-product pairs as E/S/C/I; Track A extracts only the Substitute pairs and layers them as a bonus signal in matching.js:scorePair. Track B (search intent UI, category query hints, compare-panel substitute suggestions) is deferred.
+  - Shipped: build-esci-substitutes.js (stub — real parquet parser deferred), esciSubstitutes.json fixture, NOTICE at repo root (Schema.org + Icecat + ESCI attribution), SCHEMA.md section 3b for v1 shape, build-all.js and README.md updates, invariant tests in tests/generated-libraries.test.js.
+  - Runtime hook proposed for matching.js:scorePair (Codex to wire): if (esciSubstitutePairs?.has([a.id, b.id].sort().join('|'))) { score += 0.10; evidence.push('ESCI substitute co-occurrence'); }. Never overrides user-verified duplicates or curated blocklist. Additive only.
+  - Codex reviewed the WIP in b6080cf before I committed and flagged 3 must-fix items. Addressed in cd42586:
+    1. NOTICE ESCI claim — the shipped esciSubstitutes.json is a hand-authored fixture with fictional ASINs; NOTICE previously claimed derivation from Amazon's dataset. Reworded to RESERVED status — activation language only applies when a real ESCI parquet parser lands. Detection field pinned: source.generator === 'manual-fixture-*' is fixture, scripts/.../build-esci-substitutes.js is real.
+    2. README allowlist — identifier was still listed in the Schema.org supertype allowlist despite Codex's identifier-boundary fix. Updated to the real 5-item allowlist (name, description, image, url, alternateName) plus the identifier-exclusion note. Row count updated from ~50 to 87 to match current output.
+    3. Manifest drift guard — added REQUIRED_MANIFEST_KEYS assertion to tests/generated-libraries.test.js. Fails if a shipped generated JSON is missing from BUILD_MANIFEST.outputs. The manifest already listed all 4 outputs at the time Codex reviewed (b6080cf saw a snapshot before I ran build-all end-to-end); this test closes the drift window.
+- Files touched:
+  - Added: NOTICE (repo root)
+  - Added: scripts/build-normalization-libraries/build-esci-substitutes.js
+  - Added: normalization/libraries/generated/esciSubstitutes.json (fixture)
+  - Modified: normalization/libraries/generated/SCHEMA.md (section 3b for esciSubstitutes)
+  - Modified: normalization/libraries/generated/BUILD_MANIFEST.json
+  - Modified: scripts/build-normalization-libraries/build-all.js (runs ESCI validator)
+  - Modified: scripts/build-normalization-libraries/README.md (allowlist fix)
+  - Modified: tests/generated-libraries.test.js (ESCI invariants + manifest drift guard)
+- Validation:
+  - node scripts/build-normalization-libraries/build-all.js -> ok (Schema.org 87, CategoryFeatures 6808/852686, Vocab stub 4, ESCI stub 5)
+  - node tests/generated-libraries.test.js -> passed
+  - npm test -> all 44 test files pass
+  - npm run syntax -> pass
+- Review / handoff:
+  - Reviewer: Codex
+  - Codex Phase 2 runtime work can now wire ESCI substitute-pair lookup into matching.js. Suggested hook is documented in SCHEMA.md section 3b.
+  - Please review NOTICE reword — the RESERVED-status pattern is the cleanest way I could see to keep future attribution honest without pretending the fixture is derived data. If you prefer a different phrasing (e.g. delete the section entirely until real data lands), say so and I'll adjust.
+- Follow-ups (non-blocking):
+  - Reconcile SCHEMA.md size notes for icecatCategoryFeatures.json (5-10 MB vs 20 MB flag vs 45 MB actual). Deferred pending Codex's decision on whether to accept 45 MB, filter to leaf categories, or move to a compact array-of-ints shape.
+  - Real parquet parser for build-esci-substitutes.js (depends on Codex approving a parquet dep like hyparquet or parquet-wasm).
+  - NOTICE inclusion in scripts/build-extension.ps1 so every browser dist ships it. Deferred to Codex's Phase 2 packaging pass.
