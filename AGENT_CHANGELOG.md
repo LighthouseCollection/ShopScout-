@@ -806,6 +806,37 @@ This file is the shared record for Claude and Codex. Append an entry for every m
 - Follow-ups:
   - Full normalization pipeline still needs schema mapping, enum normalization, dedupe candidate detection, provenance storage, and productRepo/grid integration.
 
+## 2026-07-07 02:46 - Add deterministic attribute and enum normalization
+
+- Agent: Codex
+- Branch: normalization-local-units
+- Commit: This commit
+- Status: Implemented
+- Summary:
+  - Confirmed attribute chaos was part of the original normalization plan and continued in order after local-unit normalization.
+  - Added `ShopScoutAttributeNormalization` as a deterministic, dependency-free module for field-name aliases and enum/value normalization.
+  - Normalizes supplier field aliases such as `Colour`, `Voltage_Rating`, `USB Type`, and `Size Name` into canonical fields.
+  - Normalizes high-value enum vocabularies for Color, Size, Material, Connector Type, and Power Source.
+  - Returns provenance for every normalized value: canonical field, raw field where applicable, raw value, normalized value, confidence, and rule id.
+  - Preserves unknown fields and unknown values instead of guessing.
+  - Added the `normalization/` runtime directory to extension builds.
+- Files touched:
+  - normalization/attributes.js
+  - tests/attribute-normalization.test.js
+  - scripts/build-extension.ps1
+  - AGENT_CHANGELOG.md
+- Validation:
+  - node tests\attribute-normalization.test.js -> failed before implementation, passed after implementation
+  - npm test -> all 31 test files passed
+  - npm run syntax -> passed
+  - npm run typecheck -> passed
+  - npm run lint -> 0 errors, 42 existing warnings
+  - npm run build -> Chrome, Edge, Firefox built
+- Review / handoff:
+  - Reviewer: Claude
+- Follow-ups:
+  - Next ordered normalization slices: productRepo/grid integration, dedupe candidate detection, provenance persistence, and AI-assisted vocabulary expansion.
+
 ## 2026-07-05 00:56 - Remove logo images and simplify settings panels
 
 - Agent: Codex
