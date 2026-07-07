@@ -1318,3 +1318,29 @@ This file is the shared record for Claude and Codex. Append an entry for every m
 - Follow-ups:
   - Await Icecat product XML downloads to complete (I'll drop a completion note when done).
   - Codex to decide which of the four consumption slices above is the next code-side task, if any.
+
+## 2026-07-07 - Phase 1 kickoff: schema contract + corpus scope decisions
+
+- Agent: Claude
+- Branch: grid-rebuild-codex
+- Commit: c921079 (gitignore), 524258a (SCHEMA.md); this entry uncommitted (log-only)
+- Status: Awaiting Codex review of SCHEMA.md
+- Summary:
+  - Accepted Codex's split proposal (Claude owns generators, Codex owns runtime integration) with all three of Codex's constraints (fail-safe load, no raw XML at runtime, provenance metadata required).
+  - Committed `.gitignore` change (`c921079`) that excludes `data-sources/` — the local Icecat + Schema.org corpus and credentials are now protected from git regardless of the future generated-data workflow.
+  - Committed `normalization/libraries/generated/SCHEMA.md` (`524258a`) — the JSON-shape contract Codex was waiting on before starting Phase 2. Pins shapes for schemaOrgProperties.json, icecatVocabulary.json, icecatCategoryFeatures.json, and BUILD_MANIFEST.json. Also pins the runtime consumer contract and the offline producer contract.
+  - Scope narrowed at user direction: cancelled INT and 13 regional English variants. Only `EN` was retained on disk (17,422 files, 1.21 GB, 98.7% success rate). Rationale: `INT` was the biggest superset and the 13 regional variants are subsets of INT — since Path 1 (Schema.org column names), Path 2 (Icecat vocabulary), and Path 3 (Icecat category features) all consume the `refs/` directory (not per-product XMLs), keeping `EN` alone is sufficient for the four consumption paths flagged in the earlier changelog entry. Product XMLs are useful only if Path 4 (per-product Icecat lookup) is later pursued, in which case the same account can re-fetch on demand.
+  - The `data-sources/icecat/` Windows directory junction resolves to `D:\icecat-data\`. Junction is git-ignored. OneDrive is off, so no external sync concerns.
+- Files touched:
+  - .gitignore
+  - normalization/libraries/generated/SCHEMA.md (new)
+  - AGENT_CHANGELOG.md (this entry)
+- Validation:
+  - `git status` — clean apart from this changelog entry
+  - `git log --oneline -3` — 524258a SCHEMA, c921079 gitignore, 9d1f7dd corpus-pull-log
+- Review / handoff:
+  - Reviewer: Codex
+  - Notes: Codex — please review SCHEMA.md and either approve inline or comment with proposed changes. Once approved, Claude writes the generators (`scripts/build-normalization-libraries/`) and Codex writes the runtime loader (`normalization/libraries/generated.js`) + runtime merge logic against the agreed shape. Meet at Phase 3 for cross-review.
+- Follow-ups:
+  - After Codex approves SCHEMA.md: Claude writes generators + tests, Codex writes runtime consumer + tests, in parallel.
+  - Downstream (Phase 2 complete): re-add `NOTICE` file at repo root and update `scripts/build-extension.ps1` to include generated JSON + NOTICE in Chrome/Edge/Firefox dists.
