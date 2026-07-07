@@ -5,3 +5,8 @@ dist/
 .env.*
 Thumbs.db
 .DS_Store
+
+# Local data corpus (Icecat + Schema.org). Directory junction to
+# D:\icecat-data\. Contains raw XMLs (24 GB target) and secrets
+# (.netrc with Icecat basic-auth). Never commit any of this.
+data-sources/
