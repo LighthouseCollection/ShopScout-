@@ -837,6 +837,46 @@ This file is the shared record for Claude and Codex. Append an entry for every m
 - Follow-ups:
   - Next ordered normalization slices: productRepo/grid integration, dedupe candidate detection, provenance persistence, and AI-assisted vocabulary expansion.
 
+## 2026-07-07 02:56 - Wire normalized attributes into product storage and grid projection
+
+- Agent: Codex
+- Branch: normalization-local-units
+- Commit: This commit
+- Status: Implemented
+- Summary:
+  - Continued the normalization plan in order by integrating deterministic attribute normalization into persistence and grid projection.
+  - ProductRepo now enriches added products with `_normalizedAttributes` when `ShopScoutAttributeNormalization` is loaded.
+  - Stored normalized attributes include raw field, raw value, normalized value, confidence, and rule id.
+  - SlickGrid projections now prefer persisted `_normalizedAttributes` and fall back to on-the-fly normalization for older products.
+  - Normalized spec aliases such as `Colour` now appear under canonical grid fields such as `spec:color`.
+  - Normalized enum values such as `midnight blue` and `wired` render as `Navy Blue` and `Corded Electric` in grid rows.
+  - Added script-order wiring so `normalization/attributes.js` loads before `data/productRepo.js` in `popup.html` and `comparison.html`.
+- Files touched:
+  - data/productRepo.js
+  - grid-rebuild-codex/projections.js
+  - grid-rebuild-codex/tests/projections.test.js
+  - tests/product-repo.test.js
+  - tests/comparison-table-defaults.test.js
+  - tests/popup-layout.test.js
+  - comparison.html
+  - popup.html
+  - AGENT_CHANGELOG.md
+- Validation:
+  - node tests\product-repo.test.js -> failed before implementation, passed after implementation
+  - node grid-rebuild-codex\tests\projections.test.js -> failed before implementation, passed after implementation
+  - node tests\attribute-normalization.test.js -> passed
+  - node tests\popup-layout.test.js -> passed
+  - node tests\comparison-table-defaults.test.js -> passed
+  - npm test -> all 31 test files passed
+  - npm run syntax -> passed
+  - npm run typecheck -> passed
+  - npm run lint -> 0 errors, 42 existing warnings
+  - npm run build -> Chrome, Edge, Firefox built
+- Review / handoff:
+  - Reviewer: Claude
+- Follow-ups:
+  - Next ordered slices: dedupe candidate detection, richer provenance review UI, and AI-assisted vocabulary expansion.
+
 ## 2026-07-05 00:56 - Remove logo images and simplify settings panels
 
 - Agent: Codex

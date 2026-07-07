@@ -33,6 +33,7 @@ function createContext() {
   ctx.globalThis = ctx;
   vm.createContext(ctx);
   loadScript(ctx, 'shared/values/cellValues.js');
+  loadScript(ctx, 'normalization/attributes.js');
   loadScript(ctx, 'shared/projections/specProjection.js');
   loadScript(ctx, 'grid-rebuild-codex/projections.js');
   return ctx;
@@ -64,7 +65,8 @@ const products = [
     },
     rawSpecs: [
       { key: 'Battery Life', value: '2 hours' },
-      { key: 'Dots per inch', value: '800 DPI' }
+      { key: 'Dots per inch', value: '800 DPI' },
+      { key: 'Colour', value: 'midnight blue' }
     ]
   },
   {
@@ -80,7 +82,8 @@ const products = [
     url: 'https://example.com/p2',
     rawSpecs: [
       { key: 'battery life', value: '90 minutes' },
-      { key: 'Voltage', value: '12 volts' }
+      { key: 'Voltage', value: '12 volts' },
+      { key: 'Power Source', value: 'wired' }
     ]
   }
 ];
@@ -111,7 +114,7 @@ assert.equal(typeof projections.buildComparisonMatrixProjection, 'function',
   'products-as-columns matrix projection is exposed');
 
 const rowsProjection = projections.buildProductsRowsProjection(products, {
-  visibleSpecKeys: ['battery life', 'dpi']
+  visibleSpecKeys: ['battery life', 'dpi', 'Color', 'Power Source']
 });
 
 assert.equal(rowsProjection.mode, 'productsRows');
@@ -124,6 +127,8 @@ assert.ok(rowsProjection.columns.some(column => column.id === 'spec:battery life
   'requested canonical spec columns are included');
 assert.ok(rowsProjection.columns.some(column => column.id === 'spec:dpi'),
   'abbreviation-equivalent spec column is canonicalized');
+assert.ok(rowsProjection.columns.some(column => column.id === 'spec:color'),
+  'attribute-normalized spec field aliases are exposed under canonical field names');
 assert.equal(
   rowsProjection.columns[rowsProjection.columns.length - 1].id,
   'actions',
@@ -146,7 +151,16 @@ assert.equal(rowsProjection.rows[0]._shopScout.productId, 'p1');
 assert.equal(rowsProjection.rows[0]._shopScout.revision, 7);
 assert.equal(rowsProjection.rows[0]['spec:battery life'], '2 hours');
 assert.equal(rowsProjection.rows[0]['spec:dpi'], '800 DPI');
+assert.equal(rowsProjection.rows[0]['spec:color'], 'Navy Blue');
+assert.deepEqual(rowsProjection.rows[0]._shopScout.normalizedAttributes['Color'], {
+  rawField: 'Colour',
+  raw: 'midnight blue',
+  normalized: 'Navy Blue',
+  confidence: 0.95,
+  rule: 'enum:color:navy-blue'
+});
 assert.equal(rowsProjection.rows[1]['spec:battery life'], '90 minutes');
+assert.equal(rowsProjection.rows[1]['spec:power source'], 'Corded Electric');
 
 const identityProjection = projections.buildProductsRowsProjection(identityProducts, {});
 assert.equal(identityProjection.rows[0].title, 'Microsoft | ANB-00001',

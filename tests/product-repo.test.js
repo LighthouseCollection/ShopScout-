@@ -11,7 +11,12 @@ const Dexie = require('../vendor/dexie.min.js');
 Dexie.dependencies.indexedDB = indexedDB;
 Dexie.dependencies.IDBKeyRange = IDBKeyRange;
 const dbSrc = fs.readFileSync(path.join(__dirname, '..', 'data', 'db.js'), 'utf8');
+const attrSrc = fs.readFileSync(path.join(__dirname, '..', 'normalization', 'attributes.js'), 'utf8');
 const repoSrc = fs.readFileSync(path.join(__dirname, '..', 'data', 'productRepo.js'), 'utf8');
+
+function plain(value) {
+  return JSON.parse(JSON.stringify(value));
+}
 
 async function createRepoContext() {
   const ctx = {
@@ -30,6 +35,7 @@ async function createRepoContext() {
   await Dexie.delete('shopscout');
   vm.runInContext(dbSrc, ctx, { filename: 'data/db.js' });
   await ctx.SSDB.db.open();
+  vm.runInContext(attrSrc, ctx, { filename: 'normalization/attributes.js' });
   vm.runInContext(repoSrc, ctx, { filename: 'data/productRepo.js' });
   return ctx;
 }
@@ -113,6 +119,36 @@ async function seedProducts(repo, listId) {
     const listId = await repo.ensureDefaultList();
     assert.strictEqual(await repo.countProducts(listId), 0,
       'fresh fake-indexeddb setup starts each case with no products');
+  });
+
+  await withRepo(async (repo) => {
+    const listId = await repo.ensureDefaultList();
+    const added = await repo.addProduct(listId, {
+      title: 'Supplier keyboard',
+      rawSpecs: [
+        { key: 'Colour', value: 'midnight blue' },
+        { key: 'Size Name', value: 'medium' }
+      ]
+    });
+
+    assert.deepStrictEqual(plain(added._normalizedAttributes.Color), {
+      rawField: 'Colour',
+      raw: 'midnight blue',
+      normalized: 'Navy Blue',
+      confidence: 0.95,
+      rule: 'enum:color:navy-blue'
+    }, 'added product carries normalized Color provenance');
+    assert.deepStrictEqual(plain(added._normalizedAttributes.Size), {
+      rawField: 'Size Name',
+      raw: 'medium',
+      normalized: 'M',
+      confidence: 1,
+      rule: 'enum:size:m'
+    }, 'added product carries normalized Size provenance');
+
+    const stored = await repo.getProduct(added.id);
+    assert.strictEqual(stored._normalizedAttributes.Color.normalized, 'Navy Blue',
+      'normalized attributes are persisted in IndexedDB');
   });
 
   console.log('product-repo.test.js: Dexie/fake-indexeddb assertions passed');

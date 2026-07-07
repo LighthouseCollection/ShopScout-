@@ -139,7 +139,9 @@
   }
 
   function normalizeProductAttributes(product) {
-    const specs = product && Array.isArray(product.specs) ? product.specs : [];
+    const specs = product && Array.isArray(product.specs) ? product.specs
+      : product && Array.isArray(product.rawSpecs) ? product.rawSpecs
+        : [];
     const out = [];
     for (const spec of specs) {
       if (!spec || spec.key == null) continue;

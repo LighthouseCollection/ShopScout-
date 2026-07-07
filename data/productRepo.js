@@ -84,13 +84,32 @@
 
   function normalizeIncoming(p, listId) {
     const ts = now();
-    return Object.assign({}, p, {
+    return Object.assign({}, p, normalizedAttributePatch(p), {
       id: p.id || uuid(),
       listId,
       capturedAt: p.capturedAt || ts,
       updatedAt: ts,
       _revision: normalizeRevision(p._revision)
     });
+  }
+
+  function normalizedAttributePatch(product) {
+    const normalizer = root.ShopScoutAttributeNormalization;
+    if (!normalizer || typeof normalizer.normalizeProductAttributes !== 'function') return {};
+    const entries = normalizer.normalizeProductAttributes(product);
+    if (!entries.length) return {};
+    const byField = Object.create(null);
+    for (const entry of entries) {
+      if (!entry || !entry.field) continue;
+      byField[entry.field] = {
+        rawField: entry.rawField,
+        raw: entry.raw,
+        normalized: entry.normalized,
+        confidence: entry.confidence,
+        rule: entry.rule
+      };
+    }
+    return { _normalizedAttributes: byField };
   }
 
   async function addProduct(listId, product) {

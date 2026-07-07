@@ -7,6 +7,10 @@ const js = read('popup.js');
 assert.ok(html.includes('id="addBtn"'), 'popup keeps Add Current Product as a gather action');
 assert.ok(html.includes('id="addWindowBtn"'), 'popup keeps Add Products from Open Tabs as a gather action');
 assert.ok(html.includes('id="urlSubmitBtn"'), 'popup keeps Add URL as a gather action');
+assert.ok(html.indexOf('src="normalization/attributes.js"') > -1,
+  'popup loads attribute normalization for captured products');
+assert.ok(html.indexOf('src="normalization/attributes.js"') < html.indexOf('src="data/productRepo.js"'),
+  'attribute normalization loads before productRepo in the popup');
 assert.ok(html.includes('id="dashboardBtn"'), 'popup header includes the dashboard shortcut');
 assert.ok(html.includes('Open Comparison Dashboard'), 'dashboard shortcut is labeled Open Comparison Dashboard');
 assert.ok(html.indexOf('id="dashboardBtn"') < html.indexOf('id="settingsBtn"'),

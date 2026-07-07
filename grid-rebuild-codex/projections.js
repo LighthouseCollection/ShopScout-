@@ -55,12 +55,23 @@
     return String(value || '').trim().toLowerCase().replace(/\s+/g, ' ');
   }
 
+  function attributeNormalizer(scope) {
+    const normalizer = scope?.ShopScoutAttributeNormalization || root.ShopScoutAttributeNormalization;
+    return normalizer && typeof normalizer.normalizeFieldName === 'function' ? normalizer : null;
+  }
+
   function canonicalField(field, scope) {
     const text = String(field || '').trim();
     if (!text) return '';
-    if (text.startsWith('spec:')) return `spec:${canonicalKey(text.slice(5), scope)}`;
+    const attrs = attributeNormalizer(scope);
+    if (text.startsWith('spec:')) {
+      const raw = text.slice(5);
+      const attrField = attrs ? attrs.normalizeFieldName(raw) : raw;
+      return `spec:${canonicalKey(attrField, scope)}`;
+    }
     if (FIELD_LABELS[text]) return text;
-    return `spec:${canonicalKey(text, scope)}`;
+    const attrField = attrs ? attrs.normalizeFieldName(text) : text;
+    return `spec:${canonicalKey(attrField, scope)}`;
   }
 
   function titleCase(value) {
@@ -294,6 +305,38 @@
   function makeRow(product, flattened, idx) {
     const id = productIdOf(product, idx);
     const row = Object.assign({}, product, flattened);
+    const attrs = root.ShopScoutAttributeNormalization;
+    const normalizedAttributes = Object.create(null);
+    const storedAttributes = product && product._normalizedAttributes && typeof product._normalizedAttributes === 'object'
+      ? product._normalizedAttributes
+      : {};
+    for (const [fieldName, entry] of Object.entries(storedAttributes)) {
+      if (!entry || typeof entry !== 'object') continue;
+      const field = `spec:${canonicalKey(fieldName, root)}`;
+      row[field] = entry.normalized;
+      normalizedAttributes[fieldName] = {
+        rawField: entry.rawField,
+        raw: entry.raw,
+        normalized: entry.normalized,
+        confidence: entry.confidence,
+        rule: entry.rule
+      };
+    }
+    if (attrs && typeof attrs.normalizeProductAttributes === 'function') {
+      for (const entry of attrs.normalizeProductAttributes(product)) {
+        if (!entry || !entry.field) continue;
+        if (normalizedAttributes[entry.field]) continue;
+        const field = `spec:${canonicalKey(entry.field, root)}`;
+        row[field] = entry.normalized;
+        normalizedAttributes[entry.field] = {
+          rawField: entry.rawField,
+          raw: entry.raw,
+          normalized: entry.normalized,
+          confidence: entry.confidence,
+          rule: entry.rule
+        };
+      }
+    }
     row.id = id;
     row.title = productDisplayName(product);
     row.image = product?.image || product?.thumb || product?.thumbnail || '';
@@ -302,7 +345,8 @@
       url: product?.url || '',
       index: idx,
       revision: Number.isFinite(Number(product?._revision)) ? Number(product._revision) : 0,
-      product
+      product,
+      normalizedAttributes
     };
     return row;
   }
