@@ -1276,3 +1276,45 @@ This file is the shared record for Claude and Codex. Append an entry for every m
   - Reviewer: Claude
 - Follow-ups:
   - Bulk ignore currently saves each matching review key individually and rebuilds after each repo decision; if very large review queues become common, add a repo-level batch decision API.
+
+## 2026-07-07 14:45 - Icecat + Schema.org corpus pull (dataset, no code change)
+
+- Agent: Claude
+- Branch: grid-rebuild-codex
+- Commit: This commit (docs-only)
+- Status: Dataset staged for downstream normalization work; downloads in progress
+- Summary:
+  - Purpose: ground the ShopScout normalization pipeline against two industry references — Schema.org's Product/Offer vocabulary (universal column-header standard) and Icecat's Open catalog (real product specs with normalized attribute names + enum values).
+  - Account: free Open Icecat account. Paid `/export/level4/` endpoints return 403. All work below is under `/export/freexml/` and `/export/freexml.int/`.
+  - All data is staged under `D:\icecat-data\` — deliberately outside the OneDrive-synced repo. Not tracked in git. Credentials in `D:\icecat-data\.netrc` (chmod 600, do NOT read/log/commit).
+- Files touched:
+  - AGENT_CHANGELOG.md (this entry)
+  - No source or repo files. All artifacts are outside the repo.
+- What is on disk (D:\icecat-data\):
+  - schema-org\ — 6 MB total, complete: `schemaorg-all-https.jsonld` (full JSON-LD vocabulary), `schemaorg-current-https-properties.csv` (flat properties table — direct lookup for the Colour→color / Size Name→size canonical column name problem), `schemaorg-current-https-types.csv`
+  - refs\ — 15 files, ~1.6 GB. Includes: `CategoryFeaturesList.xml.gz` (1.5 GB — master category × feature mapping; ~15 GB uncompressed, stream-parse only), `FeaturesList.xml.gz` (60 MB), `FeatureValuesVocabularyList.xml.gz` (44 MB — normalized enum values per feature), `CategoriesList.xml.gz` (30 MB), `SuppliersList.xml.gz`, plus BrandOrganizations, DistributorList, FeatureGroupsList, FeatureLogosList, LanguageList, MeasuresList, RelationsList, CategoryFeatureIntervalsList, SupplierProductFamiliesListRequest
+  - indexes\ — 15 files, ~250 MB uncompressed. Per-language master indexes for all English variants (EN, INT, EN_AE..EN_ZA). Each entry: `<file path Product_ID Supplier_id Catid On_Market Model_Name Prod_ID Updated Quality Country_Markets EAN_UPCs M_Prod_IDs>`.
+  - indexes-other-languages\ — 66 non-English language indexes fetched incidentally. Ignorable; safe to delete.
+  - daily\ — 6.3 MB compressed. `EN.daily.index.xml.gz` (EN scope) and `root.daily.index.xml.gz` (INT scope, 72,929 products). Note: free Open Icecat serves the base index at the daily.index.xml URL — it's not a true 24-hour delta. Diff against a saved snapshot using Product_ID + Updated= timestamps.
+  - products\<VARIANT>\ — currently downloading. Target when done: EN 17,645 (~1.5 GB), INT 72,929 (~6.2 GB), 13 regional EN_XX ~194,987 (~16 GB). Total 15 English variants: ~285,561 XMLs, ~24 GB. Two background download jobs are running (6 concurrent per variant, resumable via skip-if-exists, retry on transient failure). ETA all-in: 12-16 hrs at gentle-to-free-tier rate. Fetch logs are `<VARIANT>.fetch.log` with OK/FAIL <code>/skip prefixes.
+- Validation:
+  - Auth verified against `data.icecat.biz` — free tier confirmed by 404 body on `/export/level4/` ("You are not allowed to access a Full Icecat repository with a free Open Icecat account").
+  - Schema.org: 5 files downloaded, all HTTP 200, sizes verified.
+  - Icecat refs: 15 files downloaded, all HTTP 200.
+  - Icecat indexes: 81 language indexes fetched (English-relevant 15 kept in indexes\, other 66 archived to indexes-other-languages\).
+  - Product XMLs: 5-sample average of 89 KB/XML used for size estimates.
+- Review / handoff:
+  - Reviewer: Codex (dataset-consumer)
+  - How this maps to code work (Codex, decide scope for next slice):
+    1. Column-name canonicalization (immediate, low-cost): load `schemaorg-current-https-properties.csv` at build time. Filter to properties whose domainIncludes contains Product or Offer. Use as target canonical column names in `normalization/libraries/defaultRules.js` field aliases — replaces the hardcoded Colour→color, Size Name→size list with a schema-backed lookup.
+    2. Feature-value normalization (medium-cost): parse `FeatureValuesVocabularyList.xml.gz` for Icecat's canonical enum values per feature (e.g., all valid Color values). Extend normalization/attributes.js ENUMS with these vocabularies where confidence-worthy. Pre-process at build time into a slim JSON keyed by canonical feature name — do NOT ship the raw 44 MB XML in the extension.
+    3. Category → features mapping (heavier): `CategoryFeaturesList.xml.gz` (1.5 GB) tells you which features apply to which product category. Lets `pickDefaultSpecColumns(products)` be category-aware. Only worth parsing if the current heuristic underperforms.
+    4. Product-level lookup (optional, requires infra): 285K product XMLs are the "canonical answer" for real Icecat-covered products. Could power an offline "ShopScout looked this product up in Icecat" reference source. Requires: keyed by Product_ID / M_Prod_ID / EAN / UPC / GTIN → served from a SQLite/DuckDB the extension queries. Out of scope for immediate normalization work.
+- Constraints and cautions:
+  - License: Open Icecat is CC-BY-ND. Attribution required, NO modifications. If ShopScout redistributes any Icecat-derived data (even bundled JSON), the extension must credit Icecat and cannot represent modified values as canonical Icecat data. Safe use: derive vocabulary at build time, cite source in a NOTICE file, don't re-publish raw XMLs.
+  - Rate limits: free tier throttles above ~10 concurrent connections. Any future sync script must stay ≤6.
+  - `CategoryFeaturesList.xml.gz` is 1.5 GB compressed / ~15 GB uncompressed. Stream-parse; don't zcat the whole thing into memory.
+  - Do NOT put any raw Icecat data in the ShopScout repo. Reference by path in build scripts; ship only the derived JSON/CSV that ends up in the extension.
+- Follow-ups:
+  - Await Icecat product XML downloads to complete (I'll drop a completion note when done).
+  - Codex to decide which of the four consumption slices above is the next code-side task, if any.
