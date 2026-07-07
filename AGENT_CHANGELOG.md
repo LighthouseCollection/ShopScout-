@@ -1349,7 +1349,7 @@ This file is the shared record for Claude and Codex. Append an entry for every m
 
 - Agent: Codex
 - Branch: grid-rebuild-codex
-- Commit: Uncommitted
+- Commit: 311d2a5
 - Status: Reviewed and amended
 - Summary:
   - Reviewed Claude's generated-library schema against the current runtime normalization code paths.
@@ -1407,7 +1407,7 @@ This file is the shared record for Claude and Codex. Append an entry for every m
 
 - Agent: Codex
 - Branch: grid-rebuild-codex
-- Commit: Uncommitted
+- Commit: 28f2ce2
 - Status: Implemented
 - Summary:
   - Added a wide dashboard-page variant for table-heavy operational pages.
@@ -1431,7 +1431,7 @@ This file is the shared record for Claude and Codex. Append an entry for every m
 
 - Agent: Codex
 - Branch: grid-rebuild-codex
-- Commit: Uncommitted
+- Commit: 0c4a4d8
 - Status: Implemented
 - Summary:
   - Fixed the remaining width constraint after user reported no visible change.
@@ -1455,7 +1455,7 @@ This file is the shared record for Claude and Codex. Append an entry for every m
 
 - Agent: Codex
 - Branch: grid-rebuild-codex
-- Commit: Uncommitted
+- Commit: 83d08dc
 - Status: Implemented
 - Summary:
   - Fixed Normalization Review treating comma-separated feature lists as one approval item.
@@ -1519,7 +1519,7 @@ This file is the shared record for Claude and Codex. Append an entry for every m
 
 - Agent: Codex
 - Branch: grid-rebuild-codex
-- Commit: Uncommitted
+- Commit: 9e03ae4
 - Status: Implemented
 - Summary:
   - Corrected the normalization boundary: ASIN, UPC/EAN/GTIN, SKU, MPN/Mfr part number, item part number, model number, serial number, product ID, and generic identifier fields are product identity fields, not attribute-normalization fields.
@@ -1621,7 +1621,7 @@ This file is the shared record for Claude and Codex. Append an entry for every m
 
 - Agent: Codex
 - Branch: grid-rebuild-codex
-- Commit: Uncommitted
+- Commit: 9e34176
 - Status: Implemented
 - Summary:
   - Added fail-safe ESCI substitute-pair loading to `ShopScoutMatching`.
@@ -1706,4 +1706,30 @@ This file is the shared record for Claude and Codex. Append an entry for every m
 - Follow-ups:
   - Track A is functionally complete. Real ESCI parquet generator to replace the fixture is the next slice; deferred until parquet dep (hyparquet or parquet-wasm) is approved by Codex.
   - Track B (search intent UI, category query hints, compare-panel substitute suggestions) still deferred as originally planned.
+
+## 2026-07-07 16:49 - Post-push synchronization audit
+
+- Agent: Codex
+- Branch: grid-rebuild-codex
+- Commit: This commit
+- Status: Audit complete
+- Summary:
+  - Verified Claude's push landed locally and `grid-rebuild-codex` matched `origin/grid-rebuild-codex` before this cleanup.
+  - Confirmed working tree was clean and current remote HEAD was `1cbf4a1`.
+  - Ran the full test suite, syntax check, lint, build, generated-library test, and generated manifest drift check.
+  - Corrected six stale changelog entries that still used the uncommitted placeholder after their commits were finalized and pushed.
+- Files touched:
+  - AGENT_CHANGELOG.md
+- Validation:
+  - git fetch origin && git status --short --branch -> branch matched origin before this cleanup
+  - npm test -> all 44 test files passed
+  - npm run syntax -> passed
+  - npm run lint -> passed with existing 41 warnings, 0 errors
+  - npm run build -> chrome / edge / firefox dists rebuilt
+  - node tests\generated-libraries.test.js -> passed
+  - Generated-library manifest drift check -> passed; all shipped generated JSON files are listed in BUILD_MANIFEST outputs
+- Review / handoff:
+  - Reviewer: Claude
+- Follow-ups:
+  - This changelog-only cleanup will need pushing to restore remote/local sync.
 
