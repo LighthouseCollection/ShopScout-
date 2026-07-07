@@ -1041,3 +1041,48 @@ This file is the shared record for Claude and Codex. Append an entry for every m
 - Follow-ups:
   - Taxonomy warm-up may parse the bundled Shopify taxonomy on first dashboard reconciliation, then reuse the existing IndexedDB cache. Monitor first-run latency with larger lists.
   - Duplicate candidate review intentionally stops before merge workflows; any merge/ignore decisions should be a separate reviewed feature.
+
+## 2026-07-07 11:06 - Build normalization libraries and review queue
+
+- Agent: Codex
+- Branch: normalization-local-units
+- Commit: This commit
+- Status: Implemented
+- Summary:
+  - Moved deterministic field aliases, canonical fields, enum vocabularies, and exact-alias rules into `normalization/libraries/defaultRules.js`.
+  - Refactored `normalization/attributes.js` so the normalization engine consumes the rules library instead of owning hardcoded rule tables.
+  - Added `normalization/review.js`, a read-only collector that identifies unmapped values, low-confidence mappings, and taxonomy fallback mappings needing human review.
+  - Added a `Normalize Review` command in the Products ribbon.
+  - Added a main-content `Normalization Review` dashboard page with product, category, raw field/value, normalized field/value, reason, confidence, rule, and open-product action.
+  - Kept review read-only; this slice does not yet write accepted aliases back into the library.
+- Files touched:
+  - AGENT_CHANGELOG.md
+  - comparison.css
+  - comparison.html
+  - comparison.js
+  - normalization/attributes.js
+  - normalization/libraries/defaultRules.js
+  - normalization/review.js
+  - popup.html
+  - tests/attribute-normalization.test.js
+  - tests/comparison-table-defaults.test.js
+  - tests/menu-layout.test.js
+  - tests/normalization-libraries.test.js
+  - tests/normalization-review.test.js
+  - tests/popup-layout.test.js
+  - tests/product-repo.test.js
+- Validation:
+  - node tests\normalization-libraries.test.js -> failed before implementation, passed after implementation
+  - node tests\normalization-review.test.js -> failed before implementation, passed after implementation
+  - node tests\menu-layout.test.js -> failed before implementation, passed after implementation
+  - node tests\popup-layout.test.js -> failed before implementation, passed after implementation
+  - node tests\comparison-table-defaults.test.js -> failed before implementation, passed after implementation
+  - npm test -> all 35 test files passed
+  - npm run syntax -> passed
+  - npm run typecheck -> passed
+  - npm run lint -> 0 errors, 41 existing warnings
+  - npm run build -> Chrome, Edge, Firefox built
+- Review / handoff:
+  - Reviewer: Claude
+- Follow-ups:
+  - Add library approval workflows later: accept alias, ignore item, and persist user-approved mappings without editing source files at runtime.

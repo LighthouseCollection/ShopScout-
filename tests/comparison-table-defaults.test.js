@@ -57,6 +57,10 @@ assert.ok(!cmpHtml.includes('src="data/cellFormatters.js"'),
 /* ---- The reusable extractions ship as shared/ --------------- */
 assert.ok(cmpHtml.includes('src="shared/values/cellValues.js"'),
   'shared/values/cellValues.js is loaded for the new grid');
+assert.ok(cmpHtml.indexOf('src="normalization/libraries/defaultRules.js"') > -1,
+  'normalization rule library is loaded on comparison page');
+assert.ok(cmpHtml.indexOf('src="normalization/libraries/defaultRules.js"') < cmpHtml.indexOf('src="normalization/attributes.js"'),
+  'normalization rule library loads before attribute normalization on comparison page');
 assert.ok(cmpHtml.indexOf('src="normalization/taxonomyBridge.js"') > -1,
   'normalization/taxonomyBridge.js is loaded on comparison page');
 assert.ok(cmpHtml.indexOf('src="normalization/taxonomyBridge.js"') < cmpHtml.indexOf('src="normalization/attributes.js"'),
@@ -69,6 +73,8 @@ assert.ok(cmpHtml.indexOf('src="normalization/matching.js"') > -1,
   'normalization/matching.js is loaded on comparison page');
 assert.ok(cmpHtml.indexOf('src="normalization/matching.js"') < cmpHtml.indexOf('src="data/productRepo.js"'),
   'dedupe matching loads before productRepo on comparison page');
+assert.ok(cmpHtml.indexOf('src="normalization/review.js"') > -1,
+  'normalization review collector is loaded on comparison page');
 assert.ok(cmpHtml.includes('src="shared/projections/specProjection.js"'),
   'shared/projections/specProjection.js is loaded for the new grid');
 assert.ok(cmpHtml.includes('src="shared/edits/ratingWriter.js"'),

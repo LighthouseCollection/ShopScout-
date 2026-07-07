@@ -1210,6 +1210,82 @@ async function openDuplicateReviewPage() {
   );
 }
 
+function normalizationReviewRow(item) {
+  const confidence = Math.round(Number(item.confidence || 0) * 100);
+  const reason = item.reason || 'review';
+  return `<tr>
+    <td>
+      <strong title="${escAttr(item.productTitle)}">${esc(truncateText(item.productTitle, 64))}</strong>
+      ${item.source ? `<span>${esc(item.source)}</span>` : ''}
+    </td>
+    <td>${esc(item.category || '-')}</td>
+    <td>
+      <span class="normalization-review-raw">${esc(item.rawField || '-')}</span>
+      <span class="normalization-review-arrow">→</span>
+      <span class="normalization-review-normal">${esc(item.field || '-')}</span>
+    </td>
+    <td>
+      <span class="normalization-review-raw">${esc(item.raw || '-')}</span>
+      <span class="normalization-review-arrow">→</span>
+      <span class="normalization-review-normal">${esc(item.normalized || '-')}</span>
+    </td>
+    <td><span class="normalization-review-reason">${esc(reason)}</span></td>
+    <td>${confidence}%</td>
+    <td>
+      <code>${esc(item.rule || 'unmapped')}</code>
+      ${item.fieldSource ? `<span>${esc(item.fieldSource)}</span>` : ''}
+    </td>
+    <td>${item.productId ? `<button class="dashboard-secondary-action dashboard-secondary-action--small" type="button" data-duplicate-open="${escAttr(item.productId)}">Open</button>` : ''}</td>
+  </tr>`;
+}
+
+async function openNormalizationReviewPage() {
+  const data = await getData();
+  const repo = globalThis.SSProductRepo;
+  const listId = repo && typeof repo.getActiveListId === 'function' ? await repo.getActiveListId() : '';
+  const products = listId && repo && typeof repo.listProducts === 'function'
+    ? await repo.listProducts(listId)
+    : await getProducts();
+  const reviewer = globalThis.ShopScoutNormalizationReview;
+  const items = reviewer && typeof reviewer.collectNormalizationReviewItems === 'function'
+    ? reviewer.collectNormalizationReviewItems(products)
+    : [];
+  const body = !items.length
+    ? `<div class="dashboard-empty">
+        <h3>No normalization items need review</h3>
+        <p>All currently normalized attributes are either exact library matches or high-confidence deterministic mappings.</p>
+      </div>`
+    : `<div class="normalization-review-page">
+        <div class="normalization-review-note">
+          <strong>${items.length} item${items.length === 1 ? '' : 's'} need review.</strong>
+          These are unmapped values, low-confidence values, or fields mapped through taxonomy fallback. This page is read-only until the library-approval workflow is added.
+        </div>
+        <div class="normalization-review-table-wrap">
+          <table class="normalization-review-table">
+            <thead>
+              <tr>
+                <th>Product</th>
+                <th>Category</th>
+                <th>Field</th>
+                <th>Value</th>
+                <th>Reason</th>
+                <th>Confidence</th>
+                <th>Rule</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody>${items.map(normalizationReviewRow).join('')}</tbody>
+          </table>
+        </div>
+      </div>`;
+
+  openDashboardInfoPage(
+    'Normalization Review',
+    `${data.activeList || 'Current list'} · deterministic review queue`,
+    body
+  );
+}
+
 function closeSettingsPage(shouldRender = true) {
   const content = document.getElementById('content');
   if (content?.querySelector('[data-settings-root]')) setTrustedHtml(content, '');
@@ -1310,6 +1386,7 @@ function bindRibbonCommandEvents() {
     else if (command === 'ai-results') openLatestAiResults();
     else if (command === 'settings') openSettingsPage();
     else if (command === 'duplicate-review') openDuplicateReviewPage();
+    else if (command === 'normalization-review') openNormalizationReviewPage();
     else if (command === 'show-view-tab') activateRibbonTab('view');
     else if (command === 'show-help-tab') activateRibbonTab('about');
     else if (command === 'export') openExportPage();

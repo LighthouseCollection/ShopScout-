@@ -11,6 +11,7 @@ const Dexie = require('../vendor/dexie.min.js');
 Dexie.dependencies.indexedDB = indexedDB;
 Dexie.dependencies.IDBKeyRange = IDBKeyRange;
 const dbSrc = fs.readFileSync(path.join(__dirname, '..', 'data', 'db.js'), 'utf8');
+const rulesSrc = fs.readFileSync(path.join(__dirname, '..', 'normalization', 'libraries', 'defaultRules.js'), 'utf8');
 const attrSrc = fs.readFileSync(path.join(__dirname, '..', 'normalization', 'attributes.js'), 'utf8');
 const taxonomySrc = fs.readFileSync(path.join(__dirname, '..', 'normalization', 'taxonomyBridge.js'), 'utf8');
 const matchingSrc = fs.readFileSync(path.join(__dirname, '..', 'normalization', 'matching.js'), 'utf8');
@@ -61,6 +62,7 @@ async function createRepoContext() {
   await Dexie.delete('shopscout');
   vm.runInContext(dbSrc, ctx, { filename: 'data/db.js' });
   await ctx.SSDB.db.open();
+  vm.runInContext(rulesSrc, ctx, { filename: 'normalization/libraries/defaultRules.js' });
   vm.runInContext(taxonomySrc, ctx, { filename: 'normalization/taxonomyBridge.js' });
   vm.runInContext(attrSrc, ctx, { filename: 'normalization/attributes.js' });
   vm.runInContext(matchingSrc, ctx, { filename: 'normalization/matching.js' });

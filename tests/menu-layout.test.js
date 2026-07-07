@@ -83,8 +83,11 @@ assertIncludes('id="addUrlToggle"', 'Products tab exposes Add Product');
 assertIncludes('Delete Product(s)', 'Products tab exposes Delete Product(s)');
 assertIncludes('Rescan Products', 'Products tab exposes Rescan Products');
 assertIncludes('data-command="duplicate-review"', 'Products tab exposes possible-duplicate review');
+assertIncludes('data-command="normalization-review"', 'Products tab exposes normalization review');
 assert.ok(js.includes('openDuplicateReviewPage'), 'comparison script renders possible duplicate candidates in main content');
 assert.ok(js.includes('findDuplicateCandidates'), 'duplicate review uses the repo candidate detector');
+assert.ok(js.includes('openNormalizationReviewPage'), 'comparison script renders normalization review in main content');
+assert.ok(js.includes('collectNormalizationReviewItems'), 'normalization review uses the shared review collector');
 assertNotIncludes('data-command="cancel-run"', 'Cancel Scan is removed from the ribbon (per UX cleanup)');
 assertNotIncludes('data-command="keyboard-shortcuts"', 'Keyboard Shortcuts button is removed from the About group');
 

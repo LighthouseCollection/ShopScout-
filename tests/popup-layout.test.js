@@ -7,6 +7,10 @@ const js = read('popup.js');
 assert.ok(html.includes('id="addBtn"'), 'popup keeps Add Current Product as a gather action');
 assert.ok(html.includes('id="addWindowBtn"'), 'popup keeps Add Products from Open Tabs as a gather action');
 assert.ok(html.includes('id="urlSubmitBtn"'), 'popup keeps Add URL as a gather action');
+assert.ok(html.indexOf('src="normalization/libraries/defaultRules.js"') > -1,
+  'popup loads the normalization rule library for captured products');
+assert.ok(html.indexOf('src="normalization/libraries/defaultRules.js"') < html.indexOf('src="normalization/attributes.js"'),
+  'normalization rule library loads before attribute normalization in the popup');
 assert.ok(html.indexOf('src="normalization/taxonomyBridge.js"') > -1,
   'popup loads taxonomy bridge for captured products');
 assert.ok(html.indexOf('src="normalization/taxonomyBridge.js"') < html.indexOf('src="normalization/attributes.js"'),

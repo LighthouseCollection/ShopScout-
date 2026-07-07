@@ -3,11 +3,13 @@ const fs = require('fs');
 const path = require('path');
 const vm = require('vm');
 
+const rulesSrc = fs.readFileSync(path.join(__dirname, '..', 'normalization', 'libraries', 'defaultRules.js'), 'utf8');
 const src = fs.readFileSync(path.join(__dirname, '..', 'normalization', 'attributes.js'), 'utf8');
 
 const ctx = { console };
 ctx.globalThis = ctx;
 vm.createContext(ctx);
+vm.runInContext(rulesSrc, ctx, { filename: 'normalization/libraries/defaultRules.js' });
 vm.runInContext(src, ctx, { filename: 'attributes.js' });
 
 const A = ctx.ShopScoutAttributeNormalization;

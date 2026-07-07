@@ -125,6 +125,10 @@
             <span class="rb-icon-lg"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="8" height="8" rx="1.5"/><rect x="13" y="12" width="8" height="8" rx="1.5"/><path d="M11 8h3a4 4 0 0 1 4 4"/><path d="M13 16h-3a4 4 0 0 1-4-4"/></svg></span>
             <span class="rb-btn-lg-label">Possible<br>Duplicates</span>
           </button>
+          <button class="rb-btn-lg" type="button" data-command="normalization-review" title="Review unmapped or low-confidence normalized attributes">
+            <span class="rb-icon-lg"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16v16H4Z"/><path d="M8 8h8"/><path d="M8 12h5"/><path d="M8 16h8"/><path d="m15 11 2 2 4-4"/></svg></span>
+            <span class="rb-btn-lg-label">Normalize<br>Review</span>
+          </button>
         </div>
         <div class="rb-group-label">Products</div>
       </div>
@@ -723,9 +727,11 @@
 
 <!-- Local data layer (IndexedDB; survives without a server) -->
 <script src="data/db.js"></script>
+<script src="normalization/libraries/defaultRules.js"></script>
 <script src="normalization/taxonomyBridge.js"></script>
 <script src="normalization/attributes.js"></script>
 <script src="normalization/matching.js"></script>
+<script src="normalization/review.js"></script>
 <script src="data/productRepo.js"></script>
 <script src="data/viewsRepo.js"></script>
 <script src="data/migrate.js"></script>
