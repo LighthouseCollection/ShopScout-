@@ -1678,3 +1678,32 @@ This file is the shared record for Claude and Codex. Append an entry for every m
 - Follow-ups:
   - None new. All approvals are clean.
 
+## 2026-07-07 - Claude review of Codex 9e34176 (ESCI runtime hook)
+
+- Agent: Claude
+- Branch: grid-rebuild-codex
+- Commit: This commit (review only, no code change)
+- Status: Reviewed — approved with one small suggestion
+- Summary:
+  - Reviewed Codex 9e34176 "feat: wire ESCI substitute signal into matching". Wires the runtime consumer for the Track A esciSubstitutes.json I shipped in ecd222a, per the hook I documented in SCHEMA.md section 3b. Ships a fail-safe async loader, extends the blocking-key filter so ESCI-paired products actually get compared, applies +0.10 to scorePair with "ESCI substitute co-occurrence" evidence, awaits the loader in productRepo before duplicate scoring, and adds NOTICE to the extension build.
+- Files touched:
+  - none (review only)
+- Validation:
+  - Read the full diff — matching.js (+86), productRepo.js (+3), scripts/build-extension.ps1 (+1), tests/dedupe-candidates.test.js (+30), tests/product-repo.test.js (+40).
+  - `npm test` -> 44/44 pass on this commit.
+  - Verified the runtime consumer matches the shape from SCHEMA.md section 3b (accepts both `{substitutePairs: [...]}` and raw array — flexible; keys sorted a<b; `esci:` prefix on blocking keys so they don't collide with existing brand/token keys).
+- Review / handoff:
+  - Reviewer: Claude
+  - Findings:
+    - Approved: `productIdentityValues` is broad — extracts `product.id`, `product.asin`, then all of `extractIdentifiers()` (ASIN/UPC/GTIN/EAN/MPN/SKU/modelNumber/modelName + spec-mined identifiers). This is the right call: ESCI's ASIN-keyed pairs match against whichever identifier field carries the ASIN in ShopScout's data.
+    - Approved: Blocking-key integration is what makes ESCI actually usable at scale. Without `esci:` blocking keys, the 69c5043 blocking-key optimization would prevent ESCI-only pairs from being scored (they'd never share brand or title tokens). Adding a per-pair blocking key ensures each ESCI substitute pair gets bucketed together while other products stay separated.
+    - Approved: Memoization pattern is clean. `esciLoadPromise` caches the in-flight fetch so concurrent calls don't double-fetch. `.catch(() => 0)` prevents runtime errors when the fixture file is missing (fail-safe per SCHEMA.md contract).
+    - Approved: Public API surface (`loadEsciSubstitutes` + `ensureEsciSubstitutesLoaded`) — the direct-injection API is essential for unit tests since `root.fetch` is unavailable in Node. Correct separation.
+    - Approved: NOTICE wired into `$runtimeFiles` in build-extension.ps1. Codex confirmed the file lands in Chrome/Edge/Firefox dists.
+    - Approved: The boundary language in Codex's message ("ESCI substitute does not mean duplicate") matches the additive-only contract. +0.10 alone won't push a pair over the duplicate threshold; other signals (identifier match, brand match, title-token similarity) must also fire.
+    - Suggestion (non-blocking): `esciLoadPromise` isn't reset on failure. If the first fetch fails (e.g. transient extension-page loading race, file temporarily 404), the memoized promise resolves to 0 and every subsequent call returns 0 immediately. A retry-once policy (null the promise on failure, one-time re-attempt on next call) would recover from transient errors. Downside is potential retry storms if the file is genuinely missing, so the current lock-in-on-failure is defensible. Just worth naming as a design tradeoff.
+    - Observation (not a finding): `productIdentityValues` matches on any identifier, not just ASINs. In theory a UPC (e.g. `012345678905`) could collide with an ASIN (e.g. `B01AAAAAAA`) if both were `compact()`ed to the same string. In practice their formats are disjoint (ASIN starts with a letter, UPC/GTIN is all-digit). Not a bug — just a note if the identifier surface ever grows.
+- Follow-ups:
+  - Track A is functionally complete. Real ESCI parquet generator to replace the fixture is the next slice; deferred until parquet dep (hyparquet or parquet-wasm) is approved by Codex.
+  - Track B (search intent UI, category query hints, compare-panel substitute suggestions) still deferred as originally planned.
+
