@@ -13,35 +13,7 @@
 (function initShopScoutAttributeNormalization(root) {
   const NS = (root.ShopScoutAttributeNormalization = root.ShopScoutAttributeNormalization || {});
   const RULES = root.ShopScoutNormalizationRules || {};
-  const FIELD_ALIASES = RULES.fieldAliases || {};
-  const CANONICAL_FIELDS = RULES.canonicalFields || {};
-  const ENUMS = RULES.enums || {};
-  const EXACT_ALIAS_FIELDS = new Set(RULES.exactAliasFields || []);
-
-  const FIELD_LOOKUP = Object.create(null);
-  for (const key of Object.keys(CANONICAL_FIELDS)) {
-    FIELD_LOOKUP[normalizeToken(key)] = CANONICAL_FIELDS[key];
-    for (const alias of (FIELD_ALIASES[key] || [])) {
-      FIELD_LOOKUP[normalizeToken(alias)] = CANONICAL_FIELDS[key];
-    }
-  }
-
-  const ENUM_LOOKUPS = Object.create(null);
-  for (const field of Object.keys(ENUMS)) {
-    const lookup = Object.create(null);
-    for (const canonical of Object.keys(ENUMS[field])) {
-      const rule = 'enum:' + slug(field) + ':' + slug(canonical);
-      lookup[normalizeToken(canonical)] = { normalized: canonical, confidence: 1, rule };
-      for (const alias of ENUMS[field][canonical]) {
-        lookup[normalizeToken(alias)] = {
-          normalized: canonical,
-          confidence: alias === canonical || EXACT_ALIAS_FIELDS.has(field) ? 1 : 0.95,
-          rule
-        };
-      }
-    }
-    ENUM_LOOKUPS[field] = lookup;
-  }
+  let compiled = compileRules();
 
   function normalizeToken(value) {
     return String(value || '')
@@ -56,10 +28,50 @@
     return normalizeToken(value).replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
   }
 
+  function compileRules() {
+    const fieldAliases = RULES.fieldAliases || {};
+    const canonicalFields = RULES.canonicalFields || {};
+    const enums = RULES.enums || {};
+    const exactAliasFields = new Set(RULES.exactAliasFields || []);
+    const userRules = root.ShopScoutUserNormalizationRules || {};
+    const fieldLookup = Object.create(null);
+    for (const key of Object.keys(canonicalFields)) {
+      fieldLookup[normalizeToken(key)] = canonicalFields[key];
+      for (const alias of (fieldAliases[key] || [])) {
+        fieldLookup[normalizeToken(alias)] = canonicalFields[key];
+      }
+    }
+    const enumLookups = Object.create(null);
+    for (const field of Object.keys(enums)) {
+      const lookup = Object.create(null);
+      for (const canonical of Object.keys(enums[field])) {
+        const defaultRule = 'enum:' + slug(field) + ':' + slug(canonical);
+        lookup[normalizeToken(canonical)] = { normalized: canonical, confidence: 1, rule: defaultRule };
+        for (const alias of enums[field][canonical]) {
+          const userAlias = typeof userRules.isUserEnumAlias === 'function'
+            && userRules.isUserEnumAlias(field, canonical, alias);
+          lookup[normalizeToken(alias)] = {
+            normalized: canonical,
+            confidence: alias === canonical || exactAliasFields.has(field) || userAlias ? 1 : 0.95,
+            rule: userAlias ? 'user-enum:' + slug(field) + ':' + slug(canonical) : defaultRule
+          };
+        }
+      }
+      enumLookups[field] = lookup;
+    }
+    return { fieldAliases, canonicalFields, enums, fieldLookup, enumLookups };
+  }
+
+  function reloadRules() {
+    compiled = compileRules();
+    NS._fieldAliases = compiled.fieldAliases;
+    NS._enums = compiled.enums;
+  }
+
   function normalizeFieldName(field) {
     const original = String(field == null ? '' : field).trim();
     if (!original) return '';
-    return FIELD_LOOKUP[normalizeToken(original)] || original;
+    return compiled.fieldLookup[normalizeToken(original)] || original;
   }
 
   function taxonomyField(field, context) {
@@ -76,7 +88,7 @@
       : null;
     const canonicalField = mappedField ? mappedField.field : localField;
     const raw = value == null ? '' : String(value).trim();
-    const lookup = ENUM_LOOKUPS[canonicalField];
+    const lookup = compiled.enumLookups[canonicalField];
     if (!raw || !lookup) {
       const out = { field: canonicalField, raw, normalized: raw, confidence: 0, rule: 'unmapped' };
       if (mappedField) {
@@ -130,7 +142,8 @@
     normalizeFieldName,
     normalizeAttribute,
     normalizeProductAttributes,
-    _fieldAliases: FIELD_ALIASES,
-    _enums: ENUMS
+    reloadRules,
+    _fieldAliases: compiled.fieldAliases,
+    _enums: compiled.enums
   });
 })(globalThis);

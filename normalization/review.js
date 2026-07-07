@@ -7,6 +7,7 @@
    ============================================================= */
 (function initShopScoutNormalizationReview(root) {
   const NS = (root.ShopScoutNormalizationReview = root.ShopScoutNormalizationReview || {});
+  const REVIEW_CONFIDENCE_THRESHOLD = 0.9;
 
   function text(value) {
     return String(value == null ? '' : value).trim();
@@ -21,7 +22,7 @@
     if (!entry) return '';
     if (entry.rule === 'unmapped') return 'unmapped value';
     if (entry.fieldSource === 'shopify-taxonomy') return 'taxonomy field fallback';
-    if (Number(entry.confidence) < 0.9) return 'low confidence';
+    if (Number(entry.confidence) < REVIEW_CONFIDENCE_THRESHOLD) return 'low confidence';
     return '';
   }
 
@@ -29,7 +30,21 @@
     if (!entry) return false;
     if (entry.rule === 'unmapped') return true;
     if (entry.fieldSource === 'shopify-taxonomy') return true;
-    return Number(entry.confidence) < 0.9;
+    return Number(entry.confidence) < REVIEW_CONFIDENCE_THRESHOLD;
+  }
+
+  function keyPart(value) {
+    return text(value).toLowerCase().replace(/\s+/g, ' ');
+  }
+
+  function reviewItemKey(item) {
+    return [
+      item?.productId,
+      item?.rawField,
+      item?.field,
+      item?.raw,
+      item?.normalized
+    ].map(keyPart).join('|');
   }
 
   function collectNormalizationReviewItems(products) {
@@ -40,7 +55,7 @@
       if (!attrs || typeof attrs !== 'object') return;
       for (const [field, entry] of Object.entries(attrs)) {
         if (!needsReview(entry)) continue;
-        out.push({
+        const row = {
           productId: text(product.id || product.url || `product-${productIndex + 1}`),
           productIndex,
           productTitle: text(product.title || product.productName || product.listingTitle || 'Untitled product'),
@@ -55,14 +70,23 @@
           fieldRule: text(entry.fieldRule || ''),
           fieldSource: text(entry.fieldSource || ''),
           reason: reasonFor(entry)
-        });
+        };
+        row.reviewKey = reviewItemKey(row);
+        out.push(row);
       }
     });
-    out.sort((a, b) => a.reason.localeCompare(b.reason) || a.field.localeCompare(b.field) || a.productTitle.localeCompare(b.productTitle));
-    return out;
+    const userRules = root.ShopScoutUserNormalizationRules;
+    const ignored = userRules && typeof userRules.ignoredSet === 'function'
+      ? userRules.ignoredSet()
+      : new Set();
+    const filtered = ignored.size ? out.filter(item => !ignored.has(item.reviewKey)) : out;
+    filtered.sort((a, b) => a.reason.localeCompare(b.reason) || a.field.localeCompare(b.field) || a.productTitle.localeCompare(b.productTitle));
+    return filtered;
   }
 
   Object.assign(NS, {
+    REVIEW_CONFIDENCE_THRESHOLD,
+    reviewItemKey,
     collectNormalizationReviewItems
   });
 })(globalThis);

@@ -92,6 +92,9 @@ assert.ok(js.includes('setDuplicateCandidateDecision'), 'duplicate review saves 
 assert.ok(js.includes('openNormalizationReviewPage'), 'comparison script renders normalization review in main content');
 assert.ok(js.includes('collectNormalizationReviewItems'), 'normalization review uses the shared review collector');
 assert.ok(js.includes('rebuildNormalizationForList'), 'normalization review backfills existing captured products before rendering');
+assert.ok(js.includes('data-normalization-action="accept-alias"'), 'normalization review exposes accept-alias workflow');
+assert.ok(js.includes('data-normalization-action="ignore"'), 'normalization review exposes ignore workflow');
+assert.ok(js.includes('saveNormalizationReviewDecision'), 'normalization review persists decisions through productRepo');
 assertNotIncludes('data-command="cancel-run"', 'Cancel Scan is removed from the ribbon (per UX cleanup)');
 assertNotIncludes('data-command="keyboard-shortcuts"', 'Keyboard Shortcuts button is removed from the About group');
 

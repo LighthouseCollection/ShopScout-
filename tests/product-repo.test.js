@@ -12,6 +12,7 @@ Dexie.dependencies.indexedDB = indexedDB;
 Dexie.dependencies.IDBKeyRange = IDBKeyRange;
 const dbSrc = fs.readFileSync(path.join(__dirname, '..', 'data', 'db.js'), 'utf8');
 const rulesSrc = fs.readFileSync(path.join(__dirname, '..', 'normalization', 'libraries', 'defaultRules.js'), 'utf8');
+const userRulesSrc = fs.readFileSync(path.join(__dirname, '..', 'normalization', 'userRules.js'), 'utf8');
 const attrSrc = fs.readFileSync(path.join(__dirname, '..', 'normalization', 'attributes.js'), 'utf8');
 const taxonomySrc = fs.readFileSync(path.join(__dirname, '..', 'normalization', 'taxonomyBridge.js'), 'utf8');
 const matchingSrc = fs.readFileSync(path.join(__dirname, '..', 'normalization', 'matching.js'), 'utf8');
@@ -63,6 +64,7 @@ async function createRepoContext() {
   vm.runInContext(dbSrc, ctx, { filename: 'data/db.js' });
   await ctx.SSDB.db.open();
   vm.runInContext(rulesSrc, ctx, { filename: 'normalization/libraries/defaultRules.js' });
+  vm.runInContext(userRulesSrc, ctx, { filename: 'normalization/userRules.js' });
   vm.runInContext(taxonomySrc, ctx, { filename: 'normalization/taxonomyBridge.js' });
   vm.runInContext(attrSrc, ctx, { filename: 'normalization/attributes.js' });
   vm.runInContext(matchingSrc, ctx, { filename: 'normalization/matching.js' });
@@ -272,6 +274,48 @@ async function seedProducts(repo, listId) {
     candidates = await repo.findDuplicateCandidates(listId);
     assert.strictEqual(candidates[0].reviewDecision, 'same-product',
       'same-product review decision can be saved without mutating products');
+  });
+
+  await withRepo(async (repo) => {
+    const listId = await repo.ensureDefaultList();
+
+    await repo.saveNormalizationReviewDecision(listId, {
+      action: 'accept-alias',
+      item: {
+        rawField: 'Connectivity Tech',
+        field: 'Connectivity Technology',
+        raw: 'Bluetooth LE',
+        normalized: 'Bluetooth'
+      }
+    });
+
+    let rules = await repo.getUserNormalizationRules(listId);
+    assert.deepStrictEqual(plain(rules.fieldAliases['connectivity technology']), ['Connectivity Tech'],
+      'accepted field alias is persisted in the user rules library');
+    assert.deepStrictEqual(plain(rules.enums['Connectivity Technology'].Bluetooth), ['Bluetooth LE'],
+      'accepted enum alias is persisted in the user rules library');
+
+    const added = await repo.addProduct(listId, {
+      title: 'Bluetooth keyboard',
+      rawSpecs: [{ key: 'Connectivity Tech', value: 'Bluetooth LE' }]
+    });
+    assert.strictEqual(added._normalizedAttributes['Connectivity Technology'].normalized, 'Bluetooth',
+      'saved user normalization rules apply to future captured products');
+    assert.strictEqual(added._normalizedAttributes['Connectivity Technology'].rule, 'user-enum:connectivity-technology:bluetooth',
+      'saved user normalization rules mark provenance as user-approved');
+
+    const ignore = await repo.saveNormalizationReviewDecision(listId, {
+      action: 'ignore',
+      item: {
+        productId: 'p-ignore',
+        rawField: 'Marketing Name',
+        field: 'Marketing Name',
+        raw: 'Pro Grade',
+        normalized: 'Pro Grade'
+      }
+    });
+    rules = await repo.getUserNormalizationRules(listId);
+    assert.ok(rules.ignored.includes(ignore.reviewKey), 'ignored review item key is persisted');
   });
 
   console.log('product-repo.test.js: Dexie/fake-indexeddb assertions passed');

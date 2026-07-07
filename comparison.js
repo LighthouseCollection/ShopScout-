@@ -434,6 +434,35 @@ function bindEvents() {
       return;
     }
 
+    const normalizationAction = e.target.closest('[data-normalization-action]');
+    if (normalizationAction) {
+      const repo = globalThis.SSProductRepo;
+      const action = normalizationAction.dataset.normalizationAction || '';
+      if (!repo || typeof repo.getActiveListId !== 'function' || typeof repo.saveNormalizationReviewDecision !== 'function') {
+        toast.show('Normalization rule storage is not available.', 'error');
+        return;
+      }
+      const listId = await repo.getActiveListId();
+      const result = await repo.saveNormalizationReviewDecision(listId, {
+        action,
+        item: {
+          reviewKey: normalizationAction.dataset.reviewKey || '',
+          productId: normalizationAction.dataset.productId || '',
+          rawField: normalizationAction.dataset.rawField || '',
+          field: normalizationAction.dataset.field || '',
+          raw: normalizationAction.dataset.rawValue || '',
+          normalized: normalizationAction.dataset.normalizedValue || ''
+        }
+      });
+      if (!result?.ok) {
+        toast.show('Could not save normalization decision.', 'error');
+        return;
+      }
+      toast.show(action === 'ignore' ? 'Normalization item ignored.' : 'Alias saved to user rules.');
+      await openNormalizationReviewPage();
+      return;
+    }
+
     const selector = e.target.closest('.product-select-input');
     if (selector) {
       if (selector.disabled) return;
@@ -1263,7 +1292,27 @@ function normalizationReviewRow(item) {
       <code>${esc(item.rule || 'unmapped')}</code>
       ${item.fieldSource ? `<span>${esc(item.fieldSource)}</span>` : ''}
     </td>
-    <td>${item.productId ? `<button class="dashboard-secondary-action dashboard-secondary-action--small" type="button" data-duplicate-open="${escAttr(item.productId)}">Open</button>` : ''}</td>
+    <td>
+      <div class="normalization-review-actions">
+        <button class="dashboard-primary-action dashboard-secondary-action--small" type="button"
+          data-normalization-action="accept-alias"
+          data-review-key="${escAttr(item.reviewKey || '')}"
+          data-product-id="${escAttr(item.productId || '')}"
+          data-raw-field="${escAttr(item.rawField || '')}"
+          data-field="${escAttr(item.field || '')}"
+          data-raw-value="${escAttr(item.raw || '')}"
+          data-normalized-value="${escAttr(item.normalized || '')}">Accept alias</button>
+        <button class="dashboard-secondary-action dashboard-secondary-action--small" type="button"
+          data-normalization-action="ignore"
+          data-review-key="${escAttr(item.reviewKey || '')}"
+          data-product-id="${escAttr(item.productId || '')}"
+          data-raw-field="${escAttr(item.rawField || '')}"
+          data-field="${escAttr(item.field || '')}"
+          data-raw-value="${escAttr(item.raw || '')}"
+          data-normalized-value="${escAttr(item.normalized || '')}">Ignore</button>
+        ${item.productId ? `<button class="dashboard-secondary-action dashboard-secondary-action--small" type="button" data-duplicate-open="${escAttr(item.productId)}">Open</button>` : ''}
+      </div>
+    </td>
   </tr>`;
 }
 
@@ -1289,7 +1338,7 @@ async function openNormalizationReviewPage() {
     : `<div class="normalization-review-page">
         <div class="normalization-review-note">
           <strong>${items.length} item${items.length === 1 ? '' : 's'} need review.</strong>
-          These are unmapped values, low-confidence values, or fields mapped through taxonomy fallback. This page is read-only until the library-approval workflow is added.
+          Accept an alias to add it to this list's user rules library, or ignore noisy values that should not return to the review queue.
         </div>
         <div class="normalization-review-table-wrap">
           <table class="normalization-review-table">

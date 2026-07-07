@@ -71,7 +71,8 @@ assert.deepStrictEqual(JSON.parse(JSON.stringify(items[0])), {
   rule: 'unmapped',
   fieldRule: 'taxonomy-field:connectivity-technology',
   fieldSource: 'shopify-taxonomy',
-  reason: 'unmapped value'
+  reason: 'unmapped value',
+  reviewKey: 'p1|connectivity tech|connectivity technology|bluetooth|bluetooth'
 }, 'review item includes provenance and product context');
 
 console.log('normalization-review.test.js: assertions passed');

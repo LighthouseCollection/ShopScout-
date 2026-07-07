@@ -33,6 +33,8 @@ function createContext() {
   ctx.globalThis = ctx;
   vm.createContext(ctx);
   loadScript(ctx, 'shared/values/cellValues.js');
+  loadScript(ctx, 'normalization/libraries/defaultRules.js');
+  loadScript(ctx, 'normalization/userRules.js');
   loadScript(ctx, 'normalization/attributes.js');
   loadScript(ctx, 'shared/projections/specProjection.js');
   loadScript(ctx, 'grid-rebuild-codex/projections.js');

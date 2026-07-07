@@ -32,6 +32,39 @@
     catch (err) { console.warn('productRepo: taxonomy normalization unavailable', err); }
   }
 
+  function userRulesKey(listId) {
+    return 'normalizationUserRules:' + String(listId || '');
+  }
+
+  async function getUserNormalizationRules(listId) {
+    const userRules = root.ShopScoutUserNormalizationRules;
+    const empty = userRules && typeof userRules.emptyRuleSet === 'function'
+      ? userRules.emptyRuleSet()
+      : { fieldAliases: {}, canonicalFields: {}, enums: {}, ignored: [] };
+    if (!listId) return empty;
+    const row = await db.meta.get(userRulesKey(listId));
+    const rules = row && row.value && typeof row.value === 'object' ? row.value : empty;
+    return userRules && typeof userRules.normalizeRuleSet === 'function'
+      ? userRules.normalizeRuleSet(rules)
+      : rules;
+  }
+
+  async function loadUserNormalizationRules(listId) {
+    const userRules = root.ShopScoutUserNormalizationRules;
+    if (!userRules || typeof userRules.loadUserRules !== 'function') return;
+    userRules.loadUserRules(await getUserNormalizationRules(listId));
+  }
+
+  async function saveUserNormalizationRules(listId, rules) {
+    const userRules = root.ShopScoutUserNormalizationRules;
+    const value = userRules && typeof userRules.normalizeRuleSet === 'function'
+      ? userRules.normalizeRuleSet(rules)
+      : rules;
+    await db.meta.put({ key: userRulesKey(listId), value });
+    await loadUserNormalizationRules(listId);
+    return value;
+  }
+
   /* ---------- lists ---------- */
   async function ensureDefaultList() {
     const count = await db.product_lists.count();
@@ -132,6 +165,7 @@
   async function addProduct(listId, product) {
     return withListLock(listId, async () => {
       await ensureNormalizationReady();
+      await loadUserNormalizationRules(listId);
       const rec = normalizeIncoming(product, listId);
       await db.products.add(rec);
       return rec;
@@ -141,6 +175,7 @@
   async function addProducts(listId, products) {
     return withListLock(listId, async () => {
       await ensureNormalizationReady();
+      await loadUserNormalizationRules(listId);
       const recs = products.map(p => normalizeIncoming(p, listId));
       await db.products.bulkAdd(recs);
       return recs;
@@ -308,6 +343,7 @@
   async function rebuildNormalizationForList(listId) {
     const rows = await listProducts(listId);
     await ensureNormalizationReady();
+    await loadUserNormalizationRules(listId);
     let updated = 0;
     await withListLock(listId, async () => {
       for (const product of rows) {
@@ -323,6 +359,47 @@
       }
     });
     return { ok: true, checked: rows.length, updated };
+  }
+
+  function reviewItemKey(item) {
+    const reviewer = root.ShopScoutNormalizationReview;
+    if (reviewer && typeof reviewer.reviewItemKey === 'function') return reviewer.reviewItemKey(item);
+    return [
+      item && item.productId || '',
+      item && item.rawField || '',
+      item && item.field || '',
+      item && item.raw || '',
+      item && item.normalized || ''
+    ].map(value => String(value || '').trim().toLowerCase()).join('|');
+  }
+
+  async function saveNormalizationReviewDecision(listId, request) {
+    const action = String(request && request.action || '').trim();
+    const item = request && request.item || {};
+    if (!listId) return { ok: false, reason: 'missing-list' };
+    const userRules = root.ShopScoutUserNormalizationRules;
+    if (!userRules || typeof userRules.mergeRuleSets !== 'function') {
+      return { ok: false, reason: 'missing-user-rules' };
+    }
+    const result = await withListLock(listId, async () => {
+      const current = await getUserNormalizationRules(listId);
+      let next = current;
+      let reviewKey = reviewItemKey(item);
+      if (action === 'accept-alias') {
+        if (typeof userRules.buildUserRulePatch !== 'function') {
+          return { ok: false, reason: 'missing-rule-builder' };
+        }
+        next = userRules.mergeRuleSets(current, userRules.buildUserRulePatch(item));
+      } else if (action === 'ignore') {
+        next = userRules.mergeRuleSets(current, { ignored: [reviewKey] });
+      } else {
+        return { ok: false, reason: 'unsupported-action' };
+      }
+      const saved = await saveUserNormalizationRules(listId, next);
+      return { ok: true, action, reviewKey, rules: saved };
+    });
+    if (result?.ok) await rebuildNormalizationForList(listId);
+    return result;
   }
 
   function evalFilters(row, filters) {
@@ -394,6 +471,10 @@
     findDuplicateCandidates,
     getDuplicateCandidateDecisions,
     setDuplicateCandidateDecision,
+    getUserNormalizationRules,
+    saveUserNormalizationRules,
+    loadUserNormalizationRules,
+    saveNormalizationReviewDecision,
     rebuildNormalizationForList,
     ensureNormalizationReady,
     normalizeProductForStorage: normalizeIncoming

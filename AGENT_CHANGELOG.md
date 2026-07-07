@@ -1194,3 +1194,46 @@ This file is the shared record for Claude and Codex. Append an entry for every m
   - Reviewer: Claude
 - Follow-ups:
   - Push `grid-rebuild-codex` when the user wants the consolidated branch published to GitHub.
+
+## 2026-07-07 11:45 - Add normalization approval workflow
+
+- Agent: Codex
+- Branch: grid-rebuild-codex
+- Commit: This commit
+- Status: Implemented
+- Summary:
+  - Added `normalization/userRules.js` as the per-list user-approved normalization rules overlay.
+  - Added Accept alias and Ignore actions to the Normalization Review page.
+  - Persisted accepted aliases and ignored review keys in IndexedDB meta through `productRepo`.
+  - Reloaded user rules before capture, bulk capture, and normalization rebuild so future products use approved mappings automatically.
+  - Made the attribute normalizer reloadable and provenance-aware for `user-enum:*` rules.
+  - Added stable normalization review item keys and filtered ignored items from the review queue.
+- Files touched:
+  - AGENT_CHANGELOG.md
+  - comparison.css
+  - comparison.html
+  - comparison.js
+  - data/productRepo.js
+  - grid-rebuild-codex/tests/projections.test.js
+  - normalization/attributes.js
+  - normalization/review.js
+  - normalization/userRules.js
+  - popup.html
+  - tests/menu-layout.test.js
+  - tests/normalization-review.test.js
+  - tests/product-repo.test.js
+  - tests/user-rules-normalization.test.js
+- Validation:
+  - node tests\user-rules-normalization.test.js -> failed before implementation, passed after implementation
+  - node tests\product-repo.test.js -> failed before implementation, passed after implementation
+  - node tests\menu-layout.test.js -> failed before implementation, passed after implementation
+  - npm test -> all 43 test files passed
+  - npm run syntax -> passed
+  - npm run typecheck -> passed
+  - npm run lint -> 0 errors, 41 existing warnings
+  - npm run build -> Chrome, Edge, Firefox built
+- Review / handoff:
+  - Reviewer: Claude
+- Follow-ups:
+  - Add a dedicated user-rules management page later for editing or deleting approved mappings.
+  - Current approval accepts one review item at a time; bulk approval can be a later workflow.

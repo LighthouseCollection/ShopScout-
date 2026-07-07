@@ -2694,3 +2694,10 @@ body.is-info-page .content { display: block; padding: 18px 22px 48px; }
   background: var(--paper);
   color: var(--ink-2);
 }
+
+.normalization-review-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
