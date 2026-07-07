@@ -287,9 +287,15 @@ relevant for this category" instead of ranking by observed frequency alone.
   Icecat category names/path segments. Consumers use these to bridge from
   ShopScout's current product/category text and Shopify taxonomy context to an
   Icecat category. Do not assume a Shopify category id is an Icecat category id.
-- `features` array is sorted by `order` ascending. `order` reflects Icecat's
-  display priority for that category. Consumers use it as a tiebreaker
-  when picking default spec columns.
+- `features` array shape: **`featureId` is REQUIRED. `mandatory` is optional
+  (omitted = false). `canonicalName`, `displayName`, and `order` are OPTIONAL**
+  reserved for a future generator that resolves feature names by
+  cross-referencing FeaturesList.xml.gz. Current-generation output (Phase 1b)
+  emits only `featureId` and `mandatory`, sorted by `featureId` ascending. When
+  a name-resolving generator lands, `canonicalName`+`displayName` populate and
+  `order` reflects Icecat's display priority. Compact shape keeps the file
+  under 20 MB (852K feature associations × the full 5-field entry would be
+  160+ MB, unshippable in the extension package).
 - `mandatory` — Icecat's own indicator. Consumers may treat mandatory
   features as always-visible in the products table.
 

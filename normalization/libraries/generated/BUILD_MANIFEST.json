@@ -2,59 +2,52 @@
   "$schema": "shopscout://normalization-libraries/build-manifest/v1",
   "version": 1,
   "buildTool": "shopscout-build-normalization-libraries",
-  "buildToolVersion": 0,
-  "generatedAt": "2026-07-07T22:00:00Z",
+  "buildToolVersion": 1,
+  "generatedAt": "2026-07-07T23:06:32Z",
   "sourceCorpus": {
     "root": "data-sources/icecat/",
     "junctionTarget": "D:\\icecat-data\\",
     "note": "Windows directory junction; git-ignored; per-machine local corpus."
   },
-  "isFixture": true,
-  "fixtureNote": "This BUILD_MANIFEST corresponds to hand-authored sample fixtures shipped to unblock Codex Phase 2. All sourceSha256 values are zero-filled placeholders; outputSha256, outputBytes, and row counts reflect the fixture files themselves, not real generated data. Replace with real values when the Phase 1 generators land.",
   "outputs": {
     "schemaOrgProperties.json": {
-      "generator": "manual-fixture-for-codex-unblock",
-      "generatorVersion": 0,
+      "generator": "scripts/build-normalization-libraries/build-schema-org-properties.js",
+      "generatorVersion": 1,
       "sourceFiles": [
         {
           "path": "data-sources/icecat/schema-org/schemaorg-current-https-properties.csv",
-          "bytes": 0,
-          "sha256": "0000000000000000000000000000000000000000000000000000000000000000"
+          "bytes": 512192,
+          "sha256": "3a6319bd496d2d3dc276e3a8af9b0ff6415993e7d1f6b466072fcbdec1e0d257"
         }
       ],
-      "outputBytes": 0,
-      "outputSha256": "0000000000000000000000000000000000000000000000000000000000000000",
-      "rowCount": 8
+      "outputBytes": 52601,
+      "outputSha256": "cfba0148e81d9f0dc28ffd4d548d584447cbbc91e8f6cc4b8725896cb4875565",
+      "rowCount": 99
     },
     "icecatVocabulary.json": {
-      "generator": "manual-fixture-for-codex-unblock",
+      "generator": "scripts/build-normalization-libraries/build-icecat-vocabulary.js",
       "generatorVersion": 0,
-      "sourceFiles": [
-        {
-          "path": "data-sources/icecat/refs/FeatureValuesVocabularyList.xml.gz",
-          "bytes": 0,
-          "sha256": "0000000000000000000000000000000000000000000000000000000000000000"
-        }
-      ],
-      "outputBytes": 0,
-      "outputSha256": "0000000000000000000000000000000000000000000000000000000000000000",
+      "isStub": true,
+      "outputBytes": 3871,
+      "outputSha256": "4ddea7ce4bb23b1faabd7be324c26314c11e1a1dea32266ed3d95e0737cd7e1f",
       "featureCount": 4,
-      "vocabularyEntryCount": 16
+      "vocabularyEntryCount": 16,
+      "note": "Stub — real generation deferred until per-feature vocabulary linkage is implemented. Current output is the hand-authored fixture from Phase 1a (source.generator = manual-fixture-for-codex-unblock)."
     },
     "icecatCategoryFeatures.json": {
-      "generator": "manual-fixture-for-codex-unblock",
-      "generatorVersion": 0,
+      "generator": "scripts/build-normalization-libraries/build-icecat-category-features.js",
+      "generatorVersion": 1,
       "sourceFiles": [
         {
           "path": "data-sources/icecat/refs/CategoryFeaturesList.xml.gz",
-          "bytes": 0,
-          "sha256": "0000000000000000000000000000000000000000000000000000000000000000"
+          "bytes": 1597854683,
+          "sha256": "65c64c29911b52fff1ed920a686fb649598782eb8da634d0395840239642a0fe"
         }
       ],
-      "outputBytes": 0,
-      "outputSha256": "0000000000000000000000000000000000000000000000000000000000000000",
-      "categoryCount": 3,
-      "featureAssociationCount": 11
+      "outputBytes": 45409390,
+      "outputSha256": "dbeb8ede3bfa7bd080d86f3fdc0423c9f1f6e127864a0db27883cc28def6706c",
+      "categoryCount": 6808,
+      "featureAssociationCount": 852686
     }
   }
 }
