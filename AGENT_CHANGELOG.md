@@ -1042,6 +1042,42 @@ This file is the shared record for Claude and Codex. Append an entry for every m
   - Taxonomy warm-up may parse the bundled Shopify taxonomy on first dashboard reconciliation, then reuse the existing IndexedDB cache. Monitor first-run latency with larger lists.
   - Duplicate candidate review intentionally stops before merge workflows; any merge/ignore decisions should be a separate reviewed feature.
 
+## 2026-07-07 11:15 - Improve duplicate review and normalize existing captures
+
+- Agent: Codex
+- Branch: normalization-local-units
+- Commit: This commit
+- Status: Implemented
+- Summary:
+  - Added stable duplicate candidate keys so each possible duplicate pair can be reviewed consistently across refreshes.
+  - Added per-list duplicate candidate decisions stored in IndexedDB meta.
+  - Updated the duplicate review page with `Same product`, `Not duplicate`, and clear-decision actions.
+  - Kept duplicate decisions as review labels only; this does not merge, delete, or mutate products.
+  - Added a productRepo normalization backfill for existing captured products.
+  - Normalization Review now rebuilds normalization data for the current list before collecting review items, so older captures participate in the new review pipeline.
+- Files touched:
+  - AGENT_CHANGELOG.md
+  - comparison.css
+  - comparison.js
+  - data/productRepo.js
+  - normalization/matching.js
+  - tests/dedupe-candidates.test.js
+  - tests/menu-layout.test.js
+  - tests/product-repo.test.js
+- Validation:
+  - node tests\dedupe-candidates.test.js -> failed before implementation, passed after implementation
+  - node tests\product-repo.test.js -> failed before implementation, passed after implementation
+  - node tests\menu-layout.test.js -> failed before implementation, passed after implementation
+  - npm test -> all 35 test files passed
+  - npm run syntax -> passed
+  - npm run typecheck -> passed
+  - npm run lint -> 0 errors, 41 existing warnings
+  - npm run build -> Chrome, Edge, Firefox built
+- Review / handoff:
+  - Reviewer: Claude
+- Follow-ups:
+  - Same-product decisions are review labels only; a future merge workflow should remain separate and explicitly confirmed.
+
 ## 2026-07-07 11:06 - Build normalization libraries and review queue
 
 - Agent: Codex

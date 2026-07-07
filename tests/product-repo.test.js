@@ -214,5 +214,65 @@ async function seedProducts(repo, listId) {
       'duplicate detection does not merge or delete products');
   });
 
+  await withRepo(async (repo, db) => {
+    const listId = await repo.ensureDefaultList();
+    const now = Date.now();
+    await db.products.bulkAdd([
+      {
+        id: 'old-1',
+        listId,
+        title: 'Legacy keyboard',
+        category: 'Electronics > Computer Accessories > Keyboards',
+        rawSpecs: [{ key: 'Colour', value: 'midnight blue' }],
+        capturedAt: now,
+        updatedAt: now,
+        _revision: 1
+      },
+      {
+        id: 'old-2',
+        listId,
+        title: 'Legacy plain product',
+        rawSpecs: [],
+        capturedAt: now,
+        updatedAt: now,
+        _revision: 1
+      }
+    ]);
+
+    const result = await repo.rebuildNormalizationForList(listId);
+    assert.deepStrictEqual(plain(result), { ok: true, checked: 2, updated: 1 },
+      'normalization rebuild updates only legacy products with derived normalization data');
+
+    const updated = await repo.getProduct('old-1');
+    assert.strictEqual(updated._normalizedAttributes.Color.normalized, 'Navy Blue',
+      'normalization rebuild backfills normalized attributes for existing captured products');
+    assert.strictEqual(updated._normalizationContext.category.leaf, 'Keyboards',
+      'normalization rebuild backfills taxonomy context for existing captured products');
+  });
+
+  await withRepo(async (repo) => {
+    const listId = await repo.ensureDefaultList();
+    await repo.addProducts(listId, [
+      { id: 'd1', title: 'Bearing, Ball, 6204-2RS', brand: 'ACME', modelNumber: '6204-2RS' },
+      { id: 'd2', title: '6204 2RS Ball Bearing', brand: 'Acme Tools', modelNumber: '6204 2RS' }
+    ]);
+
+    let candidates = await repo.findDuplicateCandidates(listId);
+    assert.strictEqual(candidates[0].reviewDecision, '', 'new duplicate candidates start undecided');
+    assert.strictEqual(candidates[0].candidateKey, 'd1::d2', 'repo candidate exposes stable key');
+
+    await repo.setDuplicateCandidateDecision(listId, candidates[0].candidateKey, 'not-duplicate');
+    candidates = await repo.findDuplicateCandidates(listId);
+    assert.strictEqual(candidates[0].reviewDecision, 'not-duplicate',
+      'repo attaches saved duplicate review decisions to candidate rows');
+    assert.strictEqual(await repo.countProducts(listId), 2,
+      'duplicate review decisions do not merge or delete products');
+
+    await repo.setDuplicateCandidateDecision(listId, candidates[0].candidateKey, 'same-product');
+    candidates = await repo.findDuplicateCandidates(listId);
+    assert.strictEqual(candidates[0].reviewDecision, 'same-product',
+      'same-product review decision can be saved without mutating products');
+  });
+
   console.log('product-repo.test.js: Dexie/fake-indexeddb assertions passed');
 })().catch(err => { console.error(err); process.exit(1); });

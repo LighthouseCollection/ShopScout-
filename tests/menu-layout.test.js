@@ -86,8 +86,12 @@ assertIncludes('data-command="duplicate-review"', 'Products tab exposes possible
 assertIncludes('data-command="normalization-review"', 'Products tab exposes normalization review');
 assert.ok(js.includes('openDuplicateReviewPage'), 'comparison script renders possible duplicate candidates in main content');
 assert.ok(js.includes('findDuplicateCandidates'), 'duplicate review uses the repo candidate detector');
+assert.ok(js.includes('data-duplicate-decision="not-duplicate"'), 'duplicate review can mark candidate groups as not duplicate');
+assert.ok(js.includes('data-duplicate-decision="same-product"'), 'duplicate review can mark candidate groups as same product');
+assert.ok(js.includes('setDuplicateCandidateDecision'), 'duplicate review saves candidate decisions through productRepo');
 assert.ok(js.includes('openNormalizationReviewPage'), 'comparison script renders normalization review in main content');
 assert.ok(js.includes('collectNormalizationReviewItems'), 'normalization review uses the shared review collector');
+assert.ok(js.includes('rebuildNormalizationForList'), 'normalization review backfills existing captured products before rendering');
 assertNotIncludes('data-command="cancel-run"', 'Cancel Scan is removed from the ribbon (per UX cleanup)');
 assertNotIncludes('data-command="keyboard-shortcuts"', 'Keyboard Shortcuts button is removed from the About group');
 

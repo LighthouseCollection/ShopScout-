@@ -166,8 +166,10 @@
       for (let j = i + 1; j < input.length; j++) {
         const result = scorePair(input[i], input[j]);
         if (result.score < threshold) continue;
+        const productIds = [productId(input[i], i), productId(input[j], j)];
         out.push({
-          productIds: [productId(input[i], i), productId(input[j], j)],
+          candidateKey: productIds.slice().sort().join('::'),
+          productIds,
           titles: [titleOf(input[i]), titleOf(input[j])],
           score: result.score,
           reason: result.reason,

@@ -414,6 +414,26 @@ function bindEvents() {
       return;
     }
 
+    const duplicateDecision = e.target.closest('[data-duplicate-decision]');
+    if (duplicateDecision) {
+      const repo = globalThis.SSProductRepo;
+      const key = duplicateDecision.dataset.candidateKey || '';
+      const decision = duplicateDecision.dataset.duplicateDecision || '';
+      if (!repo || typeof repo.getActiveListId !== 'function' || typeof repo.setDuplicateCandidateDecision !== 'function') {
+        toast.show('Duplicate review storage is not available.', 'error');
+        return;
+      }
+      const listId = await repo.getActiveListId();
+      const result = await repo.setDuplicateCandidateDecision(listId, key, decision);
+      if (!result?.ok) {
+        toast.show('Could not save duplicate decision.', 'error');
+        return;
+      }
+      toast.show(decision ? 'Duplicate decision saved.' : 'Duplicate decision cleared.');
+      await openDuplicateReviewPage();
+      return;
+    }
+
     const selector = e.target.closest('.product-select-input');
     if (selector) {
       if (selector.disabled) return;
@@ -1189,7 +1209,10 @@ async function openDuplicateReviewPage() {
                 <h3>Possible duplicate ${index + 1}</h3>
                 <p>${esc(candidate.reason || 'candidate-match')}</p>
               </div>
-              <span class="duplicate-score">${Math.round(Number(candidate.score || 0) * 100)}%</span>
+              <div class="duplicate-review-status">
+                ${candidate.reviewDecision ? `<span class="duplicate-decision">${esc(candidate.reviewDecision.replace(/-/g, ' '))}</span>` : ''}
+                <span class="duplicate-score">${Math.round(Number(candidate.score || 0) * 100)}%</span>
+              </div>
             </header>
             <div class="duplicate-review-products">
               ${duplicateCandidateProductCard(left, candidate.titles?.[0])}
@@ -1198,6 +1221,11 @@ async function openDuplicateReviewPage() {
             <div class="duplicate-evidence">
               <h4>Evidence</h4>
               ${duplicateEvidenceHtml(candidate)}
+            </div>
+            <div class="duplicate-review-actions">
+              <button class="dashboard-secondary-action dashboard-secondary-action--small" type="button" data-duplicate-decision="not-duplicate" data-candidate-key="${escAttr(candidate.candidateKey || '')}">Not duplicate</button>
+              <button class="dashboard-primary-action dashboard-secondary-action--small" type="button" data-duplicate-decision="same-product" data-candidate-key="${escAttr(candidate.candidateKey || '')}">Same product</button>
+              ${candidate.reviewDecision ? `<button class="dashboard-secondary-action dashboard-secondary-action--small" type="button" data-duplicate-decision="" data-candidate-key="${escAttr(candidate.candidateKey || '')}">Clear decision</button>` : ''}
             </div>
           </section>`;
         }).join('')}
@@ -1243,6 +1271,9 @@ async function openNormalizationReviewPage() {
   const data = await getData();
   const repo = globalThis.SSProductRepo;
   const listId = repo && typeof repo.getActiveListId === 'function' ? await repo.getActiveListId() : '';
+  if (listId && repo && typeof repo.rebuildNormalizationForList === 'function') {
+    await repo.rebuildNormalizationForList(listId);
+  }
   const products = listId && repo && typeof repo.listProducts === 'function'
     ? await repo.listProducts(listId)
     : await getProducts();

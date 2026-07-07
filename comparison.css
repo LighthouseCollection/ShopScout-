@@ -2516,6 +2516,25 @@ body.is-info-page .content { display: block; padding: 18px 22px 48px; }
   font-weight: 700;
 }
 
+.duplicate-review-status {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.duplicate-decision {
+  border-radius: 999px;
+  padding: 4px 10px;
+  background: #f7efe7;
+  color: var(--accent);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: capitalize;
+}
+
 .duplicate-review-products {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
@@ -2586,6 +2605,15 @@ body.is-info-page .content { display: block; padding: 18px 22px 48px; }
 
 .duplicate-evidence li {
   margin: 4px 0;
+}
+
+.duplicate-review-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  padding: 12px 18px 16px;
+  border-top: 1px solid var(--rule-soft, #d1d5db);
+  background: var(--surface);
 }
 
 /* =============================================================

@@ -68,6 +68,8 @@ assert.deepStrictEqual(
   [['p1', 'p2'], ['p4', 'p5']],
   'detects duplicate candidate pairs without merging products'
 );
+assert.strictEqual(candidates[0].candidateKey, 'p1::p2',
+  'candidate pairs expose a stable review key');
 assert.strictEqual(candidates[0].reason, 'shared-identifier-and-token-match',
   'identifier-backed duplicate has explicit reason');
 assert.strictEqual(candidates[1].reason, 'shared-identifier-and-token-match',

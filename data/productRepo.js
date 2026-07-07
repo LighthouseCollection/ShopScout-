@@ -276,7 +276,53 @@
     const matcher = root.ShopScoutMatching;
     if (!matcher || typeof matcher.detectDuplicateCandidates !== 'function') return [];
     const rows = await listProducts(listId);
-    return matcher.detectDuplicateCandidates(rows, options);
+    const decisions = await getDuplicateCandidateDecisions(listId);
+    return matcher.detectDuplicateCandidates(rows, options).map(candidate => Object.assign({}, candidate, {
+      reviewDecision: decisions[candidate.candidateKey] || ''
+    }));
+  }
+
+  function duplicateDecisionsKey(listId) {
+    return 'duplicateDecisions:' + String(listId || '');
+  }
+
+  async function getDuplicateCandidateDecisions(listId) {
+    const row = await db.meta.get(duplicateDecisionsKey(listId));
+    return row && row.value && typeof row.value === 'object' ? Object.assign({}, row.value) : {};
+  }
+
+  async function setDuplicateCandidateDecision(listId, candidateKey, decision) {
+    const key = String(candidateKey || '').trim();
+    const allowed = new Set(['', 'same-product', 'not-duplicate']);
+    const value = allowed.has(decision) ? decision : '';
+    if (!listId || !key) return { ok: false, reason: 'missing-key' };
+    return withListLock(listId, async () => {
+      const current = await getDuplicateCandidateDecisions(listId);
+      if (value) current[key] = value;
+      else delete current[key];
+      await db.meta.put({ key: duplicateDecisionsKey(listId), value: current });
+      return { ok: true, candidateKey: key, decision: value };
+    });
+  }
+
+  async function rebuildNormalizationForList(listId) {
+    const rows = await listProducts(listId);
+    await ensureNormalizationReady();
+    let updated = 0;
+    await withListLock(listId, async () => {
+      for (const product of rows) {
+        const patch = Object.assign({}, taxonomyContextPatch(product), normalizedAttributePatch(product));
+        if (!Object.keys(patch).length) continue;
+        const currentAttrs = JSON.stringify(product._normalizedAttributes || null);
+        const nextAttrs = JSON.stringify(patch._normalizedAttributes || null);
+        const currentCtx = JSON.stringify(product._normalizationContext || null);
+        const nextCtx = JSON.stringify(patch._normalizationContext || null);
+        if (currentAttrs === nextAttrs && currentCtx === nextCtx) continue;
+        await db.products.update(product.id, Object.assign({}, patch, { updatedAt: now() }));
+        updated++;
+      }
+    });
+    return { ok: true, checked: rows.length, updated };
   }
 
   function evalFilters(row, filters) {
@@ -346,6 +392,9 @@
     countProducts,
     query,
     findDuplicateCandidates,
+    getDuplicateCandidateDecisions,
+    setDuplicateCandidateDecision,
+    rebuildNormalizationForList,
     ensureNormalizationReady,
     normalizeProductForStorage: normalizeIncoming
   };
