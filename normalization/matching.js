@@ -16,6 +16,9 @@
     'a', 'an', 'and', 'or', 'the', 'with', 'for', 'to', 'of', 'by', 'in', 'on',
     'new', 'latest', 'generic', 'product', 'item', 'pack', 'pcs', 'piece'
   ]);
+  let esciSubstitutePairs = new Set();
+  let esciPairKeysById = new Map();
+  let esciLoadPromise = null;
 
   function compact(value) {
     return String(value || '').trim().toLowerCase().replace(/[^a-z0-9]+/g, '');
@@ -33,6 +36,82 @@
 
   function productId(product, idx) {
     return String(product && (product.id || product.url || product.title) || `product-${idx + 1}`);
+  }
+
+  function productIdentityValues(product) {
+    const values = [
+      product && product.id,
+      product && product.asin
+    ];
+    return values.concat(extractIdentifiers(product || {}))
+      .map(compact)
+      .filter(Boolean);
+  }
+
+  function pairKey(left, right) {
+    const sorted = [compact(left), compact(right)].filter(Boolean).sort();
+    return sorted.length === 2 ? sorted.join('|') : '';
+  }
+
+  function productsHaveEsciSubstitutePair(a, b) {
+    if (!esciSubstitutePairs.size) return false;
+    const leftValues = productIdentityValues(a);
+    const rightValues = productIdentityValues(b);
+    for (const left of leftValues) {
+      for (const right of rightValues) {
+        const key = pairKey(left, right);
+        if (key && esciSubstitutePairs.has(key)) return true;
+      }
+    }
+    return false;
+  }
+
+  function loadEsciSubstitutes(payload) {
+    const pairs = Array.isArray(payload?.substitutePairs)
+      ? payload.substitutePairs
+      : Array.isArray(payload)
+        ? payload
+        : [];
+    const next = new Set();
+    const nextById = new Map();
+    for (const pair of pairs) {
+      const key = pairKey(pair?.a, pair?.b);
+      if (!key) continue;
+      next.add(key);
+      const [left, right] = key.split('|');
+      if (!nextById.has(left)) nextById.set(left, new Set());
+      if (!nextById.has(right)) nextById.set(right, new Set());
+      nextById.get(left).add(key);
+      nextById.get(right).add(key);
+    }
+    esciSubstitutePairs = next;
+    esciPairKeysById = nextById;
+    return esciSubstitutePairs.size;
+  }
+
+  function esciBlockingKeys(product) {
+    if (!esciPairKeysById.size) return [];
+    const out = new Set();
+    for (const value of productIdentityValues(product)) {
+      const pairKeys = esciPairKeysById.get(value);
+      if (!pairKeys) continue;
+      for (const key of pairKeys) out.add('esci:' + key);
+    }
+    return Array.from(out);
+  }
+
+  async function ensureEsciSubstitutesLoaded() {
+    if (esciSubstitutePairs.size) return esciSubstitutePairs.size;
+    if (esciLoadPromise) return esciLoadPromise;
+    if (typeof root.fetch !== 'function') return 0;
+    esciLoadPromise = root.fetch('normalization/libraries/generated/esciSubstitutes.json')
+      .then(response => {
+        if (!response || !response.ok || typeof response.json !== 'function') return 0;
+        return response.json();
+      })
+      .then(data => loadEsciSubstitutes(data))
+      .catch(() => 0);
+    return esciLoadPromise;
   }
 
   function titleOf(product) {
@@ -124,6 +203,7 @@
     const tokens = Array.from(tokenSet(product)).filter(token => token.length >= 3).slice(0, 3);
     if (brand && tokens.length) keys.push('bt:' + brand + ':' + tokens[0]);
     if (brand) keys.push('brand:' + brand);
+    keys.push(...esciBlockingKeys(product));
     if (!keys.length && tokens.length) keys.push('tok:' + tokens[0]);
     return Array.from(new Set(keys));
   }
@@ -156,6 +236,10 @@
     if (tokenSimilarity >= 0.35) {
       score += Math.min(0.28, tokenSimilarity * 0.4);
       evidence.push('title token similarity');
+    }
+    if (productsHaveEsciSubstitutePair(a, b)) {
+      score += 0.10;
+      evidence.push('ESCI substitute co-occurrence');
     }
 
     if (sharedIds.length && tokenSimilarity >= 0.25) reason = 'shared-identifier-and-token-match';
@@ -221,6 +305,8 @@
     extractIdentifiers,
     blockingKey,
     blockingKeys,
+    ensureEsciSubstitutesLoaded,
+    loadEsciSubstitutes,
     scorePair,
     detectDuplicateCandidates
   });

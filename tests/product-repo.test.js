@@ -17,6 +17,10 @@ const attrSrc = fs.readFileSync(path.join(__dirname, '..', 'normalization', 'att
 const taxonomySrc = fs.readFileSync(path.join(__dirname, '..', 'normalization', 'taxonomyBridge.js'), 'utf8');
 const matchingSrc = fs.readFileSync(path.join(__dirname, '..', 'normalization', 'matching.js'), 'utf8');
 const repoSrc = fs.readFileSync(path.join(__dirname, '..', 'data', 'productRepo.js'), 'utf8');
+const esciFixture = JSON.parse(fs.readFileSync(
+  path.join(__dirname, '..', 'normalization', 'libraries', 'generated', 'esciSubstitutes.json'),
+  'utf8'
+));
 
 function plain(value) {
   return JSON.parse(JSON.stringify(value));
@@ -30,6 +34,18 @@ async function createRepoContext() {
     crypto: { randomUUID: () => 'id-' + Math.random().toString(36).slice(2, 10) },
     Date,
     console,
+    fetch: async url => {
+      if (String(url).endsWith('normalization/libraries/generated/esciSubstitutes.json')) {
+        return {
+          ok: true,
+          json: async () => esciFixture
+        };
+      }
+      return {
+        ok: false,
+        json: async () => ({})
+      };
+    },
     SSCanonical: {
       matchProductToCategory(product) {
         if (String(product.category || '').includes('Keyboards')) {
@@ -214,6 +230,30 @@ async function seedProducts(repo, listId) {
       'repo duplicate candidate reports the matching product titles');
     assert.strictEqual(await repo.countProducts(listId), 3,
       'duplicate detection does not merge or delete products');
+  });
+
+  await withRepo(async (repo) => {
+    const listId = await repo.ensureDefaultList();
+    await repo.addProducts(listId, [
+      {
+        title: 'Compact Mac Keyboard',
+        brand: 'NorthStar',
+        asin: 'B0KEYBOARD',
+        modelNumber: 'NS-100'
+      },
+      {
+        title: 'Wireless Keyboard for Office',
+        brand: 'DeskPro',
+        asin: 'B0KEYBRD02',
+        modelNumber: 'DP-200'
+      }
+    ]);
+
+    const candidates = await repo.findDuplicateCandidates(listId, { threshold: 0.09 });
+    assert.strictEqual(candidates.length, 1,
+      'repo loads ESCI substitutes before duplicate candidate scoring');
+    assert.ok(candidates[0].evidence.includes('ESCI substitute co-occurrence'),
+      'repo candidate exposes ESCI substitute evidence');
   });
 
   await withRepo(async (repo, db) => {

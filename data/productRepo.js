@@ -310,6 +310,9 @@
   async function findDuplicateCandidates(listId, options) {
     const matcher = root.ShopScoutMatching;
     if (!matcher || typeof matcher.detectDuplicateCandidates !== 'function') return [];
+    if (typeof matcher.ensureEsciSubstitutesLoaded === 'function') {
+      await matcher.ensureEsciSubstitutesLoaded();
+    }
     const rows = await listProducts(listId);
     const decisions = await getDuplicateCandidateDecisions(listId);
     return matcher.detectDuplicateCandidates(rows, options).map(candidate => Object.assign({}, candidate, {

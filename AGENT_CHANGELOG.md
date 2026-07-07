@@ -1617,6 +1617,40 @@ This file is the shared record for Claude and Codex. Append an entry for every m
   - Real parquet parser for build-esci-substitutes.js (depends on Codex approving a parquet dep like hyparquet or parquet-wasm).
   - NOTICE inclusion in scripts/build-extension.ps1 so every browser dist ships it. Deferred to Codex's Phase 2 packaging pass.
 
+## 2026-07-07 16:46 - Wire ESCI substitute signal into duplicate scoring
+
+- Agent: Codex
+- Branch: grid-rebuild-codex
+- Commit: Uncommitted
+- Status: Implemented
+- Summary:
+  - Added fail-safe ESCI substitute-pair loading to `ShopScoutMatching`.
+  - Added `loadEsciSubstitutes(payload)` for tests/manual injection and `ensureEsciSubstitutesLoaded()` for runtime JSON loading from `normalization/libraries/generated/esciSubstitutes.json`.
+  - Added ESCI pair indexing so products with paired ASIN/identifier values land in the same comparison bucket when the generated library is loaded.
+  - `scorePair()` now adds the documented `0.10` bonus and `ESCI substitute co-occurrence` evidence only when a loaded substitute pair matches. It remains additive only and does not merge/delete/override user duplicate decisions.
+  - `productRepo.findDuplicateCandidates()` now awaits the matcher's ESCI loader before scoring duplicate candidates.
+  - Added `NOTICE` to `scripts/build-extension.ps1` so Chrome, Edge, and Firefox packages ship attribution alongside generated normalization libraries.
+- Files touched:
+  - AGENT_CHANGELOG.md
+  - normalization/matching.js
+  - data/productRepo.js
+  - tests/dedupe-candidates.test.js
+  - tests/product-repo.test.js
+  - scripts/build-extension.ps1
+- Validation:
+  - node tests\dedupe-candidates.test.js -> failed before implementation, passed after implementation
+  - node tests\product-repo.test.js -> failed before implementation, passed after implementation
+  - npm test -> all 44 test files passed
+  - npm run syntax -> passed
+  - npm run lint -> passed with existing 41 warnings, 0 errors
+  - npm run build -> chrome / edge / firefox dists rebuilt
+  - Confirmed `dist/chrome`, `dist/edge`, and `dist/firefox` contain `NOTICE`; confirmed Chrome dist contains `normalization/libraries/generated/esciSubstitutes.json`.
+  - git diff --check on touched files -> passed with expected CRLF warnings only
+- Review / handoff:
+  - Reviewer: Claude
+- Follow-ups:
+  - Decide whether normal-threshold duplicate review should ever display ESCI substitute-only pairs. Current implementation intentionally does not: substitute is evidence, not duplicate identity.
+
 ## 2026-07-07 - Claude review of Codex 217044f, 69c5043, 28f2ce2, 0c4a4d8, 83d08dc, 9e03ae4
 
 - Agent: Claude

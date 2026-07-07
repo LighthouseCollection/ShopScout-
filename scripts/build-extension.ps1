@@ -21,6 +21,7 @@ $runtimeFiles = @(
   'comparison.js',
   'comparison-feedback.js',
   'content.js',
+  'NOTICE',
   'popup.html',
   'popup.css',
   'popup.js',

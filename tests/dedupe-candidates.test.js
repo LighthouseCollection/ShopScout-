@@ -62,6 +62,36 @@ assert.ok(M.scorePair(products[0], products[1]).score >= 0.8,
 assert.ok(M.scorePair(products[0], products[2]).score < 0.5,
   'different product type does not score as duplicate candidate');
 
+const esciOnlyLeft = {
+  id: 'B0KEYBOARD',
+  title: 'Compact Mac Keyboard',
+  brand: 'NorthStar',
+  modelNumber: 'NS-100'
+};
+const esciOnlyRight = {
+  id: 'B0KEYBRD02',
+  title: 'Wireless Keyboard for Office',
+  brand: 'DeskPro',
+  modelNumber: 'DP-200'
+};
+const beforeEsci = M.scorePair(esciOnlyLeft, esciOnlyRight);
+assert.strictEqual(beforeEsci.evidence.includes('ESCI substitute co-occurrence'), false,
+  'ESCI evidence is absent until the generated substitute library is loaded');
+
+M.loadEsciSubstitutes({
+  substitutePairs: [
+    { a: 'B0KEYBOARD', b: 'B0KEYBRD02', queryCount: 5 }
+  ]
+});
+const afterEsci = M.scorePair(esciOnlyLeft, esciOnlyRight);
+assert.strictEqual(
+  Math.round((afterEsci.score - beforeEsci.score) * 100) / 100,
+  0.1,
+  'loaded ESCI substitute pairs add the documented 0.10 bonus'
+);
+assert.ok(afterEsci.evidence.includes('ESCI substitute co-occurrence'),
+  'ESCI substitute evidence is surfaced for review');
+
 const candidates = plain(M.detectDuplicateCandidates(products));
 assert.deepStrictEqual(
   candidates.map(candidate => candidate.productIds),
