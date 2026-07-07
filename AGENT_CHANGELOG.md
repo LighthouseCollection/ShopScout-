@@ -1550,3 +1550,32 @@ This file is the shared record for Claude and Codex. Append an entry for every m
   - Reviewer: Claude
 - Follow-ups:
   - If identifier formatting is needed later, keep it in a separate identifier-canonicalization module for matching/dedupe only; do not mix it with attribute alias/value normalization.
+
+## 2026-07-07 16:29 - Review Claude generated-library scope and ESCI WIP
+
+- Agent: Codex
+- Branch: grid-rebuild-codex
+- Commit: This commit
+- Status: Review complete
+- Reviewed scope:
+  - Claude committed Phase 1b generator work at `38a97c1`.
+  - Current uncommitted ESCI WIP files: `NOTICE`, `normalization/libraries/generated/esciSubstitutes.json`, `scripts/build-normalization-libraries/build-esci-substitutes.js`, plus edits to `SCHEMA.md`, `README.md`, `build-all.js`, `tests/generated-libraries.test.js`, and a generated timestamp-only change in `schemaOrgProperties.json`.
+- Must-fix issues:
+  - `esciSubstitutes.json` is documented and tested but is not listed in `normalization/libraries/generated/BUILD_MANIFEST.json`. The manifest must include every shipped generated library, and `tests/generated-libraries.test.js` should assert required outputs exist in the manifest so this cannot drift.
+  - `NOTICE` states the ESCI file is derived from Amazon ESCI, but the current `esciSubstitutes.json` fixture says its ASINs are fictional. Until real ESCI parsing exists, either keep ESCI out of NOTICE or clearly label the file as a non-derived fixture. Do not claim attribution/source derivation for fictional test data.
+  - `scripts/build-normalization-libraries/README.md` still says Schema.org allowlist includes `identifier`; this conflicts with Codex's identifier-boundary fix. Update it to remove `identifier` and reflect the current 87-row, ~45 KB output.
+- Suggestions:
+  - Update `SCHEMA.md` size notes for `icecatCategoryFeatures.json`; the table says 5-10 MB and a later note says under 20 MB, but the actual generated file is 45 MB. Since SCHEMA.md already requires review for files over 20 MB, document the accepted 45 MB reality or choose a compact representation before runtime packaging.
+  - Avoid committing timestamp-only regeneration in `schemaOrgProperties.json`; it adds churn without semantic value.
+  - If ESCI remains a fixture, consider keeping it under tests/fixtures until runtime integration actually consumes it. Shipping fictional substitute pairs in `normalization/libraries/generated/` can be mistaken for production data.
+- Approved items:
+  - Phase 1b scope call is correct: real Schema.org generation is appropriate; real Icecat vocabulary generation is correctly deferred because `FeatureValuesVocabularyList.xml.gz` is not feature-scoped by itself.
+  - MVP CategoryFeatures generator shape is acceptable for runtime category-feature lookup as long as runtime treats feature display names/order as optional.
+  - Dependency-free generator approach is reasonable for Schema.org and the Icecat XML MVP.
+- Validation run:
+  - node tests\generated-libraries.test.js -> passed
+  - node scripts\build-normalization-libraries\build-esci-substitutes.js -> passed fixture validation
+- Review / handoff:
+  - Reviewer: Claude to address must-fix items before committing ESCI WIP.
+- Follow-ups:
+  - After the manifest/NOTICE/README issues are fixed, rerun `node tests\generated-libraries.test.js`, `npm test`, `npm run syntax`, and `npm run build`.
