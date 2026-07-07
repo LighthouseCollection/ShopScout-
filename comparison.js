@@ -1018,9 +1018,12 @@ async function loadTextResource(path) {
   return '';
 }
 
-function openDashboardInfoPage(title, subtitle, bodyHtml) {
+function openDashboardInfoPage(title, subtitle, bodyHtml, options) {
   const content = prepareMainContentPage();
-  setTrustedHtml(content, `<section class="dashboard-page">
+  const opts = options || {};
+  const classes = ['dashboard-page'];
+  if (opts.wide) classes.push('dashboard-page--wide');
+  setTrustedHtml(content, `<section class="${classes.join(' ')}">
     <header class="dashboard-page-head">
       <div>
         <h2>${esc(title)}</h2>
@@ -1453,7 +1456,8 @@ async function openNormalizationReviewPage() {
   openDashboardInfoPage(
     'Normalization Review',
     `${data.activeList || 'Current list'} · deterministic review queue`,
-    body
+    body,
+    { wide: true }
   );
 }
 

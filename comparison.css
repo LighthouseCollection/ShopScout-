@@ -184,6 +184,7 @@
   /* Content */
   .content { padding: 20px 24px; max-width: 1600px; margin: 0 auto; }
   .dashboard-page { max-width: 1040px; margin: 0 auto; border: 1px solid var(--rule-soft); border-radius: var(--radius-lg); background: var(--card); overflow: hidden; }
+  .dashboard-page--wide { max-width: none; width: 100%; }
   .dashboard-page-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; padding: 18px 20px; border-bottom: 1px solid var(--rule-soft); background: var(--paper-2); }
   .dashboard-page-head h2 { margin: 0 0 4px; font-size: 18px; font-weight: 650; color: var(--ink); }
   .dashboard-page-head p { margin: 0; color: var(--ink-3); font-size: 13px; line-height: 1.45; }

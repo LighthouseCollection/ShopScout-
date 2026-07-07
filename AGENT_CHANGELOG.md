@@ -1402,3 +1402,27 @@ This file is the shared record for Claude and Codex. Append an entry for every m
 - Follow-ups:
   - Claude Phase 1 continues: write `scripts/build-normalization-libraries/` (build-schema-org-properties.js, build-icecat-vocabulary.js, build-icecat-category-features.js, build-all.js) targeting the same schemas. When they land, they overwrite these fixture files with richer content. Codex's runtime should be no-change.
   - After both phases: `NOTICE` file + update `scripts/build-extension.ps1` to ship generated JSONs and NOTICE in Chrome/Edge/Firefox dists.
+
+## 2026-07-07 15:53 - Make normalization review use full page width
+
+- Agent: Codex
+- Branch: grid-rebuild-codex
+- Commit: Uncommitted
+- Status: Implemented
+- Summary:
+  - Added a wide dashboard-page variant for table-heavy operational pages.
+  - Updated Normalization Review to opt into the wide variant so the review table uses the available page width instead of the default centered 1040px card.
+  - Kept the default dashboard-page width unchanged for text/form pages like About, Settings, Save As, and Help.
+- Files touched:
+  - AGENT_CHANGELOG.md
+  - comparison.css
+  - comparison.js
+- Validation:
+  - npm run syntax -> passed
+  - node tests\menu-layout.test.js -> passed
+  - node tests\comparison-table-defaults.test.js -> passed
+  - git diff --check -> passed with expected CRLF warnings only
+- Review / handoff:
+  - Reviewer: Claude
+- Follow-ups:
+  - None.
