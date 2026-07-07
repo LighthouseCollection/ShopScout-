@@ -36,18 +36,29 @@ Attribution below is required by each source's license.
    overlay (`normalization/userRules.js`); Icecat's underlying data is
    preserved without modification.
 
-3. Amazon Shopping Queries Dataset (ESCI)
-   --------------------------------------
-   Files derived: `normalization/libraries/generated/esciSubstitutes.json`
+3. Amazon Shopping Queries Dataset (ESCI) — RESERVED
+   --------------------------------------------------
+   Files to be derived (real data not yet generated):
+     `normalization/libraries/generated/esciSubstitutes.json`
    Source vocabulary: https://github.com/amazon-science/esci-data
-   License: Apache License 2.0
-   Attribution: "This work incorporates substitute-product signal derived
-   from the Amazon Shopping Queries Dataset (ESCI) by Amazon Science,
-   used under Apache-2.0."
-   Notes: The generated JSON extracts pairs of Amazon product identifiers
-   (ASINs) labeled as substitutes for the same shopping query. ShopScout
-   uses this as a bonus scoring signal in duplicate/substitute detection;
-   it does not authoritatively determine product identity.
+   License (when real data is used): Apache License 2.0
+
+   IMPORTANT: The `esciSubstitutes.json` file currently shipped is a
+   hand-authored FIXTURE (fictional ASINs) meant only to unblock runtime
+   integration by Codex. It is NOT derived from Amazon's ESCI dataset.
+   The attribution below activates ONLY when a real ESCI parquet parser
+   generates the file from Amazon's data.
+
+   Attribution to activate when real data lands:
+     "This work incorporates substitute-product signal derived from the
+     Amazon Shopping Queries Dataset (ESCI) by Amazon Science, used
+     under Apache-2.0."
+
+   Detection: the fixture has `source.generator = "manual-fixture-for-codex-unblock"`
+   and `source.generatorVersion: 0`. Real generator output will set
+   `source.generator = "scripts/build-normalization-libraries/build-esci-substitutes.js"`
+   with `generatorVersion >= 1`. Update this NOTICE at the same commit
+   as the real generator lands.
 
 --------------------------------------------------------------------------
 

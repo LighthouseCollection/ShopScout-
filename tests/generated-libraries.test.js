@@ -203,6 +203,25 @@ const manifest = loadJson('BUILD_MANIFEST.json');
 assert.strictEqual(manifest.version, 1, 'BUILD_MANIFEST.version === 1');
 assert.ok(manifest.outputs && typeof manifest.outputs === 'object',
   'outputs object present');
+
+/* Drift guard: every shipped generated JSON in the directory must be listed
+   in BUILD_MANIFEST.outputs. Prevents a generated library from shipping
+   without a manifest entry (source fingerprint, generator identity). */
+const REQUIRED_MANIFEST_KEYS = new Set([
+  'schemaOrgProperties.json',
+  'icecatVocabulary.json',
+  'icecatCategoryFeatures.json',
+  'esciSubstitutes.json'
+]);
+for (const key of REQUIRED_MANIFEST_KEYS) {
+  assert.ok(manifest.outputs[key],
+    'manifest lists required output: ' + key);
+}
+const manifestKeys = new Set(Object.keys(manifest.outputs));
+for (const key of REQUIRED_MANIFEST_KEYS) {
+  assert.ok(manifestKeys.has(key), 'manifest key present: ' + key);
+}
+
 for (const [name, meta] of Object.entries(manifest.outputs)) {
   assert.ok(fs.existsSync(path.join(GEN, name)),
     'manifest output exists on disk: ' + name);

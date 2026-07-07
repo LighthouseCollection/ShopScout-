@@ -45,7 +45,7 @@ Each generator:
 
 | Generator | Real / stub | Output | Notes |
 |---|---|---|---|
-| `build-schema-org-properties.js` | Real | ~50 properties, ~15 KB | Filter: `domainIncludes` ⊇ {Product, Offer} plus a small supertype allowlist (`name`, `description`, `image`, `url`, `identifier`, `alternateName`). |
+| `build-schema-org-properties.js` | Real | 87 properties, ~45 KB | Filter: `domainIncludes` ⊇ {Product, Offer} plus a small supertype allowlist (`name`, `description`, `image`, `url`, `alternateName`). Identifier properties (ASIN, GTIN, SKU, MPN, model, serialNumber, productID, UPC/EAN/ISBN) are explicitly excluded — they belong in the identifier/matching model, not attribute normalization. |
 | `build-icecat-category-features.js` | Real (MVP) | ~thousands of categories | Streams the 1.5 GB gzip. Emits path, displayName, matchTerms (heuristic from path), and feature id list per category. |
 | `build-icecat-vocabulary.js` | Stub | Preserves fixture | Real generation requires cross-referencing FeaturesList + FeatureValuesVocabularyList + product XMLs to link vocabulary values to specific features. Deferred as follow-up. |
 | `build-esci-substitutes.js` | Stub (Track A) | Preserves fixture | Real generation requires parsing the 700 MB Amazon ESCI dataset (parquet). Adds a substitute-pair scoring signal to `normalization/matching.js`. Fixture is a small illustrative set; runtime is fail-safe. |
