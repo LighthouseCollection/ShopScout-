@@ -1,0 +1,144 @@
+{
+  "$schema": "shopscout://normalization-libraries/icecatCategoryFeatures/v1",
+  "version": 1,
+  "source": {
+    "vocabulary": "Open Icecat",
+    "license": "CC-BY-ND-4.0",
+    "url": "https://icecat.biz/",
+    "sourceFile": "data-sources/icecat/refs/CategoryFeaturesList.xml.gz",
+    "sourceBytes": 1597854683,
+    "sourceSha256": "0000000000000000000000000000000000000000000000000000000000000000",
+    "generatedAt": "2026-07-07T22:00:00Z",
+    "generator": "manual-fixture-for-codex-unblock",
+    "generatorVersion": 0,
+    "note": "Sample fixture matching the amended v1 schema so Codex Phase 2 can develop and test the runtime loader in parallel with Claude Phase 1 generators. Includes: (1) Printer Cartridges (377) with mandatory Color and Compatible Printer + non-mandatory features; (2) Wireless Mice (421) with mandatory Connection Type + Color; (3) Coffee Machines (652) as a category with only non-mandatory features to exercise the fallback. matchTerms include reasonable English aliases the runtime can bridge to Shopify taxonomy context."
+  },
+  "categories": {
+    "377": {
+      "categoryId": 377,
+      "path": ["Computers", "Printer Supplies", "Printer Cartridges"],
+      "displayName": "Printer Cartridges",
+      "matchTerms": [
+        "cartridges",
+        "ink cartridge",
+        "ink cartridges",
+        "printer cartridge",
+        "printer cartridges",
+        "toner cartridge",
+        "toner cartridges"
+      ],
+      "url": "https://icecat.biz/en/browse/categories/377.html",
+      "features": [
+        {
+          "featureId": 5432,
+          "canonicalName": "compatible printer",
+          "displayName": "Compatible Printer",
+          "mandatory": true,
+          "order": 1
+        },
+        {
+          "featureId": 12345,
+          "canonicalName": "color",
+          "displayName": "Color",
+          "mandatory": true,
+          "order": 2
+        },
+        {
+          "featureId": 8801,
+          "canonicalName": "page yield",
+          "displayName": "Page Yield",
+          "mandatory": false,
+          "order": 3
+        },
+        {
+          "featureId": 8802,
+          "canonicalName": "cartridge capacity",
+          "displayName": "Cartridge Capacity",
+          "mandatory": false,
+          "order": 4
+        }
+      ]
+    },
+    "421": {
+      "categoryId": 421,
+      "path": ["Computers", "Peripherals", "Input Devices", "Mice"],
+      "displayName": "Mice",
+      "matchTerms": [
+        "computer mouse",
+        "gaming mouse",
+        "mice",
+        "mouse",
+        "wireless mice",
+        "wireless mouse"
+      ],
+      "url": "https://icecat.biz/en/browse/categories/421.html",
+      "features": [
+        {
+          "featureId": 22001,
+          "canonicalName": "connector type",
+          "displayName": "Connector Type",
+          "mandatory": true,
+          "order": 1
+        },
+        {
+          "featureId": 12345,
+          "canonicalName": "color",
+          "displayName": "Color",
+          "mandatory": true,
+          "order": 2
+        },
+        {
+          "featureId": 8901,
+          "canonicalName": "dpi",
+          "displayName": "DPI",
+          "mandatory": false,
+          "order": 3
+        },
+        {
+          "featureId": 8902,
+          "canonicalName": "buttons",
+          "displayName": "Number of Buttons",
+          "mandatory": false,
+          "order": 4
+        }
+      ]
+    },
+    "652": {
+      "categoryId": 652,
+      "path": ["Home Appliances", "Small Kitchen Appliances", "Coffee Machines"],
+      "displayName": "Coffee Machines",
+      "matchTerms": [
+        "coffee machine",
+        "coffee machines",
+        "coffee maker",
+        "coffee makers",
+        "espresso machine",
+        "espresso machines"
+      ],
+      "url": "https://icecat.biz/en/browse/categories/652.html",
+      "features": [
+        {
+          "featureId": 20101,
+          "canonicalName": "material",
+          "displayName": "Material",
+          "mandatory": false,
+          "order": 1
+        },
+        {
+          "featureId": 12345,
+          "canonicalName": "color",
+          "displayName": "Color",
+          "mandatory": false,
+          "order": 2
+        },
+        {
+          "featureId": 9401,
+          "canonicalName": "water tank capacity",
+          "displayName": "Water Tank Capacity",
+          "mandatory": false,
+          "order": 3
+        }
+      ]
+    }
+  }
+}

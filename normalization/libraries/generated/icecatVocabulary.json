@@ -1,0 +1,114 @@
+{
+  "$schema": "shopscout://normalization-libraries/icecatVocabulary/v1",
+  "version": 1,
+  "source": {
+    "vocabulary": "Open Icecat",
+    "license": "CC-BY-ND-4.0",
+    "url": "https://icecat.biz/",
+    "sourceFile": "data-sources/icecat/refs/FeatureValuesVocabularyList.xml.gz",
+    "sourceBytes": 46496359,
+    "sourceSha256": "0000000000000000000000000000000000000000000000000000000000000000",
+    "generatedAt": "2026-07-07T22:00:00Z",
+    "generator": "manual-fixture-for-codex-unblock",
+    "generatorVersion": 0,
+    "note": "Sample fixture matching the amended v1 schema so Codex Phase 2 can develop and test the runtime loader in parallel with Claude Phase 1 generators. Includes: (1) a Color feature (id 12345) whose vocabulary partly overlaps defaultRules.enums.Color to exercise the merge-not-skip rule; (2) a second Color feature (id 12399) that shares the displayName Color to exercise the duplicate-feature-id merge-by-displayName rule; (3) a new Material feature (id 20101) whose canonicals include Aluminum + a curated overlap on Stainless Steel; (4) a Connector Type feature (id 22001) that exercises exactAliasFields lookup."
+  },
+  "features": {
+    "12345": {
+      "featureId": 12345,
+      "canonicalName": "color",
+      "displayName": "Color",
+      "url": "https://icecat.biz/en/browse/features/12345.html",
+      "vocabulary": [
+        {
+          "canonical": "Black",
+          "aliases": ["jet black", "matte black", "black color"]
+        },
+        {
+          "canonical": "Cobalt Blue",
+          "aliases": ["cobalt", "cobalt blue color", "royal cobalt"]
+        },
+        {
+          "canonical": "Gray",
+          "aliases": ["grey", "graphite", "charcoal gray", "space gray"]
+        },
+        {
+          "canonical": "Navy Blue",
+          "aliases": ["navy", "midnight blue", "dark navy"]
+        },
+        {
+          "canonical": "Sand",
+          "aliases": ["sand color", "sandstone", "beige-sand"]
+        },
+        {
+          "canonical": "White",
+          "aliases": ["off white", "ivory", "pearl white"]
+        }
+      ]
+    },
+    "12399": {
+      "featureId": 12399,
+      "canonicalName": "color",
+      "displayName": "Color",
+      "url": "https://icecat.biz/en/browse/features/12399.html",
+      "vocabulary": [
+        {
+          "canonical": "Rose Gold",
+          "aliases": ["rose", "pink gold"]
+        },
+        {
+          "canonical": "Silver",
+          "aliases": ["metallic silver", "brushed silver"]
+        }
+      ]
+    },
+    "20101": {
+      "featureId": 20101,
+      "canonicalName": "material",
+      "displayName": "Material",
+      "url": "https://icecat.biz/en/browse/features/20101.html",
+      "vocabulary": [
+        {
+          "canonical": "Aluminum",
+          "aliases": ["aluminium", "anodized aluminum", "aluminium alloy"]
+        },
+        {
+          "canonical": "Copper",
+          "aliases": ["cu", "copper alloy"]
+        },
+        {
+          "canonical": "Leather",
+          "aliases": ["genuine leather", "top grain leather", "real leather"]
+        },
+        {
+          "canonical": "Stainless Steel",
+          "aliases": ["ss", "inox", "stainless"]
+        }
+      ]
+    },
+    "22001": {
+      "featureId": 22001,
+      "canonicalName": "connector type",
+      "displayName": "Connector Type",
+      "url": "https://icecat.biz/en/browse/features/22001.html",
+      "vocabulary": [
+        {
+          "canonical": "HDMI",
+          "aliases": ["hdmi input", "hdmi output"]
+        },
+        {
+          "canonical": "Lightning",
+          "aliases": ["apple lightning", "lightning port"]
+        },
+        {
+          "canonical": "USB-A",
+          "aliases": ["usb a", "usb type-a", "type-a", "type a"]
+        },
+        {
+          "canonical": "USB-C",
+          "aliases": ["usb c", "usb type-c", "type-c", "type c"]
+        }
+      ]
+    }
+  }
+}

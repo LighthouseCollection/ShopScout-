@@ -1,0 +1,60 @@
+{
+  "$schema": "shopscout://normalization-libraries/build-manifest/v1",
+  "version": 1,
+  "buildTool": "shopscout-build-normalization-libraries",
+  "buildToolVersion": 0,
+  "generatedAt": "2026-07-07T22:00:00Z",
+  "sourceCorpus": {
+    "root": "data-sources/icecat/",
+    "junctionTarget": "D:\\icecat-data\\",
+    "note": "Windows directory junction; git-ignored; per-machine local corpus."
+  },
+  "isFixture": true,
+  "fixtureNote": "This BUILD_MANIFEST corresponds to hand-authored sample fixtures shipped to unblock Codex Phase 2. All sourceSha256 values are zero-filled placeholders; outputSha256, outputBytes, and row counts reflect the fixture files themselves, not real generated data. Replace with real values when the Phase 1 generators land.",
+  "outputs": {
+    "schemaOrgProperties.json": {
+      "generator": "manual-fixture-for-codex-unblock",
+      "generatorVersion": 0,
+      "sourceFiles": [
+        {
+          "path": "data-sources/icecat/schema-org/schemaorg-current-https-properties.csv",
+          "bytes": 0,
+          "sha256": "0000000000000000000000000000000000000000000000000000000000000000"
+        }
+      ],
+      "outputBytes": 0,
+      "outputSha256": "0000000000000000000000000000000000000000000000000000000000000000",
+      "rowCount": 8
+    },
+    "icecatVocabulary.json": {
+      "generator": "manual-fixture-for-codex-unblock",
+      "generatorVersion": 0,
+      "sourceFiles": [
+        {
+          "path": "data-sources/icecat/refs/FeatureValuesVocabularyList.xml.gz",
+          "bytes": 0,
+          "sha256": "0000000000000000000000000000000000000000000000000000000000000000"
+        }
+      ],
+      "outputBytes": 0,
+      "outputSha256": "0000000000000000000000000000000000000000000000000000000000000000",
+      "featureCount": 4,
+      "vocabularyEntryCount": 16
+    },
+    "icecatCategoryFeatures.json": {
+      "generator": "manual-fixture-for-codex-unblock",
+      "generatorVersion": 0,
+      "sourceFiles": [
+        {
+          "path": "data-sources/icecat/refs/CategoryFeaturesList.xml.gz",
+          "bytes": 0,
+          "sha256": "0000000000000000000000000000000000000000000000000000000000000000"
+        }
+      ],
+      "outputBytes": 0,
+      "outputSha256": "0000000000000000000000000000000000000000000000000000000000000000",
+      "categoryCount": 3,
+      "featureAssociationCount": 11
+    }
+  }
+}

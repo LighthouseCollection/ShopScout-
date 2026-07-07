@@ -1,0 +1,91 @@
+{
+  "$schema": "shopscout://normalization-libraries/schemaOrgProperties/v1",
+  "version": 1,
+  "source": {
+    "vocabulary": "Schema.org",
+    "release": "27.0",
+    "url": "https://schema.org/",
+    "license": "CC-BY-SA-3.0",
+    "sourceFile": "data-sources/icecat/schema-org/schemaorg-current-https-properties.csv",
+    "sourceBytes": 0,
+    "sourceSha256": "0000000000000000000000000000000000000000000000000000000000000000",
+    "generatedAt": "2026-07-07T22:00:00Z",
+    "generator": "manual-fixture-for-codex-unblock",
+    "generatorVersion": 0,
+    "note": "Sample fixture matching the amended v1 schema so Codex Phase 2 can develop and test the runtime loader in parallel with Claude Phase 1 generators. Replace with real generator output — same shape, richer content, real sha256 fingerprints, real sourceBytes."
+  },
+  "properties": [
+    {
+      "canonical": "brand",
+      "displayName": "Brand",
+      "aliases": [],
+      "expectedTypes": ["Brand", "Organization"],
+      "domains": ["Product"],
+      "description": "The brand(s) associated with a product or service, or the brand(s) maintained by an organization or business person.",
+      "url": "https://schema.org/brand"
+    },
+    {
+      "canonical": "color",
+      "displayName": "Color",
+      "aliases": [],
+      "expectedTypes": ["Text"],
+      "domains": ["Product"],
+      "description": "The color of the product.",
+      "url": "https://schema.org/color"
+    },
+    {
+      "canonical": "gtin",
+      "displayName": "GTIN",
+      "aliases": ["gtin12", "gtin13", "gtin14", "gtin8"],
+      "expectedTypes": ["Text"],
+      "domains": ["Product"],
+      "description": "A Global Trade Item Number (GTIN). GTINs identify trade items, including products and services, using numeric identification codes.",
+      "url": "https://schema.org/gtin"
+    },
+    {
+      "canonical": "material",
+      "displayName": "Material",
+      "aliases": [],
+      "expectedTypes": ["Product", "Text", "URL"],
+      "domains": ["Product"],
+      "description": "A material that something is made from, e.g. leather, wool, cotton, paper.",
+      "url": "https://schema.org/material"
+    },
+    {
+      "canonical": "model",
+      "displayName": "Model",
+      "aliases": [],
+      "expectedTypes": ["ProductModel", "Text"],
+      "domains": ["Product"],
+      "description": "The model of the product. Use with the URL of a ProductModel or a textual representation of the model identifier.",
+      "url": "https://schema.org/model"
+    },
+    {
+      "canonical": "size",
+      "displayName": "Size",
+      "aliases": [],
+      "expectedTypes": ["DefinedTerm", "QuantitativeValue", "SizeSpecification", "Text"],
+      "domains": ["Product"],
+      "description": "A standardized size of a product or creative work, specified either through a simple textual string (for example 'XL', '32Wx34L'), a QuantitativeValue with a unitCode, or a comprehensive and structured SizeSpecification.",
+      "url": "https://schema.org/size"
+    },
+    {
+      "canonical": "sku",
+      "displayName": "SKU",
+      "aliases": [],
+      "expectedTypes": ["Text"],
+      "domains": ["Product", "Offer"],
+      "description": "The Stock Keeping Unit (SKU), i.e. a merchant-specific identifier for a product or service, or the product to which the offer refers.",
+      "url": "https://schema.org/sku"
+    },
+    {
+      "canonical": "weight",
+      "displayName": "Weight",
+      "aliases": [],
+      "expectedTypes": ["QuantitativeValue"],
+      "domains": ["Product"],
+      "description": "The weight of the product or person.",
+      "url": "https://schema.org/weight"
+    }
+  ]
+}
