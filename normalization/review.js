@@ -37,6 +37,43 @@
     return text(value).toLowerCase().replace(/\s+/g, ' ');
   }
 
+  const IDENTIFIER_FIELDS = new Set([
+    'asin',
+    'sku',
+    'upc',
+    'ean',
+    'gtin',
+    'gtin8',
+    'gtin 8',
+    'gtin12',
+    'gtin 12',
+    'gtin13',
+    'gtin 13',
+    'gtin14',
+    'gtin 14',
+    'global trade identification number',
+    'global trade item number',
+    'mpn',
+    'mfr part number',
+    'manufacturer part number',
+    'item part number',
+    'part number',
+    'model',
+    'model number',
+    'model no',
+    'model no.',
+    'item model number',
+    'product model number',
+    'serial number',
+    'identifier',
+    'product id',
+    'product identifier'
+  ]);
+
+  function isIdentifierField(field) {
+    return IDENTIFIER_FIELDS.has(keyPart(field));
+  }
+
   function reviewItemKey(item) {
     return [
       item?.productId,
@@ -80,6 +117,7 @@
       const attrs = product && product._normalizedAttributes;
       if (!attrs || typeof attrs !== 'object') return;
       for (const [field, entry] of Object.entries(attrs)) {
+        if (isIdentifierField(field) || isIdentifierField(entry?.rawField)) continue;
         if (!needsReview(entry)) continue;
         const rawField = text(entry.rawField || field);
         const splitValues = splitReviewValues(field, entry.raw, entry.normalized);

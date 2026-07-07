@@ -3,7 +3,7 @@
   "version": 1,
   "buildTool": "shopscout-build-normalization-libraries",
   "buildToolVersion": 1,
-  "generatedAt": "2026-07-07T23:06:32Z",
+  "generatedAt": "2026-07-07T23:22:27Z",
   "sourceCorpus": {
     "root": "data-sources/icecat/",
     "junctionTarget": "D:\\icecat-data\\",
@@ -20,9 +20,9 @@
           "sha256": "3a6319bd496d2d3dc276e3a8af9b0ff6415993e7d1f6b466072fcbdec1e0d257"
         }
       ],
-      "outputBytes": 52601,
-      "outputSha256": "cfba0148e81d9f0dc28ffd4d548d584447cbbc91e8f6cc4b8725896cb4875565",
-      "rowCount": 99
+      "outputBytes": 45001,
+      "outputSha256": "a0decb8758d8c2a55810533a5657e09de397cd0932c27fcf9741df2bc3ac90f2",
+      "rowCount": 87
     },
     "icecatVocabulary.json": {
       "generator": "scripts/build-normalization-libraries/build-icecat-vocabulary.js",

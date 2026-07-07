@@ -10,7 +10,11 @@
    - Property is included if domainIncludes intersects
      {Product, Offer} OR the property is in the SUPERTYPE_ALLOWLIST
      (a small curated set from Thing/Intangible/PhysicalObject that
-     is genuinely useful in a product grid).
+     is genuinely useful as a comparable product attribute.
+   - Identity fields (ASIN, GTIN, SKU, MPN, model, etc.) are excluded
+     from this normalization library. They belong in the identifier
+     model and may be used for matching/dedupe, but not for attribute
+     alias/value normalization.
    ============================================================= */
 'use strict';
 
@@ -48,8 +52,51 @@ const SUPERTYPE_ALLOWLIST = new Set([
   'https://schema.org/description',
   'https://schema.org/image',
   'https://schema.org/url',
-  'https://schema.org/identifier',
   'https://schema.org/alternateName'
+]);
+
+const IDENTIFIER_PROPERTY_IDS = new Set([
+  'https://schema.org/asin',
+  'https://schema.org/ean',
+  'https://schema.org/gtin',
+  'https://schema.org/gtin8',
+  'https://schema.org/gtin12',
+  'https://schema.org/gtin13',
+  'https://schema.org/gtin14',
+  'https://schema.org/identifier',
+  'https://schema.org/isbn',
+  'https://schema.org/model',
+  'https://schema.org/mpn',
+  'https://schema.org/productID',
+  'https://schema.org/serialNumber',
+  'https://schema.org/sku',
+  'https://schema.org/upc'
+]);
+
+const IDENTIFIER_CANONICALS = new Set([
+  'asin',
+  'ean',
+  'global trade identification number',
+  'global trade item number',
+  'gtin',
+  'gtin 8',
+  'gtin 12',
+  'gtin 13',
+  'gtin 14',
+  'identifier',
+  'isbn',
+  'item part number',
+  'manufacturer part number',
+  'mfr part number',
+  'model',
+  'model number',
+  'mpn',
+  'part number',
+  'product id',
+  'product identifier',
+  'serial number',
+  'sku',
+  'upc'
 ]);
 
 function splitList(value) {
@@ -111,6 +158,10 @@ function collectDomainsForGridFilter(domainIncludes) {
   return [...kept].sort();
 }
 
+function isIdentifierProperty(id, canonical) {
+  return IDENTIFIER_PROPERTY_IDS.has(id) || IDENTIFIER_CANONICALS.has(canonical);
+}
+
 async function build() {
   const csvAbs = sourcePath(SOURCE_REL);
   const sourceBytes = fileBytes(csvAbs);
@@ -132,6 +183,7 @@ async function build() {
 
     const canonical = labelToCanonical(label);
     if (!canonical) return;
+    if (isIdentifierProperty(id, canonical)) return;
     if (seen.has(canonical)) return;
     seen.add(canonical);
     seen.add(id);
@@ -169,7 +221,7 @@ async function build() {
       generatedAt: nowIso(),
       generator: GENERATOR_NAME,
       generatorVersion: GENERATOR_VERSION,
-      note: 'Filtered to Schema.org properties whose domainIncludes intersects {Product, Offer}, plus a small allowlisted subset of Thing/Intangible/PhysicalObject properties (name, description, image, url, identifier, alternateName) that are genuinely useful in a product grid per SCHEMA.md v1 amended by Codex.'
+      note: 'Filtered to Schema.org properties whose domainIncludes intersects {Product, Offer}, plus a small allowlisted subset of Thing/Intangible/PhysicalObject properties (name, description, image, url, alternateName) that are genuinely useful as comparable product attributes per SCHEMA.md v1 amended by Codex. Identifier properties such as ASIN, GTIN, SKU, MPN, model, serialNumber, productID, UPC/EAN/ISBN are intentionally excluded because they belong in the identifier model, not attribute normalization.'
     },
     properties: sorted
   };

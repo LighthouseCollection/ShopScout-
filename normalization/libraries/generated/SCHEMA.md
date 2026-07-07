@@ -116,8 +116,16 @@ when the generator keeps an explicit allowlist for product-grid usefulness.
 This prevents generic Schema.org fields from flooding the ShopScout column
 normalizer.
 
+Identifier properties are explicitly excluded even when Schema.org marks them
+as Product or Offer properties. Examples: `asin`, `gtin`, `gtin8`,
+`gtin12`, `gtin13`, `gtin14`, `sku`, `mpn`, `model`, `productID`,
+`serialNumber`, `identifier`, `upc`, `ean`, and `isbn`. These are product
+identity fields used for matching, dedupe, and product-detail identifiers;
+they are not attribute aliases or enum values and must not enter the
+normalization review workflow.
+
 **Field notes:**
-- `canonical` — Schema.org exact id (lowercase, no spaces). Used as the
+- `canonical` — Schema.org label converted to a lowercase display key. Used as the
   canonical field key in ShopScout's `fieldAliases`.
 - `displayName` — Title Case for UI rendering.
 - `aliases` — additional string aliases if Schema.org documents multiple

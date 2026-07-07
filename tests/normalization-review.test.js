@@ -107,4 +107,55 @@ assert.deepStrictEqual(
   'split feature review items keep raw and normalized values aligned'
 );
 
+const identifierItems = review.collectNormalizationReviewItems([
+  {
+    id: 'p4',
+    title: 'Identifier-heavy product',
+    source: 'Amazon',
+    _normalizedAttributes: {
+      ASIN: {
+        rawField: 'ASIN',
+        raw: 'B0056BYSWY',
+        normalized: 'B0056BYSWY',
+        confidence: 0,
+        rule: 'unmapped'
+      },
+      GTIN: {
+        rawField: 'Global Trade Identification Number',
+        raw: '00012345678905',
+        normalized: '00012345678905',
+        confidence: 0,
+        rule: 'unmapped'
+      },
+      MPN: {
+        rawField: 'Mfr Part Number',
+        raw: 'MXK-MINI-MAC',
+        normalized: 'MXK-MINI-MAC',
+        confidence: 0,
+        rule: 'unmapped'
+      },
+      'Model number': {
+        rawField: 'Model Number',
+        raw: '920-012644',
+        normalized: '920-012644',
+        confidence: 0,
+        rule: 'unmapped'
+      },
+      UPC: {
+        rawField: 'UPC',
+        raw: '123456789012',
+        normalized: '123456789012',
+        confidence: 0,
+        rule: 'unmapped'
+      }
+    }
+  }
+]);
+
+assert.strictEqual(
+  identifierItems.length,
+  0,
+  'product identifiers are identity fields and are excluded from normalization review'
+);
+
 console.log('normalization-review.test.js: assertions passed');

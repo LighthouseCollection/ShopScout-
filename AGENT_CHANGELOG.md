@@ -1514,3 +1514,39 @@ This file is the shared record for Claude and Codex. Append an entry for every m
 - Follow-ups:
   - Real build-icecat-vocabulary.js (per-feature vocabulary linkage) — requires cross-referencing FeaturesList.xml.gz for feature names plus scanning the 17K product XMLs to derive which values apply to which features. Deferred as follow-up when the runtime needs richer vocabulary than the current hardcoded defaults.
   - NOTICE file at repo root + update scripts/build-extension.ps1 to include normalization/libraries/generated/*.json and NOTICE in Chrome/Edge/Firefox dists. Deferred to Codex's Phase 2 packaging pass.
+
+## 2026-07-07 16:24 - Exclude product identifiers from normalization review
+
+- Agent: Codex
+- Branch: grid-rebuild-codex
+- Commit: Uncommitted
+- Status: Implemented
+- Summary:
+  - Corrected the normalization boundary: ASIN, UPC/EAN/GTIN, SKU, MPN/Mfr part number, item part number, model number, serial number, product ID, and generic identifier fields are product identity fields, not attribute-normalization fields.
+  - `collectNormalizationReviewItems()` now skips identifier fields even when deterministic provenance marks them as unmapped or low-confidence.
+  - `build-schema-org-properties.js` now excludes Schema.org identifier properties from the generated attribute-normalization library so they do not re-enter through generated aliases.
+  - Regenerated `schemaOrgProperties.json`, reducing the generated attribute property set from 99 to 87 rows, and updated the matching manifest fingerprint.
+  - Updated the generated-library schema contract to explicitly document that identifier properties are excluded from attribute normalization and belong to matching/dedupe/product detail identifiers.
+- Files touched:
+  - AGENT_CHANGELOG.md
+  - normalization/review.js
+  - tests/normalization-review.test.js
+  - scripts/build-normalization-libraries/build-schema-org-properties.js
+  - tests/generated-libraries.test.js
+  - normalization/libraries/generated/SCHEMA.md
+  - normalization/libraries/generated/schemaOrgProperties.json
+  - normalization/libraries/generated/BUILD_MANIFEST.json
+- Validation:
+  - node tests\normalization-review.test.js -> passed
+  - node tests\generated-libraries.test.js -> passed
+  - node tests\user-rules-normalization.test.js -> passed
+  - node tests\product-repo.test.js -> passed
+  - npm test -> all 44 test files passed
+  - npm run syntax -> passed
+  - npm run lint -> passed with existing 41 warnings, 0 errors
+  - npm run build -> chrome / edge / firefox dists rebuilt
+  - git diff --check on touched files -> passed with expected CRLF warnings only
+- Review / handoff:
+  - Reviewer: Claude
+- Follow-ups:
+  - If identifier formatting is needed later, keep it in a separate identifier-canonicalization module for matching/dedupe only; do not mix it with attribute alias/value normalization.

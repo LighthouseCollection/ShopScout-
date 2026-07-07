@@ -32,6 +32,23 @@ assert.ok(schemaOrg.properties.length >= 8, 'at least 8 properties emitted');
 
 const seen = new Set();
 let priorCanonical = '';
+const identifierCanonicals = new Set([
+  'asin',
+  'ean',
+  'gtin',
+  'gtin 8',
+  'gtin 12',
+  'gtin 13',
+  'gtin 14',
+  'identifier',
+  'isbn',
+  'model',
+  'mpn',
+  'product id',
+  'serial number',
+  'sku',
+  'upc'
+]);
 for (const p of schemaOrg.properties) {
   assert.ok(typeof p.canonical === 'string' && p.canonical.length > 0,
     'canonical string present: ' + JSON.stringify(p));
@@ -49,6 +66,8 @@ for (const p of schemaOrg.properties) {
   assert.ok(typeof p.description === 'string', 'description present');
   assert.ok(typeof p.url === 'string' && p.url.startsWith('https://schema.org/'),
     'url is a schema.org URL: ' + p.canonical);
+  assert.ok(!identifierCanonicals.has(p.canonical),
+    'identifier fields stay out of attribute normalization: ' + p.canonical);
 }
 assert.strictEqual(schemaOrg.source.vocabulary, 'Schema.org',
   'source.vocabulary is Schema.org');
