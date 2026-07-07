@@ -1476,3 +1476,41 @@ This file is the shared record for Claude and Codex. Append an entry for every m
   - Reviewer: Claude
 - Follow-ups:
   - If users need different splitting behavior per category, add category-aware split rules rather than broadening generic punctuation splitting.
+
+## 2026-07-07 16:20 - Phase 1b: real Schema.org + Icecat CategoryFeatures generators
+
+- Agent: Claude
+- Branch: grid-rebuild-codex
+- Commit: 38a97c1 (Phase 1b) + this entry
+- Status: Implemented; awaiting Codex Phase 2 (runtime loader) — one open coordination point on file size, see below
+- Summary:
+  - Shipped offline build scripts and their real output for two of the three normalization libraries. Overwrote the Phase 1a hand-authored fixtures with real content and real sha256 fingerprints. Preserved the vocabulary fixture (real generator deferred).
+  - Design decisions:
+    - **No npm dependencies added.** Uses Node.js built-ins only (fs, zlib, crypto, readline, stream). Includes a small custom streaming XML parser in scripts/build-normalization-libraries/lib.js — sufficient for Icecat's attribute-heavy format, avoids adding sax or similar to the extension's dep tree.
+    - **Streaming for the 1.5 GB gzip.** CategoryFeaturesList.xml.gz decompresses to ~15 GB. The generator streams through it via fs.createReadStream(...).pipe(zlib.createGunzip()) and processes events without buffering the full XML in memory. Peak Node RSS during the run was ~300 MB.
+    - **Deterministic output.** UTF-8 + LF + 2-space indent + trailing newline. Keys sorted (canonical asc for properties, numeric asc for feature/category ids). Reproducible sha256 fingerprints.
+    - **Regression guard.** guardAgainstRegression in lib.js refuses to overwrite output smaller than 25% of the prior file. Protects against a truncated/corrupt source silently gutting the shipped library.
+- Files touched:
+  - Added: scripts/build-normalization-libraries/{README.md, lib.js, build-all.js, build-schema-org-properties.js, build-icecat-category-features.js, build-icecat-vocabulary.js}
+  - Added: tests/generated-libraries.test.js
+  - Modified: normalization/libraries/generated/SCHEMA.md (see coordination point below)
+  - Regenerated: normalization/libraries/generated/schemaOrgProperties.json (99 real properties, 52 KB)
+  - Regenerated: normalization/libraries/generated/icecatCategoryFeatures.json (6,808 real categories, 852,686 feature associations, 45 MB)
+  - Regenerated: normalization/libraries/generated/BUILD_MANIFEST.json (real sha256 fingerprints)
+  - Preserved: normalization/libraries/generated/icecatVocabulary.json (Phase 1a fixture)
+- SCHEMA amendment (needs Codex review):
+  - The features[] example in Codex's approved schema ({featureId, canonicalName, displayName, mandatory, order}) is ~85 bytes per entry. Multiplied by 852,686 real feature associations, that produces a 160+ MB unshippable file. I amended the schema field notes to declare canonicalName, displayName, and order as OPTIONAL fields on each entry. Current-generation output emits only featureId and mandatory, dropping the file to 45 MB. When a future generator resolves feature names (via FeaturesList.xml.gz cross-reference), those fields populate; runtime should treat them as optional. This is a bounded schema relaxation — no field renames, no shape restructuring, and the runtime merge semantics don't change. If Codex prefers a further-compact array-of-ints shape (features: [12345, 5432] + mandatoryFeatureIds: [12345]), we can amend again.
+- Validation:
+  - node scripts/build-normalization-libraries/build-all.js -> ok (Schema.org 99, CategoryFeatures 6,808 / 852,686, Vocab stub validated)
+  - node tests/generated-libraries.test.js -> ok
+  - npm test -> all 44 test files passed
+  - npm run syntax -> pass
+  - git status -> only the Codex WIP files above this entry (normalization/review.js, tests/normalization-review.test.js) plus this changelog entry are unstaged; my Phase 1b files are committed at 38a97c1.
+- Review / handoff:
+  - Reviewer: Codex
+  - Codex Phase 2 (runtime loader + merge logic + fail-safe fallback) can proceed against the real generated files instead of fixtures. Runtime behavior should be identical since the shape is the same v1 — Codex may simply verify: fail-safe fallback, precedence chain (userRules > defaultRules > generated), merge-not-skip on enum overlap, feature-id merge-by-displayName on duplicate feature ids, matchTerms-based category bridging.
+  - Please review the SCHEMA amendment (optional canonicalName/displayName/order on category feature entries) and either approve, propose the array-of-ints alternative, or specify a different compression.
+  - Please also review the 45 MB file size. ShopScout already ships 94 MB of Shopify taxonomy so precedent exists, but if the runtime cannot afford another 45 MB of static JSON, we should discuss leaf-only filtering or lazy loading.
+- Follow-ups:
+  - Real build-icecat-vocabulary.js (per-feature vocabulary linkage) — requires cross-referencing FeaturesList.xml.gz for feature names plus scanning the 17K product XMLs to derive which values apply to which features. Deferred as follow-up when the runtime needs richer vocabulary than the current hardcoded defaults.
+  - NOTICE file at repo root + update scripts/build-extension.ps1 to include normalization/libraries/generated/*.json and NOTICE in Chrome/Edge/Firefox dists. Deferred to Codex's Phase 2 packaging pass.
