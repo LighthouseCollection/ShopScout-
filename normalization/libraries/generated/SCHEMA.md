@@ -110,10 +110,11 @@ an industry-standard vocabulary that survives future Schema.org releases.
 ```
 
 **Property inclusion rule.** A Schema.org property is included iff its
-`domainIncludes` intersects `{Product, Offer}` OR any of their supertypes
-that a product would naturally use (`Thing`, `Intangible`, `PhysicalObject`).
-Curated: prefer explicit `Product` / `Offer` domains only, to keep the file
-small.
+`domainIncludes` explicitly intersects `{Product, Offer}`. Supertype
+properties from `Thing`, `Intangible`, or `PhysicalObject` are included only
+when the generator keeps an explicit allowlist for product-grid usefulness.
+This prevents generic Schema.org fields from flooding the ShopScout column
+normalizer.
 
 **Field notes:**
 - `canonical` — Schema.org exact id (lowercase, no spaces). Used as the
@@ -130,9 +131,12 @@ small.
 **Consumer usage in Codex's runtime.**
 - Build an alias-to-canonical map at load time:
   `properties.flatMap(p => [[p.canonical, p.canonical], ...p.aliases.map(a => [a.toLowerCase(), p.canonical])])`.
-- Union into `ShopScoutNormalizationRules.fieldAliases` on load, but only
-  where the canonical does not already exist in `defaultRules` (precedence
-  rule above).
+- Union into `ShopScoutNormalizationRules.fieldAliases` on load without
+  changing curated meanings. If a canonical field already exists in
+  `defaultRules`, generated aliases may be appended only when they are not
+  already claimed by another curated canonical field. If a generated canonical
+  is new, add it to `canonicalFields` and add its aliases. Curated and user
+  rules still win every conflict.
 
 **Invariants:**
 - `properties[].canonical` values are unique across the array.
@@ -207,17 +211,24 @@ fields) with thousands of canonical values across hundreds of features.
   ```js
   const enums = { ...defaultRules.enums };
   for (const feature of Object.values(generated.features)) {
-    if (!enums[feature.displayName]) {
-      enums[feature.displayName] = Object.fromEntries(
-        feature.vocabulary.map(entry => [entry.canonical, entry.aliases])
-      );
+    const field = feature.displayName;
+    enums[field] = enums[field] || {};
+    for (const entry of feature.vocabulary) {
+      if (!enums[field][entry.canonical]) {
+        enums[field][entry.canonical] = entry.aliases;
+      } else {
+        // Precedence rule: do NOT overwrite curated defaults.
+        // Safe, non-conflicting generated aliases may be appended later.
+      }
     }
-    // Precedence rule: do NOT overwrite curated defaults. Curated defaultRules
-    // always wins for the same displayName+canonical pair.
   }
   ```
 - Feature id is preserved so downstream category-features lookup
   (`icecatCategoryFeatures.json`) can cross-reference by id.
+- Multiple Icecat feature ids may normalize to the same ShopScout
+  `displayName`. Runtime consumers merge those features by `displayName` /
+  `canonicalName`; feature ids remain in provenance so source-specific audit
+  is still possible.
 
 **Invariants:**
 - Every `featureId` (JSON key) equals the `featureId` field inside the value.
@@ -257,6 +268,7 @@ relevant for this category" instead of ranking by observed frequency alone.
       "categoryId": 377,
       "path": ["Printer Supplies", "Printer Cartridges"],
       "displayName": "Printer Cartridges",
+      "matchTerms": ["printer cartridges", "ink cartridges", "toner cartridges"],
       "url": "https://icecat.biz/en/browse/categories/377.html",
       "features": [
         { "featureId": 12345, "canonicalName": "color", "displayName": "Color", "mandatory": true, "order": 1 },
@@ -271,6 +283,10 @@ relevant for this category" instead of ranking by observed frequency alone.
 - Top-level `categories` is an OBJECT keyed by `categoryId` (string).
 - `path` — the Icecat taxonomy path as an array of segment names, root
   first. Consumers can join with " > " for display.
+- `matchTerms` — lowercased English category labels and aliases derived from
+  Icecat category names/path segments. Consumers use these to bridge from
+  ShopScout's current product/category text and Shopify taxonomy context to an
+  Icecat category. Do not assume a Shopify category id is an Icecat category id.
 - `features` array is sorted by `order` ascending. `order` reflects Icecat's
   display priority for that category. Consumers use it as a tiebreaker
   when picking default spec columns.
@@ -278,18 +294,22 @@ relevant for this category" instead of ranking by observed frequency alone.
   features as always-visible in the products table.
 
 **Consumer usage in Codex's runtime.**
-- `pickDefaultSpecColumns(products, listContext)` — for a list where every
-  product resolves to the same Icecat categoryId (via
-  `taxonomyBridge.categoryContextForProduct`), start the default column
-  set with `mandatory: true` features, then add features in `order`
-  ascending until the visible column budget is filled.
-- Falls back to the current frequency heuristic when: (a) products don't
-  share a category, (b) the category isn't in this file, or (c) the file
-  fails to load.
+- `pickDefaultSpecColumns(products, listContext)` — resolves a best-effort
+  Icecat category by matching product category text, title/spec signals, and
+  Shopify taxonomy `category.path`/`knownAttributes` against
+  `categories[].displayName`, `path`, and `matchTerms`. If the list resolves
+  to one dominant Icecat category, start the default column set with
+  `mandatory: true` features, then add features in `order` ascending until the
+  visible column budget is filled.
+- Falls back to the current frequency heuristic when: (a) products don't share
+  a dominant category, (b) the category confidence is below the runtime
+  threshold, (c) the category isn't in this file, or (d) the file fails to
+  load.
 
 **Invariants:**
 - Every `categoryId` (JSON key) equals the `categoryId` field.
 - Object keys are sorted numerically ascending.
+- `matchTerms` values are unique within a category and sorted ascending.
 - Within `features`, `featureId` values are unique per category.
 - `features` is sorted by `order` ascending; within same `order`, by
   `featureId` ascending.

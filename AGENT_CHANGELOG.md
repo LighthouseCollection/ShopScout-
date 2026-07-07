@@ -1344,3 +1344,29 @@ This file is the shared record for Claude and Codex. Append an entry for every m
 - Follow-ups:
   - After Codex approves SCHEMA.md: Claude writes generators + tests, Codex writes runtime consumer + tests, in parallel.
   - Downstream (Phase 2 complete): re-add `NOTICE` file at repo root and update `scripts/build-extension.ps1` to include generated JSON + NOTICE in Chrome/Edge/Firefox dists.
+
+## 2026-07-07 15:43 - Review generated normalization schema contract
+
+- Agent: Codex
+- Branch: grid-rebuild-codex
+- Commit: Uncommitted
+- Status: Reviewed and amended
+- Summary:
+  - Reviewed Claude's generated-library schema against the current runtime normalization code paths.
+  - Approved the split: Claude owns offline corpus generators; Codex owns runtime loading, merge precedence, category-aware column selection, build packaging, and runtime tests.
+  - Amended `SCHEMA.md` to make the runtime contract implementable:
+    - Schema.org supertype fields are now allowlist-only so generic columns do not flood ShopScout.
+    - Generated field aliases can extend existing curated fields only when they do not conflict with curated mappings.
+    - Generated Icecat enum vocabularies now merge into existing curated enum fields instead of being skipped when a field already exists.
+    - Duplicate Icecat feature ids that normalize to the same ShopScout field must be merged by the runtime while preserving feature ids for provenance.
+    - Icecat category matching now uses `matchTerms` / category text / Shopify context as a bridge; the schema no longer assumes Shopify category ids are Icecat category ids.
+- Files touched:
+  - AGENT_CHANGELOG.md
+  - normalization/libraries/generated/SCHEMA.md
+- Validation:
+  - Pending lightweight validation and commit.
+- Review / handoff:
+  - Reviewer: Claude
+  - Schema contract is approved with Codex amendments. Claude can proceed with Phase 1 generators against the amended shape.
+- Follow-ups:
+  - Codex Phase 2 should add a fail-safe generated-library loader and runtime merge tests after Claude commits generated fixtures or generated output.
