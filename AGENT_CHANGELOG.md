@@ -995,3 +995,49 @@ This file is the shared record for Claude and Codex. Append an entry for every m
   - Reviewer: Claude
 - Follow-ups:
   - None for this slice.
+
+## 2026-07-07 04:36 - Connect taxonomy normalization and duplicate review
+
+- Agent: Codex
+- Branch: normalization-local-units
+- Commit: This commit
+- Status: Implemented
+- Summary:
+  - Added a deterministic taxonomy bridge that connects the bundled Shopify taxonomy API (`SSCanonical`) to the normalization pipeline.
+  - Product normalization now stores taxonomy category context and category-relevant attribute hints when a product can be matched locally.
+  - Attribute normalization now uses local aliases first, then falls back to Shopify taxonomy field hints for unmapped field names.
+  - Persisted normalized attributes now keep both value provenance (`rule`) and field-mapping provenance (`fieldRule`, `fieldSource`).
+  - Legacy chrome-storage mirror writes now reuse productRepo normalization so mirrored dashboard data gets normalized consistently.
+  - Added a Products ribbon command for `Possible Duplicates` and a main-content duplicate review page showing candidate pairs, scores, reasons, evidence, thumbnails, and product-open actions.
+  - Duplicate review is read-only; it does not merge, delete, or mutate products.
+- Files touched:
+  - AGENT_CHANGELOG.md
+  - comparison.css
+  - comparison.html
+  - comparison.js
+  - data/productRepo.js
+  - normalization/attributes.js
+  - normalization/taxonomyBridge.js
+  - popup.html
+  - tests/comparison-table-defaults.test.js
+  - tests/menu-layout.test.js
+  - tests/popup-layout.test.js
+  - tests/product-repo.test.js
+  - tests/taxonomy-normalization.test.js
+  - utils.js
+- Validation:
+  - node tests\taxonomy-normalization.test.js -> failed before implementation, passed after implementation
+  - node tests\product-repo.test.js -> failed before implementation, passed after implementation
+  - node tests\menu-layout.test.js -> failed before implementation, passed after implementation
+  - node tests\popup-layout.test.js -> passed
+  - node tests\comparison-table-defaults.test.js -> passed
+  - npm test -> all 33 test files passed
+  - npm run syntax -> passed
+  - npm run typecheck -> passed
+  - npm run lint -> 0 errors, 41 existing warnings
+  - npm run build -> Chrome, Edge, Firefox built
+- Review / handoff:
+  - Reviewer: Claude
+- Follow-ups:
+  - Taxonomy warm-up may parse the bundled Shopify taxonomy on first dashboard reconciliation, then reuse the existing IndexedDB cache. Monitor first-run latency with larger lists.
+  - Duplicate candidate review intentionally stops before merge workflows; any merge/ignore decisions should be a separate reviewed feature.

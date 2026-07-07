@@ -24,6 +24,14 @@
     return task();
   }
 
+  async function ensureNormalizationReady() {
+    const canon = root.SSCanonical;
+    if (!canon || typeof canon.ready !== 'function') return;
+    if (typeof canon.isReady === 'function' && canon.isReady()) return;
+    try { await canon.ready(); }
+    catch (err) { console.warn('productRepo: taxonomy normalization unavailable', err); }
+  }
+
   /* ---------- lists ---------- */
   async function ensureDefaultList() {
     const count = await db.product_lists.count();
@@ -84,7 +92,7 @@
 
   function normalizeIncoming(p, listId) {
     const ts = now();
-    return Object.assign({}, p, normalizedAttributePatch(p), {
+    return Object.assign({}, p, taxonomyContextPatch(p), normalizedAttributePatch(p), {
       id: p.id || uuid(),
       listId,
       capturedAt: p.capturedAt || ts,
@@ -101,19 +109,29 @@
     const byField = Object.create(null);
     for (const entry of entries) {
       if (!entry || !entry.field) continue;
-      byField[entry.field] = {
+      const record = {
         rawField: entry.rawField,
         raw: entry.raw,
         normalized: entry.normalized,
         confidence: entry.confidence,
         rule: entry.rule
       };
+      if (entry.fieldRule) record.fieldRule = entry.fieldRule;
+      if (entry.fieldSource) record.fieldSource = entry.fieldSource;
+      byField[entry.field] = record;
     }
     return { _normalizedAttributes: byField };
   }
 
+  function taxonomyContextPatch(product) {
+    const taxonomy = root.ShopScoutTaxonomyNormalization;
+    if (!taxonomy || typeof taxonomy.taxonomyPatchForProduct !== 'function') return {};
+    return taxonomy.taxonomyPatchForProduct(product);
+  }
+
   async function addProduct(listId, product) {
     return withListLock(listId, async () => {
+      await ensureNormalizationReady();
       const rec = normalizeIncoming(product, listId);
       await db.products.add(rec);
       return rec;
@@ -122,6 +140,7 @@
 
   async function addProducts(listId, products) {
     return withListLock(listId, async () => {
+      await ensureNormalizationReady();
       const recs = products.map(p => normalizeIncoming(p, listId));
       await db.products.bulkAdd(recs);
       return recs;
@@ -326,6 +345,8 @@
     listProducts,
     countProducts,
     query,
-    findDuplicateCandidates
+    findDuplicateCandidates,
+    ensureNormalizationReady,
+    normalizeProductForStorage: normalizeIncoming
   };
 })(globalThis);

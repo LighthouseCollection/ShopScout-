@@ -120,25 +120,57 @@
     return FIELD_LOOKUP[normalizeToken(original)] || original;
   }
 
-  function normalizeAttribute(field, value) {
-    const canonicalField = normalizeFieldName(field);
+  function taxonomyField(field, context) {
+    const taxonomy = root.ShopScoutTaxonomyNormalization;
+    if (!taxonomy || typeof taxonomy.normalizeFieldWithTaxonomy !== 'function') return null;
+    const mapped = taxonomy.normalizeFieldWithTaxonomy(field, context);
+    return mapped && mapped.source === 'shopify-taxonomy' ? mapped : null;
+  }
+
+  function normalizeAttribute(field, value, context) {
+    const localField = normalizeFieldName(field);
+    const mappedField = localField === String(field == null ? '' : field).trim()
+      ? taxonomyField(field, context)
+      : null;
+    const canonicalField = mappedField ? mappedField.field : localField;
     const raw = value == null ? '' : String(value).trim();
     const lookup = ENUM_LOOKUPS[canonicalField];
     if (!raw || !lookup) {
-      return { field: canonicalField, raw, normalized: raw, confidence: 0, rule: 'unmapped' };
+      const out = { field: canonicalField, raw, normalized: raw, confidence: 0, rule: 'unmapped' };
+      if (mappedField) {
+        out.fieldRule = mappedField.rule;
+        out.fieldSource = mappedField.source;
+      }
+      return out;
     }
     const hit = lookup[normalizeToken(raw)];
-    if (!hit) return { field: canonicalField, raw, normalized: raw, confidence: 0, rule: 'unmapped' };
-    return {
+    if (!hit) {
+      const out = { field: canonicalField, raw, normalized: raw, confidence: 0, rule: 'unmapped' };
+      if (mappedField) {
+        out.fieldRule = mappedField.rule;
+        out.fieldSource = mappedField.source;
+      }
+      return out;
+    }
+    const out = {
       field: canonicalField,
       raw,
       normalized: hit.normalized,
       confidence: hit.confidence,
       rule: hit.rule
     };
+    if (mappedField) {
+      out.fieldRule = mappedField.rule;
+      out.fieldSource = mappedField.source;
+    }
+    return out;
   }
 
   function normalizeProductAttributes(product) {
+    const taxonomy = root.ShopScoutTaxonomyNormalization;
+    const context = taxonomy && typeof taxonomy.categoryContextForProduct === 'function'
+      ? taxonomy.categoryContextForProduct(product)
+      : null;
     const specs = product && Array.isArray(product.specs) ? product.specs
       : product && Array.isArray(product.rawSpecs) ? product.rawSpecs
         : [];
@@ -146,7 +178,7 @@
     for (const spec of specs) {
       if (!spec || spec.key == null) continue;
       const rawField = String(spec.key).trim();
-      const normalized = normalizeAttribute(rawField, spec.value);
+      const normalized = normalizeAttribute(rawField, spec.value, context);
       out.push(Object.assign({ rawField }, normalized));
     }
     return out;

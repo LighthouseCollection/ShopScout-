@@ -57,6 +57,10 @@ assert.ok(!cmpHtml.includes('src="data/cellFormatters.js"'),
 /* ---- The reusable extractions ship as shared/ --------------- */
 assert.ok(cmpHtml.includes('src="shared/values/cellValues.js"'),
   'shared/values/cellValues.js is loaded for the new grid');
+assert.ok(cmpHtml.indexOf('src="normalization/taxonomyBridge.js"') > -1,
+  'normalization/taxonomyBridge.js is loaded on comparison page');
+assert.ok(cmpHtml.indexOf('src="normalization/taxonomyBridge.js"') < cmpHtml.indexOf('src="normalization/attributes.js"'),
+  'taxonomy bridge loads before attribute normalization on comparison page');
 assert.ok(cmpHtml.indexOf('src="normalization/attributes.js"') > -1,
   'normalization/attributes.js is loaded on comparison page');
 assert.ok(cmpHtml.indexOf('src="normalization/attributes.js"') < cmpHtml.indexOf('src="data/productRepo.js"'),

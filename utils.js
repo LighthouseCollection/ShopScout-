@@ -36,6 +36,10 @@ window.SS = (() => {
        against the legacy store match the IndexedDB ids. Without this,
        selection / row-actions can't reconcile the two stores. */
     let mutatedLegacy = false;
+    if (repo.ensureNormalizationReady) {
+      try { await repo.ensureNormalizationReady(); }
+      catch (err) { console.warn('SS.mirrorToProductRepo: normalization warm-up failed', err); }
+    }
     await db.transaction('rw', db.product_lists, db.products, db.meta, async () => {
       await db.products.clear();
       await db.product_lists.clear();
@@ -48,10 +52,13 @@ window.SS = (() => {
           const recs = [];
           for (const p of products) {
             if (!p.id) { p.id = uuid(); mutatedLegacy = true; }
-            recs.push(Object.assign({}, p, {
+            const rec = repo.normalizeProductForStorage
+              ? repo.normalizeProductForStorage(p, listId)
+              : Object.assign({}, p, { listId, capturedAt: p.capturedAt || ts, updatedAt: ts });
+            recs.push(Object.assign({}, rec, {
               listId,
-              capturedAt: p.capturedAt || ts,
-              updatedAt: ts
+              capturedAt: rec.capturedAt || p.capturedAt || ts,
+              updatedAt: rec.updatedAt || ts
             }));
           }
           await db.products.bulkAdd(recs);

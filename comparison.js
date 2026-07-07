@@ -408,6 +408,12 @@ function bindEvents() {
       return;
     }
 
+    const duplicateOpen = e.target.closest('[data-duplicate-open]');
+    if (duplicateOpen) {
+      await globalThis.openProductDetailById?.(duplicateOpen.dataset.duplicateOpen);
+      return;
+    }
+
     const selector = e.target.closest('.product-select-input');
     if (selector) {
       if (selector.disabled) return;
@@ -1115,6 +1121,95 @@ async function openSettingsPage() {
   </section>`);
 }
 
+function duplicateCandidateProductCard(product, fallbackTitle) {
+  const title = product?.title || product?.productName || fallbackTitle || 'Untitled product';
+  const image = sanitizeUrl(product?.image || product?.mainImage || '');
+  const source = product?.source || product?.retailer || 'Unknown source';
+  const price = product?.newPrice || product?.price || '';
+  return `<article class="duplicate-product-card">
+    <div class="duplicate-product-thumb">${image ? `<img src="${escAttr(image)}" alt="">` : '<span>No image</span>'}</div>
+    <div class="duplicate-product-main">
+      <h4 title="${escAttr(title)}">${esc(truncateText(title, 76))}</h4>
+      <p>${esc(source)}${price ? ` · ${esc(price)}` : ''}</p>
+      ${product?.id ? `<button class="dashboard-secondary-action dashboard-secondary-action--small" type="button" data-duplicate-open="${escAttr(product.id)}">Open product</button>` : ''}
+    </div>
+  </article>`;
+}
+
+function duplicateEvidenceHtml(candidate) {
+  const evidence = Array.isArray(candidate.evidence) ? candidate.evidence : [];
+  const shared = Array.isArray(candidate.sharedIdentifiers) ? candidate.sharedIdentifiers : [];
+  const items = [
+    ...evidence,
+    ...shared.map(value => `shared normalized identifier: ${value}`)
+  ].filter(Boolean);
+  if (!items.length) return '<p class="dashboard-muted">No detailed evidence recorded.</p>';
+  return `<ul>${items.map(item => `<li>${esc(item)}</li>`).join('')}</ul>`;
+}
+
+async function loadDuplicateCandidateRows() {
+  const repo = globalThis.SSProductRepo;
+  if (repo && typeof repo.getActiveListId === 'function' && typeof repo.findDuplicateCandidates === 'function') {
+    const listId = await repo.getActiveListId();
+    const products = listId && typeof repo.listProducts === 'function' ? await repo.listProducts(listId) : [];
+    const candidates = listId ? await repo.findDuplicateCandidates(listId) : [];
+    return { products, candidates };
+  }
+  const products = await getProducts();
+  const matcher = globalThis.ShopScoutMatching;
+  const candidates = matcher && typeof matcher.detectDuplicateCandidates === 'function'
+    ? matcher.detectDuplicateCandidates(products)
+    : [];
+  return { products, candidates };
+}
+
+async function openDuplicateReviewPage() {
+  const data = await getData();
+  const { products, candidates } = await loadDuplicateCandidateRows();
+  const byId = new Map();
+  (products || []).forEach((product, idx) => {
+    if (product?.id) byId.set(String(product.id), product);
+    if (product?.url) byId.set(String(product.url), product);
+    byId.set(`product-${idx + 1}`, product);
+  });
+
+  const body = !candidates.length
+    ? `<div class="dashboard-empty">
+        <h3>No likely duplicates found</h3>
+        <p>ShopScout checked normalized identifiers, model numbers, brand/manufacturer similarity, and title token overlap. Nothing crossed the review threshold.</p>
+      </div>`
+    : `<div class="duplicate-review-list">
+        ${candidates.map((candidate, index) => {
+          const ids = candidate.productIds || [];
+          const left = byId.get(String(ids[0])) || null;
+          const right = byId.get(String(ids[1])) || null;
+          return `<section class="duplicate-review-group">
+            <header>
+              <div>
+                <h3>Possible duplicate ${index + 1}</h3>
+                <p>${esc(candidate.reason || 'candidate-match')}</p>
+              </div>
+              <span class="duplicate-score">${Math.round(Number(candidate.score || 0) * 100)}%</span>
+            </header>
+            <div class="duplicate-review-products">
+              ${duplicateCandidateProductCard(left, candidate.titles?.[0])}
+              ${duplicateCandidateProductCard(right, candidate.titles?.[1])}
+            </div>
+            <div class="duplicate-evidence">
+              <h4>Evidence</h4>
+              ${duplicateEvidenceHtml(candidate)}
+            </div>
+          </section>`;
+        }).join('')}
+      </div>`;
+
+  openDashboardInfoPage(
+    'Possible Duplicates',
+    `${data.activeList || 'Current list'} · ${candidates.length} candidate group${candidates.length === 1 ? '' : 's'} · review only`,
+    body
+  );
+}
+
 function closeSettingsPage(shouldRender = true) {
   const content = document.getElementById('content');
   if (content?.querySelector('[data-settings-root]')) setTrustedHtml(content, '');
@@ -1214,6 +1309,7 @@ function bindRibbonCommandEvents() {
     } else if (command === 'manual-ai') openManualAiModal();
     else if (command === 'ai-results') openLatestAiResults();
     else if (command === 'settings') openSettingsPage();
+    else if (command === 'duplicate-review') openDuplicateReviewPage();
     else if (command === 'show-view-tab') activateRibbonTab('view');
     else if (command === 'show-help-tab') activateRibbonTab('about');
     else if (command === 'export') openExportPage();

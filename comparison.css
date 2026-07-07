@@ -2469,3 +2469,121 @@ body.is-info-page .content { display: block; padding: 18px 22px 48px; }
 .ribbon-pane[data-pane="search"] .rb-select--wide {
   height: 28px;
 }
+
+/* =============================================================
+   Possible duplicates review page
+   ============================================================= */
+.duplicate-review-list {
+  display: grid;
+  gap: 16px;
+}
+
+.duplicate-review-group {
+  border: 1px solid var(--rule-soft, #d1d5db);
+  border-radius: var(--radius-lg);
+  background: var(--card);
+  overflow: hidden;
+}
+
+.duplicate-review-group > header {
+  display: flex;
+  justify-content: space-between;
+  gap: 18px;
+  align-items: flex-start;
+  padding: 16px 18px;
+  background: var(--paper-2);
+  border-bottom: 1px solid var(--rule-soft, #d1d5db);
+}
+
+.duplicate-review-group h3,
+.duplicate-review-group h4 {
+  margin: 0;
+}
+
+.duplicate-review-group header p {
+  margin: 4px 0 0;
+  color: var(--ink-3);
+}
+
+.duplicate-score {
+  flex: 0 0 auto;
+  border-radius: 999px;
+  padding: 4px 10px;
+  background: #e7f1f4;
+  color: var(--primary);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.duplicate-review-products {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 12px;
+  padding: 14px 18px;
+}
+
+.duplicate-product-card {
+  display: grid;
+  grid-template-columns: 84px minmax(0, 1fr);
+  gap: 12px;
+  align-items: center;
+  border: 1px solid var(--rule-soft, #d1d5db);
+  border-radius: var(--radius);
+  padding: 10px;
+  background: var(--surface);
+}
+
+.duplicate-product-thumb {
+  width: 76px;
+  height: 76px;
+  border: 1px solid var(--rule-soft, #d1d5db);
+  border-radius: var(--radius);
+  background: var(--paper);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--ink-4);
+  font-size: 11px;
+  overflow: hidden;
+}
+
+.duplicate-product-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
+}
+
+.duplicate-product-main {
+  min-width: 0;
+}
+
+.duplicate-product-main h4 {
+  font-size: 15px;
+  line-height: 1.28;
+}
+
+.duplicate-product-main p {
+  margin: 6px 0 10px;
+  color: var(--ink-3);
+}
+
+.dashboard-secondary-action--small {
+  padding: 5px 10px;
+  min-height: 28px;
+}
+
+.duplicate-evidence {
+  border-top: 1px solid var(--rule-soft, #d1d5db);
+  padding: 14px 18px 16px;
+}
+
+.duplicate-evidence ul {
+  margin: 8px 0 0;
+  padding-left: 20px;
+}
+
+.duplicate-evidence li {
+  margin: 4px 0;
+}

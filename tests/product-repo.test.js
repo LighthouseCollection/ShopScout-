@@ -12,6 +12,7 @@ Dexie.dependencies.indexedDB = indexedDB;
 Dexie.dependencies.IDBKeyRange = IDBKeyRange;
 const dbSrc = fs.readFileSync(path.join(__dirname, '..', 'data', 'db.js'), 'utf8');
 const attrSrc = fs.readFileSync(path.join(__dirname, '..', 'normalization', 'attributes.js'), 'utf8');
+const taxonomySrc = fs.readFileSync(path.join(__dirname, '..', 'normalization', 'taxonomyBridge.js'), 'utf8');
 const matchingSrc = fs.readFileSync(path.join(__dirname, '..', 'normalization', 'matching.js'), 'utf8');
 const repoSrc = fs.readFileSync(path.join(__dirname, '..', 'data', 'productRepo.js'), 'utf8');
 
@@ -26,7 +27,31 @@ async function createRepoContext() {
     IDBKeyRange,
     crypto: { randomUUID: () => 'id-' + Math.random().toString(36).slice(2, 10) },
     Date,
-    console
+    console,
+    SSCanonical: {
+      matchProductToCategory(product) {
+        if (String(product.category || '').includes('Keyboards')) {
+          return {
+            gid: 'gid://shopify/TaxonomyCategory/el-3-2',
+            name: 'Keyboards',
+            full_name: 'Electronics > Computer Accessories > Keyboards',
+            parts: ['Electronics', 'Computer Accessories', 'Keyboards']
+          };
+        }
+        return null;
+      },
+      knownAttributesFor(category) {
+        return category && category.name === 'Keyboards'
+          ? ['Color', 'Connectivity Technology', 'Keyboard Layout']
+          : [];
+      },
+      canonicalKey(value) {
+        const text = String(value || '').toLowerCase().replace(/[_-]+/g, ' ').trim();
+        if (text === 'colour') return 'Color';
+        if (text === 'connectivity tech') return 'Connectivity Technology';
+        return String(value || '').trim();
+      }
+    }
   };
   ctx.globalThis = ctx;
   vm.createContext(ctx);
@@ -36,6 +61,7 @@ async function createRepoContext() {
   await Dexie.delete('shopscout');
   vm.runInContext(dbSrc, ctx, { filename: 'data/db.js' });
   await ctx.SSDB.db.open();
+  vm.runInContext(taxonomySrc, ctx, { filename: 'normalization/taxonomyBridge.js' });
   vm.runInContext(attrSrc, ctx, { filename: 'normalization/attributes.js' });
   vm.runInContext(matchingSrc, ctx, { filename: 'normalization/matching.js' });
   vm.runInContext(repoSrc, ctx, { filename: 'data/productRepo.js' });
@@ -127,12 +153,18 @@ async function seedProducts(repo, listId) {
     const listId = await repo.ensureDefaultList();
     const added = await repo.addProduct(listId, {
       title: 'Supplier keyboard',
+      category: 'Electronics > Computer Accessories > Keyboards',
       rawSpecs: [
         { key: 'Colour', value: 'midnight blue' },
-        { key: 'Size Name', value: 'medium' }
+        { key: 'Size Name', value: 'medium' },
+        { key: 'Connectivity Tech', value: 'Bluetooth' }
       ]
     });
 
+    assert.strictEqual(added._normalizationContext.category.leaf, 'Keyboards',
+      'added product stores Shopify taxonomy category context');
+    assert.ok(added._normalizationContext.knownAttributes.includes('Keyboard Layout'),
+      'added product stores Shopify taxonomy attribute hints');
     assert.deepStrictEqual(plain(added._normalizedAttributes.Color), {
       rawField: 'Colour',
       raw: 'midnight blue',
@@ -147,10 +179,21 @@ async function seedProducts(repo, listId) {
       confidence: 1,
       rule: 'enum:size:m'
     }, 'added product carries normalized Size provenance');
+    assert.deepStrictEqual(plain(added._normalizedAttributes['Connectivity Technology']), {
+      rawField: 'Connectivity Tech',
+      raw: 'Bluetooth',
+      normalized: 'Bluetooth',
+      confidence: 0,
+      rule: 'unmapped',
+      fieldRule: 'taxonomy-field:connectivity-technology',
+      fieldSource: 'shopify-taxonomy'
+    }, 'added product uses Shopify taxonomy field mapping when local aliases do not know the field');
 
     const stored = await repo.getProduct(added.id);
     assert.strictEqual(stored._normalizedAttributes.Color.normalized, 'Navy Blue',
       'normalized attributes are persisted in IndexedDB');
+    assert.strictEqual(stored._normalizationContext.source, 'shopify-taxonomy',
+      'taxonomy context is persisted in IndexedDB');
   });
 
   await withRepo(async (repo) => {
