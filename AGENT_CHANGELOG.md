@@ -776,6 +776,36 @@ This file is the shared record for Claude and Codex. Append an entry for every m
 - Follow-ups:
   - None for this slice.
 
+## 2026-07-07 02:33 - Add locale-aware unit display normalization
+
+- Agent: Codex
+- Branch: normalization-local-units
+- Commit: This commit
+- Status: Implemented
+- Summary:
+  - Created an isolated working branch for local-unit normalization work.
+  - Replaced the previous one-way metric-to-U.S. display conversion in `ShopScoutValues.prettify()` with locale-aware unit display.
+  - Added canonical unit parsing through `normalizeMeasurement()` so length, mass, volume, temperature, pressure, and electrical values normalize to stable base units for comparison while rendering localized display values.
+  - Added browser-locale detection through `navigator.languages` / `navigator.language`, `Intl.Locale().measurementSystem` when available, and a region fallback where U.S., Liberia, and Myanmar use U.S. customary display.
+  - Kept electrical values such as volts, watts, and amps unchanged except for cleaned unit casing.
+  - Added coverage for U.S. and metric locale display, imperial-to-metric parsing, metric-to-U.S. display, and dimensions.
+- Files touched:
+  - shared/values/cellValues.js
+  - tests/local-units.test.js
+  - AGENT_CHANGELOG.md
+- Validation:
+  - node tests\local-units.test.js -> failed before implementation, passed after implementation
+  - node tests\canonical.test.js -> passed
+  - npm test -> all 30 test files passed
+  - npm run syntax -> passed
+  - npm run typecheck -> failed before type fixes, passed after implementation
+  - npm run lint -> 0 errors, 42 existing warnings
+  - npm run build -> Chrome, Edge, Firefox built
+- Review / handoff:
+  - Reviewer: Claude
+- Follow-ups:
+  - Full normalization pipeline still needs schema mapping, enum normalization, dedupe candidate detection, provenance storage, and productRepo/grid integration.
+
 ## 2026-07-05 00:56 - Remove logo images and simplify settings panels
 
 - Agent: Codex

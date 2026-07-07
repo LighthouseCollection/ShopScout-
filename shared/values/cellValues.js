@@ -7,7 +7,9 @@
    useful to any future renderer.
 
    Public API on window.ShopScoutValues:
-     prettify(value)           — display-friendly normalized string
+     prettify(value, options)  — display-friendly normalized string
+     normalizeMeasurement(value) — canonical base value for unit-bearing values
+     measurementSystemForLocale(locale) — 'us' | 'metric'
      parseNumeric(value)       — numeric sort/rank value or NaN
      stableColor(text)         — { bg, fg, border } HSL pill colors
      splitToPills(text)        — multi-value split (or null)
@@ -40,62 +42,203 @@
     return rounded + ' hr';
   }
 
-  /* ---- Metric → U.S. customary --------------------------------- */
-  const METRIC_RE = /^(-?\d+(?:\.\d+)?)\s*(mm|cm|m|km|kg|g|mg|°c|c\b|l|ml|kpa|bar)\b/i;
+  /* ---- Unit normalization + locale display --------------------- */
+  const NUMBER = '(-?\\d+(?:[.,]\\d+)?)';
+  const UNIT_RE = new RegExp('^' + NUMBER + '\\s*(mm|cm|m|km|inches|inch|in\\.?|"|ft|feet|foot|yd|yard|yards|kg|g|mg|lb|lbs|pounds?|oz|ounces?|l|liter|liters|litre|litres|ml|milliliter|milliliters|millilitre|millilitres|gal|gallon|gallons|fl\\s*oz|fluid\\s*ounces?|°c|c\\b|°f|f\\b|kpa|bar|psi|v|volt|volts|w|watt|watts|a|amp|amps|amperes?)\\b', 'i');
+  const LOCAL_US_REGIONS = new Set(['US', 'LR', 'MM']);
 
-  function normalizeMetric(raw) {
-    const s = String(raw).trim();
-    const m = s.match(METRIC_RE);
+  function decimalNumber(raw) {
+    const s = String(raw || '').trim();
+    const comma = s.lastIndexOf(',');
+    const dot = s.lastIndexOf('.');
+    if (comma > dot) return parseFloat(s.replace(/\./g, '').replace(',', '.'));
+    return parseFloat(s.replace(/,/g, ''));
+  }
+
+  function canonicalUnit(unit) {
+    const u = String(unit || '').trim().toLowerCase().replace(/\.$/, '');
+    if (u === '"' || u === 'inch' || u === 'inches') return 'in';
+    if (u === 'feet' || u === 'foot') return 'ft';
+    if (u === 'yard' || u === 'yards') return 'yd';
+    if (u === 'lbs' || u === 'pound' || u === 'pounds') return 'lb';
+    if (u === 'ounces' || u === 'ounce') return 'oz';
+    if (u === 'liter' || u === 'liters' || u === 'litre' || u === 'litres') return 'l';
+    if (u === 'milliliter' || u === 'milliliters' || u === 'millilitre' || u === 'millilitres') return 'ml';
+    if (u === 'gallon' || u === 'gallons') return 'gal';
+    if (/^(fl\s*oz|fluid\s*ounce)/.test(u)) return 'fl oz';
+    if (u === 'c') return '°c';
+    if (u === 'f') return '°f';
+    if (u === 'volt' || u === 'volts') return 'v';
+    if (u === 'watt' || u === 'watts') return 'w';
+    if (u === 'amp' || u === 'amps' || u === 'ampere' || u === 'amperes') return 'a';
+    return u;
+  }
+
+  function roundBase(n) {
+    if (!isFinite(n)) return n;
+    return Math.round(n * 100) / 100;
+  }
+
+  function normalizeMeasurement(raw) {
+    const m = String(raw || '').trim().match(UNIT_RE);
     if (!m) return null;
-    const n = parseFloat(m[1]);
-    const u = m[2].toLowerCase();
-    if (u === 'mm') return round1(n / 25.4) + ' in';
-    if (u === 'cm') return round1(n / 2.54) + ' in';
-    if (u === 'm') {
-      const feet = n * 3.28084;
-      if (feet >= 1) return round1(feet) + ' ft';
-      return round1(n * 39.3701) + ' in';
-    }
-    if (u === 'km') return round1(n * 0.621371) + ' mi';
-    if (u === 'kg') return round1(n * 2.20462) + ' lb';
-    if (u === 'g') {
-      const oz = n * 0.035274;
-      if (oz >= 1) return round1(oz) + ' oz';
-      return round1(n) + ' g';
-    }
-    if (u === 'mg') return round1(n) + ' mg';
-    if (u === 'l')  return round1(n * 0.264172) + ' gal';
-    if (u === 'ml') return round1(n * 0.033814) + ' fl oz';
-    if (u === '°c' || u === 'c') return round1(n * 9 / 5 + 32) + ' °F';
-    if (u === 'kpa') return round1(n * 0.145038) + ' psi';
-    if (u === 'bar') return round1(n * 14.5038) + ' psi';
+    const n = decimalNumber(m[1]);
+    const u = canonicalUnit(m[2]);
+    if (!isFinite(n)) return null;
+
+    if (u === 'mm') return { kind: 'length', baseValue: roundBase(n), baseUnit: 'mm' };
+    if (u === 'cm') return { kind: 'length', baseValue: roundBase(n * 10), baseUnit: 'mm' };
+    if (u === 'm')  return { kind: 'length', baseValue: roundBase(n * 1000), baseUnit: 'mm' };
+    if (u === 'km') return { kind: 'length', baseValue: roundBase(n * 1000000), baseUnit: 'mm' };
+    if (u === 'in') return { kind: 'length', baseValue: roundBase(n * 25.4), baseUnit: 'mm' };
+    if (u === 'ft') return { kind: 'length', baseValue: roundBase(n * 304.8), baseUnit: 'mm' };
+    if (u === 'yd') return { kind: 'length', baseValue: roundBase(n * 914.4), baseUnit: 'mm' };
+
+    if (u === 'mg') return { kind: 'mass', baseValue: roundBase(n / 1000), baseUnit: 'g' };
+    if (u === 'g')  return { kind: 'mass', baseValue: roundBase(n), baseUnit: 'g' };
+    if (u === 'kg') return { kind: 'mass', baseValue: roundBase(n * 1000), baseUnit: 'g' };
+    if (u === 'oz') return { kind: 'mass', baseValue: roundBase(n * 28.349523125), baseUnit: 'g' };
+    if (u === 'lb') return { kind: 'mass', baseValue: roundBase(n * 453.59237), baseUnit: 'g' };
+
+    if (u === 'ml')    return { kind: 'volume', baseValue: roundBase(n), baseUnit: 'ml' };
+    if (u === 'l')     return { kind: 'volume', baseValue: roundBase(n * 1000), baseUnit: 'ml' };
+    if (u === 'fl oz') return { kind: 'volume', baseValue: roundBase(n * 29.5735295625), baseUnit: 'ml' };
+    if (u === 'gal')   return { kind: 'volume', baseValue: roundBase(n * 3785.411784), baseUnit: 'ml' };
+
+    if (u === '°c') return { kind: 'temperature', baseValue: roundBase(n), baseUnit: '°C' };
+    if (u === '°f') return { kind: 'temperature', baseValue: roundBase((n - 32) * 5 / 9), baseUnit: '°C' };
+
+    if (u === 'kpa') return { kind: 'pressure', baseValue: roundBase(n), baseUnit: 'kPa' };
+    if (u === 'bar') return { kind: 'pressure', baseValue: roundBase(n * 100), baseUnit: 'kPa' };
+    if (u === 'psi') return { kind: 'pressure', baseValue: roundBase(n * 6.8947572932), baseUnit: 'kPa' };
+
+    if (u === 'v') return { kind: 'electrical', baseValue: roundBase(n), baseUnit: 'V' };
+    if (u === 'w') return { kind: 'electrical', baseValue: roundBase(n), baseUnit: 'W' };
+    if (u === 'a') return { kind: 'electrical', baseValue: roundBase(n), baseUnit: 'A' };
     return null;
   }
 
-  function round1(n) {
-    if (!isFinite(n)) return n;
-    return n >= 100 ? Math.round(n) : Math.round(n * 10) / 10;
+  function localeFromOptions(options) {
+    if (options && options.locale) return options.locale;
+    try {
+      const nav = root.navigator;
+      if (nav && Array.isArray(nav.languages) && nav.languages.length) return nav.languages[0];
+      if (nav && nav.language) return nav.language;
+    } catch {}
+    return 'en-US';
+  }
+
+  function regionFromLocale(locale) {
+    const tag = String(locale || '').trim();
+    if (!tag) return '';
+    try {
+      if (root.Intl && root.Intl.Locale) {
+        const loc = new root.Intl.Locale(tag);
+        if (loc.region) return String(loc.region).toUpperCase();
+        if (loc.maximize) {
+          const max = loc.maximize();
+          if (max.region) return String(max.region).toUpperCase();
+        }
+      }
+    } catch {}
+    const parts = tag.split('-');
+    return parts.length > 1 ? String(parts[parts.length - 1]).toUpperCase() : '';
+  }
+
+  function measurementSystemForLocale(locale) {
+    try {
+      if (root.Intl && root.Intl.Locale) {
+        const loc = new root.Intl.Locale(locale || 'en-US');
+        const measured = loc && /** @type {any} */ (loc).measurementSystem;
+        if (measured === 'ussystem') return 'us';
+        if (measured === 'metric') return 'metric';
+      }
+    } catch {}
+    return LOCAL_US_REGIONS.has(regionFromLocale(locale)) ? 'us' : 'metric';
+  }
+
+  function formatNumber(n, digits) {
+    if (!isFinite(n)) return '';
+    const decimals = typeof digits === 'number' ? digits : (Math.abs(n) < 10 ? 1 : 0);
+    const rounded = Math.round(n * Math.pow(10, decimals)) / Math.pow(10, decimals);
+    return String(rounded).replace(/\.0$/, '');
+  }
+
+  function formatMeasurementBase(measurement, options) {
+    if (!measurement) return null;
+    if (measurement.kind === 'electrical') {
+      return formatNumber(measurement.baseValue, measurement.baseValue % 1 ? 1 : 0) + ' ' + measurement.baseUnit;
+    }
+    const system = measurementSystemForLocale(localeFromOptions(options));
+    const v = measurement.baseValue;
+    if (system === 'us') {
+      if (measurement.kind === 'length') {
+        if (v >= 1609344) return formatNumber(v / 1609344, 1) + ' mi';
+        if (v >= 1828.8) return formatNumber(v / 304.8, 1) + ' ft';
+        return formatNumber(v / 25.4, 1) + ' in';
+      }
+      if (measurement.kind === 'mass') {
+        if (v >= 907.18474) return formatNumber(v / 453.59237, 1) + ' lb';
+        return formatNumber(v / 28.349523125, 1) + ' oz';
+      }
+      if (measurement.kind === 'volume') {
+        if (v >= 3785.411784) return formatNumber(v / 3785.411784, 1) + ' gal';
+        return formatNumber(v / 29.5735295625, 1) + ' fl oz';
+      }
+      if (measurement.kind === 'temperature') return formatNumber(v * 9 / 5 + 32, 1) + ' °F';
+      if (measurement.kind === 'pressure') return formatNumber(v / 6.8947572932, 1) + ' psi';
+    }
+
+    if (measurement.kind === 'length') {
+      if (v >= 1000000) return formatNumber(v / 1000000, 1) + ' km';
+      if (v >= 1000) return formatNumber(v / 1000, 1) + ' m';
+      if (v >= 100) return formatNumber(v / 10, 1) + ' cm';
+      return formatNumber(v, v % 1 ? 1 : 0) + ' mm';
+    }
+    if (measurement.kind === 'mass') {
+      if (v >= 1000) return formatNumber(v / 1000, 1) + ' kg';
+      return formatNumber(v, Math.abs(v) < 10 && v % 1 ? 1 : 0) + ' g';
+    }
+    if (measurement.kind === 'volume') {
+      if (v >= 1000) return formatNumber(v / 1000, 1) + ' L';
+      return formatNumber(v, v % 1 ? 1 : 0) + ' ml';
+    }
+    if (measurement.kind === 'temperature') return formatNumber(v, 1) + ' °C';
+    if (measurement.kind === 'pressure') return formatNumber(v, 1) + ' kPa';
+    return null;
+  }
+
+  function normalizeMetric(raw) {
+    return formatMeasurementBase(normalizeMeasurement(raw), { locale: 'en-US' });
   }
 
   /* ---- Triple "L x W x H" dimensions in metric ----------------- */
-  const DIM_RE = /^(\d+(?:\.\d+)?)\s*[x×]\s*(\d+(?:\.\d+)?)\s*[x×]\s*(\d+(?:\.\d+)?)\s*(mm|cm|m)\b/i;
+  const DIM_RE = new RegExp('^' + NUMBER + '\\s*[x×]\\s*' + NUMBER + '\\s*[x×]\\s*' + NUMBER + '\\s*(mm|cm|m|inches|inch|in\\.?|")\\b', 'i');
 
-  function normalizeDimensions(raw) {
+  function normalizeDimensions(raw, options) {
     const m = String(raw).trim().match(DIM_RE);
     if (!m) return null;
-    const a = parseFloat(m[1]), b = parseFloat(m[2]), c = parseFloat(m[3]);
-    const u = m[4].toLowerCase();
-    const factor = u === 'mm' ? 1 / 25.4 : u === 'cm' ? 1 / 2.54 : 39.3701;
-    return [a, b, c].map(v => round1(v * factor)).join(' × ') + ' in';
+    const u = canonicalUnit(m[4]);
+    const values = [];
+    for (const part of [m[1], m[2], m[3]]) {
+      const parsed = normalizeMeasurement(part + ' ' + u);
+      if (!parsed || parsed.kind !== 'length') return null;
+      values.push(parsed);
+    }
+    const system = measurementSystemForLocale(localeFromOptions(options));
+    if (system === 'us') {
+      return values.map(v => formatNumber(v.baseValue / 25.4, 1)).join(' × ') + ' in';
+    }
+    return values.map(v => formatNumber(v.baseValue / 10, 1)).join(' × ') + ' cm';
   }
 
   /* ---- prettify (the public coercion) -------------------------- */
-  function prettify(value) {
+  function prettify(value, options) {
     if (value == null) return '';
     const s = String(value).trim();
     if (!s) return '';
-    return normalizeDimensions(s)
-        || normalizeMetric(s)
+    return normalizeDimensions(s, options)
+        || formatMeasurementBase(normalizeMeasurement(s), options)
         || normalizeTime(s)
         || s;
   }
@@ -192,6 +335,7 @@
     prettify, parseNumeric, stableColor, splitToPills,
     computeRanks, polarityForField,
     /* exposed for parity with the old internals if needed */
-    normalizeTime, normalizeMetric, normalizeDimensions
+    normalizeTime, normalizeMetric, normalizeDimensions,
+    normalizeMeasurement, measurementSystemForLocale
   });
 })(globalThis);
