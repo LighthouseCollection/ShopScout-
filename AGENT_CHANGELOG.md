@@ -1370,3 +1370,35 @@ This file is the shared record for Claude and Codex. Append an entry for every m
   - Schema contract is approved with Codex amendments. Claude can proceed with Phase 1 generators against the amended shape.
 - Follow-ups:
   - Codex Phase 2 should add a fail-safe generated-library loader and runtime merge tests after Claude commits generated fixtures or generated output.
+
+## 2026-07-07 16:15 - Phase 1a: sample fixtures shipped to unblock Codex Phase 2
+
+- Agent: Claude
+- Branch: grid-rebuild-codex
+- Commit: 5333663 (fixtures) + this entry
+- Status: Implemented, Codex Phase 2 unblocked
+- Summary:
+  - Accepted Codex's SCHEMA.md amendments as-is. All five amendments (Schema.org supertype allowlist, non-conflicting alias extension, Icecat enum merge-not-skip, duplicate feature-id merge-by-displayName, category matchTerms bridging) improve the runtime contract in ways I hadn't fully thought through.
+  - Shipped 4 hand-authored sample fixture JSONs at the target paths under `normalization/libraries/generated/`. Small (all under 5 KB) but content-realistic. Deliberately exercise the amended merge rules:
+    - Color feature id 12345 partly overlaps `defaultRules.enums.Color` (Navy Blue, Gray, White) so the runtime can verify curated wins for shared canonicals AND Cobalt Blue / Sand get added.
+    - Color feature id 12399 shares `displayName: "Color"` with 12345 so the runtime can verify the merge-by-displayName rule with feature-id provenance intact.
+    - Material feature id 20101 has Stainless Steel that overlaps `defaultRules.enums.Material` (Stainless Steel 304 / Stainless Steel) — exercises the append-non-conflicting rule.
+    - Connector Type feature id 22001 exercises `exactAliasFields` lookup (its aliases should get confidence 1.0 via the exact-alias path).
+    - 3 categories with `matchTerms` sorted alphabetically: Printer Cartridges (377), Mice (421), Coffee Machines (652 — non-mandatory-only to exercise the fallback).
+  - All fixtures pass invariant checks: sorted-by-canonical for properties, numeric-ascending JSON keys for features + categories, matchTerms sorted alphabetically, feature-order ascending, JSON keys match value ids.
+  - `BUILD_MANIFEST.json` has `isFixture: true` and zero-filled sha256 placeholders so Codex can filter fixtures from real generator output. `source.generator: "manual-fixture-for-codex-unblock"` and `source.generatorVersion: 0` in every file mark them clearly.
+- Files touched:
+  - normalization/libraries/generated/schemaOrgProperties.json (new, 3.6 KB)
+  - normalization/libraries/generated/icecatVocabulary.json (new, 3.9 KB)
+  - normalization/libraries/generated/icecatCategoryFeatures.json (new, 4.4 KB)
+  - normalization/libraries/generated/BUILD_MANIFEST.json (new, 2.4 KB)
+  - AGENT_CHANGELOG.md (this entry)
+- Validation:
+  - Every fixture JSON.parses cleanly.
+  - Every fixture passes schema invariants (sort order, uniqueness, id/key equivalence, matchTerms sorted).
+- Review / handoff:
+  - Reviewer: Codex
+  - Codex Phase 2 can now start: build the runtime loader in `normalization/libraries/generated.js` (or wherever fits Codex's existing pattern), wire the fail-safe fallback, wire the merge-into-defaultRules logic, ship the merged shape into `ShopScoutNormalizationRules`. Test against these fixtures. When real generators land (Claude's next commits), no runtime change should be needed — the fixtures share the amended v1 shape byte-for-byte.
+- Follow-ups:
+  - Claude Phase 1 continues: write `scripts/build-normalization-libraries/` (build-schema-org-properties.js, build-icecat-vocabulary.js, build-icecat-category-features.js, build-all.js) targeting the same schemas. When they land, they overwrite these fixture files with richer content. Codex's runtime should be no-change.
+  - After both phases: `NOTICE` file + update `scripts/build-extension.ps1` to ship generated JSONs and NOTICE in Chrome/Edge/Firefox dists.
