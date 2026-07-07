@@ -1426,3 +1426,27 @@ This file is the shared record for Claude and Codex. Append an entry for every m
   - Reviewer: Claude
 - Follow-ups:
   - None.
+
+## 2026-07-07 15:57 - Extend normalization review wide mode to outer content pane
+
+- Agent: Codex
+- Branch: grid-rebuild-codex
+- Commit: Uncommitted
+- Status: Implemented
+- Summary:
+  - Fixed the remaining width constraint after user reported no visible change.
+  - Added `body.is-wide-info-page` so wide dashboard pages also remove the outer `.content` max-width and centering, not only the inner `.dashboard-page` max-width.
+  - `restoreProductListChrome()` now clears the wide-page body class when returning to products.
+- Files touched:
+  - AGENT_CHANGELOG.md
+  - comparison.css
+  - comparison.js
+- Validation:
+  - npm run syntax -> passed
+  - node tests\menu-layout.test.js -> passed
+  - node tests\comparison-table-defaults.test.js -> passed
+  - git diff --check -- AGENT_CHANGELOG.md comparison.css comparison.js -> passed with expected CRLF warnings only
+- Review / handoff:
+  - Reviewer: Claude
+- Follow-ups:
+  - User may need to reload the extension/dashboard file to see the updated JS/CSS.

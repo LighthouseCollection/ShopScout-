@@ -183,6 +183,7 @@
 
   /* Content */
   .content { padding: 20px 24px; max-width: 1600px; margin: 0 auto; }
+  body.is-wide-info-page .content { max-width: none; width: 100%; margin: 0; }
   .dashboard-page { max-width: 1040px; margin: 0 auto; border: 1px solid var(--rule-soft); border-radius: var(--radius-lg); background: var(--card); overflow: hidden; }
   .dashboard-page--wide { max-width: none; width: 100%; }
   .dashboard-page-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; padding: 18px 20px; border-bottom: 1px solid var(--rule-soft); background: var(--paper-2); }

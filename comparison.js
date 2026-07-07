@@ -939,7 +939,7 @@ function restoreProductListChrome() {
   document.getElementById('urlBar').style.display = '';
   document.getElementById('filterBar').style.display = '';
   document.querySelector('.controls').style.display = '';
-  document.body.classList.remove('is-info-page');
+  document.body.classList.remove('is-info-page', 'is-wide-info-page');
   const productGrid = document.getElementById('productGrid');
   if (productGrid) productGrid.hidden = false;
   renderAll();
@@ -1021,6 +1021,7 @@ async function loadTextResource(path) {
 function openDashboardInfoPage(title, subtitle, bodyHtml, options) {
   const content = prepareMainContentPage();
   const opts = options || {};
+  document.body.classList.toggle('is-wide-info-page', Boolean(opts.wide));
   const classes = ['dashboard-page'];
   if (opts.wide) classes.push('dashboard-page--wide');
   setTrustedHtml(content, `<section class="${classes.join(' ')}">
