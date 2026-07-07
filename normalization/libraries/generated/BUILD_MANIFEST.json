@@ -3,7 +3,7 @@
   "version": 1,
   "buildTool": "shopscout-build-normalization-libraries",
   "buildToolVersion": 1,
-  "generatedAt": "2026-07-07T23:22:27Z",
+  "generatedAt": "2026-07-07T23:31:06Z",
   "sourceCorpus": {
     "root": "data-sources/icecat/",
     "junctionTarget": "D:\\icecat-data\\",
@@ -21,7 +21,7 @@
         }
       ],
       "outputBytes": 45001,
-      "outputSha256": "a0decb8758d8c2a55810533a5657e09de397cd0932c27fcf9741df2bc3ac90f2",
+      "outputSha256": "5746c57c49bfe10e5c75b953d77cba03d9d9931ffa04abb37331bf7b915ee2c5",
       "rowCount": 87
     },
     "icecatVocabulary.json": {
@@ -45,9 +45,18 @@
         }
       ],
       "outputBytes": 45409390,
-      "outputSha256": "dbeb8ede3bfa7bd080d86f3fdc0423c9f1f6e127864a0db27883cc28def6706c",
+      "outputSha256": "2d05aa710eb025f626885dd283acbaea9c49261d6e46a23c6e9a35db12ed2577",
       "categoryCount": 6808,
       "featureAssociationCount": 852686
+    },
+    "esciSubstitutes.json": {
+      "generator": "scripts/build-normalization-libraries/build-esci-substitutes.js",
+      "generatorVersion": 0,
+      "isStub": true,
+      "outputBytes": 1492,
+      "outputSha256": "d3a3b879c0c4808ed0e9712d7554cac74939dba874ee0d22c6d4787d884f4976",
+      "substitutePairCount": 5,
+      "note": "Stub — real parquet parsing deferred. Current output is a Track A minimum-viable fixture illustrating the v1 shape. Real generator will read data-sources/esci/shopping_queries_dataset_examples.parquet when a parquet dependency is approved (hyparquet or parquet-wasm)."
     }
   }
 }

@@ -24,6 +24,7 @@ const {
 const schemaOrg = require('./build-schema-org-properties');
 const icecatCategoryFeatures = require('./build-icecat-category-features');
 const icecatVocabulary = require('./build-icecat-vocabulary');
+const esciSubstitutes = require('./build-esci-substitutes');
 
 const MANIFEST_NAME = 'BUILD_MANIFEST.json';
 
@@ -57,9 +58,17 @@ async function main() {
     `${v.vocabularyEntryCount} entries, ${v.outputBytes} bytes\n`
   );
 
+  process.stdout.write('=== esciSubstitutes.json (stub) ===\n');
+  const e = esciSubstitutes.validate();
+  process.stdout.write(
+    `  ${e.isFixture ? 'fixture preserved' : 'validated'}: ${e.substitutePairCount} pairs, ` +
+    `${e.outputBytes} bytes\n`
+  );
+
   const schemaOrgFp = readGeneratedFingerprint(s.outputName);
   const catFeatFp = readGeneratedFingerprint(c.outputName);
   const vocabFp = readGeneratedFingerprint(v.outputName);
+  const esciFp = readGeneratedFingerprint(e.outputName);
 
   const manifest = {
     $schema: 'shopscout://normalization-libraries/build-manifest/v1',
@@ -99,6 +108,15 @@ async function main() {
         outputSha256: catFeatFp.outputSha256,
         categoryCount: c.categoryCount,
         featureAssociationCount: c.featureAssociationCount
+      },
+      'esciSubstitutes.json': {
+        generator: esciSubstitutes.GENERATOR_NAME,
+        generatorVersion: esciSubstitutes.GENERATOR_VERSION,
+        isStub: true,
+        outputBytes: esciFp.outputBytes,
+        outputSha256: esciFp.outputSha256,
+        substitutePairCount: e.substitutePairCount,
+        note: 'Stub — real parquet parsing deferred. Current output is a Track A minimum-viable fixture illustrating the v1 shape. Real generator will read data-sources/esci/shopping_queries_dataset_examples.parquet when a parquet dependency is approved (hyparquet or parquet-wasm).'
       }
     }
   };

@@ -1,0 +1,66 @@
+ShopScout — Third-party Data Attribution
+========================================
+
+This extension bundles JSON files under `normalization/libraries/generated/`
+that are derived from third-party open data sources. The generated files are
+not the source data itself — they are compact indexed lookup tables extracted
+by scripts under `scripts/build-normalization-libraries/`.
+
+Attribution below is required by each source's license.
+
+--------------------------------------------------------------------------
+
+1. Schema.org
+   -----------
+   Files derived: `normalization/libraries/generated/schemaOrgProperties.json`
+   Source vocabulary: https://schema.org/
+   License: Creative Commons Attribution-ShareAlike 3.0 (CC-BY-SA-3.0)
+   Attribution: "This work incorporates canonical field names from
+   Schema.org (https://schema.org/), used under CC-BY-SA-3.0."
+   Notes: The generated JSON extracts a subset of Schema.org's
+   Product + Offer + selected supertype properties to serve as canonical
+   column names. Property URLs preserved in each entry.
+
+2. Icecat Open Icecat
+   ------------------
+   Files derived: `normalization/libraries/generated/icecatVocabulary.json`,
+                  `normalization/libraries/generated/icecatCategoryFeatures.json`
+   Source vocabulary: https://icecat.biz/ (Open Icecat)
+   License: Creative Commons Attribution-NoDerivatives 4.0 (CC-BY-ND-4.0)
+   Attribution: "This work incorporates enum vocabularies and category-feature
+   mappings from Open Icecat (https://icecat.biz/), used under CC-BY-ND-4.0."
+   Notes: The generated JSON extracts feature vocabularies and category-to-
+   feature mappings. Icecat's data is included as reference lookup only —
+   ShopScout does not modify Icecat's canonical values. Any user-editable
+   normalization decisions layer on top via the extension's user rules
+   overlay (`normalization/userRules.js`); Icecat's underlying data is
+   preserved without modification.
+
+3. Amazon Shopping Queries Dataset (ESCI)
+   --------------------------------------
+   Files derived: `normalization/libraries/generated/esciSubstitutes.json`
+   Source vocabulary: https://github.com/amazon-science/esci-data
+   License: Apache License 2.0
+   Attribution: "This work incorporates substitute-product signal derived
+   from the Amazon Shopping Queries Dataset (ESCI) by Amazon Science,
+   used under Apache-2.0."
+   Notes: The generated JSON extracts pairs of Amazon product identifiers
+   (ASINs) labeled as substitutes for the same shopping query. ShopScout
+   uses this as a bonus scoring signal in duplicate/substitute detection;
+   it does not authoritatively determine product identity.
+
+--------------------------------------------------------------------------
+
+Non-inclusion policy
+--------------------
+The raw source files (Schema.org RDF/JSON-LD, Icecat XMLs, ESCI parquet
+files) are NOT redistributed in this extension. They are consumed only at
+build time under `data-sources/` (git-ignored) on the developer's local
+machine. The generated JSON files under `normalization/libraries/generated/`
+are the only artifacts shipped in the extension package.
+
+Updating this NOTICE
+--------------------
+When adding a new generated library, update `SCHEMA.md` and this file
+before the extension package is rebuilt. Removing or misrepresenting any
+attribution above is a license violation for the affected source.

@@ -55,6 +55,7 @@ Every generator script MUST:
 | `schemaOrgProperties.json` | Path 1 — canonical column names from Schema.org Product + Offer vocabulary | `data-sources/icecat/schema-org/schemaorg-current-https-properties.csv` | 30-100 KB |
 | `icecatVocabulary.json` | Path 2 — normalized enum values per Icecat feature (e.g., all valid `Color` values) | `data-sources/icecat/refs/FeatureValuesVocabularyList.xml.gz` | 2-5 MB |
 | `icecatCategoryFeatures.json` | Path 3 — which features apply to which Icecat category | `data-sources/icecat/refs/CategoryFeaturesList.xml.gz` | 5-10 MB |
+| `esciSubstitutes.json` | Path 5 (search intent, Track A) — product-id pairs labeled Substitute in Amazon's ESCI dataset. Runtime uses as a bonus signal in `matching.js`. | `data-sources/esci/shopping_queries_dataset_examples.parquet` | 2-8 MB |
 | `BUILD_MANIFEST.json` | Meta — generator versions, source fingerprints, output row counts | (all of the above) | 2-5 KB |
 
 Any file totaling more than **20 MB** MUST be flagged in code review — either the source has grown or the generator is emitting redundant data.
@@ -327,6 +328,85 @@ relevant for this category" instead of ranking by observed frequency alone.
 - Within `features`, `featureId` values are unique per category.
 - `features` is sorted by `order` ascending; within same `order`, by
   `featureId` ascending.
+
+---
+
+## 3b. `esciSubstitutes.json` (Path 5, Track A)
+
+**Purpose.** Amazon's Shopping Queries Dataset (ESCI) labels query-product
+pairs as Exact / Substitute / Complement / Irrelevant. This file extracts
+the pairs of product identifiers that appear together as substitutes for
+the same query — a strong signal that two products are actually
+comparable-but-distinct alternatives. Runtime uses this as a bonus scoring
+signal in `matching.js:scorePair`, layered on top of the existing
+identifier / brand / title-token scoring.
+
+**Not for:** attribute normalization, spec authority, category taxonomy.
+This is a relevance/comparability signal only.
+
+**Shape:**
+
+```json
+{
+  "$schema": "shopscout://normalization-libraries/esciSubstitutes/v1",
+  "version": 1,
+  "source": {
+    "vocabulary": "Amazon Shopping Queries Dataset (ESCI)",
+    "release": "2022-12",
+    "url": "https://github.com/amazon-science/esci-data",
+    "license": "Apache-2.0",
+    "sourceFile": "data-sources/esci/shopping_queries_dataset_examples.parquet",
+    "sourceBytes": 0,
+    "sourceSha256": "...64 hex chars...",
+    "generatedAt": "2026-07-07T22:00:00Z",
+    "generator": "scripts/build-normalization-libraries/build-esci-substitutes.js",
+    "generatorVersion": 1,
+    "locale": "us"
+  },
+  "substitutePairs": [
+    { "a": "B01234567", "b": "B07654321", "queryCount": 3 },
+    { "a": "B01AAAAAA", "b": "B02BBBBBB", "queryCount": 1 }
+  ]
+}
+```
+
+**Field notes:**
+- `substitutePairs[]` — each entry is a pair of Amazon product IDs (ASINs)
+  labeled `S` (Substitute) in ESCI for at least one common query.
+- `a` / `b` — ASIN strings. Pair is stored with `a < b` (string comparison)
+  so lookups are canonical. Consumers key by `a + "|" + b` after sorting.
+- `queryCount` — number of distinct ESCI queries for which this pair was
+  labeled Substitute. Higher counts = stronger signal.
+- Locale filter: US only by default. Non-EN locales are excluded to keep
+  the file small and English-focused. If future runtime needs other
+  locales, bump `version` and emit `locale` per pair.
+
+**Consumer usage in Codex's runtime.**
+- Load fail-safe at startup (see fail-safe example below).
+- Build a Set of `a + "|" + b` keys at load time.
+- In `normalization/matching.js:scorePair(a, b)`, add:
+  ```js
+  const pairKey = [a.id, b.id].sort().join('|');
+  if (esciSubstitutePairs && esciSubstitutePairs.has(pairKey)) {
+    score += 0.10;
+    evidence.push('ESCI substitute co-occurrence');
+  }
+  ```
+- Never override user-verified duplicates or curated blocklist. ESCI is
+  additive only.
+
+**Invariants:**
+- Pairs stored with `a < b` (string comparison).
+- Pairs unique in the array.
+- Array sorted by `a`, then `b`.
+- `queryCount >= 1`.
+
+**Deferred until Codex approves the shape and Track A runtime lands:**
+- Extended shape with per-query metadata (which queries generated the
+  substitute label). Adds ~10× file size.
+- Complement pairs (`C` label) as a distinct file `esciComplements.json`.
+- Query-token → category-hint file `esciQueryTokens.json` for Track B
+  (search intent layer).
 
 ---
 

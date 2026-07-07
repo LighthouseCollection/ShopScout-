@@ -163,6 +163,40 @@ for (const [id, cat] of Object.entries(catFeat.categories)) {
 assert.strictEqual(catFeat.source.vocabulary, 'Open Icecat',
   'source.vocabulary is Open Icecat');
 
+/* -------------------- esciSubstitutes.json -------------------- */
+
+const esci = loadJson('esciSubstitutes.json');
+assert.strictEqual(esci.version, 1, 'esciSubstitutes.version === 1');
+assert.strictEqual(esci.source.license, 'Apache-2.0',
+  'esciSubstitutes.source.license is Apache-2.0');
+assert.ok(Array.isArray(esci.substitutePairs),
+  'esciSubstitutes.substitutePairs is an array');
+assert.ok(esci.substitutePairs.length >= 1,
+  'at least 1 substitute pair present');
+const pairsSeen = new Set();
+let priorPairA = '';
+let priorPairB = '';
+for (const pair of esci.substitutePairs) {
+  assert.ok(typeof pair.a === 'string' && pair.a.length > 0,
+    'pair.a is non-empty string');
+  assert.ok(typeof pair.b === 'string' && pair.b.length > 0,
+    'pair.b is non-empty string');
+  assert.ok(pair.a < pair.b,
+    'pair canonicalized (a < b): ' + pair.a + ', ' + pair.b);
+  const key = pair.a + '|' + pair.b;
+  assert.ok(!pairsSeen.has(key),
+    'pair unique: ' + key);
+  pairsSeen.add(key);
+  assert.ok(
+    pair.a > priorPairA || (pair.a === priorPairA && pair.b >= priorPairB),
+    'pairs sorted by (a, b) ascending: ' + key
+  );
+  priorPairA = pair.a;
+  priorPairB = pair.b;
+  assert.ok(typeof pair.queryCount === 'number' && pair.queryCount >= 1,
+    'queryCount >= 1: ' + key);
+}
+
 /* -------------------- BUILD_MANIFEST.json -------------------- */
 
 const manifest = loadJson('BUILD_MANIFEST.json');
