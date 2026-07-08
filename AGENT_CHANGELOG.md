@@ -2,6 +2,59 @@
 
 This file is the shared record for Claude and Codex. Append an entry for every meaningful change so both agents can continue from the same factual project history.
 
+## 2026-07-08 - Claude polish batch — grid autosize, rescan perf, pill palette, build stamp
+
+- Agent: Claude
+- Branch: grid-rebuild-codex
+- Commits: 2cdb360 → 4e0942e (12 commits)
+- Status: Shipped. `dist/` rebuilt after each commit; build tag shows current SHA next to ShopScout brand.
+- Summary:
+  - Rapid iteration session driven by user testing the loaded extension and reporting UX issues in real time. Every fix rebuilt into `dist/chrome|edge|firefox` and stamped with `v3.3.0.<shortsha>` next to the ShopScout brand in popup + comparison for visual verification.
+  - **Build stamp** (`2cdb360`): `scripts/build-extension.ps1` now reads `package.json` version + `git rev-parse --short HEAD` and injects `v{version}.{sha}` into `popup.html` + `comparison.html` at build time (replaces `data-build-tag>dev` placeholder). Tiny muted mono-font next to the ShopScout brand. Users can now visually confirm which build is loaded — if the tag doesn't change after a fix, dist wasn't rebuilt or the extension wasn't reloaded.
+  - **Column auto-sizing overhaul** (`fa20ff4`, `81ee888`, `e7685f9`, `09f32d8`, `0739f8f`): removed layered floors that were forcing wide columns for narrow content.
+    - `fa20ff4` — dropped `columnWidths` persistence entirely. `state.js`, `projections.js`, `shopscoutGrid.js` no longer read/write per-column widths. Every render recomputes from content via measuredColumnWidth. Session resize still visually works; just doesn't persist. Kills the case where a user (or old saved state) had 260px title columns overriding my new auto-sizing.
+    - `e7685f9` — removed hardcoded `minWidth`/`width` from projections.js BASE_COLUMNS. `notes minWidth:160`, `brand minWidth:120`, `newPrice width:104`, `modelName minWidth:160`, `rating width:128` — all gone. Fixed shapes (select 40, thumb 76, actions 92) kept.
+    - `09f32d8` — collapsed adapter's per-type width bounds into one uniform rule: `max(header, content) + 16px pad`, floor 40. Only fixed shapes kept per-type bounds.
+    - `0739f8f` — walked back partially. Uniform pad wasn't enough for chrome-heavy types: rating cell has 5 Unicode stars (~14px each) that plain text-length missed; brand/source/spec pill cells have ~18px border+padding chrome. Rating now gets min:132/pad:20; brand/source/spec get pad:28. Everything else keeps min:40/pad:16.
+    - Net result: `COLOR: Blue` measures ~50–80px, `NOTES: -` measures ~40–70px, rating fits stars + "4.5" + "597 reviews", brand pills have breathing room.
+  - **Normalization review UX cleanup** (`81ee888`, `125247c`): removed the three redundant columns (Reason/Confidence/Rule — always "unmapped/0%/unmapped" for typical queues). Removed per-row "Accept all matching" / "Ignore all matching" buttons (bulk actions now live in a page toolbar at top: "Accept all as aliases" / "Ignore all remaining"). Row action strip is now Accept alias / Ignore / Open. Row height 126→64, product column left-aligned, page toolbar with count summary + bulk actions. Added tooltips to every action button + column header.
+  - **Grid host = full page** (`45dc3dd`, `7dc29b0`): the "iframe" feel was two things.
+    - `45dc3dd` — `applyHostHeight` was capping at 6/8/12 visible rows for review/matrix/products. Changed to `header + rowCount × rowHeight` — the host is exactly as tall as its content. Browser scrolls the whole page when the list is long; SlickGrid's internal scrollbar never triggers.
+    - `7dc29b0` — stripped `#productGrid.ss-grid-shell` chrome (border, margin, background, `overflow: hidden`) so the grid blends into the page instead of sitting in a bordered box. Also added an 18px `scrollbarBuffer` to the host height because a horizontal scrollbar was eating vertical viewport space and triggering a spurious vertical scrollbar.
+  - **Rescan performance** (`8159e64`, `61cd6df`):
+    - `8159e64` — scaled the anti-throttling pause to list size. 1–3 items: no pause. 4–10 items: 300–800ms breath. 11+: original 3–6s. Also updated progress text to say "loading page..." during the tab-load phase so users don't see a static "Scanning X of Y" for 20 seconds.
+    - `61cd6df` — parallelized. Concurrency scales with list size (≤3 items rip all at once; larger lists cap at 3 in-flight tabs). Per-product page-load timeout dropped from 25s→10s (settle 2.5s→1.5s). Slow pages fail fast instead of stalling the queue.
+    - Rough speedup for 2-product rescan: 20–50s → ~10–15s.
+  - **Semantic pill palette** (`4e0942e`): killed the hash-of-value random coloring that was already present but unused (`stableColor` in cellValues.js was defined but never applied to grid pills). Introduced `ShopScoutValues.pillColorKey(field, value)` — a fixed 7-color palette (blue/green/red/amber/purple/teal/slate) with this precedence:
+    1. Value-semantic override (Available/Active/Yes → green, Missing/Deactivated/No/Failed → red, Pending/Limited → amber).
+    2. Field-name category (brand/source/model → blue identifiers; category/type → purple taxonomy; weight/capacity/voltage → teal numeric; notes/description/title → no pill).
+    3. Stable hash of field name → palette bucket. Same field always same color; two unrelated columns won't accidentally match.
+    - CSS style: outline darker, fill lighter, border-radius 6px (rounded rectangle, not full pill). `data-pill-color="X"` attribute on each pill; one CSS rule per palette key.
+- Files touched (highlights):
+  - `grid-rebuild-codex/slickGridAdapter.js` (widths, host height, pill data-attr, rating/pill chrome)
+  - `grid-rebuild-codex/projections.js` (dropped hardcoded widths from BASE_COLUMNS)
+  - `grid-rebuild-codex/state.js` + `shopscoutGrid.js` (columnWidths persistence removed)
+  - `grid-rebuild-codex/grid.css` (shell chrome removed, semantic palette rules)
+  - `shared/values/cellValues.js` (pillColorKey + PILL_COLOR_KEYS)
+  - `comparison.js` (normalization review projection trim, bulk-all toolbar handler)
+  - `comparison.css` (toolbar layout, tighter product cell)
+  - `comparison/rescanController.js` (scaled pause + parallel workers)
+  - `background.js` (`waitForTabComplete` 25s→10s for rescan)
+  - `scripts/build-extension.ps1` (build stamp injection)
+  - `popup.html` + `popup.css` (labeled dashboard button, build tag)
+  - `comparison.html` (build tag in ribbon brand)
+  - Tests: adapter.test.js, popup-layout.test.js, menu-layout.test.js, normalization-review-render.test.js, state.test.js
+- Validation run:
+  - `npm test` → 47/47 pass after each commit.
+  - `npm run lint` → pass.
+  - `npm run build` → chrome/edge/firefox dists rebuilt after every commit with fresh SHA stamp.
+- Review / handoff:
+  - Reviewer: Codex or user. Every commit was validated by user reloading + reporting back.
+- Follow-ups or risks:
+  - `rescanProduct` still shows a hard `10000ms` timeout in background.js — for genuinely slow retailers this may fail more often than the 25s original. If real-world failure rates climb, adaptive timeout (start 10s, escalate on retry) is the obvious next step.
+  - Parallel rescan at concurrency 3 may increase perceived resource use on the user's machine (3 tabs opening simultaneously). Fine for typical use, may want to add a "background scan quietly" toggle later.
+  - Column width persistence is fully removed — if the user wants sticky resizes later, we re-add via `state.columnWidths` with an explicit "Save current widths" ribbon action.
+
 ## 2026-07-08 - Claude issue-batch #2 + full triage sweep via gh CLI
 
 - Agent: Claude
