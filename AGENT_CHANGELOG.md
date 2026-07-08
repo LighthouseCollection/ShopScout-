@@ -2026,3 +2026,71 @@ This file is the shared record for Claude and Codex. Append an entry for every m
   - Optional in-flight fetch memoization on ensureVerticalPackLoaded.
   - Path B picker UI as a follow-up commit.
 
+## 2026-07-07 - Design brief for Codex: multi-vertical list support
+
+- Agent: Claude
+- Branch: grid-rebuild-codex
+- Commit: This commit (design brief only, no code change)
+- Status: Handoff to Codex — please implement in your next commit
+- Motivation:
+  - User flagged a real gap in 3561c22: current implementation locks in a list's single vertical after the first detection, and every subsequent product is normalized against that single vertical's pack. When a user adds a Furniture chair to an "Electronics" list, or a Luggage bag to a "Cameras & Optics" list, the mismatched product's specs (seat depth, cushion firmness, wheels count) don't resolve against the wrong vertical's vocabulary. Similarly, if the first product's detection was noisy or wrong, the list is permanently mis-assigned.
+  - Real usage: users create lists like "Home Office Upgrade" that legitimately span multiple verticals — printer (Electronics) + chair (Furniture) + notebook paper (Office Supplies). Each product needs its own vertical's vocabulary.
+- Target model: **product-level vertical, list-level primary vertical**
+  - Each list has a `primaryVerticalId` (first detected, used for UI defaults, column picking) AND a `verticalsSeen: string[]` set (every vertical any product in the list has ever been detected as)
+  - Each product carries its own `_normalizationContext.vertical` and is normalized against its own vertical's pack
+  - Packs are fetched per vertical, cached in memory. A mixed list of N verticals holds N packs in memory during the session; each cached in IndexedDB indefinitely after first fetch
+- Concrete changes requested (Codex to implement):
+  1. **List schema (data/productRepo.js)**:
+     - Rename `verticalId` -> `primaryVerticalId` (source/confidence fields follow: `primaryVerticalSource`, `primaryVerticalConfidence`)
+     - Add `verticalsSeen: string[]` field (default empty array on new lists)
+     - Migration: existing lists with `verticalId` set should get `primaryVerticalId = verticalId` and `verticalsSeen = [verticalId]`. Since user said existing lists will be retired, a simple in-place rename in the fresh schema is fine — no full migration script needed.
+  2. **Detection logic (detectListVertical)**:
+     - ALWAYS run detection on incoming products, even if list has a primaryVerticalId
+     - Return an ARRAY of per-product detection results, not a single list-wide detection
+     - For each product with a detected vertical:
+       - If detected vertical is not in `verticalsSeen`, append to it and mark for pack fetch
+       - If detected vertical differs from `primaryVerticalId`, do NOT auto-overwrite — the primary stays as the assigned/user-picked value. Add to `verticalsSeen` only.
+     - If list has no `primaryVerticalId` yet and the FIRST successful detection succeeds, set it as primary.
+  3. **Pack loading (prepareNormalizationForList)**:
+     - Collect the union of: (a) list's `primaryVerticalId`, (b) all verticals detected on incoming products
+     - Fetch each vertical's pack in parallel via `Promise.all`
+     - Return `{ primaryDetection, perProductDetections }` — an object exposing both the list-primary detection AND per-product detections
+  4. **Normalization (normalizeIncoming)**:
+     - Accept per-product detection instead of a single list-wide detection
+     - Each product's `_normalizationContext.vertical` uses ITS OWN detection result, not the list's
+     - `attributes.js:lookupEnum(context?.vertical?.id, ...)` — already parameterized correctly; will consume the per-product vertical id transparently
+  5. **matching.js**:
+     - No shape change needed — pack signals and blocking keys work fine across products with different verticals
+     - `loadVerticalPackSignals` may be called for each loaded pack; verify it's additive (multiple packs' ESCI data shouldn't conflict)
+  6. **UI (deferred to a later commit)**:
+     - Products in mixed lists could show a small vertical badge on their row
+     - Primary vertical indicator on the list header
+     - Manual "reassign primary" action from list settings
+     - None of this is blocking. The data model correctness is the important part; UI can follow.
+- Files Codex should touch:
+  - data/productRepo.js
+  - normalization/attributes.js  (probably no change — the per-product vertical id already flows through)
+  - normalization/matching.js  (probably no change — verify)
+  - normalization/libraries/generatedPacks.js  (probably no change — API already handles per-vertical loading)
+  - tests/product-repo.test.js  (extend: multi-vertical detection scenario)
+  - tests/generated-packs.test.js  (extend: multiple packs loaded concurrently)
+- New tests requested:
+  - "Adding a product with a different vertical to an existing list appends to verticalsSeen without changing primaryVerticalId"
+  - "Products in a mixed list normalize against their own vertical's vocabulary"
+  - "Concurrent pack fetches for multiple verticals resolve independently"
+  - "First-ever detection sets primaryVerticalId; subsequent detections never overwrite it"
+- Bandwidth/memory trade-off (informational, not a decision point):
+  - Worst case: 5-product list with 5 different verticals = 5 packs = ~10-15 MB fetched total, all cached in IndexedDB
+  - Typical case: user stays within 1-2 verticals per list = ~3-5 MB
+  - Memory footprint per pack ~1-3 MB in memory; extension service worker handles 5+ comfortably
+- Ownership:
+  - Codex owns the runtime consumer side, so this whole brief is on Codex. Claude has no code to change for this feature — Phase 1 packs already support per-vertical fetching.
+  - When Codex ships this, Claude will review against the spec above.
+- Handoff / next steps:
+  - Codex: implement per items 1-5, add tests, commit. If any item needs clarification, comment in this changelog entry and Claude will refine.
+  - Claude: review Codex's implementation once shipped.
+- Follow-ups (out of scope for this brief):
+  - UI badges for mixed-vertical lists (item 6)
+  - "Reassign primary vertical" list-settings action
+  - Column-picking behavior: does `pickDefaultSpecColumns` use primary only, or union across verticals-seen? Recommend primary for now, revisit if lists frequently span verticals.
+
