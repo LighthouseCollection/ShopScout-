@@ -68,7 +68,10 @@ const VERTICAL_RULES = [
     /\bbrake\b/i, /\bexhaust/i, /\bmuffler/i, /\bspark plug/i, /\bradiator\b/i,
     /\balternator/i, /\bstarter motor/i, /\bignition (?:coil|switch)/i,
     /\bwiper (?:blade|arm)/i, /\bcar seat/i, /\btrailer\b/i, /\bboat\b/i,
-    /\brv\b/i, /\bscooter\b/i, /\bwheelchair/i, /\bhelmet\b(?! camera)/i
+    /\brv\b/i, /\bscooter\b/i, /\bwheelchair/i,
+    // helmet: only vehicular helmets — welding/construction/hard hat/hockey/football/etc.
+    // helmets belong elsewhere. Match specific context words instead of blanket \bhelmet\b.
+    /\b(?:motorcycle|motorbike|bike|bicycle|cycling|racing|scooter|snowmobile|atv) helmets?/i
   ] },
   // Sporting Goods
   { id: 'sporting-goods', displayName: 'Sporting Goods', patterns: [
@@ -119,7 +122,7 @@ const VERTICAL_RULES = [
     /\btable\b(?!t| top |top display)/i, /\bdesk\b(?! (?:accessor|calendar|clock|lamp|pad))/i,
     /\bbed\b(?! sheet|ding)/i, /\bmattress/i, /\bwardrobe/i, /\bdresser\b/i,
     /\bcabinet\b(?! (?:power|fuse|breaker|control))/i, /\bshelv/i, /\bbookshelf/i, /\bbookcase/i,
-    /\bstool\b/i, /\bottoman\b/i, /\brecliner/i, /\bbench\b/i,
+    /\bstool\b/i, /\bottoman\b/i, /\brecliner/i, /\bbench\b(?! (?:grinder|vise|top))/i,
     /\barmoire/i, /\bnight ?stand/i, /\bfuton/i
   ] },
   // Cars are covered by Vehicles & Parts.
@@ -135,7 +138,7 @@ const VERTICAL_RULES = [
     /\bhospital (?:bed|equipment)/i, /\bstethoscope/i, /\bdefibrillator/i,
     /\btelephone switching/i, /\bswitchboard equipment/i, /\bpbx\b/i
   ] },
-  // Hardware — tools, fasteners, DIY
+  // Hardware — tools, fasteners, DIY, air/pneumatic tools, welding
   { id: 'hardware', displayName: 'Hardware', patterns: [
     /\bhammer\b/i, /\bdrill\b(?! bit(?! set))/i, /\bsaw\b(?! blade)/i,
     /\bwrench\b/i, /\bscrewdriver\b/i, /\bpliers/i, /\bplyer/i,
@@ -144,7 +147,28 @@ const VERTICAL_RULES = [
     /\bimpact driver/i, /\bwork(?:bench|shop)/i, /\btoolbox/i,
     /\bfastener/i, /\bscrew\b(?! driver)/i, /\bbolt\b/i, /\bnut\b(?! (?:milk|butter|ella|meg))/i,
     /\bhinge\b/i, /\block (?:cylinder|body|set)/i, /\bpad ?lock/i,
-    /\bmeasuring tape/i, /\blevel (?:tool| gauge)/i, /\bstud finder/i
+    /\bmeasuring tape/i, /\blevel (?:tool| gauge)/i, /\bstud finder/i,
+    // Issue #3: air compressor + related pneumatic tools + Amazon
+    // "Tools & Home Improvement" wrapper category. The Icecat category
+    // set includes "Air Compressors", "Pneumatic Tools", "Nail Guns",
+    // etc. which previously fell through unclassified even though they
+    // are clearly Hardware. Also welding, chainsaws, drill bits.
+    /\bair compressor/i, /\bair inflator/i, /\btire inflator/i,
+    /\bpneumatic\b/i, /\bair (?:nailer|stapler|ratchet|impact)/i,
+    /\bcompressor\b(?! (?:refrigerator|freezer|ac unit|hvac|air conditioner))/i,
+    /\btools? (?:&|and) home improvement/i, /\btool set\b/i, /\btool kit\b/i,
+    /\bdrill press\b/i, /\bdrill bit/i, /\bchainsaw/i, /\bchain saw/i,
+    // Grinders — hardware only for specific types; coffee/spice/seasoning
+    // grinders fall through to Home & Garden.
+    /\bangle grinder/i, /\bbench grinder/i, /\bdie grinder/i, /\bstraight grinder/i,
+    /\bmiter (?:saw|box)/i, /\bband saw/i, /\bcircular saw/i, /\bjigsaw/i,
+    /\breciprocating saw/i, /\btable saw/i, /\bscroll saw/i,
+    /\bwelder\b/i, /\bwelding\b/i, /\bsoldering (?:iron|station)/i,
+    /\bplaner\b/i, /\blathe\b/i, /\bjointer\b/i, /\bair hose\b/i,
+    /\bhex key/i, /\ballen (?:wrench|key)/i, /\bratchet\b/i, /\btorque wrench/i,
+    /\butility knife/i, /\bcaulk (?:gun|ing)/i, /\bhardware (?:kit| set)/i,
+    /\bsafety (?:glasses|goggles|gloves)/i, /\bwork (?:gloves|boots)/i,
+    /\bventilation fan/i, /\bshop vac/i, /\bwet[- ]?dry vacuum/i
   ] },
   // Cameras & Optics is above.
   // Health & Beauty
@@ -174,6 +198,8 @@ const VERTICAL_RULES = [
     /\bdryer\b(?! (?:sheet|hair))/i, /\boven\b/i, /\bmicrowave\b/i,
     /\bcoffee (?:machine|maker|grinder)/i, /\bespresso/i, /\bblender\b/i,
     /\bmixer (?:hand|stand|kitchen)/i, /\bfood processor/i, /\bkettle\b/i,
+    /\bcoffee grinder/i, /\bseasoning (?:grinder|mill)/i, /\bspice (?:grinder|mill|rack)/i,
+    /\bpepper (?:mill|grinder)/i, /\bsalt (?:mill|grinder)/i, /\bmeat grinder/i,
     /\btoaster\b/i, /\bwaffle iron/i, /\brice cooker/i, /\bslow cooker/i,
     /\binstant pot/i, /\bair fryer/i, /\bpressure cooker/i,
     /\bvacuum cleaner/i, /\brobot vacuum/i, /\biron\b(?!(?:y|ic|ing (?:board| plate)))/i,
