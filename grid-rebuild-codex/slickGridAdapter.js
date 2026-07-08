@@ -659,11 +659,13 @@
   }
 
   /* Grid host is sized to exactly the content it needs to render — full
-     header + one row per data row. SlickGrid's internal viewport then
-     matches the host, so its own scrollbar never appears; when the list
-     is long, the browser scrolls the whole page instead of a
-     scroll-inside-scroll iframe feel. Empty tables still reserve a small
-     minimum so the header row stays visible. */
+     header + one row per data row + a small horizontal-scrollbar buffer.
+     SlickGrid's internal viewport then matches the host, so its own
+     vertical scrollbar never appears; when the list is long, the browser
+     scrolls the whole page instead of a scroll-inside-scroll feel. The
+     scrollbar buffer accounts for the ~17px the horizontal scrollbar
+     steals at the bottom of the viewport when columns overflow — without
+     it, a horizontal scrollbar can trigger a spurious vertical one. */
   function applyHostHeight(container, projection) {
     if (!container?.style) return;
     const rowCount = Array.isArray(projection?.rows) ? projection.rows.length : 0;
@@ -672,9 +674,10 @@
     const isUserRules = projection?.mode === 'userRules';
     const headerHeight = isMatrix ? 132 : 42;
     const rowHeight = isNormalizationReview ? 64 : (isUserRules ? 60 : 82);
-    const minHeight = rowCount ? headerHeight + rowHeight : 140;
+    const scrollbarBuffer = 18;
+    const minHeight = rowCount ? headerHeight + rowHeight + scrollbarBuffer : 140;
     const contentHeight = rowCount
-      ? headerHeight + (rowCount * rowHeight)
+      ? headerHeight + (rowCount * rowHeight) + scrollbarBuffer
       : minHeight;
     container.style.height = `${contentHeight}px`;
     container.style.minHeight = '0';

@@ -152,8 +152,8 @@ assert.equal(capturedGridOptions.enableColumnReorder, false,
   'missing Sortable disables SlickGrid column drag instead of throwing');
 assert.equal(capturedGridOptions.showCellSelection, false,
   'grid does not show a selected-cell border when a cell is clicked');
-assert.equal(host.style.height, '206px',
-  'small product lists shrink the grid host height instead of leaving viewport-sized empty space');
+assert.equal(host.style.height, '224px',
+  'small product lists shrink the grid host height (header + rowCount*rowHeight + horizontal-scrollbar buffer)');
 const titleColumn = capturedColumns.find(column => column.id === 'title');
 const brandColumn = capturedColumns.find(column => column.id === 'brand');
 const priceColumn = capturedColumns.find(column => column.id === 'newPrice');

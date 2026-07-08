@@ -1,12 +1,13 @@
-/* Codex Phase 2 grid shell. Scoped to #productGrid / ss-grid-* only. */
+/* Codex Phase 2 grid shell. Scoped to #productGrid / ss-grid-* only.
+   No border, margin, or overflow clip — the grid flows into the page
+   like any other content so the browser handles page scrolling. */
 #productGrid.ss-grid-shell {
   position: relative;
-  margin: 12px 20px 44px;
+  margin: 0;
   padding: 0;
-  border: 1px solid var(--rule, #d1d5db);
-  border-radius: 8px;
-  background: var(--surface, #fff);
-  overflow: hidden;
+  border: 0;
+  background: transparent;
+  overflow: visible;
 }
 
 .ss-grid-status {
