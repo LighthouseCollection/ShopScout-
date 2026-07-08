@@ -84,7 +84,17 @@
     }
     const id = uuid();
     const ts = now();
-    await db.product_lists.add({ id, name: 'My Products', createdAt: ts, updatedAt: ts, verticalId: '', verticalSource: '', verticalConfidence: 0, verticalSkipped: false });
+    await db.product_lists.add({
+      id,
+      name: 'My Products',
+      createdAt: ts,
+      updatedAt: ts,
+      primaryVerticalId: '',
+      primaryVerticalSource: '',
+      primaryVerticalConfidence: 0,
+      verticalsSeen: [],
+      verticalSkipped: false
+    });
     await setActiveListId(id);
     return id;
   }
@@ -96,7 +106,17 @@
   async function createList(name) {
     const id = uuid();
     const ts = now();
-    await db.product_lists.add({ id, name: String(name || 'Untitled'), createdAt: ts, updatedAt: ts, verticalId: '', verticalSource: '', verticalConfidence: 0, verticalSkipped: false });
+    await db.product_lists.add({
+      id,
+      name: String(name || 'Untitled'),
+      createdAt: ts,
+      updatedAt: ts,
+      primaryVerticalId: '',
+      primaryVerticalSource: '',
+      primaryVerticalConfidence: 0,
+      verticalsSeen: [],
+      verticalSkipped: false
+    });
     return id;
   }
 
@@ -124,15 +144,44 @@
     await db.meta.put({ key: 'activeListId', value: id });
   }
 
+  function primaryVerticalId(list) {
+    return String(list?.primaryVerticalId || list?.verticalId || '').trim();
+  }
+
+  function primaryVerticalSource(list) {
+    return String(list?.primaryVerticalSource || list?.verticalSource || '').trim();
+  }
+
+  function primaryVerticalConfidence(list) {
+    return Number(list?.primaryVerticalConfidence ?? list?.verticalConfidence ?? 0) || 0;
+  }
+
+  function normalizeVerticalsSeen(list) {
+    const values = Array.isArray(list?.verticalsSeen) ? list.verticalsSeen : [];
+    const legacy = primaryVerticalId(list);
+    return Array.from(new Set([...values, legacy].map(value => String(value || '').trim()).filter(Boolean)));
+  }
+
+  function addUnique(values, value) {
+    const next = Array.isArray(values) ? values.slice() : [];
+    const id = String(value || '').trim();
+    if (id && !next.includes(id)) next.push(id);
+    return next;
+  }
+
   async function setListVertical(id, vertical) {
     const next = vertical || {};
-    const verticalId = String(next.verticalId || next.id || '').trim();
-    const source = String(next.source || next.verticalSource || (verticalId ? 'manual' : 'bundled-defaults')).trim();
+    const list = id ? await db.product_lists.get(id) : null;
+    const existingSeen = normalizeVerticalsSeen(list);
+    const verticalId = String(next.primaryVerticalId || next.verticalId || next.id || '').trim();
+    const source = String(next.source || next.primaryVerticalSource || next.verticalSource || (verticalId ? 'manual' : 'bundled-defaults')).trim();
     const skipped = Boolean(next.skip || next.verticalSkipped || (!verticalId && source === 'bundled-defaults'));
+    const seen = verticalId ? addUnique(existingSeen, verticalId) : existingSeen;
     const patch = {
-      verticalId,
-      verticalSource: source,
-      verticalConfidence: Number(next.confidence ?? next.verticalConfidence ?? (verticalId ? 1 : 0)) || 0,
+      primaryVerticalId: verticalId,
+      primaryVerticalSource: source,
+      primaryVerticalConfidence: Number(next.confidence ?? next.primaryVerticalConfidence ?? next.verticalConfidence ?? (verticalId ? 1 : 0)) || 0,
+      verticalsSeen: skipped && !verticalId ? [] : seen,
       verticalSkipped: skipped && !verticalId,
       updatedAt: now()
     };
@@ -206,43 +255,86 @@
     return { _normalizedAttributes: byField };
   }
 
+  function detectionVerticalId(detection) {
+    return String(detection?.verticalId || '').trim();
+  }
+
+  function detectionAt(plan, index) {
+    return plan?.perProductDetections?.[index] || null;
+  }
+
+  function uniqueVerticalIds(plan) {
+    const ids = new Set();
+    if (plan?.primaryDetection?.verticalId) ids.add(plan.primaryDetection.verticalId);
+    for (const detection of (plan?.perProductDetections || [])) {
+      if (detection?.verticalId) ids.add(detection.verticalId);
+    }
+    return Array.from(ids);
+  }
+
   async function detectListVertical(listId, incomingProducts) {
     await ensureGeneratedPacksReady();
     const packs = root.ShopScoutGeneratedPacks;
-    if (!packs || typeof packs.detectVerticalForProducts !== 'function') return null;
+    if (!packs || typeof packs.detectVerticalForProducts !== 'function') return [];
     const list = listId ? await db.product_lists.get(listId) : null;
-    if (list?.verticalSkipped) return null;
-    if (list?.verticalId) {
-      return {
-        verticalId: list.verticalId,
-        confidence: Number(list.verticalConfidence) || 1,
-        source: list.verticalSource || 'list-setting',
-        categoryId: ''
-      };
-    }
+    if (list?.verticalSkipped) return [];
     const rows = Array.isArray(incomingProducts) ? incomingProducts : [];
-    const candidates = rows.map(product => Object.assign({}, product, taxonomyContextPatch(product)));
-    const detection = packs.detectVerticalForProducts(candidates);
-    if (detection?.verticalId && listId) {
-      await setListVertical(listId, detection);
+    const detections = rows.map(product => {
+      const candidate = Object.assign({}, product, taxonomyContextPatch(product));
+      const detection = packs.detectVerticalForProducts([candidate]);
+      return detection && detection.verticalId ? detection : null;
+    });
+    if (listId && list) {
+      const currentPrimary = primaryVerticalId(list);
+      let nextPrimary = currentPrimary;
+      let nextSource = primaryVerticalSource(list);
+      let nextConfidence = primaryVerticalConfidence(list);
+      let seen = normalizeVerticalsSeen(list);
+      for (const detection of detections) {
+        const id = detectionVerticalId(detection);
+        if (!id) continue;
+        seen = addUnique(seen, id);
+        if (!nextPrimary) {
+          nextPrimary = id;
+          nextSource = detection.source || 'auto-detected';
+          nextConfidence = Number(detection.confidence) || 0;
+        }
+      }
+      await db.product_lists.update(listId, {
+        primaryVerticalId: nextPrimary,
+        primaryVerticalSource: nextSource,
+        primaryVerticalConfidence: nextConfidence,
+        verticalsSeen: seen,
+        verticalSkipped: false,
+        updatedAt: now()
+      });
     }
-    return detection && detection.verticalId ? detection : null;
+    return detections;
   }
 
   async function prepareNormalizationForList(listId, incomingProducts) {
     await ensureNormalizationReady();
     await loadUserNormalizationRules(listId);
-    const detection = await detectListVertical(listId, incomingProducts);
-    if (detection?.verticalId && root.ShopScoutGeneratedPacks?.ensureVerticalPackLoaded) {
-      await root.ShopScoutGeneratedPacks.ensureVerticalPackLoaded(detection.verticalId);
+    const perProductDetections = await detectListVertical(listId, incomingProducts);
+    const list = listId ? await db.product_lists.get(listId) : null;
+    const primaryId = primaryVerticalId(list);
+    const primaryDetection = primaryId ? {
+      verticalId: primaryId,
+      confidence: primaryVerticalConfidence(list) || 1,
+      source: primaryVerticalSource(list) || 'list-setting',
+      categoryId: ''
+    } : null;
+    const plan = { primaryDetection, perProductDetections };
+    if (root.ShopScoutGeneratedPacks?.ensureVerticalPackLoaded) {
+      await Promise.all(uniqueVerticalIds(plan).map(id => root.ShopScoutGeneratedPacks.ensureVerticalPackLoaded(id)));
     }
-    return detection;
+    return plan;
   }
 
   async function addProduct(listId, product) {
     return withListLock(listId, async () => {
-      const detection = await prepareNormalizationForList(listId, [product]);
-      const rec = normalizeIncoming(product, listId, detection);
+      const plan = await prepareNormalizationForList(listId, [product]);
+      const rec = normalizeIncoming(product, listId, detectionAt(plan, 0));
       await db.products.add(rec);
       return rec;
     });
@@ -250,8 +342,8 @@
 
   async function addProducts(listId, products) {
     return withListLock(listId, async () => {
-      const detection = await prepareNormalizationForList(listId, products);
-      const recs = products.map(p => normalizeIncoming(p, listId, detection));
+      const plan = await prepareNormalizationForList(listId, products);
+      const recs = products.map((p, index) => normalizeIncoming(p, listId, detectionAt(plan, index)));
       await db.products.bulkAdd(recs);
       return recs;
     });
@@ -386,13 +478,15 @@
     const matcher = root.ShopScoutMatching;
     if (!matcher || typeof matcher.detectDuplicateCandidates !== 'function') return [];
     const rows = await listProducts(listId);
-    const detection = await detectListVertical(listId, rows);
+    const plan = await prepareNormalizationForList(listId, rows);
     let packSignals = 0;
-    if (detection?.verticalId && root.ShopScoutGeneratedPacks?.ensureVerticalPackLoaded
+    if (root.ShopScoutGeneratedPacks?.ensureVerticalPackLoaded
         && typeof matcher.loadVerticalPackSignals === 'function') {
-      const packResult = await root.ShopScoutGeneratedPacks.ensureVerticalPackLoaded(detection.verticalId);
-      if (packResult?.ok && packResult.pack) {
-        packSignals = matcher.loadVerticalPackSignals(packResult.pack) || 0;
+      for (const verticalId of uniqueVerticalIds(plan)) {
+        const packResult = await root.ShopScoutGeneratedPacks.ensureVerticalPackLoaded(verticalId);
+        if (packResult?.ok && packResult.pack) {
+          packSignals += matcher.loadVerticalPackSignals(packResult.pack) || 0;
+        }
       }
     }
     if (!packSignals && typeof matcher.ensureEsciSubstitutesLoaded === 'function') {
@@ -429,11 +523,12 @@
 
   async function rebuildNormalizationForList(listId) {
     const rows = await listProducts(listId);
-    const detection = await prepareNormalizationForList(listId, rows);
+    const plan = await prepareNormalizationForList(listId, rows);
     let updated = 0;
     await withListLock(listId, async () => {
-      for (const product of rows) {
-        const contextPatch = taxonomyContextPatch(product, detection);
+      for (let index = 0; index < rows.length; index++) {
+        const product = rows[index];
+        const contextPatch = taxonomyContextPatch(product, detectionAt(plan, index));
         const patch = Object.assign({}, contextPatch, normalizedAttributePatch(Object.assign({}, product, contextPatch)));
         if (!Object.keys(patch).length) continue;
         const currentAttrs = JSON.stringify(product._normalizedAttributes || null);

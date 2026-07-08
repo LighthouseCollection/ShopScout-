@@ -48,7 +48,33 @@ async function createRepoContext() {
           json: async () => ({
             version: 1,
             vertical: { id: 'electronics', displayName: 'Electronics' },
-            icecatVocabulary: { features: {} },
+            icecatVocabulary: {
+              features: {
+                connectivity: {
+                  displayName: 'Connectivity Technology',
+                  vocabulary: [{ canonical: 'Bluetooth', aliases: ['BT Pack'] }]
+                }
+              }
+            },
+            icecatCategoryFeatures: { categories: {} },
+            shopifyCategoryTree: { categories: {} }
+          })
+        };
+      }
+      if (String(url).endsWith('normalization/libraries/generated/test-furniture.json')) {
+        return {
+          ok: true,
+          json: async () => ({
+            version: 1,
+            vertical: { id: 'furniture', displayName: 'Furniture' },
+            icecatVocabulary: {
+              features: {
+                upholstery: {
+                  displayName: 'Upholstery Material',
+                  vocabulary: [{ canonical: 'Faux Leather', aliases: ['pleather'] }]
+                }
+              }
+            },
             icecatCategoryFeatures: { categories: {} },
             shopifyCategoryTree: { categories: {} }
           })
@@ -69,17 +95,30 @@ async function createRepoContext() {
             parts: ['Electronics', 'Computer Accessories', 'Keyboards']
           };
         }
+        if (String(product.category || '').includes('Chairs')) {
+          return {
+            gid: 'gid://shopify/TaxonomyCategory/fr-1-1',
+            name: 'Office Chairs',
+            full_name: 'Furniture > Office Furniture > Office Chairs',
+            parts: ['Furniture', 'Office Furniture', 'Office Chairs']
+          };
+        }
         return null;
       },
       knownAttributesFor(category) {
-        return category && category.name === 'Keyboards'
-          ? ['Color', 'Connectivity Technology', 'Keyboard Layout']
-          : [];
+        if (category && category.name === 'Keyboards') {
+          return ['Color', 'Connectivity Technology', 'Keyboard Layout'];
+        }
+        if (category && category.name === 'Office Chairs') {
+          return ['Color', 'Upholstery Material', 'Seat Depth'];
+        }
+        return [];
       },
       canonicalKey(value) {
         const text = String(value || '').toLowerCase().replace(/[_-]+/g, ' ').trim();
         if (text === 'colour') return 'Color';
         if (text === 'connectivity tech') return 'Connectivity Technology';
+        if (text === 'upholstery') return 'Upholstery Material';
         return String(value || '').trim();
       }
     }
@@ -104,13 +143,21 @@ async function createRepoContext() {
           packUrl: 'normalization/libraries/generated/test-electronics.json',
           packBytes: 100,
           packSha256: 'b'.repeat(64)
+        },
+        {
+          id: 'furniture',
+          displayName: 'Furniture',
+          packUrl: 'normalization/libraries/generated/test-furniture.json',
+          packBytes: 100,
+          packSha256: 'c'.repeat(64)
         }
       ]
     },
     categoryToVertical: {
       version: 1,
       mapping: {
-        'gid://shopify/TaxonomyCategory/el-3-2': 'electronics'
+        'gid://shopify/TaxonomyCategory/el-3-2': 'electronics',
+        'gid://shopify/TaxonomyCategory/fr-1-1': 'furniture'
       }
     }
   });
@@ -220,10 +267,12 @@ async function seedProducts(repo, listId) {
     assert.strictEqual(added._normalizationContext.vertical.id, 'electronics',
       'added product stores detected vertical context');
     const list = await db.product_lists.get(listId);
-    assert.strictEqual(list.verticalId, 'electronics',
-      'product list stores detected vertical id for future pack loading');
-    assert.strictEqual(list.verticalSource, 'taxonomy-category-id',
-      'product list stores vertical detection provenance');
+    assert.strictEqual(list.primaryVerticalId, 'electronics',
+      'product list stores first detected vertical id as primary');
+    assert.strictEqual(list.primaryVerticalSource, 'taxonomy-category-id',
+      'product list stores primary vertical detection provenance');
+    assert.deepStrictEqual(list.verticalsSeen, ['electronics'],
+      'product list stores detected verticals seen for future pack loading');
     assert.ok(added._normalizationContext.knownAttributes.includes('Keyboard Layout'),
       'added product stores Shopify taxonomy attribute hints');
     assert.deepStrictEqual(plain(added._normalizedAttributes.Color), {
@@ -244,11 +293,11 @@ async function seedProducts(repo, listId) {
       rawField: 'Connectivity Tech',
       raw: 'Bluetooth',
       normalized: 'Bluetooth',
-      confidence: 0,
-      rule: 'unmapped',
+      confidence: 0.92,
+      rule: 'pack-enum:connectivity-technology:bluetooth',
       fieldRule: 'taxonomy-field:connectivity-technology',
       fieldSource: 'shopify-taxonomy'
-    }, 'added product uses Shopify taxonomy field mapping when local aliases do not know the field');
+    }, 'added product uses Shopify taxonomy field mapping plus vertical pack vocabulary');
 
     const stored = await repo.getProduct(added.id);
     assert.strictEqual(stored._normalizedAttributes.Color.normalized, 'Navy Blue',
@@ -264,18 +313,71 @@ async function seedProducts(repo, listId) {
     const detection = await repo.detectListVertical(listId, [
       { title: 'Keyboard', category: 'Electronics > Computer Accessories > Keyboards' }
     ]);
-    assert.strictEqual(detection, null,
+    assert.strictEqual(Array.isArray(detection), true,
+      'bundled-defaults skip returns a detection array');
+    assert.strictEqual(detection.length, 0,
       'bundled-defaults skip prevents automatic vertical detection from re-selecting a pack');
 
     let list = await db.product_lists.get(listId);
-    assert.strictEqual(list.verticalId, '', 'skip stores no vertical id');
-    assert.strictEqual(list.verticalSource, 'bundled-defaults', 'skip stores bundled-defaults provenance');
+    assert.strictEqual(list.primaryVerticalId, '', 'skip stores no primary vertical id');
+    assert.strictEqual(list.primaryVerticalSource, 'bundled-defaults', 'skip stores bundled-defaults provenance');
     assert.strictEqual(list.verticalSkipped, true, 'skip stores a durable verticalSkipped flag');
+    assert.deepStrictEqual(list.verticalsSeen, [], 'skip does not invent verticals seen');
 
     await repo.setListVertical(listId, { verticalId: 'electronics', source: 'manual-picker', confidence: 1 });
     list = await db.product_lists.get(listId);
-    assert.strictEqual(list.verticalId, 'electronics', 'manual picker can set a vertical after skip');
+    assert.strictEqual(list.primaryVerticalId, 'electronics', 'manual picker can set a primary vertical after skip');
     assert.strictEqual(list.verticalSkipped, false, 'manual picker clears the skip flag');
+    assert.deepStrictEqual(list.verticalsSeen, ['electronics'], 'manual picker records selected vertical in verticalsSeen');
+  });
+
+  await withRepo(async (repo, db) => {
+    const listId = await repo.ensureDefaultList();
+    const added = await repo.addProducts(listId, [
+      {
+        id: 'keyboard-mixed',
+        title: 'Mixed list keyboard',
+        category: 'Electronics > Computer Accessories > Keyboards',
+        rawSpecs: [
+          { key: 'Connectivity Technology', value: 'BT Pack' }
+        ]
+      },
+      {
+        id: 'chair-mixed',
+        title: 'Mixed list chair',
+        category: 'Furniture > Office Furniture > Chairs',
+        rawSpecs: [
+          { key: 'Upholstery', value: 'pleather' }
+        ]
+      }
+    ]);
+
+    assert.strictEqual(added[0]._normalizationContext.vertical.id, 'electronics',
+      'first product stores its own electronics vertical context');
+    assert.strictEqual(added[1]._normalizationContext.vertical.id, 'furniture',
+      'second product stores its own furniture vertical context');
+    assert.strictEqual(added[0]._normalizedAttributes['Connectivity Technology'].normalized, 'Bluetooth',
+      'electronics product normalizes against electronics pack vocabulary');
+    assert.strictEqual(added[1]._normalizedAttributes['Upholstery Material'].normalized, 'Faux Leather',
+      'furniture product normalizes against furniture pack vocabulary');
+
+    let list = await db.product_lists.get(listId);
+    assert.strictEqual(list.primaryVerticalId, 'electronics',
+      'first successful detection sets the primary vertical');
+    assert.deepStrictEqual(list.verticalsSeen, ['electronics', 'furniture'],
+      'mixed list records every detected vertical without changing primary');
+
+    await repo.addProduct(listId, {
+      id: 'chair-second',
+      title: 'Second chair',
+      category: 'Furniture > Office Furniture > Chairs',
+      rawSpecs: [{ key: 'Upholstery', value: 'pleather' }]
+    });
+    list = await db.product_lists.get(listId);
+    assert.strictEqual(list.primaryVerticalId, 'electronics',
+      'subsequent detections never overwrite the primary vertical');
+    assert.deepStrictEqual(list.verticalsSeen, ['electronics', 'furniture'],
+      'verticalsSeen remains deduplicated and stable');
   });
 
   await withRepo(async (repo) => {
@@ -344,8 +446,8 @@ async function seedProducts(repo, listId) {
     ]);
 
     const result = await repo.rebuildNormalizationForList(listId);
-    assert.deepStrictEqual(plain(result), { ok: true, checked: 2, updated: 2 },
-      'normalization rebuild backfills attribute and list-vertical context for legacy products');
+    assert.deepStrictEqual(plain(result), { ok: true, checked: 2, updated: 1 },
+      'normalization rebuild backfills product-level normalization only where the product has detectable context');
 
     const updated = await repo.getProduct('old-1');
     assert.strictEqual(updated._normalizedAttributes.Color.normalized, 'Navy Blue',
@@ -353,8 +455,8 @@ async function seedProducts(repo, listId) {
     assert.strictEqual(updated._normalizationContext.category.leaf, 'Keyboards',
       'normalization rebuild backfills taxonomy context for existing captured products');
     const plainUpdated = await repo.getProduct('old-2');
-    assert.strictEqual(plainUpdated._normalizationContext.vertical.id, 'electronics',
-      'normalization rebuild applies detected list vertical context to plain legacy products');
+    assert.strictEqual(plainUpdated._normalizationContext, undefined,
+      'normalization rebuild does not apply list-primary vertical context to unrelated plain products');
   });
 
   await withRepo(async (repo) => {

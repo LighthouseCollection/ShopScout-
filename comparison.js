@@ -1410,12 +1410,12 @@ async function openVerticalPickerPage() {
   const suggested = typeof packs.detectVerticalForProducts === 'function'
     ? packs.detectVerticalForProducts(products)
     : null;
-  const selectedId = list?.verticalId || suggested?.verticalId || '';
+  const selectedId = list?.primaryVerticalId || list?.verticalId || suggested?.verticalId || '';
   const selectedInfo = selectedId && typeof packs.getVerticalInfo === 'function' ? packs.getVerticalInfo(selectedId) : null;
   const status = list?.verticalSkipped
     ? 'Bundled defaults selected for this list.'
-    : list?.verticalId
-      ? `Selected: ${selectedInfo?.displayName || list.verticalId} (${list.verticalSource || 'manual'})`
+    : (list?.primaryVerticalId || list?.verticalId)
+      ? `Selected: ${selectedInfo?.displayName || selectedId} (${list.primaryVerticalSource || list.verticalSource || 'manual'})`
       : suggested?.verticalId
         ? `Suggested: ${selectedInfo?.displayName || suggested.verticalId} · ${Math.round(Number(suggested.confidence || 0) * 100)}% confidence`
         : 'No reliable vertical detected. Choose one for richer generated normalization.';

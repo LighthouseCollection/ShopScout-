@@ -92,6 +92,33 @@ assert.strictEqual(
 assert.ok(afterEsci.evidence.includes('ESCI substitute co-occurrence'),
   'ESCI substitute evidence is surfaced for review');
 
+M.loadVerticalPackSignals({
+  esciSubstitutes: {
+    substitutePairs: [
+      { a: 'B0VERTICAL01', b: 'B0VERTICAL02', queryCount: 2 }
+    ]
+  }
+});
+M.loadVerticalPackSignals({
+  esciSubstitutes: {
+    substitutePairs: [
+      { a: 'B0VERTICAL03', b: 'B0VERTICAL04', queryCount: 2 }
+    ]
+  }
+});
+assert.ok(
+  M.scorePair({ id: 'B0KEYBOARD' }, { id: 'B0KEYBRD02' }).evidence.includes('ESCI substitute co-occurrence'),
+  'base ESCI substitute pairs remain loaded after vertical-pack signals merge'
+);
+assert.ok(
+  M.scorePair({ asin: 'B0VERTICAL01' }, { asin: 'B0VERTICAL02' }).evidence.includes('ESCI substitute co-occurrence'),
+  'first vertical pack substitute pair is loaded'
+);
+assert.ok(
+  M.scorePair({ asin: 'B0VERTICAL03' }, { asin: 'B0VERTICAL04' }).evidence.includes('ESCI substitute co-occurrence'),
+  'second vertical pack substitute pair merges instead of replacing the first pack'
+);
+
 const candidates = plain(M.detectDuplicateCandidates(products));
 assert.deepStrictEqual(
   candidates.map(candidate => candidate.productIds),

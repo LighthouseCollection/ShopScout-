@@ -67,7 +67,7 @@
     return false;
   }
 
-  function loadEsciSubstitutes(payload) {
+  function buildSubstituteIndexes(payload) {
     const pairs = Array.isArray(payload?.substitutePairs)
       ? payload.substitutePairs
       : Array.isArray(payload)
@@ -85,6 +85,22 @@
       nextById.get(left).add(key);
       nextById.get(right).add(key);
     }
+    return { pairs: next, byId: nextById };
+  }
+
+  function mergeSubstituteIndexes(indexes) {
+    for (const key of indexes.pairs) esciSubstitutePairs.add(key);
+    for (const [id, pairKeys] of indexes.byId.entries()) {
+      if (!esciPairKeysById.has(id)) esciPairKeysById.set(id, new Set());
+      for (const key of pairKeys) esciPairKeysById.get(id).add(key);
+    }
+    return esciSubstitutePairs.size;
+  }
+
+  function loadEsciSubstitutes(payload) {
+    const indexes = buildSubstituteIndexes(payload);
+    const next = indexes.pairs;
+    const nextById = indexes.byId;
     esciSubstitutePairs = next;
     esciPairKeysById = nextById;
     return esciSubstitutePairs.size;
@@ -116,7 +132,7 @@
   }
 
   function loadVerticalPackSignals(pack) {
-    if (pack?.esciSubstitutes) return loadEsciSubstitutes(pack.esciSubstitutes);
+    if (pack?.esciSubstitutes) return mergeSubstituteIndexes(buildSubstituteIndexes(pack.esciSubstitutes));
     return 0;
   }
 

@@ -2221,3 +2221,39 @@ This file is the shared record for Claude and Codex. Append an entry for every m
 - Ownership: Codex owns runtime + UI. This whole brief is Codex's territory. Claude reviews after Codex ships each fix (can be batched or split by priority).
 - Follow-ups (out of scope): consider migrating chrome.storage.local settings into IndexedDB too, so there's ONE storage layer for the extension. Progress overlay hooks in AI analysis / scheduled scans / big imports — worth naming the component broadly enough to be reusable.
 
+## 2026-07-07 23:42 - Multi-vertical list normalization runtime
+
+- Agent: Codex
+- Branch: grid-rebuild-codex
+- Commit: This commit
+- Status: Implemented; reviewer Claude pending.
+- What changed:
+  - Converted list vertical storage from single `verticalId` semantics to `primaryVerticalId` plus `verticalsSeen`.
+  - Kept legacy `verticalId` reads as compatibility fallback for existing data and UI callsites.
+  - Updated list vertical detection to run per incoming product, preserve the first/selected primary vertical, and append additional product verticals without overwriting the primary.
+  - Updated normalization planning so each product normalizes against its own detected vertical pack while the list keeps a primary vertical for defaults.
+  - Updated duplicate candidate matching to load signals from every needed vertical pack and merge pack-level substitute signals additively.
+  - Updated the vertical picker page to read/display `primaryVerticalId` and `primaryVerticalSource`.
+- Files touched:
+  - `comparison.js`
+  - `data/productRepo.js`
+  - `normalization/matching.js`
+  - `tests/dedupe-candidates.test.js`
+  - `tests/generated-packs.test.js`
+  - `tests/product-repo.test.js`
+  - `AGENT_CHANGELOG.md`
+- Validation run:
+  - `node tests\dedupe-candidates.test.js` -> passed
+  - `node tests\product-repo.test.js` -> passed
+  - `node tests\generated-packs.test.js` -> passed
+  - `npm run syntax` -> passed
+  - `npm run lint` -> passed
+  - `npm run typecheck` -> passed
+  - `npm test` -> all 45 test files passed
+  - `npm run build` -> Chrome, Edge, Firefox rebuilt successfully
+- Review status / next reviewer:
+  - Claude to review against the 2026-07-07 multi-vertical brief.
+- Follow-ups or risks:
+  - UI badges for mixed-vertical rows remain deferred as requested in the brief.
+  - Manual primary vertical reassignment remains deferred.
+

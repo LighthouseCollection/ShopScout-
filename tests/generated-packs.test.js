@@ -48,6 +48,13 @@ const bundled = {
         packUrl: null,
         packBytes: null,
         packSha256: null
+      },
+      {
+        id: 'furniture',
+        displayName: 'Furniture',
+        packUrl: 'https://github.com/LighthouseCollection/ShopScout-/releases/download/data-v1/furniture.json',
+        packBytes: 456,
+        packSha256: 'b'.repeat(64)
       }
     ]
   },
@@ -75,10 +82,28 @@ const bundled = {
       }
     }
   };
+  const furniturePack = {
+    version: 1,
+    vertical: { id: 'furniture', displayName: 'Furniture' },
+    icecatVocabulary: {
+      features: {
+        2: {
+          featureId: 2,
+          displayName: 'Upholstery Material',
+          vocabulary: [{ canonical: 'Faux Leather', aliases: ['pleather'] }]
+        }
+      }
+    }
+  };
   const { ctx, meta } = makeCtx(async url => {
     fetchCalls++;
-    assert.strictEqual(url, bundled.verticalsIndex.verticals[0].packUrl, 'fetches configured pack URL');
-    return { ok: true, json: async () => pack };
+    if (url === bundled.verticalsIndex.verticals[0].packUrl) {
+      return { ok: true, json: async () => pack };
+    }
+    if (url === bundled.verticalsIndex.verticals[2].packUrl) {
+      return { ok: true, json: async () => furniturePack };
+    }
+    throw new Error('unexpected pack URL ' + url);
   });
   const P = ctx.ShopScoutGeneratedPacks;
   P.loadBundledData(bundled);
@@ -87,7 +112,8 @@ const bundled = {
     P.listVerticals().map(v => ({ id: v.id, displayName: v.displayName })),
     [
       { id: 'electronics', displayName: 'Electronics' },
-      { id: 'sporting-goods', displayName: 'Sporting Goods' }
+      { id: 'sporting-goods', displayName: 'Sporting Goods' },
+      { id: 'furniture', displayName: 'Furniture' }
     ],
     'public vertical list exposes bundled vertical metadata for picker UI'
   );
@@ -118,6 +144,17 @@ const bundled = {
   assert.strictEqual(result.ok, true, 'cached pack load succeeds');
   assert.strictEqual(result.source, 'cache', 'second load comes from IndexedDB cache');
   assert.strictEqual(fetchCalls, 1, 'cache hit does not fetch again');
+
+  P._clearMemoryCacheForTest();
+  await meta.delete('normalizationVerticalPack:electronics');
+  const concurrent = await Promise.all([
+    P.ensureVerticalPackLoaded('electronics'),
+    P.ensureVerticalPackLoaded('furniture')
+  ]);
+  assert.deepStrictEqual(concurrent.map(item => item.verticalId).sort(), ['electronics', 'furniture'],
+    'concurrent pack loads resolve independently for multiple verticals');
+  assert.strictEqual(P.lookupEnum('furniture', 'Upholstery Material', 'pleather').normalized, 'Faux Leather',
+    'second vertical pack vocabulary remains addressable after concurrent load');
 
   const missing = await P.ensureVerticalPackLoaded('unknown');
   assert.strictEqual(missing.ok, false, 'unknown vertical fails safely');
