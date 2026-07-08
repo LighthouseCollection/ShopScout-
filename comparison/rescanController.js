@@ -149,7 +149,7 @@ async function rescanList(productIndexes) {
   const withUrl = targetIndexes.filter(idx => products[idx]?.url);
   if (!withUrl.length) { toast.show('No products have URLs', 'error'); return; }
   const proceed = await ShopScoutUI.confirm(
-    `Rescan ${withUrl.length} product(s)? This will re-visit each URL one at a time with short pauses between pages.\n\nThis may take a while for large lists.`,
+    `Rescan ${withUrl.length} product(s)? ShopScout reopens each saved URL one at a time with short pauses, then updates price, availability, images, and captured specs.\n\nYour list, notes, and saved AI results stay in place. This may take a while for large lists.`,
     { title: 'Rescan products', okLabel: 'Rescan' }
   );
   if (!proceed) return;

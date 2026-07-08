@@ -1264,8 +1264,10 @@ function normalizationReviewRow(item) {
   const valuePair = normalizationPairHtml(item.raw, item.normalized);
   return `<tr>
     <td>
-      <strong title="${escAttr(item.productTitle)}">${esc(truncateText(item.productTitle, 64))}</strong>
-      ${item.source ? `<span>${esc(item.source)}</span>` : ''}
+      <div class="normalization-review-product">
+        <strong title="${escAttr(item.productTitle)}">${esc(truncateText(item.productTitle, 64))}</strong>
+        ${item.source ? `<span>${esc(item.source)}</span>` : ''}
+      </div>
     </td>
     <td>${esc(item.category || '-')}</td>
     <td>${fieldPair}</td>
@@ -1277,7 +1279,7 @@ function normalizationReviewRow(item) {
       ${item.fieldSource ? `<span>${esc(item.fieldSource)}</span>` : ''}
     </td>
     <td>
-      <div class="normalization-review-actions">
+      <div class="normalization-review-actions ss-grid-review-actions">
         <button class="dashboard-primary-action dashboard-secondary-action--small" type="button"
           data-normalization-action="accept-alias"
           ${signatureAttrs}>Accept alias</button>
@@ -1499,9 +1501,10 @@ async function openNormalizationReviewPage() {
         <div class="normalization-review-note">
           <strong>${items.length} item${items.length === 1 ? '' : 's'} need review.</strong>
           Accept an alias to add it to this list's user rules library, or ignore noisy values that should not return to the review queue.
+          <br>Unmapped means ShopScout did not find a confident library rule yet. Accept alias saves a list-specific user rule; Ignore hides repeated noise for this list.
         </div>
-        <div class="normalization-review-table-wrap">
-          <table class="normalization-review-table">
+        <div class="normalization-review-table-wrap ss-grid-review-wrap">
+          <table class="normalization-review-table ss-grid-review-table">
             <thead>
               <tr>
                 <th>Product</th>

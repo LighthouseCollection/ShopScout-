@@ -163,7 +163,12 @@ assert.strictEqual(vmResult.products.length, 2, 'view-model carries each product
 
 /* === rescanController surface === */
 const rescanCtx = makeCtx();
-vm.runInContext(read('comparison/rescanController.js'), rescanCtx, { filename: 'comparison/rescanController.js' });
+const rescanSource = read('comparison/rescanController.js');
+assert.ok(rescanSource.includes('updates price, availability, images, and captured specs'),
+  'rescan confirmation explains what data gets refreshed');
+assert.ok(rescanSource.includes('Your list, notes, and saved AI results stay in place'),
+  'rescan confirmation explains what data is preserved');
+vm.runInContext(rescanSource, rescanCtx, { filename: 'comparison/rescanController.js' });
 const rc = rescanCtx.ShopScoutComparison && rescanCtx.ShopScoutComparison.rescanController;
 assert.ok(rc, 'ShopScoutComparison.rescanController namespace registered');
 for (const name of ['rescanSingle', 'rescanSelectedProducts', 'rescanList', 'cancelActive']) {

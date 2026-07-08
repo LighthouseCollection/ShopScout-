@@ -35,6 +35,11 @@ vm.runInContext(
 
 const adapter = ctx.ShopScoutSlickGridAdapter;
 assert.ok(adapter, 'adapter namespace is registered');
+const gridCss = fs.readFileSync(path.join(root, 'grid-rebuild-codex/grid.css'), 'utf8');
+assert.match(gridCss, /\.ss-grid-host\s*\{[\s\S]*min-height:\s*0;/,
+  'grid host CSS does not force a viewport-sized blank area before runtime sizing');
+assert.match(gridCss, /\.ss-grid-host\.ss-grid-is-matrix \.slick-header-column[\s\S]*min-height:\s*124px;/,
+  'comparison matrix header reserves enough height for thumbnail plus wrapped title');
 
 const host = {
   children: [],
@@ -117,6 +122,7 @@ const liveInstance = adapter.create(host, {
     { id: 'select', name: '', field: '_selected', type: 'selection', width: 40 },
     { id: 'title', name: 'Name', field: 'title' },
     { id: 'brand', name: 'Brand', field: 'brand', type: 'brand' },
+    { id: 'newPrice', name: 'Price', field: 'newPrice', type: 'price' },
     { id: 'source', name: 'Source', field: 'source', type: 'source' },
     { id: 'devices', name: 'Compatible Devices', field: 'devices', type: 'spec' },
     { id: 'notes', name: 'Notes', field: 'notes', type: 'text' },
@@ -150,6 +156,7 @@ assert.equal(host.style.height, '206px',
   'small product lists shrink the grid host height instead of leaving viewport-sized empty space');
 const titleColumn = capturedColumns.find(column => column.id === 'title');
 const brandColumn = capturedColumns.find(column => column.id === 'brand');
+const priceColumn = capturedColumns.find(column => column.id === 'newPrice');
 const selectColumn = capturedColumns.find(column => column.id === 'select');
 const sourceColumn = capturedColumns.find(column => column.id === 'source');
 const devicesColumn = capturedColumns.find(column => column.id === 'devices');
@@ -164,6 +171,8 @@ assert.equal(selectColumn.minWidth, 40, 'checkbox column minWidth does not expan
 assert.equal(actionsColumn.sortable, false, 'actions column is not sortable');
 assert.match(productHeaderColumn.name, /ss-grid-product-head/, 'comparison columns can render product thumbnails in the header');
 assert.match(productHeaderColumn.name, /qnap\.jpg/, 'comparison header includes the product thumbnail URL');
+assert.match(productHeaderColumn.name, /ss-grid-product-head-title-wrap/,
+  'comparison header title has a wrapping container so long names are not cut off under thumbnails');
 assert.ok(
   productHeaderColumn.name.indexOf('ss-grid-header-thumb') < productHeaderColumn.name.indexOf('ss-grid-product-head-title'),
   'comparison header places the product thumbnail before the product title'
@@ -198,6 +207,9 @@ const sourceHtml = sourceColumn.formatter(0, 2, 'generic', sourceColumn, {
   source: 'generic',
   url: 'https://www.amazon.com/dp/B0TEST'
 });
+const roundedPriceHtml = priceColumn.formatter(0, 2, '$24.29', priceColumn, {});
+assert.match(roundedPriceHtml, />\$25</, 'price formatter rounds display price to the nearest 0/5 dollar');
+assert.match(roundedPriceHtml, /title="\$24\.29"/, 'price formatter preserves the original price in a tooltip');
 assert.doesNotMatch(sourceHtml, /ss-grid-logo-img/, 'source does not render a logo image');
 assert.match(sourceHtml, /title="Amazon"/, 'source logo keeps the retailer label as a tooltip');
 assert.match(sourceHtml, /aria-label="Amazon"/, 'source logo keeps the retailer label for assistive tech');
@@ -228,6 +240,9 @@ assert.match(devicesHtml, /ss-grid-pill-list/, 'list-like spec values render as 
 for (const label of ['Laptop', 'PC', 'Smartphone', 'Tablet']) {
   assert.match(devicesHtml, new RegExp(`>${label}<`), `${label} appears as a pill`);
 }
+const includedItemsHtml = devicesColumn.formatter(0, 4, 'Quick Connector× 1, USB Charging Cord× 1', devicesColumn, {});
+assert.match(includedItemsHtml, /Quick Connector/, 'quantity-bearing included items render as separated pills');
+assert.match(includedItemsHtml, /ss-grid-pill-qty/, 'quantity marker renders with a dedicated class for smaller italic styling');
 const notesHtml = notesColumn.formatter(0, 5, 'Fast, quiet, and easy to use.', notesColumn, {});
 assert.doesNotMatch(notesHtml, /ss-grid-pill-list/, 'description-like text fields keep sentence commas as prose');
 const singleSpecHtml = devicesColumn.formatter(0, 4, 'Bluetooth', devicesColumn, {});

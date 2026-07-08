@@ -20,7 +20,7 @@
 
 .ss-grid-host {
   height: calc(100vh - 250px);
-  min-height: 420px;
+  min-height: 0;
   width: 100%;
 }
 
@@ -184,23 +184,32 @@ a.ss-grid-logo-token:visited {
   background: #fff;
 }
 
-.ss-grid-product-head-title {
+.ss-grid-product-head-title-wrap {
   display: block;
   width: 100%;
   min-width: 0;
+}
+
+.ss-grid-product-head-title {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  width: 100%;
+  min-width: 0;
   overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  overflow-wrap: anywhere;
+  line-height: 1.2;
+  max-height: 2.4em;
   text-align: center;
 }
 
 .ss-grid-host.ss-grid-is-matrix .slick-header-column {
-  min-height: 78px;
+  min-height: 124px;
   line-height: 1.2;
 }
 
 .ss-grid-host.ss-grid-is-matrix .slick-header-column.ui-state-default {
-  height: 78px;
+  height: 124px;
 }
 
 .ss-grid-rating {
@@ -248,6 +257,7 @@ a.ss-grid-logo-token:visited {
 .ss-grid-value-pill {
   display: inline-flex;
   align-items: center;
+  gap: 3px;
   max-width: 100%;
   padding: 2px 7px;
   border: 1px solid var(--rule-soft, #d1d5db);
@@ -256,6 +266,13 @@ a.ss-grid-logo-token:visited {
   color: var(--ink-2, #2a3441);
   font-size: 12px;
   line-height: 1.35;
+}
+
+.ss-grid-pill-qty {
+  color: var(--ink-3, #5a6470);
+  font-size: 10px;
+  font-style: italic;
+  line-height: 1;
 }
 
 .ss-grid-select {

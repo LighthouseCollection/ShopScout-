@@ -106,6 +106,11 @@ assert.strictEqual(
   JSON.stringify(['App Control', 'Voice Control']),
   'sort is stable regardless of source order'
 );
+assert.strictEqual(
+  JSON.stringify(V.splitToPills('Cordless Tire Inflator × 1, Quick Connector× 1, USB Charging Cord× 1, Extension Hose Coupling*1')),
+  JSON.stringify(['Cordless Tire Inflator (×1)', 'Extension Hose Coupling (×1)', 'Quick Connector (×1)', 'USB Charging Cord (×1)']),
+  'quantity-bearing included items are normalized and sorted as one pill per item'
+);
 assert.strictEqual(V.splitToPills('Lithium Ion'), null, 'single value → no split');
 assert.strictEqual(V.splitToPills('15.5 x 10.25 x 2 inches'), null, 'dimensions never split');
 assert.strictEqual(V.splitToPills('Wi-Fi 6/6E'), null, 'slash never splits');

@@ -158,7 +158,22 @@
 
   function htmlForPrice(value) {
     const text = textValue(value).trim();
-    return text ? `<span class="ss-grid-price">${esc(text)}</span>` : '<span class="ss-grid-empty">-</span>';
+    if (!text) return '<span class="ss-grid-empty">-</span>';
+    const rounded = roundedPriceText(text);
+    if (!rounded) return `<span class="ss-grid-price">${esc(text)}</span>`;
+    return `<span class="ss-grid-price" title="${escAttr(text)}">${esc(rounded)}</span>`;
+  }
+
+  function roundedPriceText(value) {
+    const text = textValue(value).trim();
+    if (!text) return '';
+    if (/[–—-]\s*\$?\d/.test(text) || /\b(to|from|more options)\b/i.test(text)) return '';
+    const match = text.match(/^\s*\$?\s*([0-9][0-9,]*(?:\.[0-9]{1,2})?)\s*$/);
+    if (!match) return '';
+    const amount = Number(match[1].replace(/,/g, ''));
+    if (!Number.isFinite(amount)) return '';
+    const rounded = Math.round(amount / 5) * 5;
+    return `$${rounded.toLocaleString('en-US', { maximumFractionDigits: 0 })}`;
   }
 
   function shouldRenderPills(column, field) {
@@ -186,7 +201,14 @@
     const parts = Array.isArray(splitParts) && splitParts.length
       ? splitParts
       : [text];
-    return `<span class="ss-grid-pill-list">${parts.map(part => `<span class="ss-grid-value-pill">${esc(part)}</span>`).join('')}</span>`;
+    return `<span class="ss-grid-pill-list">${parts.map(part => `<span class="ss-grid-value-pill">${pillPartHtml(part)}</span>`).join('')}</span>`;
+  }
+
+  function pillPartHtml(part) {
+    const text = textValue(part).trim();
+    const quantity = text.match(/^(.*?)\s+\((×\d+)\)$/);
+    if (!quantity) return esc(text);
+    return `${esc(quantity[1])} <span class="ss-grid-pill-qty">${esc(quantity[2])}</span>`;
   }
 
   function plainCellHtml(value, column) {
@@ -360,7 +382,9 @@
     if (!thumb) return esc(label || 'Product');
     return `<span class="ss-grid-product-head">`
       + `<img class="ss-grid-header-thumb" src="${escAttr(thumb)}" alt="" aria-hidden="true" loading="lazy">`
+      + `<span class="ss-grid-product-head-title-wrap">`
       + `<span class="ss-grid-product-head-title" title="${escAttr(label || 'Product')}">${esc(label || 'Product')}</span>`
+      + `</span>`
       + `</span>`;
   }
 
@@ -482,7 +506,7 @@
     if (!container?.style) return;
     const rowCount = Array.isArray(projection?.rows) ? projection.rows.length : 0;
     const isMatrix = projection?.mode === 'comparisonMatrix';
-    const headerHeight = isMatrix ? 104 : 42;
+    const headerHeight = isMatrix ? 132 : 42;
     const rowHeight = 82;
     const padding = 0;
     const minHeight = rowCount ? headerHeight + rowHeight : 140;

@@ -283,6 +283,17 @@
   }
 
   /* ---- Multi-value split (one-pill-per-part) ------------------- */
+  function normalizePillPart(raw) {
+    const text = String(raw || '').trim();
+    if (!text) return '';
+    const quantity = text.match(/^(.*?)\s*(?:x|×|\*)\s*(\d+)\s*$/i);
+    if (!quantity) return text;
+    const item = quantity[1].trim();
+    const count = quantity[2].trim();
+    if (!item || !count) return text;
+    return `${item} (×${count})`;
+  }
+
   function splitToPills(text) {
     if (text == null) return null;
     const s = String(text).trim();
@@ -290,10 +301,10 @@
     if (/\d\s*(x|×)\s*\d/i.test(s)) return null;
     if (/^[-+]?\d+(?:[.,]\d+)?\s*[a-z%°"]+/i.test(s)) return null;
     if (s.length > 200) return null;
-    const parts = s.split(/\s*(?:,|·|•|;)\s*/).map(p => p.trim()).filter(Boolean);
+    const parts = s.split(/\s*(?:,|·|•|;)\s*/).map(normalizePillPart).filter(Boolean);
     if (parts.length < 2) return null;
     for (const p of parts) {
-      if (p.length === 0 || p.length > 40) return null;
+      if (p.length === 0 || p.length > 52) return null;
       if (/\.\S/.test(p)) return null;
     }
     parts.sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base' }));

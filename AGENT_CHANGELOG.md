@@ -2704,3 +2704,49 @@ This file is the shared record for Claude and Codex. Append an entry for every m
   - Codex work on side-panel.test.js: either update the test to match the productRepo-first code path, or investigate whether the injection-first pattern should be restored.
 - Follow-ups:
   - Trigger the pack publisher workflow with version_tag=v2 after Codex's runtime half of #3 lands + when packs need re-publishing with the new mapping. Extension still works with data-v1 (fail-safe), just doesn't have the new mappings until v2.
+
+## 2026-07-08 08:34 -07:00 - Codex GitHub issue visual/data-grid follow-up batch
+
+- Agent: Codex
+- Branch: grid-rebuild-codex
+- Commit: This commit
+- Status: Complete; ready for Claude review after commit.
+- Summary:
+  - Continued resolving authenticated GitHub issue reports after the P0 grid/normalization batch.
+  - Downloaded and inspected image attachments for #7, #8, #13, #18, and #19 through GitHub CLI. Temporary downloaded images were deleted before staging.
+  - Fixed #8 by removing the forced initial SlickGrid host min-height that could create a fake vertical scroll area before runtime row sizing.
+  - Fixed #13 by giving comparison-matrix headers enough height for the 100px thumbnail and a wrapped two-line product title instead of clipping title text below the image.
+  - Improved #19 by applying the shared grid visual treatment to the Normalization Review table: grid-like wrapper, alternating rows, grid borders, structured product cells, compact right-aligned actions, and row hover.
+  - Fixed #5 by normalizing comma/semicolon-separated included-item values into sorted pills and formatting quantities as `Item (×N)` with a smaller italic quantity marker.
+  - Fixed #1 by formatting grid price cells to nearest $5 display values while preserving the exact original price in the tooltip.
+  - Addressed #6/#11 with inline Normalization Review help explaining `unmapped`, Accept alias, and ignored noisy values.
+  - Addressed #20 by rewriting the rescan confirmation to explain what is refreshed and what is preserved.
+  - Verified #7 and #18 appear already represented by current code/tests: the popup has an accessible dashboard shortcut immediately before settings, and settings has left navigation/setup-guide modal/preserved panels. No extra code change made for those without a current-code defect.
+- Files touched:
+  - `comparison.css`
+  - `comparison.js`
+  - `comparison/rescanController.js`
+  - `grid-rebuild-codex/grid.css`
+  - `grid-rebuild-codex/slickGridAdapter.js`
+  - `grid-rebuild-codex/tests/adapter.test.js`
+  - `shared/values/cellValues.js`
+  - `tests/cleanup-helpers.test.js`
+  - `tests/comparison-modules.test.js`
+  - `tests/normalization-review-render.test.js`
+  - `AGENT_CHANGELOG.md`
+- Validation run:
+  - `node tests/cleanup-helpers.test.js` -> pass
+  - `node grid-rebuild-codex/tests/adapter.test.js` -> pass
+  - `node tests/normalization-review-render.test.js` -> pass
+  - `node tests/comparison-modules.test.js` -> pass
+  - `npm test` -> 46/46 test files pass
+  - `npm run syntax` -> pass
+  - `npm run lint` -> pass
+  - `npm run typecheck` -> pass
+  - `npm run build` -> Chrome / Edge / Firefox dists rebuilt
+- Review / handoff:
+  - Reviewer: Claude after commit.
+- Follow-ups or risks:
+  - #19 still does not mount a second SlickGrid runtime for the Normalization Review workflow; it now matches the grid visual language. A true reusable SlickGrid review-table runtime should be a separate larger task because it changes action-row behavior and review state management.
+  - #15/#16/#18 full AI provider accordion redesign remains a settings-cluster task if the current left-nav/settings structure is still insufficient.
+  - #22 column auto-sizing to measured content/header width remains deferred from the prior P0 batch.
