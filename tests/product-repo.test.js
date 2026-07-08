@@ -257,6 +257,27 @@ async function seedProducts(repo, listId) {
       'taxonomy context is persisted in IndexedDB');
   });
 
+  await withRepo(async (repo, db) => {
+    const listId = await repo.ensureDefaultList();
+    await repo.setListVertical(listId, { skip: true, source: 'bundled-defaults', confidence: 0 });
+
+    const detection = await repo.detectListVertical(listId, [
+      { title: 'Keyboard', category: 'Electronics > Computer Accessories > Keyboards' }
+    ]);
+    assert.strictEqual(detection, null,
+      'bundled-defaults skip prevents automatic vertical detection from re-selecting a pack');
+
+    let list = await db.product_lists.get(listId);
+    assert.strictEqual(list.verticalId, '', 'skip stores no vertical id');
+    assert.strictEqual(list.verticalSource, 'bundled-defaults', 'skip stores bundled-defaults provenance');
+    assert.strictEqual(list.verticalSkipped, true, 'skip stores a durable verticalSkipped flag');
+
+    await repo.setListVertical(listId, { verticalId: 'electronics', source: 'manual-picker', confidence: 1 });
+    list = await db.product_lists.get(listId);
+    assert.strictEqual(list.verticalId, 'electronics', 'manual picker can set a vertical after skip');
+    assert.strictEqual(list.verticalSkipped, false, 'manual picker clears the skip flag');
+  });
+
   await withRepo(async (repo) => {
     const listId = await repo.ensureDefaultList();
     await repo.addProducts(listId, [

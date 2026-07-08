@@ -382,6 +382,18 @@ function bindEvents() {
       return;
     }
 
+    const verticalChoice = e.target.closest('[data-vertical-id]');
+    if (verticalChoice && verticalChoice.closest('.vertical-picker-page')) {
+      setVerticalPickerSelection(verticalChoice.dataset.verticalId || '');
+      return;
+    }
+
+    const verticalAction = e.target.closest('[data-vertical-action]');
+    if (verticalAction) {
+      await handleVerticalPickerAction(verticalAction.dataset.verticalAction || '');
+      return;
+    }
+
     const feedbackAction = e.target.closest('[data-feedback-action]');
     if (feedbackAction) {
       await handleFeedbackAction(feedbackAction.dataset.feedbackAction);
@@ -528,6 +540,10 @@ function bindEvents() {
      inline-edit control are gone with the rest of the inline-edit
      flow. Document-level outside-click handler for the row-action
      menu is also gone. The new grid will own these. */
+
+  document.getElementById('content').addEventListener('input', e => {
+    if (e.target && e.target.id === 'verticalPickerSearch') filterVerticalPickerChoices(e.target.value);
+  });
 
   // Product detail page
   document.getElementById('detailBack').addEventListener('click', closeProductDetail);
@@ -1314,6 +1330,120 @@ async function collectCurrentNormalizationReviewItems() {
     : [];
 }
 
+async function getActiveRepoListContext() {
+  const repo = globalThis.SSProductRepo;
+  const listId = repo && typeof repo.getActiveListId === 'function' ? await repo.getActiveListId() : '';
+  const lists = listId && repo && typeof repo.listLists === 'function' ? await repo.listLists() : [];
+  const list = lists.find(item => item.id === listId) || null;
+  const products = listId && repo && typeof repo.listProducts === 'function' ? await repo.listProducts(listId) : [];
+  return { repo, listId, list, products };
+}
+
+function verticalPickerCard(vertical, selectedId) {
+  const id = String(vertical?.id || '');
+  const active = id && id === selectedId;
+  const size = Number(vertical?.packBytes || 0);
+  const sizeLabel = size > 0 ? `${Math.max(1, Math.round(size / 1024))} KB pack` : 'Bundled defaults until pack is published';
+  return `<button class="vertical-picker-card${active ? ' active' : ''}" type="button"
+      data-vertical-id="${escAttr(id)}"
+      data-vertical-name="${escAttr(vertical?.displayName || id)}">
+      <span class="vertical-picker-card-title">${esc(vertical?.displayName || id)}</span>
+      <span class="vertical-picker-card-meta">${esc(sizeLabel)}</span>
+    </button>`;
+}
+
+function setVerticalPickerSelection(verticalId) {
+  const selected = String(verticalId || '');
+  const input = document.getElementById('verticalPickerSelected');
+  if (input) input.value = selected;
+  document.querySelectorAll('.vertical-picker-card').forEach(card => {
+    card.classList.toggle('active', card.dataset.verticalId === selected);
+  });
+}
+
+function filterVerticalPickerChoices(query) {
+  const needle = String(query || '').trim().toLowerCase();
+  document.querySelectorAll('.vertical-picker-card').forEach(card => {
+    const text = `${card.dataset.verticalName || ''} ${card.dataset.verticalId || ''}`.toLowerCase();
+    card.hidden = Boolean(needle && !text.includes(needle));
+  });
+}
+
+async function handleVerticalPickerAction(action) {
+  const { repo, listId } = await getActiveRepoListContext();
+  if (!repo || !listId || typeof repo.setListVertical !== 'function') {
+    toast.show('Vertical settings are not available.', 'error');
+    return;
+  }
+  const selectedId = document.getElementById('verticalPickerSelected')?.value || '';
+  if (action === 'use-selected') {
+    if (!selectedId) {
+      toast.show('Choose a vertical first.', 'error');
+      return;
+    }
+    await repo.setListVertical(listId, { verticalId: selectedId, source: 'manual-picker', confidence: 1 });
+    if (typeof repo.rebuildNormalizationForList === 'function') await repo.rebuildNormalizationForList(listId);
+    toast.show('Vertical pack selected and normalization rebuilt.');
+    await openVerticalPickerPage();
+  } else if (action === 'use-defaults') {
+    await repo.setListVertical(listId, { skip: true, source: 'bundled-defaults', confidence: 0 });
+    if (typeof repo.rebuildNormalizationForList === 'function') await repo.rebuildNormalizationForList(listId);
+    toast.show('Using bundled normalization defaults for this list.');
+    await openVerticalPickerPage();
+  }
+}
+
+async function openVerticalPickerPage() {
+  const data = await getData();
+  const { repo, listId, list, products } = await getActiveRepoListContext();
+  const packs = globalThis.ShopScoutGeneratedPacks;
+  if (!repo || !listId || !packs || typeof packs.ensureBundledDataLoaded !== 'function'
+      || typeof globalThis.ShopScoutGeneratedPacks.listVerticals !== 'function') {
+    openDashboardInfoPage('Vertical Packs', data.activeList || 'Current list',
+      '<div class="dashboard-empty"><h3>Vertical pack metadata is unavailable</h3><p>ShopScout will continue using bundled normalization defaults.</p></div>');
+    return;
+  }
+
+  await packs.ensureBundledDataLoaded();
+  const verticals = globalThis.ShopScoutGeneratedPacks.listVerticals().sort((a, b) =>
+    String(a.displayName || a.id).localeCompare(String(b.displayName || b.id)));
+  const suggested = typeof packs.detectVerticalForProducts === 'function'
+    ? packs.detectVerticalForProducts(products)
+    : null;
+  const selectedId = list?.verticalId || suggested?.verticalId || '';
+  const selectedInfo = selectedId && typeof packs.getVerticalInfo === 'function' ? packs.getVerticalInfo(selectedId) : null;
+  const status = list?.verticalSkipped
+    ? 'Bundled defaults selected for this list.'
+    : list?.verticalId
+      ? `Selected: ${selectedInfo?.displayName || list.verticalId} (${list.verticalSource || 'manual'})`
+      : suggested?.verticalId
+        ? `Suggested: ${selectedInfo?.displayName || suggested.verticalId} · ${Math.round(Number(suggested.confidence || 0) * 100)}% confidence`
+        : 'No reliable vertical detected. Choose one for richer generated normalization.';
+
+  openDashboardInfoPage(
+    'Vertical Packs',
+    `${data.activeList || list?.name || 'Current list'} · generated normalization library`,
+    `<div class="vertical-picker-page">
+      <div class="normalization-review-note">
+        <strong>${esc(status)}</strong>
+        <span>Vertical packs add category-specific attribute vocabulary, comparison signals, and normalization hints. If the category is unclear, choose the closest shopping vertical or keep bundled defaults.</span>
+      </div>
+      <div class="vertical-picker-toolbar">
+        <input id="verticalPickerSearch" class="dashboard-input" type="search" placeholder="Search verticals..." autocomplete="off">
+        <input id="verticalPickerSelected" type="hidden" value="${escAttr(selectedId)}">
+      </div>
+      <div class="vertical-picker-grid">
+        ${verticals.length ? verticals.map(vertical => verticalPickerCard(vertical, selectedId)).join('') : '<div class="dashboard-empty"><h3>No verticals available</h3></div>'}
+      </div>
+      <div class="dashboard-page-actions">
+        <button class="dashboard-secondary-action" type="button" data-vertical-action="use-defaults">Use Bundled Defaults</button>
+        <button class="dashboard-primary-action" type="button" data-vertical-action="use-selected">Use Selected Vertical</button>
+      </div>
+    </div>`,
+    { wide: true }
+  );
+}
+
 async function openNormalizationReviewPage() {
   const data = await getData();
   const repo = globalThis.SSProductRepo;
@@ -1559,6 +1689,7 @@ function bindRibbonCommandEvents() {
     else if (command === 'settings') openSettingsPage();
     else if (command === 'duplicate-review') openDuplicateReviewPage();
     else if (command === 'normalization-review') openNormalizationReviewPage();
+    else if (command === 'vertical-picker') openVerticalPickerPage();
     else if (command === 'normalization-rules') openNormalizationRulesPage();
     else if (command === 'show-view-tab') activateRibbonTab('view');
     else if (command === 'show-help-tab') activateRibbonTab('about');

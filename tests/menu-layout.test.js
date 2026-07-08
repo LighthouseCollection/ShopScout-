@@ -85,6 +85,7 @@ assertIncludes('Rescan Products', 'Products tab exposes Rescan Products');
 assertIncludes('data-command="duplicate-review"', 'Products tab exposes possible-duplicate review');
 assertIncludes('data-command="normalization-review"', 'Products tab exposes normalization review');
 assertIncludes('data-command="normalization-rules"', 'Products tab exposes user normalization rules');
+assertIncludes('data-command="vertical-picker"', 'Products tab exposes vertical pack picker');
 assert.ok(js.includes('openDuplicateReviewPage'), 'comparison script renders possible duplicate candidates in main content');
 assert.ok(js.includes('findDuplicateCandidates'), 'duplicate review uses the repo candidate detector');
 assert.ok(js.includes('data-duplicate-decision="not-duplicate"'), 'duplicate review can mark candidate groups as not duplicate');
@@ -100,6 +101,13 @@ assert.ok(js.includes('data-normalization-bulk-action="ignore"'), 'normalization
 assert.ok(js.includes('saveNormalizationReviewDecision'), 'normalization review persists decisions through productRepo');
 assert.ok(js.includes('openNormalizationRulesPage'), 'comparison script renders user normalization rules page');
 assert.ok(js.includes('deleteUserNormalizationRule'), 'user rules page deletes approved mappings through productRepo');
+assert.ok(js.includes('openVerticalPickerPage'), 'comparison script renders vertical picker in main content');
+assert.ok(js.includes('ShopScoutGeneratedPacks.listVerticals'), 'vertical picker reads generated vertical pack metadata');
+assert.ok(js.includes('setListVertical'), 'vertical picker saves selected vertical through productRepo');
+assert.ok(js.includes('data-vertical-action="use-selected"'), 'vertical picker exposes selected-vertical save action');
+assert.ok(js.includes('data-vertical-action="use-defaults"'), 'vertical picker exposes bundled-defaults skip action');
+assert.ok(/\.vertical-picker-grid[\s\S]{0,220}grid-template-columns:\s*repeat\(auto-fit,\s*minmax\(220px,\s*1fr\)\)/.test(css),
+  'vertical picker uses a responsive grid of vertical choices');
 assertNotIncludes('data-command="cancel-run"', 'Cancel Scan is removed from the ribbon (per UX cleanup)');
 assertNotIncludes('data-command="keyboard-shortcuts"', 'Keyboard Shortcuts button is removed from the About group');
 

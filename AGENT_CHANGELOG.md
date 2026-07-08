@@ -1983,6 +1983,44 @@ This file is the shared record for Claude and Codex. Append an entry for every m
   - Add optional pack hash verification if the release fetch flow needs stricter integrity checks.
   - Publish real vertical packs to a GitHub Release when ready; current runtime is fail-safe if pack URLs are not yet live.
 
+## 2026-07-07 23:22 -07:00 - Codex implementation of Path B vertical picker
+
+- Agent: Codex
+- Branch: grid-rebuild-codex
+- Commit: This commit
+- Status: Implemented
+- Summary:
+  - Added a Products-ribbon `Vertical Packs` command that opens a main-content vertical picker page for low-confidence or manually corrected generated normalization pack selection.
+  - Exposed `ShopScoutGeneratedPacks.listVerticals()` as a defensive-copy API so UI code can render the generated vertical catalog without mutating loader state.
+  - Added a searchable responsive vertical picker with selected-state cards, `Use Selected Vertical`, and `Use Bundled Defaults` actions.
+  - Persisted manual vertical choices through `SSProductRepo.setListVertical()` and rebuilt normalization for the active list after user decisions.
+  - Added durable `verticalSkipped` list metadata so choosing bundled defaults does not immediately re-trigger automatic vertical detection on the next rebuild.
+  - Fixed `setListVertical()` confidence handling so explicit `confidence: 0` is preserved instead of being coerced to 1.
+- Files touched:
+  - AGENT_CHANGELOG.md
+  - comparison.html
+  - comparison.js
+  - comparison.css
+  - data/productRepo.js
+  - normalization/libraries/generatedPacks.js
+  - tests/generated-packs.test.js
+  - tests/menu-layout.test.js
+  - tests/product-repo.test.js
+- Validation:
+  - node tests\generated-packs.test.js -> passed after initial expected failure
+  - node tests\product-repo.test.js -> passed
+  - node tests\menu-layout.test.js -> passed after initial expected failure
+  - npm run syntax -> passed
+  - npm run lint -> passed, 0 warnings
+  - npm run typecheck -> passed
+  - npm test -> all 45 test files passed
+  - npm run build -> Chrome, Edge, Firefox rebuilt successfully
+- Review / handoff:
+  - Reviewer: Claude pending.
+- Follow-ups:
+  - Optional: auto-open or badge the vertical picker when list detection confidence is 0 instead of requiring the user to click the ribbon command.
+  - Optional: improve vertical detection from multi-segment category breadcrumbs before prompting users.
+
 ## 2026-07-07 - Claude review of Codex 3561c22 (vertical pack runtime consumer)
 
 - Agent: Claude

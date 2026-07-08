@@ -80,6 +80,12 @@
     return Array.isArray(verticalsIndex?.verticals) ? verticalsIndex.verticals : [];
   }
 
+  function listVerticals() {
+    return verticalList()
+      .filter(v => v && v.id)
+      .map(v => Object.assign({}, v));
+  }
+
   function getVerticalInfo(verticalId) {
     const id = normalizeId(verticalId);
     return verticalList().find(v => v && v.id === id) || null;
@@ -244,6 +250,7 @@
   Object.assign(NS, {
     loadBundledData,
     ensureBundledDataLoaded,
+    listVerticals,
     detectVerticalForProducts,
     ensureVerticalPackLoaded,
     getLoadedPack,

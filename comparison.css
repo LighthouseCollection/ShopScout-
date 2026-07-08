@@ -2703,3 +2703,62 @@ body.is-info-page .content { display: block; padding: 18px 22px 48px; }
   gap: 8px;
   align-items: center;
 }
+
+/* =============================================================
+   Vertical pack picker page
+   ============================================================= */
+.vertical-picker-page {
+  display: grid;
+  gap: 16px;
+}
+
+.vertical-picker-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.vertical-picker-toolbar .dashboard-input {
+  width: min(440px, 100%);
+}
+
+.vertical-picker-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 12px;
+}
+
+.vertical-picker-card {
+  min-height: 88px;
+  border: 1px solid var(--rule-soft, #d1d5db);
+  border-radius: var(--radius);
+  background: var(--surface);
+  color: var(--ink);
+  display: grid;
+  align-content: start;
+  gap: 6px;
+  padding: 14px;
+  text-align: left;
+  cursor: pointer;
+}
+
+.vertical-picker-card:hover {
+  border-color: var(--accent);
+  background: var(--paper-2);
+}
+
+.vertical-picker-card.active {
+  border-color: var(--primary);
+  background: color-mix(in srgb, var(--primary) 10%, var(--surface));
+  box-shadow: inset 0 0 0 1px var(--primary);
+}
+
+.vertical-picker-card-title {
+  font-size: 15px;
+  font-weight: 650;
+}
+
+.vertical-picker-card-meta {
+  color: var(--ink-3);
+  font-size: 12px;
+}

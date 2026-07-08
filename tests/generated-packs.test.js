@@ -83,6 +83,19 @@ const bundled = {
   const P = ctx.ShopScoutGeneratedPacks;
   P.loadBundledData(bundled);
 
+  assert.deepStrictEqual(
+    P.listVerticals().map(v => ({ id: v.id, displayName: v.displayName })),
+    [
+      { id: 'electronics', displayName: 'Electronics' },
+      { id: 'sporting-goods', displayName: 'Sporting Goods' }
+    ],
+    'public vertical list exposes bundled vertical metadata for picker UI'
+  );
+  const listed = P.listVerticals();
+  listed[0].displayName = 'Mutated';
+  assert.strictEqual(P.getVerticalInfo('electronics').displayName, 'Electronics',
+    'public vertical list returns defensive copies');
+
   const detected = P.detectVerticalForProducts([{ _normalizationContext: { category: { id: '119' } } }]);
   assert.strictEqual(detected.verticalId, 'electronics', 'detects vertical id from Icecat category id');
   assert.strictEqual(detected.confidence, 0.95, 'preserves detection confidence');

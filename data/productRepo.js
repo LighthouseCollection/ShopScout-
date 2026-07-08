@@ -84,7 +84,7 @@
     }
     const id = uuid();
     const ts = now();
-    await db.product_lists.add({ id, name: 'My Products', createdAt: ts, updatedAt: ts, verticalId: '', verticalSource: '', verticalConfidence: 0 });
+    await db.product_lists.add({ id, name: 'My Products', createdAt: ts, updatedAt: ts, verticalId: '', verticalSource: '', verticalConfidence: 0, verticalSkipped: false });
     await setActiveListId(id);
     return id;
   }
@@ -96,7 +96,7 @@
   async function createList(name) {
     const id = uuid();
     const ts = now();
-    await db.product_lists.add({ id, name: String(name || 'Untitled'), createdAt: ts, updatedAt: ts, verticalId: '', verticalSource: '', verticalConfidence: 0 });
+    await db.product_lists.add({ id, name: String(name || 'Untitled'), createdAt: ts, updatedAt: ts, verticalId: '', verticalSource: '', verticalConfidence: 0, verticalSkipped: false });
     return id;
   }
 
@@ -126,10 +126,14 @@
 
   async function setListVertical(id, vertical) {
     const next = vertical || {};
+    const verticalId = String(next.verticalId || next.id || '').trim();
+    const source = String(next.source || next.verticalSource || (verticalId ? 'manual' : 'bundled-defaults')).trim();
+    const skipped = Boolean(next.skip || next.verticalSkipped || (!verticalId && source === 'bundled-defaults'));
     const patch = {
-      verticalId: String(next.verticalId || next.id || '').trim(),
-      verticalSource: String(next.source || next.verticalSource || 'manual').trim(),
-      verticalConfidence: Number(next.confidence || next.verticalConfidence || 1) || 0,
+      verticalId,
+      verticalSource: source,
+      verticalConfidence: Number(next.confidence ?? next.verticalConfidence ?? (verticalId ? 1 : 0)) || 0,
+      verticalSkipped: skipped && !verticalId,
       updatedAt: now()
     };
     await db.product_lists.update(id, patch);
@@ -207,6 +211,7 @@
     const packs = root.ShopScoutGeneratedPacks;
     if (!packs || typeof packs.detectVerticalForProducts !== 'function') return null;
     const list = listId ? await db.product_lists.get(listId) : null;
+    if (list?.verticalSkipped) return null;
     if (list?.verticalId) {
       return {
         verticalId: list.verticalId,
