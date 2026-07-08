@@ -21,7 +21,6 @@
       columnVisibility: {},
       removedColumns: [],
       columnOrder: [],
-      columnWidths: {},
       pinnedColumns: [],
       savedViewId: null
     };
@@ -60,7 +59,6 @@
       columnVisibility: asObject(input.columnVisibility),
       removedColumns: asArray(input.removedColumns).map(String).filter(Boolean),
       columnOrder: asArray(input.columnOrder).map(String).filter(Boolean),
-      columnWidths: asObject(input.columnWidths),
       pinnedColumns: asArray(input.pinnedColumns).map(String).filter(Boolean),
       savedViewId: input.savedViewId ? String(input.savedViewId) : base.savedViewId
     };

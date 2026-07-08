@@ -32,7 +32,6 @@ const unsubscribe = store.subscribe(next => { observed = next; });
 store.dispatch({
   sort: [{ field: 'newPrice', dir: 'desc' }],
   columnOrder: ['title', 'newPrice'],
-  columnWidths: { title: 320 },
   selectedProductIds: new Set(['p1', 'p2'])
 });
 unsubscribe();
@@ -43,7 +42,8 @@ assert.deepEqual(store.getState().selectedProductIds, ['p1', 'p2'],
 
 const wire = state.serialize(store.getState());
 assert.deepEqual(wire.columnOrder, ['title', 'newPrice']);
-assert.deepEqual(wire.columnWidths, { title: 320 });
+assert.equal(wire.columnWidths, undefined,
+  'columnWidths is not persisted — every load auto-sizes from content');
 assert.deepEqual(wire.selectedProductIds, ['p1', 'p2']);
 
 const restored = state.deserialize({

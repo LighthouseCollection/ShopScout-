@@ -267,15 +267,17 @@
   function applyColumnState(columns, viewState) {
     const state = viewState || {};
     const visibility = state.columnVisibility || {};
-    const widths = state.columnWidths || {};
     const order = Array.isArray(state.columnOrder) ? state.columnOrder : [];
     const pinned = new Set(Array.isArray(state.pinnedColumns) ? state.pinnedColumns : []);
     const removed = removedColumnSet(state);
+    /* Column widths are intentionally NOT read from state — every render
+       recomputes widths from actual header/content via measuredColumnWidth
+       in slickGridAdapter.js. Any legacy state.columnWidths blob is
+       ignored so it can't override the new auto-sized defaults. */
     const prepared = columns
       .filter(column => column.required || !removed.has(column.id))
       .map(column => {
         const next = Object.assign({}, column);
-        if (widths[next.id] != null && Number(widths[next.id]) > 0) next.width = Number(widths[next.id]);
         if (pinned.has(next.id)) next.pinned = true;
         return next;
       })

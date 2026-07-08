@@ -30,8 +30,7 @@
           sort: [],
           group: null,
           columnVisibility: {},
-          columnOrder: [],
-          columnWidths: {}
+          columnOrder: []
         },
         getState() { return this._state; },
         dispatch(patch) { this._state = Object.assign({}, this._state, patch || {}); return this._state; }
@@ -340,7 +339,7 @@
     } else if (command === 'open-columns') {
       openColumnsModal();
     } else if (command === 'reset-columns') {
-      ensureStore().dispatch({ columnVisibility: {}, columnOrder: [], columnWidths: {}, pinnedColumns: [] });
+      ensureStore().dispatch({ columnVisibility: {}, columnOrder: [], pinnedColumns: [] });
       render();
     } else if (command === 'clear-group') {
       ensureStore().dispatch({ group: null });
@@ -823,9 +822,10 @@
         onColumnOrderChange(columnOrder) {
           ensureStore().dispatch({ columnOrder });
         },
-        onColumnWidthsChange(columnWidths) {
-          ensureStore().dispatch({ columnWidths });
-        },
+        /* Column widths are not persisted — every load auto-sizes columns
+           from content via columnWidthBounds. Resize handles still work
+           for the current session; the change is just no longer written
+           to the store, so reload restores auto-sized widths. */
         onSelectionChange(items) {
           const rows = (items || []).map(item => ({
             id: item?._shopScout?.productId || item?.id,
