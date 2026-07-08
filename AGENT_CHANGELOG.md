@@ -1983,3 +1983,46 @@ This file is the shared record for Claude and Codex. Append an entry for every m
   - Add optional pack hash verification if the release fetch flow needs stricter integrity checks.
   - Publish real vertical packs to a GitHub Release when ready; current runtime is fail-safe if pack URLs are not yet live.
 
+## 2026-07-07 - Claude review of Codex 3561c22 (vertical pack runtime consumer)
+
+- Agent: Claude
+- Branch: grid-rebuild-codex
+- Commit: This commit (review only)
+- Status: Reviewed — approved, with 3 non-blocking suggestions + 1 gap flagged for future work
+- Summary:
+  - Reviewed Codex 3561c22 "feat(normalization): load vertical packs at runtime". Wires the Phase 2 runtime consumer for the vertical-pack architecture Claude shipped in b3eca3b + f6ba0c4. 590 lines added across 10 files. All 45 tests pass (44 existing + 1 new: tests/generated-packs.test.js).
+- Files reviewed:
+  - normalization/libraries/generatedPacks.js (new, 254 lines) — pack loader with bundled data + IndexedDB cache + fail-safe fetch
+  - normalization/attributes.js (+20) — pack vocabulary integration into the attribute lookup layer
+  - normalization/matching.js (+7) — loadVerticalPackSignals hook so matching gets pack ESCI data
+  - data/productRepo.js (+119) — list schema (verticalId/Source/Confidence), setListVertical/detectListVertical APIs, prepareNormalizationForList orchestrator
+  - comparison.html + popup.html (+1 each) — script wiring, correct order
+  - tests/generated-packs.test.js (+128 new) — VM-context tests with mock fetch + in-memory meta store
+  - tests/product-repo.test.js (+50) — extends list schema tests
+- Validation:
+  - npm test -> all 45 test files pass on this commit.
+  - Verified: bundled data loader fail-safe, sha256 cache invalidation, URL mismatch cache invalidation, 3-tier cache (memory → IndexedDB → network), attribute lookup precedence (defaultRules → pack → unmapped) matches SCHEMA.md v1 contract.
+- Review / handoff:
+  - Reviewer: Claude
+  - Findings:
+    - Approved: `generatedPacks.js` architecture is clean. Public API surface (loadBundledData, ensureBundledDataLoaded, detectVerticalForProducts, ensureVerticalPackLoaded, getLoadedPack, buildEnumLookup, lookupEnum) matches Phase 1 handoff notes. `_clearMemoryCacheForTest` is essential for testability.
+    - Approved: Detection has clear confidence tiers — 0.95 for direct Icecat category id match, 0.85 for breadcrumb/category-name match, 0 for unmapped. Runtime can make informed decisions with these.
+    - Approved: Cache invalidation on sha256 mismatch is critical for the workflow-based publishing model. When we publish data-v2 replacing data-v1, cached packs get correctly rejected. Similarly for URL mismatch.
+    - Approved: `isPackForVertical(pack, verticalId)` guards against corrupted/stale cache by verifying version + vertical id before accepting. Defensive.
+    - Approved: URL protocol check `if (pathOrUrl && /^https?:\/\//i.test(pathOrUrl))` correctly distinguishes bundled (chrome.runtime.getURL prefix) from remote (github.com releases direct). Necessary for the split-source model.
+    - Approved: List schema migration by ADDING fields to product_lists table. New lists get vertical fields set to empty strings/0. Consistent with user's "fresh start" directive — no legacy migration needed.
+    - Approved: `attributes.js` change — pack lookup is TRIED ONLY WHEN defaults miss. Layered precedence exactly matches SCHEMA.md v1: userRules > defaultRules > generated. Additive.
+    - Approved: `matching.js loadVerticalPackSignals(pack)` delegates to existing `loadEsciSubstitutes` which already accepts both shapes ({substitutePairs: []} and raw []). No breakage.
+    - Approved: Script tag wiring in popup.html + comparison.html positions generatedPacks.js AFTER defaultRules.js and BEFORE taxonomyBridge.js. Correct order — pack loader is a dep of taxonomyBridge/attributes.
+    - Approved: Tests use vm.createContext with a mock fetch + in-memory Map for SSDB.meta. Correct pattern for Node isolation of a browser module. 128 lines cover bundled load, detection tiers, fetch → cache → memory tier, and sha256 invalidation.
+    - Suggestion (non-blocking): `ensureVerticalPackLoaded` has no in-flight promise memoization. Two concurrent callers with the same verticalId both hit network. Same pattern as `esciLoadPromise` in matching.js would prevent this. Wasted bandwidth, not corruption.
+    - Suggestion (non-blocking): first-capture latency. `prepareNormalizationForList` awaits `ensureVerticalPackLoaded` before adding the product. That blocks capture by 200-500 ms on the first product to a new list. Alternative: kick off pack fetch in background, use defaults for the first capture, re-normalize when pack lands. YAGNI until profiled — flag only.
+    - Suggestion (non-blocking): `verticalIdFromName` only tries the FIRST path segment. Breadcrumbs like "Products > Electronics > Laptops" (where "Products" is a wrapper) fail even though the second segment would match. Could try each segment until one matches a vertical, in priority order.
+    - Observation (not a finding): `verticalConfidence: Number(next.confidence || next.verticalConfidence || 1) || 0` in setListVertical — the `|| 1` fallback means an explicit confidence: 0 becomes 1. In practice callers never pass 0, so this doesn't trigger. But brittle if the API grows.
+  - Gap flagged for future work:
+    - Path B (user picker when detection confidence is low) is NOT implemented in this commit. When detection returns confidence 0 / unmapped, the list is created with empty verticalId and Path C (bundled defaults only) kicks in silently. Users won't be told "we couldn't figure out the category — pick one for better results." Currently acceptable as a soft launch (users get functional but less-normalized comparison), but worth surfacing later. Not a Must-fix — matches the "fresh start" scope where the goal is shipping fast.
+- Follow-ups:
+  - Publish real vertical packs to a data-v1 GitHub Release when ready (workflow_dispatch from the Actions tab with tag "v1").
+  - Optional in-flight fetch memoization on ensureVerticalPackLoaded.
+  - Path B picker UI as a follow-up commit.
+
