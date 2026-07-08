@@ -2597,3 +2597,35 @@ This file is the shared record for Claude and Codex. Append an entry for every m
 - Follow-ups:
   - None from this milestone. Session work is fully shipped.
   - Open items on the roadmap remain in their earlier entries: task #70 (ProductSpec consumer migration, pre-existing before this session), possible Track B for ESCI search intent (deferred by design), real Icecat vocabulary generator (deferred, fixture in place), real ESCI parquet generator (deferred, needs parquet dep decision).
+
+## 2026-07-08 - Claude fix for GitHub issue #3 (offline half) + pre-existing test failure noted
+
+- Agent: Claude
+- Branch: grid-rebuild-codex
+- Commit: 5ff735e (mapping fix) + this entry
+- Status: Claude's half of issue #3 shipped. Codex still owns the runtime half.
+- Summary:
+  - Triaged 22 open GitHub issues in docs/ISSUE_TRIAGE_2026-07-08.md (commit 8c940b8). 21 assigned to Codex, 1 (issue #3) joint with Claude.
+  - Shipped Claude's half of #3 at 5ff735e: extended VERTICAL_RULES in build-vertical-mapping.js to cover air compressors, pneumatic tools, welding, chainsaws, drill bits, and related hardware categories. Also fixed regressions where broad rules over-matched (bench grinder → furniture, welding helmet → vehicles-parts, coffee/spice grinders → hardware). Coverage grew from 2,386 to 2,449 mapped Icecat categories. Hardware bucket +67.
+  - The user's original report was a Portable Air Compressor with breadcrumb `Tools & Home Improvement > Power & Hand Tools > Power Tools > Air Compressors & Inflators > Portable Air Compressors`. Detection now maps Icecat categories 3390 (Air Compressors) + related to `hardware`. Spot-checked 9 target categories, all resolve correctly.
+- Codex's remaining half of #3:
+  - verticalIdFromName in normalization/libraries/generatedPacks.js only tries the FIRST breadcrumb segment. In the user's report, first segment is "Tools & Home Improvement" which isn't a vertical display name (Hardware is). Fixing this needs the function to walk multiple breadcrumb segments (leaf-first or any-match). This was flagged as a non-blocking Suggestion in my 3561c22 review; user's issue #3 confirms it matters in production. Estimated fix: ~20 lines in generatedPacks.js:verticalIdFromName plus a test in generated-packs.test.js.
+- Pre-existing test failure (NOT caused by 5ff735e):
+  - tests/side-panel.test.js fails on `bulk tab capture asks an existing content script first and injects only as fallback` (test file line 24). Verified this fails identically on HEAD~1 (before my commit) and HEAD.
+  - Root cause: Codex's 23566ec ("fix: make productRepo the product source of truth") changed background.js to write directly to productRepo. That refactor likely removed the "try existing content script first, inject as fallback" pattern the test was checking for.
+  - This is on Codex's side to either update the test to match the new code path, or restore the pattern if it was intentional. Not blocking my commit; noted here so Codex sees it on next fetch.
+- Files touched:
+  - Modified: scripts/build-normalization-libraries/build-vertical-mapping.js (+63 -20)
+  - Regenerated: normalization/libraries/generated/icecat_category_to_vertical.json
+  - Regenerated: normalization/libraries/generated/BUILD_MANIFEST.json
+  - AGENT_CHANGELOG.md (this entry)
+- Validation:
+  - node scripts/build-normalization-libraries/build-vertical-mapping.js -> 2,449 categories mapped
+  - Spot-check script: 8/8 target categories map correctly (Coffee/Seasoning Grinders → home-garden; Bench Grinders / Welding Masks / Welding Wire / Chainsaws / Drill Bits / Air Compressors → hardware; Motorcycle Helmet → vehicles-parts)
+  - npm test -> 44/45 pass; side-panel.test.js is the pre-existing failure noted above.
+- Review / handoff:
+  - Reviewer: Codex
+  - Codex work on #3 (runtime half): fix verticalIdFromName to try multiple breadcrumb segments.
+  - Codex work on side-panel.test.js: either update the test to match the productRepo-first code path, or investigate whether the injection-first pattern should be restored.
+- Follow-ups:
+  - Trigger the pack publisher workflow with version_tag=v2 after Codex's runtime half of #3 lands + when packs need re-publishing with the new mapping. Extension still works with data-v1 (fail-safe), just doesn't have the new mappings until v2.
