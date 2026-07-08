@@ -166,9 +166,10 @@ const productHeaderColumn = capturedColumns.find(column => column.id === 'produc
 const actionsColumn = capturedColumns.find(column => column.id === 'actions');
 assert.equal(titleColumn.sortable, true, 'data columns are sortable from their own headers');
 assert.equal(brandColumn.sortable, true, 'secondary data columns are sortable from their own headers');
-assert.ok(titleColumn.width >= 150, 'title column measures at least its floor so short names still render legibly');
-assert.ok(sourceColumn.width >= 96, 'source column keeps the full header word visible');
-assert.ok(devicesColumn.width >= 170, 'spec columns measure header/content width instead of using the narrow default');
+assert.ok(titleColumn.width >= 40, 'title column measures from actual content — short names get tight widths');
+assert.ok(titleColumn.width <= 200, 'short-title fixture does not blow the title column up to a hardcoded floor');
+assert.ok(sourceColumn.width >= 40, 'source column measures from actual header/content only');
+assert.ok(devicesColumn.width >= 160, 'spec columns whose HEADER is long ("Compatible Devices") measure the header width');
 assert.ok(productHeaderColumn.width >= 180, 'comparison matrix product columns reserve enough width for thumbnail headers');
 assert.equal(selectColumn.width, 40, 'checkbox column width follows the checkbox-plus-padding size');
 assert.equal(selectColumn.minWidth, 40, 'checkbox column minWidth does not expand to the adapter default');

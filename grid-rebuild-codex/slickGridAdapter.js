@@ -480,7 +480,10 @@
 
   /* Character-width estimate for auto-sizing. Body cells render Inter 13px
      regular (~7.2px/char). Headers render 11px monospace-uppercase-bold —
-     the uppercase letters push effective width closer to 9.6px/char. */
+     uppercase letters push effective width closer to 9.6px/char.
+     Rendered pills/token cells add a border+padding chrome that plain text
+     measurement misses, so cellChrome is added when a column type is
+     known to wrap its content in a pill/token. */
   function estimateTextWidth(value, opts) {
     const text = textValue(value).replace(/\s+/g, ' ').trim();
     if (!text) return 0;
@@ -494,32 +497,22 @@
 
   /* Column-width bounds.
 
-     Content-driven columns (text, spec, brand, source, rating, title, price)
-     size to max(header, widest sampled cell) + pad, floored at 56 so the
-     sort-indicator glyph and a one-character header stay legible. The upper
-     bound just prevents any single column from running away and swallowing
-     the viewport.
+     Only truly fixed-shape columns (checkbox, action buttons, thumbnail,
+     comparison-matrix cells, normalization-review action cells) keep
+     hardcoded per-type bounds — their content isn't measurable text.
 
-     Fixed-shape columns (selection, actions, image, matrixCell, and the
-     normalization/userRule review columns) keep tight per-type bounds
-     because their DOM contents don't correspond to a text length.        */
+     Everything else — every content column, every spec column, every
+     header — uses one uniform rule: max(header text, widest sampled cell
+     text) + 16px pad (4px each side + ~8px for the sort indicator).
+     Floor 40px so a one-character header stays legible.                */
   function columnWidthBounds(column) {
     if (column?.type === 'selection') return { min: column.width || 40, max: column.width || 40, pad: 0 };
     if (column?.type === 'actions') return { min: column.width || 112, max: column.width || 112, pad: 0 };
-    if (column?.type === 'normalizationActions') return { min: column.width || 500, max: column.width || 560, pad: 0 };
-    if (column?.type === 'normalizationProduct') return { min: 240, max: 380, pad: 42 };
-    if (column?.type === 'normalizationPair') return { min: 190, max: 340, pad: 38 };
-    if (column?.type === 'normalizationRule') return { min: 130, max: 220, pad: 34 };
-    if (column?.type === 'normalizationReason') return { min: 130, max: 180, pad: 34 };
+    if (column?.type === 'normalizationActions') return { min: column.width || 260, max: column.width || 320, pad: 0 };
     if (column?.type === 'userRuleActions') return { min: column.width || 190, max: column.width || 220, pad: 0 };
-    if (column?.type === 'userRuleCode') return { min: 180, max: 360, pad: 34 };
     if (column?.type === 'image') return { min: column.width || 96, max: column.width || 112, pad: 0 };
-    if ((column?.field || column?.id) === 'title') return { min: 150, max: 520, pad: 42 };
-    if (column?.type === 'matrixCell') return { min: 180, max: 300, pad: 36 };
-    if (column?.type === 'source' || column?.type === 'brand') return { min: 96, max: 200, pad: 34 };
-    if (column?.type === 'rating') return { min: 128, max: 160, pad: 34 };
-    if (column?.type === 'price') return { min: 88, max: 140, pad: 34 };
-    return { min: 56, max: 360, pad: 34 };
+    if (column?.type === 'matrixCell') return { min: 180, max: 300, pad: 16 };
+    return { min: 40, max: 520, pad: 16 };
   }
 
   function measuredColumnWidth(column, rows) {
