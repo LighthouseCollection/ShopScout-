@@ -9,16 +9,21 @@
 (function initShopScoutGridCodexProjections(root) {
   const NS = (root.ShopScoutGridCodexProjections = root.ShopScoutGridCodexProjections || {});
 
+  /* Fixed-shape columns (select, thumb, actions) keep hardcoded widths
+     because their content isn't measurable text. Every other column
+     lets slickGridAdapter.measuredColumnWidth compute width from actual
+     header + cell content — hardcoded minWidths here would override
+     that and force columns wider than their content needs. */
   const BASE_COLUMNS = [
     { id: 'select', field: '_selected', name: '', type: 'selection', width: 40, minWidth: 40, maxWidth: 40, required: true },
     { id: 'thumb', field: 'image', name: '', type: 'image', width: 76, required: true },
-    { id: 'title', field: 'title', name: 'Name', type: 'text', minWidth: 260, editable: true, required: true },
-    { id: 'brand', field: 'brand', name: 'Brand', type: 'brand', minWidth: 120, editable: true },
-    { id: 'newPrice', field: 'newPrice', name: 'Price', type: 'price', width: 104, editable: true },
-    { id: 'source', field: 'source', name: 'Source', type: 'source', width: 118, defaultHidden: true },
-    { id: 'modelName', field: 'modelName', name: 'Model', type: 'text', minWidth: 160, editable: true },
-    { id: 'rating', field: 'rating', name: 'Rating', type: 'rating', width: 128, editable: true },
-    { id: 'notes', field: 'notes', name: 'Notes', type: 'text', minWidth: 160, editable: true }
+    { id: 'title', field: 'title', name: 'Name', type: 'text', editable: true, required: true },
+    { id: 'brand', field: 'brand', name: 'Brand', type: 'brand', editable: true },
+    { id: 'newPrice', field: 'newPrice', name: 'Price', type: 'price', editable: true },
+    { id: 'source', field: 'source', name: 'Source', type: 'source', defaultHidden: true },
+    { id: 'modelName', field: 'modelName', name: 'Model', type: 'text', editable: true },
+    { id: 'rating', field: 'rating', name: 'Rating', type: 'rating', editable: true },
+    { id: 'notes', field: 'notes', name: 'Notes', type: 'text', editable: true }
   ];
 
   const ACTIONS_COLUMN = { id: 'actions', field: '_actions', name: '', type: 'actions', width: 92, required: true };
@@ -373,7 +378,6 @@
       field,
       name: fieldLabel(field),
       type: 'spec',
-      minWidth: 132,
       editable: true,
       specKey: field.slice(5)
     }));

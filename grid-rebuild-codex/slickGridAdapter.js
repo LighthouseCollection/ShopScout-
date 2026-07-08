@@ -516,7 +516,7 @@
     if (column?.type === 'userRuleActions') return { min: column.width || 190, max: column.width || 220, pad: 0 };
     if (column?.type === 'userRuleCode') return { min: 180, max: 360, pad: 34 };
     if (column?.type === 'image') return { min: column.width || 96, max: column.width || 112, pad: 0 };
-    if ((column?.field || column?.id) === 'title') return { min: 260, max: 520, pad: 42 };
+    if ((column?.field || column?.id) === 'title') return { min: 150, max: 520, pad: 42 };
     if (column?.type === 'matrixCell') return { min: 180, max: 300, pad: 36 };
     if (column?.type === 'source' || column?.type === 'brand') return { min: 96, max: 200, pad: 34 };
     if (column?.type === 'rating') return { min: 128, max: 160, pad: 34 };
