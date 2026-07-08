@@ -32,6 +32,13 @@
     catch (err) { console.warn('productRepo: taxonomy normalization unavailable', err); }
   }
 
+  async function ensureGeneratedPacksReady() {
+    const packs = root.ShopScoutGeneratedPacks;
+    if (!packs || typeof packs.ensureBundledDataLoaded !== 'function') return;
+    try { await packs.ensureBundledDataLoaded(); }
+    catch (err) { console.warn('productRepo: generated normalization packs unavailable', err); }
+  }
+
   function userRulesKey(listId) {
     return 'normalizationUserRules:' + String(listId || '');
   }
@@ -77,7 +84,7 @@
     }
     const id = uuid();
     const ts = now();
-    await db.product_lists.add({ id, name: 'My Products', createdAt: ts, updatedAt: ts });
+    await db.product_lists.add({ id, name: 'My Products', createdAt: ts, updatedAt: ts, verticalId: '', verticalSource: '', verticalConfidence: 0 });
     await setActiveListId(id);
     return id;
   }
@@ -89,7 +96,7 @@
   async function createList(name) {
     const id = uuid();
     const ts = now();
-    await db.product_lists.add({ id, name: String(name || 'Untitled'), createdAt: ts, updatedAt: ts });
+    await db.product_lists.add({ id, name: String(name || 'Untitled'), createdAt: ts, updatedAt: ts, verticalId: '', verticalSource: '', verticalConfidence: 0 });
     return id;
   }
 
@@ -117,15 +124,54 @@
     await db.meta.put({ key: 'activeListId', value: id });
   }
 
+  async function setListVertical(id, vertical) {
+    const next = vertical || {};
+    const patch = {
+      verticalId: String(next.verticalId || next.id || '').trim(),
+      verticalSource: String(next.source || next.verticalSource || 'manual').trim(),
+      verticalConfidence: Number(next.confidence || next.verticalConfidence || 1) || 0,
+      updatedAt: now()
+    };
+    await db.product_lists.update(id, patch);
+    return patch;
+  }
+
   /* ---------- products ---------- */
   function normalizeRevision(value) {
     const n = Number(value);
     return isFinite(n) && n > 0 ? Math.floor(n) : 1;
   }
 
-  function normalizeIncoming(p, listId) {
+  function verticalContext(detection) {
+    if (!detection || !detection.verticalId) return null;
+    const info = root.ShopScoutGeneratedPacks && typeof root.ShopScoutGeneratedPacks.getVerticalInfo === 'function'
+      ? root.ShopScoutGeneratedPacks.getVerticalInfo(detection.verticalId)
+      : null;
+    return {
+      id: detection.verticalId,
+      displayName: info?.displayName || detection.verticalId,
+      confidence: Number(detection.confidence) || 0,
+      source: detection.source || 'unknown',
+      categoryId: detection.categoryId || ''
+    };
+  }
+
+  function taxonomyContextPatch(product, detection) {
+    const taxonomy = root.ShopScoutTaxonomyNormalization;
+    const patch = taxonomy && typeof taxonomy.taxonomyPatchForProduct === 'function'
+      ? taxonomy.taxonomyPatchForProduct(product)
+      : {};
+    const vertical = verticalContext(detection);
+    if (!vertical) return patch;
+    const context = Object.assign({}, patch._normalizationContext || {}, { vertical });
+    return Object.assign({}, patch, { _normalizationContext: context });
+  }
+
+  function normalizeIncoming(p, listId, detection) {
     const ts = now();
-    return Object.assign({}, p, taxonomyContextPatch(p), normalizedAttributePatch(p), {
+    const contextPatch = taxonomyContextPatch(p, detection);
+    const productWithContext = Object.assign({}, p, contextPatch);
+    return Object.assign({}, p, contextPatch, normalizedAttributePatch(productWithContext), {
       id: p.id || uuid(),
       listId,
       capturedAt: p.capturedAt || ts,
@@ -156,17 +202,42 @@
     return { _normalizedAttributes: byField };
   }
 
-  function taxonomyContextPatch(product) {
-    const taxonomy = root.ShopScoutTaxonomyNormalization;
-    if (!taxonomy || typeof taxonomy.taxonomyPatchForProduct !== 'function') return {};
-    return taxonomy.taxonomyPatchForProduct(product);
+  async function detectListVertical(listId, incomingProducts) {
+    await ensureGeneratedPacksReady();
+    const packs = root.ShopScoutGeneratedPacks;
+    if (!packs || typeof packs.detectVerticalForProducts !== 'function') return null;
+    const list = listId ? await db.product_lists.get(listId) : null;
+    if (list?.verticalId) {
+      return {
+        verticalId: list.verticalId,
+        confidence: Number(list.verticalConfidence) || 1,
+        source: list.verticalSource || 'list-setting',
+        categoryId: ''
+      };
+    }
+    const rows = Array.isArray(incomingProducts) ? incomingProducts : [];
+    const candidates = rows.map(product => Object.assign({}, product, taxonomyContextPatch(product)));
+    const detection = packs.detectVerticalForProducts(candidates);
+    if (detection?.verticalId && listId) {
+      await setListVertical(listId, detection);
+    }
+    return detection && detection.verticalId ? detection : null;
+  }
+
+  async function prepareNormalizationForList(listId, incomingProducts) {
+    await ensureNormalizationReady();
+    await loadUserNormalizationRules(listId);
+    const detection = await detectListVertical(listId, incomingProducts);
+    if (detection?.verticalId && root.ShopScoutGeneratedPacks?.ensureVerticalPackLoaded) {
+      await root.ShopScoutGeneratedPacks.ensureVerticalPackLoaded(detection.verticalId);
+    }
+    return detection;
   }
 
   async function addProduct(listId, product) {
     return withListLock(listId, async () => {
-      await ensureNormalizationReady();
-      await loadUserNormalizationRules(listId);
-      const rec = normalizeIncoming(product, listId);
+      const detection = await prepareNormalizationForList(listId, [product]);
+      const rec = normalizeIncoming(product, listId, detection);
       await db.products.add(rec);
       return rec;
     });
@@ -174,9 +245,8 @@
 
   async function addProducts(listId, products) {
     return withListLock(listId, async () => {
-      await ensureNormalizationReady();
-      await loadUserNormalizationRules(listId);
-      const recs = products.map(p => normalizeIncoming(p, listId));
+      const detection = await prepareNormalizationForList(listId, products);
+      const recs = products.map(p => normalizeIncoming(p, listId, detection));
       await db.products.bulkAdd(recs);
       return recs;
     });
@@ -310,10 +380,19 @@
   async function findDuplicateCandidates(listId, options) {
     const matcher = root.ShopScoutMatching;
     if (!matcher || typeof matcher.detectDuplicateCandidates !== 'function') return [];
-    if (typeof matcher.ensureEsciSubstitutesLoaded === 'function') {
+    const rows = await listProducts(listId);
+    const detection = await detectListVertical(listId, rows);
+    let packSignals = 0;
+    if (detection?.verticalId && root.ShopScoutGeneratedPacks?.ensureVerticalPackLoaded
+        && typeof matcher.loadVerticalPackSignals === 'function') {
+      const packResult = await root.ShopScoutGeneratedPacks.ensureVerticalPackLoaded(detection.verticalId);
+      if (packResult?.ok && packResult.pack) {
+        packSignals = matcher.loadVerticalPackSignals(packResult.pack) || 0;
+      }
+    }
+    if (!packSignals && typeof matcher.ensureEsciSubstitutesLoaded === 'function') {
       await matcher.ensureEsciSubstitutesLoaded();
     }
-    const rows = await listProducts(listId);
     const decisions = await getDuplicateCandidateDecisions(listId);
     return matcher.detectDuplicateCandidates(rows, options).map(candidate => Object.assign({}, candidate, {
       reviewDecision: decisions[candidate.candidateKey] || ''
@@ -345,12 +424,12 @@
 
   async function rebuildNormalizationForList(listId) {
     const rows = await listProducts(listId);
-    await ensureNormalizationReady();
-    await loadUserNormalizationRules(listId);
+    const detection = await prepareNormalizationForList(listId, rows);
     let updated = 0;
     await withListLock(listId, async () => {
       for (const product of rows) {
-        const patch = Object.assign({}, taxonomyContextPatch(product), normalizedAttributePatch(product));
+        const contextPatch = taxonomyContextPatch(product, detection);
+        const patch = Object.assign({}, contextPatch, normalizedAttributePatch(Object.assign({}, product, contextPatch)));
         if (!Object.keys(patch).length) continue;
         const currentAttrs = JSON.stringify(product._normalizedAttributes || null);
         const nextAttrs = JSON.stringify(patch._normalizedAttributes || null);
@@ -492,6 +571,8 @@
     deleteList,
     getActiveListId,
     setActiveListId,
+    setListVertical,
+    detectListVertical,
     addProduct,
     addProducts,
     updateProduct,

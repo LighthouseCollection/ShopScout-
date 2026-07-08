@@ -16,6 +16,7 @@ const userRulesSrc = fs.readFileSync(path.join(__dirname, '..', 'normalization',
 const attrSrc = fs.readFileSync(path.join(__dirname, '..', 'normalization', 'attributes.js'), 'utf8');
 const taxonomySrc = fs.readFileSync(path.join(__dirname, '..', 'normalization', 'taxonomyBridge.js'), 'utf8');
 const matchingSrc = fs.readFileSync(path.join(__dirname, '..', 'normalization', 'matching.js'), 'utf8');
+const packsSrc = fs.readFileSync(path.join(__dirname, '..', 'normalization', 'libraries', 'generatedPacks.js'), 'utf8');
 const repoSrc = fs.readFileSync(path.join(__dirname, '..', 'data', 'productRepo.js'), 'utf8');
 const esciFixture = JSON.parse(fs.readFileSync(
   path.join(__dirname, '..', 'normalization', 'libraries', 'generated', 'esciSubstitutes.json'),
@@ -39,6 +40,18 @@ async function createRepoContext() {
         return {
           ok: true,
           json: async () => esciFixture
+        };
+      }
+      if (String(url).endsWith('normalization/libraries/generated/test-electronics.json')) {
+        return {
+          ok: true,
+          json: async () => ({
+            version: 1,
+            vertical: { id: 'electronics', displayName: 'Electronics' },
+            icecatVocabulary: { features: {} },
+            icecatCategoryFeatures: { categories: {} },
+            shopifyCategoryTree: { categories: {} }
+          })
         };
       }
       return {
@@ -80,6 +93,27 @@ async function createRepoContext() {
   vm.runInContext(dbSrc, ctx, { filename: 'data/db.js' });
   await ctx.SSDB.db.open();
   vm.runInContext(rulesSrc, ctx, { filename: 'normalization/libraries/defaultRules.js' });
+  vm.runInContext(packsSrc, ctx, { filename: 'normalization/libraries/generatedPacks.js' });
+  ctx.ShopScoutGeneratedPacks.loadBundledData({
+    verticalsIndex: {
+      version: 1,
+      verticals: [
+        {
+          id: 'electronics',
+          displayName: 'Electronics',
+          packUrl: 'normalization/libraries/generated/test-electronics.json',
+          packBytes: 100,
+          packSha256: 'b'.repeat(64)
+        }
+      ]
+    },
+    categoryToVertical: {
+      version: 1,
+      mapping: {
+        'gid://shopify/TaxonomyCategory/el-3-2': 'electronics'
+      }
+    }
+  });
   vm.runInContext(userRulesSrc, ctx, { filename: 'normalization/userRules.js' });
   vm.runInContext(taxonomySrc, ctx, { filename: 'normalization/taxonomyBridge.js' });
   vm.runInContext(attrSrc, ctx, { filename: 'normalization/attributes.js' });
@@ -169,7 +203,7 @@ async function seedProducts(repo, listId) {
       'fresh fake-indexeddb setup starts each case with no products');
   });
 
-  await withRepo(async (repo) => {
+  await withRepo(async (repo, db) => {
     const listId = await repo.ensureDefaultList();
     const added = await repo.addProduct(listId, {
       title: 'Supplier keyboard',
@@ -183,6 +217,13 @@ async function seedProducts(repo, listId) {
 
     assert.strictEqual(added._normalizationContext.category.leaf, 'Keyboards',
       'added product stores Shopify taxonomy category context');
+    assert.strictEqual(added._normalizationContext.vertical.id, 'electronics',
+      'added product stores detected vertical context');
+    const list = await db.product_lists.get(listId);
+    assert.strictEqual(list.verticalId, 'electronics',
+      'product list stores detected vertical id for future pack loading');
+    assert.strictEqual(list.verticalSource, 'taxonomy-category-id',
+      'product list stores vertical detection provenance');
     assert.ok(added._normalizationContext.knownAttributes.includes('Keyboard Layout'),
       'added product stores Shopify taxonomy attribute hints');
     assert.deepStrictEqual(plain(added._normalizedAttributes.Color), {
@@ -282,14 +323,17 @@ async function seedProducts(repo, listId) {
     ]);
 
     const result = await repo.rebuildNormalizationForList(listId);
-    assert.deepStrictEqual(plain(result), { ok: true, checked: 2, updated: 1 },
-      'normalization rebuild updates only legacy products with derived normalization data');
+    assert.deepStrictEqual(plain(result), { ok: true, checked: 2, updated: 2 },
+      'normalization rebuild backfills attribute and list-vertical context for legacy products');
 
     const updated = await repo.getProduct('old-1');
     assert.strictEqual(updated._normalizedAttributes.Color.normalized, 'Navy Blue',
       'normalization rebuild backfills normalized attributes for existing captured products');
     assert.strictEqual(updated._normalizationContext.category.leaf, 'Keyboards',
       'normalization rebuild backfills taxonomy context for existing captured products');
+    const plainUpdated = await repo.getProduct('old-2');
+    assert.strictEqual(plainUpdated._normalizationContext.vertical.id, 'electronics',
+      'normalization rebuild applies detected list vertical context to plain legacy products');
   });
 
   await withRepo(async (repo) => {

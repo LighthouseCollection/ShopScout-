@@ -89,7 +89,7 @@
     const canonicalField = mappedField ? mappedField.field : localField;
     const raw = value == null ? '' : String(value).trim();
     const lookup = compiled.enumLookups[canonicalField];
-    if (!raw || !lookup) {
+    if (!raw) {
       const out = { field: canonicalField, raw, normalized: raw, confidence: 0, rule: 'unmapped' };
       if (mappedField) {
         out.fieldRule = mappedField.rule;
@@ -97,8 +97,11 @@
       }
       return out;
     }
-    const hit = lookup[normalizeToken(raw)];
-    if (!hit) {
+    const hit = lookup ? lookup[normalizeToken(raw)] : null;
+    const packHit = !hit && root.ShopScoutGeneratedPacks && typeof root.ShopScoutGeneratedPacks.lookupEnum === 'function'
+      ? root.ShopScoutGeneratedPacks.lookupEnum(context?.vertical?.id, canonicalField, raw)
+      : null;
+    if (!hit && !packHit) {
       const out = { field: canonicalField, raw, normalized: raw, confidence: 0, rule: 'unmapped' };
       if (mappedField) {
         out.fieldRule = mappedField.rule;
@@ -106,12 +109,13 @@
       }
       return out;
     }
+    const finalHit = hit || packHit;
     const out = {
       field: canonicalField,
       raw,
-      normalized: hit.normalized,
-      confidence: hit.confidence,
-      rule: hit.rule
+      normalized: finalHit.normalized,
+      confidence: finalHit.confidence,
+      rule: finalHit.rule
     };
     if (mappedField) {
       out.fieldRule = mappedField.rule;
@@ -122,9 +126,9 @@
 
   function normalizeProductAttributes(product) {
     const taxonomy = root.ShopScoutTaxonomyNormalization;
-    const context = taxonomy && typeof taxonomy.categoryContextForProduct === 'function'
+    const context = product?._normalizationContext || (taxonomy && typeof taxonomy.categoryContextForProduct === 'function'
       ? taxonomy.categoryContextForProduct(product)
-      : null;
+      : null);
     const specs = product && Array.isArray(product.specs) ? product.specs
       : product && Array.isArray(product.rawSpecs) ? product.rawSpecs
         : [];

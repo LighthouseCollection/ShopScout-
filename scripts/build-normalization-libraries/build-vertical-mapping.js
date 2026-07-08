@@ -24,7 +24,6 @@
 const fs = require('fs');
 const path = require('path');
 const {
-  sourcePath,
   outputPath,
   fileBytes,
   sha256OfFileSync,

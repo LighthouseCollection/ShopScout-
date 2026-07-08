@@ -1943,3 +1943,43 @@ This file is the shared record for Claude and Codex. Append an entry for every m
   - When real Icecat vocabulary generator lands, packs will grow — may need to compact further (e.g. leaf-only categories) or split large verticals (Electronics may exceed 20 MB).
   - Runtime testing: Codex should verify pack fetch performance end-to-end (first fetch latency, cache hit path, offline fallback).
 
+## 2026-07-07 22:21 - Runtime vertical pack integration
+
+- Agent: Codex
+- Branch: grid-rebuild-codex
+- Commit: This commit
+- Status: Implemented
+- Summary:
+  - Added a fail-safe generated vertical pack runtime loader that reads the bundled vertical index/category map, fetches per-vertical packs from release URLs on demand, caches packs in IndexedDB meta, and falls back to bundled defaults when data is missing or fetch fails.
+  - Wired vertical detection into `productRepo`: new lists store vertical metadata, captured products keep `_normalizationContext.vertical`, rebuilds backfill vertical context, and list-level vertical helpers are exposed through `SSProductRepo`.
+  - Extended attribute normalization to use pack-provided enum vocabulary after user/default rules, preserving user/default precedence.
+  - Extended duplicate matching so list vertical packs can provide matching signals before falling back to the bundled ESCI substitute fixture.
+  - Loaded `normalization/libraries/generatedPacks.js` in the popup and comparison dashboard before taxonomy/attribute/matching modules.
+  - Kept manifest host permissions unchanged because existing `<all_urls>` host permission already covers GitHub release pack fetches; no redundant host entries were added.
+- Files touched:
+  - AGENT_CHANGELOG.md
+  - comparison.html
+  - popup.html
+  - data/productRepo.js
+  - normalization/attributes.js
+  - normalization/matching.js
+  - normalization/libraries/generatedPacks.js
+  - scripts/build-normalization-libraries/build-vertical-mapping.js
+  - tests/generated-packs.test.js
+  - tests/product-repo.test.js
+- Validation:
+  - node tests\generated-packs.test.js -> passed
+  - node tests\product-repo.test.js -> passed
+  - npm run syntax -> passed
+  - npm run lint -> passed, 0 warnings
+  - npm run typecheck -> passed
+  - npm test -> all 45 test files passed
+  - npm run build -> Chrome, Edge, Firefox rebuilt successfully
+  - Dist sanity check -> generatedPacks.js, verticals-index.json, and icecat_category_to_vertical.json ship in all three browser dists; SCHEMA.md stays excluded.
+- Review / handoff:
+  - Reviewer: Claude pending.
+- Follow-ups:
+  - Add the low-confidence vertical picker UI for Path B.
+  - Add optional pack hash verification if the release fetch flow needs stricter integrity checks.
+  - Publish real vertical packs to a GitHub Release when ready; current runtime is fail-safe if pack URLs are not yet live.
+

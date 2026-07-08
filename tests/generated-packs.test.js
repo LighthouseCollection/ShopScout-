@@ -1,0 +1,128 @@
+const assert = require('assert');
+const vm = require('vm');
+const { read } = require('./_helpers');
+
+const src = read('normalization/libraries/generatedPacks.js');
+
+function makeCtx(fetchImpl) {
+  const meta = new Map();
+  const ctx = {
+    console,
+    fetch: fetchImpl,
+    SSDB: {
+      db: {
+        meta: {
+          async get(key) {
+            return meta.has(key) ? meta.get(key) : undefined;
+          },
+          async put(row) {
+            meta.set(row.key, row);
+          },
+          async delete(key) {
+            meta.delete(key);
+          }
+        }
+      }
+    }
+  };
+  ctx.globalThis = ctx;
+  vm.createContext(ctx);
+  vm.runInContext(src, ctx, { filename: 'normalization/libraries/generatedPacks.js' });
+  return { ctx, meta };
+}
+
+const bundled = {
+  verticalsIndex: {
+    version: 1,
+    verticals: [
+      {
+        id: 'electronics',
+        displayName: 'Electronics',
+        packUrl: 'https://github.com/LighthouseCollection/ShopScout-/releases/download/data-v1/electronics.json',
+        packBytes: 123,
+        packSha256: 'a'.repeat(64)
+      },
+      {
+        id: 'sporting-goods',
+        displayName: 'Sporting Goods',
+        packUrl: null,
+        packBytes: null,
+        packSha256: null
+      }
+    ]
+  },
+  categoryToVertical: {
+    version: 1,
+    mapping: {
+      119: 'electronics',
+      287: 'sporting-goods'
+    }
+  }
+};
+
+(async () => {
+  let fetchCalls = 0;
+  const pack = {
+    version: 1,
+    vertical: { id: 'electronics', displayName: 'Electronics' },
+    icecatVocabulary: {
+      features: {
+        1: {
+          featureId: 1,
+          displayName: 'Connectivity Technology',
+          vocabulary: [{ canonical: 'Bluetooth', aliases: ['bt'] }]
+        }
+      }
+    }
+  };
+  const { ctx, meta } = makeCtx(async url => {
+    fetchCalls++;
+    assert.strictEqual(url, bundled.verticalsIndex.verticals[0].packUrl, 'fetches configured pack URL');
+    return { ok: true, json: async () => pack };
+  });
+  const P = ctx.ShopScoutGeneratedPacks;
+  P.loadBundledData(bundled);
+
+  const detected = P.detectVerticalForProducts([{ _normalizationContext: { category: { id: '119' } } }]);
+  assert.strictEqual(detected.verticalId, 'electronics', 'detects vertical id from Icecat category id');
+  assert.strictEqual(detected.confidence, 0.95, 'preserves detection confidence');
+  assert.strictEqual(detected.source, 'icecat-category-id', 'preserves detection source');
+  assert.strictEqual(detected.categoryId, '119', 'preserves source category id');
+
+  let result = await P.ensureVerticalPackLoaded('electronics');
+  assert.strictEqual(result.ok, true, 'remote pack load succeeds');
+  assert.strictEqual(result.source, 'remote', 'first load comes from remote');
+  assert.strictEqual(result.pack.vertical.id, 'electronics', 'pack payload returned');
+  assert.strictEqual(fetchCalls, 1, 'first load fetches once');
+  assert.ok(meta.has('normalizationVerticalPack:electronics'), 'remote pack cached in IndexedDB meta');
+  const enumHit = P.lookupEnum('electronics', 'Connectivity Technology', 'bt');
+  assert.strictEqual(enumHit.normalized, 'Bluetooth', 'pack enum vocabulary normalizes aliases');
+  assert.strictEqual(enumHit.rule, 'pack-enum:connectivity-technology:bluetooth',
+    'pack enum hit includes generated-rule provenance');
+
+  P._clearMemoryCacheForTest();
+  result = await P.ensureVerticalPackLoaded('electronics');
+  assert.strictEqual(result.ok, true, 'cached pack load succeeds');
+  assert.strictEqual(result.source, 'cache', 'second load comes from IndexedDB cache');
+  assert.strictEqual(fetchCalls, 1, 'cache hit does not fetch again');
+
+  const missing = await P.ensureVerticalPackLoaded('unknown');
+  assert.strictEqual(missing.ok, false, 'unknown vertical fails safely');
+  assert.strictEqual(missing.fallback, true, 'unknown vertical reports fallback');
+  assert.strictEqual(missing.reason, 'unknown-vertical', 'unknown vertical reason preserved');
+
+  const noPack = await P.ensureVerticalPackLoaded('sporting-goods');
+  assert.strictEqual(noPack.ok, false, 'placeholder pack URL is skipped');
+  assert.strictEqual(noPack.fallback, true, 'placeholder pack URL falls back to bundled defaults');
+  assert.strictEqual(noPack.reason, 'missing-pack-url', 'placeholder reason preserved');
+
+  const failing = makeCtx(async () => ({ ok: false, status: 404, json: async () => ({}) }));
+  failing.ctx.console.warn = () => {};
+  failing.ctx.ShopScoutGeneratedPacks.loadBundledData(bundled);
+  const failed = await failing.ctx.ShopScoutGeneratedPacks.ensureVerticalPackLoaded('electronics');
+  assert.strictEqual(failed.ok, false, 'fetch failure fails safely');
+  assert.strictEqual(failed.fallback, true, 'fetch failure falls back');
+  assert.strictEqual(failed.reason, 'fetch-failed', 'fetch failure reason preserved');
+
+  console.log('generated-packs.test.js: assertions passed');
+})();

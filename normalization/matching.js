@@ -6,6 +6,7 @@
 
    Public API on window.ShopScoutMatching:
      extractIdentifiers(product)
+     loadVerticalPackSignals(pack)
      scorePair(a, b)
      detectDuplicateCandidates(products, options)
    ============================================================= */
@@ -112,6 +113,11 @@
       .then(data => loadEsciSubstitutes(data))
       .catch(() => 0);
     return esciLoadPromise;
+  }
+
+  function loadVerticalPackSignals(pack) {
+    if (pack?.esciSubstitutes) return loadEsciSubstitutes(pack.esciSubstitutes);
+    return 0;
   }
 
   function titleOf(product) {
@@ -307,6 +313,7 @@
     blockingKeys,
     ensureEsciSubstitutesLoaded,
     loadEsciSubstitutes,
+    loadVerticalPackSignals,
     scorePair,
     detectDuplicateCandidates
   });
