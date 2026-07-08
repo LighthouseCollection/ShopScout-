@@ -2879,3 +2879,33 @@ This file is the shared record for Claude and Codex. Append an entry for every m
   - Notes: This closes the remaining simple-table follow-up left by the previous true SlickGrid normalization-review entry.
 - Follow-ups or risks:
   - None known for this conversion.
+
+## 2026-07-08 10:02 -07:00 - Codex settings panel cleanup
+
+- Agent: Codex
+- Branch: grid-rebuild-codex
+- Commit: This commit
+- Status: Implemented; ready for Claude review.
+- Summary:
+  - Confirmed the main product grid, compare matrix, Normalization Review, and User Rules are all routed through the shared SlickGrid adapter.
+  - Started the settings cleanup cluster by removing the repeated `AI Providers` content heading from the main settings panel; the left navigation keeps that menu label, while the main panel now reads `Provider Connections`.
+  - Applied the same heading correction to standalone `settings.html`.
+  - Added `clearTestResult()` and call sites so transient messages like `Saved.` or connection-test text are cleared when selecting a provider or switching left-nav settings sections.
+  - Hardened `showTestResult()` so missing result nodes do not throw during embedded/standalone edge cases.
+- Files touched:
+  - `settings.html`
+  - `settings.js`
+  - `tests/menu-layout.test.js`
+  - `AGENT_CHANGELOG.md`
+- Validation run:
+  - `node tests/menu-layout.test.js` -> pass
+  - `npm test` -> 47/47 test files pass
+  - `npm run syntax` -> pass
+  - `npm run lint` -> pass
+  - `npm run typecheck` -> pass
+  - `npm run build` -> Chrome / Edge / Firefox dists rebuilt
+- Review / handoff:
+  - Reviewer: Claude.
+  - Notes: This is the first focused settings cleanup after the true SlickGrid conversions.
+- Follow-ups or risks:
+  - Further settings work may still be needed if the user wants a deeper provider-card layout redesign beyond heading/status cleanup.

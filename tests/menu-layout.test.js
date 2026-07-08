@@ -218,6 +218,8 @@ assert.ok(settingsJs.includes('data-settings-nav="ai-providers"'), 'embedded set
 assert.ok(settingsJs.includes('data-settings-nav="quick-capture"'), 'embedded settings has a left-pane Quick Capture Button navigation item');
 assert.ok(settingsJs.includes('data-settings-nav="open-facts"'), 'embedded settings has a left-pane Open*Facts Enrichment navigation item');
 assert.ok(settingsJs.includes('AI Providers</strong>'), 'settings left nav names AI Providers');
+assert.ok(!settingsJs.includes('<h3>AI Providers</h3>'), 'settings main panel does not repeat the left-nav AI Providers label as its content heading');
+assert.ok(settingsJs.includes('<h3>Provider Connections</h3>'), 'settings main AI panel uses a distinct content heading');
 assert.ok(settingsJs.includes('Quick Capture Button</strong>'), 'settings left nav names Quick Capture Button');
 assert.ok(settingsJs.includes('Open*Facts Enrichment</strong>'), 'settings left nav names Open*Facts Enrichment');
 assert.ok(settingsJs.includes('data-settings-panel="ai-providers"'), 'embedded settings has a main AI Providers panel');
@@ -227,6 +229,7 @@ assert.ok(settingsJs.includes('openSetupGuideModal'), 'embedded settings opens t
 assert.ok(settingsJs.includes('bindSettingsNav'), 'embedded settings binds left navigation to main content panels');
 assert.ok(settingsJs.includes('function currentSettingsRoot'), 'settings panel switching is scoped to the mounted settings root');
 assert.ok(settingsJs.includes('showSettingsPanel(link.getAttribute(\'data-settings-nav\'), rootEl)'), 'settings nav click updates the local settings main panel');
+assert.ok(settingsJs.includes('clearTestResult()'), 'settings nav switching clears transient Saved/test messages');
 assert.ok(!settingsJs.includes('dashboard-settings-side'), 'embedded settings does not render a duplicate right-side settings pane');
 assert.ok(!settingsJs.includes('id="savedPill"'), 'embedded settings does not render the floating Saved label');
 assert.ok(!settingsJs.includes('id="guideInstructions"'), 'embedded settings does not render an inline setup guide panel');

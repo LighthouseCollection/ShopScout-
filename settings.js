@@ -44,7 +44,7 @@ function settingsShellHtml() {
         <section class="dashboard-settings-panel" id="aiProvidersCard" data-settings-panel="ai-providers">
           <div class="dashboard-settings-card dashboard-settings-providers">
             <div class="dashboard-settings-section-head">
-              <h3>AI Providers</h3>
+              <h3>Provider Connections</h3>
               <p>Enable one or more providers and choose the model ShopScout should use.</p>
             </div>
             <div id="providerList" class="dashboard-settings-provider-list"></div>
@@ -427,8 +427,7 @@ function selectProvider(providerId) {
   document.getElementById('providerNotes').value = cfg.notes || '';
   document.getElementById('baseUrlField').style.display = provider.defaultBaseUrl ? 'block' : 'none';
   document.getElementById('testProvider').disabled = provider.adapter === 'manual';
-  document.getElementById('testResult').className = 'test-result';
-  document.getElementById('testResult').textContent = '';
+  clearTestResult();
   renderTokenUsageSummary();
   renderProviderList();
 }
@@ -482,6 +481,7 @@ function bindSettingsNav() {
 
 function showSettingsPanel(panelId, rootEl = currentSettingsRoot()) {
   const id = panelId || 'ai-providers';
+  clearTestResult(rootEl);
   rootEl.querySelectorAll('[data-settings-panel]').forEach(panel => {
     panel.hidden = panel.getAttribute('data-settings-panel') !== id;
   });
@@ -625,8 +625,16 @@ function openProviderUrl(key) {
 
 function showTestResult(type, message) {
   const result = document.getElementById('testResult');
+  if (!result) return;
   result.className = `test-result ${type}`;
   result.textContent = message;
+}
+
+function clearTestResult(rootEl = currentSettingsRoot()) {
+  const result = rootEl.querySelector?.('#testResult') || document.getElementById('testResult');
+  if (!result) return;
+  result.className = 'test-result';
+  result.textContent = '';
 }
 
 function setTrustedHtml(target, html) {
