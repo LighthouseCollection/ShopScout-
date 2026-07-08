@@ -658,6 +658,12 @@
     grid.render();
   }
 
+  /* Grid host is sized to exactly the content it needs to render — full
+     header + one row per data row. SlickGrid's internal viewport then
+     matches the host, so its own scrollbar never appears; when the list
+     is long, the browser scrolls the whole page instead of a
+     scroll-inside-scroll iframe feel. Empty tables still reserve a small
+     minimum so the header row stays visible. */
   function applyHostHeight(container, projection) {
     if (!container?.style) return;
     const rowCount = Array.isArray(projection?.rows) ? projection.rows.length : 0;
@@ -667,20 +673,10 @@
     const headerHeight = isMatrix ? 132 : 42;
     const rowHeight = isNormalizationReview ? 64 : (isUserRules ? 60 : 82);
     const minHeight = rowCount ? headerHeight + rowHeight : 140;
-    /* Normalization review + user rules take over available page height —
-       they're full-page views, not embedded panels, so the small
-       6-visible-row cap made them feel iframed inside empty space.
-       Everything else keeps a fixed max cap so tables inside cards
-       don't blow past their container. */
-    if (isNormalizationReview || isUserRules) {
-      container.style.height = 'calc(100vh - 260px)';
-      container.style.minHeight = `${minHeight}px`;
-      return;
-    }
-    const maxRowsBeforeScroll = isMatrix ? 8 : 12;
-    const visibleRows = Math.max(1, Math.min(rowCount || 1, maxRowsBeforeScroll));
-    const height = Math.max(minHeight, headerHeight + (visibleRows * rowHeight));
-    container.style.height = `${height}px`;
+    const contentHeight = rowCount
+      ? headerHeight + (rowCount * rowHeight)
+      : minHeight;
+    container.style.height = `${contentHeight}px`;
     container.style.minHeight = '0';
   }
 
