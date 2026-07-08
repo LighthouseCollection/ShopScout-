@@ -183,8 +183,7 @@
   box-sizing: border-box;
   max-width: 100%;
   min-width: 0;
-  overflow: hidden;
-  padding: 2px 8px;
+  padding: 3px 8px 4px;
   border: 1px solid hsl(212 55% 62%);
   border-radius: 6px;
   background: hsl(212 65% 95%);
@@ -194,7 +193,7 @@
   white-space: nowrap;
   font-size: 12px;
   font-weight: 500;
-  line-height: 1.35;
+  line-height: 1.5;
 }
 
 a.ss-grid-logo-token,
@@ -313,14 +312,14 @@ a.ss-grid-logo-token:visited {
   align-items: center;
   gap: 3px;
   max-width: 100%;
-  padding: 2px 8px;
+  padding: 3px 8px 4px;
   border: 1px solid var(--rule-soft, #d1d5db);
   border-radius: 6px;
   background: var(--paper-2, #eaedf1);
   color: var(--ink-2, #2a3441);
   font-size: 12px;
   font-weight: 500;
-  line-height: 1.35;
+  line-height: 1.5;
 }
 
 /* Semantic pill palette — outline (darker) + filled interior (lighter).
