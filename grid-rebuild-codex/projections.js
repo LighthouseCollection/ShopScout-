@@ -16,7 +16,10 @@
      that and force columns wider than their content needs. */
   const BASE_COLUMNS = [
     { id: 'select', field: '_selected', name: '', type: 'selection', width: 40, minWidth: 40, maxWidth: 40, required: true },
-    { id: 'thumb', field: 'image', name: '', type: 'image', width: 76, required: true },
+    /* Thumbnail column also carries the row actions (Open/Rescan/Delete)
+       stacked under the image, so it needs to be wide enough for a
+       3-icon row at 30px each + gaps + padding. */
+    { id: 'thumb', field: 'image', name: '', type: 'image', width: 108, required: true },
     { id: 'title', field: 'title', name: 'Name', type: 'text', editable: true, required: true },
     { id: 'brand', field: 'brand', name: 'Brand', type: 'brand', editable: true },
     { id: 'newPrice', field: 'newPrice', name: 'Price', type: 'price', editable: true },
@@ -397,7 +400,11 @@
       editable: true,
       specKey: field.slice(5)
     }));
-    const allColumnsRaw = BASE_COLUMNS.concat(specColumns, [ACTIONS_COLUMN])
+    /* No trailing ACTIONS_COLUMN — row actions now render under the
+       thumbnail in the image cell. Keeping ACTIONS_COLUMN in allColumns
+       would surface an empty column at the far right that can't be
+       hidden. */
+    const allColumnsRaw = BASE_COLUMNS.concat(specColumns)
       .filter(column => column.required || !removed.has(column.id));
     /* Auto-hide fields that are empty across every product in the current
        view. A column that no row has any value for adds nothing but noise

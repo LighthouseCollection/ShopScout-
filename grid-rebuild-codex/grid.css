@@ -127,6 +127,17 @@
   overflow-wrap: anywhere;
 }
 
+/* Thumbnail column stacks the product image with the row actions
+   underneath, matching the reference layout the user requested. */
+.ss-grid-thumb-stack {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+  padding: 4px 0;
+}
+
 .ss-grid-thumb {
   width: 58px;
   height: 58px;
@@ -142,6 +153,18 @@
   border: 1px solid var(--rule, #d1d5db);
   border-radius: 5px;
   background: var(--paper-2, #eaedf1);
+}
+
+/* Actions live inside the thumb-stack. 30x30 icon buttons per user spec. */
+.ss-grid-thumb-stack .ss-grid-action-bar {
+  justify-content: center;
+  gap: 4px;
+  width: auto;
+}
+.ss-grid-thumb-stack .ss-grid-action-btn {
+  width: 30px;
+  height: 30px;
+  font-size: 16px;
 }
 
 .ss-grid-price {

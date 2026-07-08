@@ -127,9 +127,15 @@
 
   function htmlForImage(value, item) {
     const src = safeUrl(value);
-    if (!src) return '<span class="ss-grid-no-thumb" aria-label="No image"></span>';
     const label = item?.title || 'Product image';
-    return `<img class="ss-grid-thumb" src="${escAttr(src)}" alt="${escAttr(label)}">`;
+    const thumb = src
+      ? `<img class="ss-grid-thumb" src="${escAttr(src)}" alt="${escAttr(label)}">`
+      : '<span class="ss-grid-no-thumb" aria-label="No image"></span>';
+    /* Row actions render UNDER the thumbnail so the user doesn't have to
+       horizontally scroll to the far-right column just to open/rescan/
+       delete a product. Same [data-ss-grid-action] click contract, so
+       the existing onClick delegation still fires. */
+    return `<div class="ss-grid-thumb-stack">${thumb}${htmlForActions()}</div>`;
   }
 
   function htmlForSource(value, item) {
@@ -672,7 +678,7 @@
     const isNormalizationReview = projection?.mode === 'normalizationReview';
     const isUserRules = projection?.mode === 'userRules';
     const headerHeight = isMatrix ? 132 : 42;
-    const rowHeight = isNormalizationReview ? 64 : (isUserRules ? 60 : 82);
+    const rowHeight = isNormalizationReview ? 64 : (isUserRules ? 60 : 110);
     const scrollbarBuffer = 18;
     const minHeight = rowCount ? headerHeight + rowHeight + scrollbarBuffer : 140;
     const contentHeight = rowCount
@@ -709,7 +715,7 @@
       explicitInitialization: false,
       forceFitColumns: false,
       multiColumnSort: true,
-      rowHeight: projection?.mode === 'normalizationReview' ? 64 : (projection?.mode === 'userRules' ? 60 : 82),
+      rowHeight: projection?.mode === 'normalizationReview' ? 64 : (projection?.mode === 'userRules' ? 60 : 110),
       showCellSelection: false,
       enableTextSelectionOnCells: true
     };

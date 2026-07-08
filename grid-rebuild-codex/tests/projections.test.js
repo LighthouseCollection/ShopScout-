@@ -143,21 +143,23 @@ assert.ok(rowsProjection.columns.some(column => column.id === 'spec:dpi'),
   'abbreviation-equivalent spec column is canonicalized');
 assert.ok(rowsProjection.columns.some(column => column.id === 'spec:color'),
   'attribute-normalized spec field aliases are exposed under canonical field names');
-assert.equal(
-  rowsProjection.columns[rowsProjection.columns.length - 1].id,
-  'actions',
-  'row actions stay in the far-right final column after dynamic specs'
+assert.ok(
+  !rowsProjection.columns.some(column => column.id === 'actions'),
+  'standalone actions column has been removed — actions render under the thumbnail in the image cell'
+);
+assert.ok(
+  !rowsProjection.allColumns.some(column => column.id === 'actions'),
+  'standalone actions column no longer appears in allColumns either'
 );
 const reorderedProjection = projections.buildProductsRowsProjection(products, {
   visibleSpecKeys: ['battery life', 'dpi'],
   viewState: {
-    columnOrder: ['actions', 'title', 'brand', 'spec:dpi', 'spec:battery life']
+    columnOrder: ['title', 'brand', 'spec:dpi', 'spec:battery life']
   }
 });
-assert.equal(
-  reorderedProjection.columns[reorderedProjection.columns.length - 1].id,
-  'actions',
-  'saved column order cannot move row actions away from the far-right utility column'
+assert.ok(
+  !reorderedProjection.columns.some(column => column.id === 'actions'),
+  'a saved column order that used to reference actions is honored, and the column simply isn\'t there'
 );
 assert.equal(rowsProjection.rows.length, 2);
 assert.equal(rowsProjection.rows[0].id, 'p1');
