@@ -512,6 +512,17 @@
     if (column?.type === 'userRuleActions') return { min: column.width || 190, max: column.width || 220, pad: 0 };
     if (column?.type === 'image') return { min: column.width || 96, max: column.width || 112, pad: 0 };
     if (column?.type === 'matrixCell') return { min: 180, max: 300, pad: 16 };
+    /* Rating cell renders 5 Unicode stars (~14px each = 70px) plus the
+       numeric rating; the text-length estimator undercounts wide glyphs,
+       so this type keeps a rating-specific floor. */
+    if (column?.type === 'rating') return { min: 132, max: 200, pad: 20 };
+    /* Pill-wrapped cells (brand, source, spec, plain text pills) have
+       border+padding chrome the text-length estimator misses — bump the
+       pad so the pill has room on both sides. */
+    if (column?.type === 'brand' || column?.type === 'source' || column?.type === 'spec') {
+      return { min: 40, max: 520, pad: 28 };
+    }
+    if (column?.type === 'price') return { min: 40, max: 200, pad: 16 };
     return { min: 40, max: 520, pad: 16 };
   }
 
