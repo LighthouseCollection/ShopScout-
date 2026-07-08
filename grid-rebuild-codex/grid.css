@@ -40,15 +40,27 @@
   overflow: visible !important;
 }
 
+/* Header: clean white surface with a subtle bottom rule, ink-2 text.
+   Slightly larger than the old 11px mono so column labels are readable
+   without needing to zoom. Small letter-spacing keeps them tidy. */
+.ss-grid-host .slick-header {
+  background: var(--surface, #fff);
+  border-bottom: 1px solid var(--rule, #d1d5db);
+}
+.ss-grid-host .slick-header-columns {
+  background: var(--surface, #fff);
+}
 .ss-grid-host .slick-header-column {
-  background: var(--paper-2, #eaedf1);
-  color: var(--ink-3, #5a6470);
-  font-family: var(--font-mono, ui-monospace, Consolas, monospace);
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  border-right: 1px solid var(--rule, #d1d5db);
+  background: var(--surface, #fff);
+  color: var(--ink-2, #2a3441);
+  font-family: var(--font-body, "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  text-transform: none;
+  border-right: 0;
+  padding-top: 10px;
+  padding-bottom: 10px;
 }
 
 .ss-grid-host .slick-header-column.slick-header-sortable,
@@ -57,34 +69,46 @@
 }
 
 .ss-grid-host .slick-header-column.slick-header-sortable:hover {
-  background: color-mix(in srgb, var(--paper-2, #eaedf1) 76%, var(--primary-tint, #e6eef1));
+  background: var(--paper-2, #eaedf1);
 }
 
 .ss-grid-host .slick-sort-indicator {
-  opacity: 0.72;
+  opacity: 0.55;
+}
+.ss-grid-host .slick-sort-indicator-asc,
+.ss-grid-host .slick-sort-indicator-desc {
+  opacity: 0.9;
+  color: var(--primary, #0b3d4f);
 }
 
-.ss-grid-host .slick-row.odd {
-  background: #f5f5f5;
+/* Rows: white base, subtle hover, ultra-light bottom rule. No zebra —
+   product data grids read better with uniform row backgrounds. */
+.ss-grid-host .slick-row {
+  background: var(--surface, #fff);
+  transition: background 90ms ease;
 }
-
+.ss-grid-host .slick-row.odd,
 .ss-grid-host .slick-row.even {
-  background: #f1f1f1;
+  background: var(--surface, #fff);
+}
+.ss-grid-host .slick-row:hover {
+  background: color-mix(in srgb, var(--primary, #0b3d4f) 5%, var(--surface, #fff));
 }
 
 .ss-grid-host .slick-cell {
   display: flex;
   align-items: center;
-  justify-content: center;
-  border-right: 1px solid var(--rule-soft, #d1d5db);
-  border-bottom: 1px solid var(--rule, #d1d5db);
+  justify-content: flex-start;
+  border-right: 0;
+  border-bottom: 1px solid color-mix(in srgb, var(--rule, #d1d5db) 60%, transparent);
   color: var(--ink, #0f1419);
   font-size: 13px;
-  line-height: 1.35;
+  line-height: 1.4;
   white-space: normal;
   overflow: hidden;
   text-overflow: ellipsis;
   user-select: text;
+  padding: 8px 12px;
 }
 
 .ss-grid-host .slick-cell.active,
@@ -93,6 +117,17 @@
   background: inherit;
   box-shadow: none;
   outline: 0;
+}
+
+/* Fixed-shape cells (checkbox, thumbnail+actions, image) center their
+   content — matches the visual metaphor of an icon/image column. */
+.ss-grid-host .slick-cell.ss-grid-cell-selection,
+.ss-grid-host .slick-cell.ss-grid-cell-image {
+  justify-content: center;
+  padding: 8px 4px;
+}
+.ss-grid-host .slick-cell.ss-grid-cell-title {
+  justify-content: flex-start;
 }
 
 .ss-grid-host .ss-grid-cell-actions {

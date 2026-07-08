@@ -37,14 +37,16 @@ assert.ok(gridCss.includes('.ss-grid-header-thumb') && gridCss.includes('width: 
   'compare headers reserve a 100px-wide thumbnail area');
 assert.ok(!gridCss.includes('#eaeaea'),
   'grid overrides do not use the darker #eaeaea alternating row color');
-assert.ok(/\.ss-grid-host \.slick-row\.odd[\s\S]{0,80}background:\s*#f5f5f5/.test(gridCss),
-  'odd alternating grid rows use the requested #f5f5f5 background');
+/* Zebra rows deliberately removed as part of the rich-grid polish —
+   uniform white rows read better for product data tables. */
+assert.ok(/\.ss-grid-host \.slick-row\.odd,[\s\S]{0,120}background:\s*var\(--surface/.test(gridCss),
+  'grid rows use a uniform white surface — no darker alternating row');
 assert.ok(!gridCss.includes('#e5e7eb'),
   'grid border fallbacks use #d1d5db instead of #e5e7eb');
 assert.ok(/\.ss-grid-host \.slick-cell[\s\S]{0,180}align-items:\s*center/.test(gridCss),
   'grid cells vertically center their contents');
-assert.ok(/\.ss-grid-host \.slick-cell[\s\S]{0,220}justify-content:\s*center/.test(gridCss),
-  'grid cells horizontally center their contents by default');
+assert.ok(/\.ss-grid-host \.slick-cell[\s\S]{0,260}justify-content:\s*flex-start/.test(gridCss),
+  'grid cells left-align content by default (fixed-shape cells override to center)');
 assert.ok(/\.ss-grid-host \.slick-cell[\s\S]{0,520}user-select:\s*text/.test(gridCss),
   'grid cells allow normal browser text selection for copy/paste');
 assert.ok(/\.ss-grid-host \.slick-cell\.ss-grid-cell-title[\s\S]{0,180}justify-content:\s*flex-start/.test(gridCss),
