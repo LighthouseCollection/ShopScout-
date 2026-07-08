@@ -247,7 +247,7 @@ a.ss-grid-logo-token:visited {
 }
 
 .ss-grid-stars {
-  color: var(--accent, #c4661a);
+  color: var(--accent, #ecd496);
   letter-spacing: 0.02em;
   white-space: nowrap;
 }
@@ -443,7 +443,7 @@ a.ss-grid-logo-token:visited {
   padding: 1px 5px;
   border-radius: 999px;
   background: var(--accent-tint, #f7ece0);
-  color: var(--accent, #c4661a);
+  color: var(--accent, #ecd496);
   font-size: 10px;
   line-height: 1.4;
 }

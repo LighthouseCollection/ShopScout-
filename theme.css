@@ -24,7 +24,7 @@
   --primary-tint:  #e6eef1;
   --primary-light: #e6eef1;        /* alias used by legacy popup/comparison code */
   --primary-dark:  #1e2937;
-  --accent:        #c4661a;        /* burnt orange — investigative accent */
+  --accent:        #ecd496;        /* burnt orange — investigative accent */
   --accent-tint:   #f7ece0;
 
   /* Semantic status (verified / listing-only / suspicious) */

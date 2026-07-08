@@ -44,7 +44,7 @@ assert.ok(!html.includes('data-payload-mode='), 'popup gatherer does not include
 assert.ok(!html.includes('id="aiProviderSelect"'), 'popup gatherer does not include AI provider selection');
 assert.ok(!html.includes('ai-providers.js'), 'popup gatherer does not load AI provider helpers');
 assert.ok(html.includes('--primary: #0b3d4f'), 'popup uses the comparison page primary color token');
-assert.ok(html.includes('--accent: #c4661a'), 'popup uses the comparison page accent color token');
+assert.ok(html.includes('--accent: #ecd496'), 'popup uses the comparison page accent color token');
 assert.ok(html.includes('--menu-bg: #1e2937'), 'popup uses the comparison page ribbon background token');
 assert.ok(html.includes('--radius: 4px'), 'popup uses the comparison page compact radius token');
 assert.ok(html.includes('Comparison theme alignment'), 'popup includes the comparison theme alignment layer');

@@ -92,9 +92,43 @@
     return verticalList().find(v => v && v.id === id) || null;
   }
 
+  /* Breadcrumb keyword → Shopify vertical map. Real-world retailer
+     breadcrumbs (Amazon, Walmart) rarely name a Shopify vertical
+     directly — "Automotive > Tools & Equipment > Air Compressors" needs
+     to resolve to "hardware" even though no segment says "hardware".
+     Rules are checked from most-specific segment (last) to least; a
+     later rule can override an earlier default (Tools+Automotive → hardware
+     wins over Automotive → vehicles-parts). Each entry is a case-
+     insensitive substring the segment must contain. */
+  const KEYWORD_VERTICAL_RULES = [
+    /* Hardware — tools & compressors first so Automotive→vehicles-parts
+       doesn't hijack a shop-tool breadcrumb. */
+    ['hardware',            ['air compressor', 'air inflator', 'tire inflator', 'pneumatic', 'welding', 'welder', 'power tool', 'hand tool', 'tools & home improvement', 'tools & equipment', 'drill bit', 'chainsaw', 'grinder ', 'angle grinder']],
+    ['electronics',         ['electronics', 'cell phone', 'cellular phone', 'smartphone', 'computer', 'laptop', 'tablet', 'monitor', 'headphone', 'earbud', 'speaker', 'tv & video', 'television', 'audio', 'video game']],
+    ['cameras-optics',      ['camera', 'lens', 'binocular', 'telescope', 'microscope']],
+    ['apparel-accessories', ['clothing', 'shoes', 'jewelry', 'watches', 'handbag', 'apparel', 'accessories & jewelry']],
+    ['health-beauty',       ['beauty', 'personal care', 'skin care', 'makeup', 'cosmetic', 'health & household', 'vitamin', 'wellness', 'hair care']],
+    ['sporting-goods',      ['sports & outdoors', 'sporting goods', 'fitness', 'exercise', 'camping', 'hiking', 'outdoor recreation', 'bicycle', 'cycling', 'fishing', 'golf']],
+    ['toys-games',          ['toys & games', 'toy', 'board game', 'puzzle', 'action figure', 'dolls']],
+    ['baby-toddler',        ['baby ', 'toddler', 'infant', 'diaper', 'stroller', 'car seat']],
+    ['animals-pet-supplies',['pet supplies', 'pet food', 'dog ', 'cat ', 'aquarium']],
+    ['office-supplies',     ['office products', 'office supplies', 'writing supplies', 'notebook & paper', 'printer & ink']],
+    ['media',               ['books', 'kindle', 'audible', 'movies & tv', 'music, cds']],
+    ['food-beverages-tobacco', ['grocery', 'gourmet food', 'beverage']],
+    ['furniture',           ['furniture', 'sofa', 'mattress', 'bed frame', 'bookshelf']],
+    ['home-garden',         ['home & kitchen', 'home & garden', 'kitchen & dining', 'appliances', 'bedding', 'bath ', 'garden', 'patio, lawn']],
+    ['vehicles-parts',      ['automotive', 'motorcycle', 'car & vehicle', 'auto parts', 'vehicle accessories']],
+    ['luggage-bags',        ['luggage', 'backpack', 'travel gear']],
+    ['arts-entertainment',  ['musical instrument', 'party supplies', 'arts, crafts']],
+    ['business-industrial', ['industrial & scientific', 'lab & scientific']]
+  ];
+
   function verticalIdFromName(value) {
-    const parts = String(value || '').split('>').map(part => part.trim()).filter(Boolean).reverse();
+    const parts = String(value || '').split('>').map(part => part.trim()).filter(Boolean);
     if (!parts.length) return '';
+    const reversed = parts.slice().reverse();
+
+    /* Strategy 1: any segment slug matches a Shopify vertical display name. */
     const idsBySlug = new Map();
     for (const vertical of verticalList()) {
       const id = normalizeId(vertical?.id);
@@ -102,8 +136,21 @@
       idsBySlug.set(slug(vertical.displayName || id), id);
       idsBySlug.set(slug(id), id);
     }
-    const hit = parts.map(slug).map(partSlug => idsBySlug.get(partSlug)).find(Boolean);
-    return hit || '';
+    const slugHit = reversed.map(slug).map(partSlug => idsBySlug.get(partSlug)).find(Boolean);
+    if (slugHit) return slugHit;
+
+    /* Strategy 2: keyword substring match against the full breadcrumb.
+       Walks all rules; the first vertical whose keyword appears in ANY
+       segment wins. Rules are ordered specific → generic. */
+    const availableIds = new Set(Array.from(idsBySlug.values()));
+    const haystack = parts.join(' > ').toLowerCase();
+    for (const [verticalId, keywords] of KEYWORD_VERTICAL_RULES) {
+      if (!availableIds.has(verticalId)) continue;
+      for (const keyword of keywords) {
+        if (haystack.includes(keyword)) return verticalId;
+      }
+    }
+    return '';
   }
 
   function categoryCandidates(product) {

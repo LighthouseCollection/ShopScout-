@@ -56,7 +56,7 @@
     --bg: var(--paper); --surface: var(--card); --surface-muted: var(--paper-2);
     --text: var(--ink); --muted: var(--ink-3); --border: var(--rule); --border-strong: var(--rule-strong);
     --primary: #0b3d4f; --primary-tint: #e6eef1; --primary-light: #e6eef1; --primary-dark: #1e2937;
-    --accent: #c4661a; --accent-tint: #f7ece0; --price: #b45309; --used: #0f6e3d;
+    --accent: #ecd496; --accent-tint: #f7ece0; --price: #b45309; --used: #0f6e3d;
     --danger: #a3201c; --danger-light: #fae3e1;
     --success: #0f6e3d; --success-light: #e3f1e8;
     --ok: #0f6e3d; --ok-tint: #e3f1e8; --ok-rule: #b6d8c2;
