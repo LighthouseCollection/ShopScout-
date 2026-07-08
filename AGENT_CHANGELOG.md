@@ -2366,3 +2366,44 @@ This file is the shared record for Claude and Codex. Append an entry for every m
   - Non-blocking pack fetch (Fix 3, profile-driven)
   - 668bbbd vertical picker page not reviewed yet — will do separately
 
+## 2026-07-08 - Claude review of Codex 668bbbd (vertical picker page)
+
+- Agent: Claude
+- Branch: grid-rebuild-codex
+- Commit: This commit (review only)
+- Status: Approved — closes the Path B gap flagged in the 3561c22 review. One non-blocking Suggestion.
+- Summary:
+  - Reviewed 668bbbd "feat(normalization): add vertical picker page". Codex proactively closed the Path B gap I flagged in the 3561c22 review: user-facing UI for choosing a vertical when auto-detection is uncertain, or explicitly opting into bundled defaults.
+- Files reviewed:
+  - data/productRepo.js (+15 -5) — verticalSkipped field + skip semantic in setListVertical + short-circuit in detectListVertical
+  - normalization/libraries/generatedPacks.js (+7) — public listVerticals() returning safe copies
+  - comparison.html (+4) — ribbon button "Vertical Packs" with 4-square icon
+  - comparison.js (+131) — openVerticalPickerPage, handleVerticalPickerAction, verticalPickerCard renderer, selection + search event handlers, ribbon command wiring
+  - comparison.css (+59) — .vertical-picker-page/-grid/-card/-toolbar styles
+  - tests/generated-packs.test.js (+13), tests/menu-layout.test.js (+8), tests/product-repo.test.js (+21)
+- Validation:
+  - Verified: verticalSkipped field on new list creation (both getOrCreateDefaultList and createList)
+  - Verified: setListVertical(id, {skip: true, source: 'bundled-defaults'}) writes verticalSkipped=true only when NO vertical was chosen; choosing a vertical clears the skip
+  - Verified: detectListVertical short-circuits with return null when list.verticalSkipped is true — user's explicit skip is respected across future adds
+  - Verified: listVerticals() returns Object.assign copies (callers can't mutate the internal cache)
+  - Verified: click handler for card selection is scoped via .closest('.vertical-picker-page') so it doesn't fire on random data-vertical-id attributes elsewhere
+  - Verified: filterVerticalPickerChoices uses .hidden (screen-reader-correct)
+  - Verified: card is a `<button>` (keyboard-accessible)
+- Review / handoff:
+  - Reviewer: Claude
+  - Findings:
+    - Approved: Positioning is right — this IS the Path B I flagged as gap in the 3561c22 review. Codex delivered it proactively without waiting for a formal brief.
+    - Approved: UX flow is clean. Status line shows "Selected: X (source)" or "Suggested: X · N% confidence" or "No reliable vertical detected". User can accept, override, or opt out.
+    - Approved: `verticalSkipped: skipped && !verticalId` semantic — skip only sets if user is actually skipping WITHOUT choosing. Choosing clears any prior skip. Correct precedence.
+    - Approved: setListVertical variants — {verticalId, source: 'manual-picker', confidence: 1} for pick, {skip: true, source: 'bundled-defaults', confidence: 0} for opt-out. Clear intent per shape.
+    - Approved: Pack size shown per card ("X KB pack" or "Bundled defaults until pack is published"). Transparent about download cost.
+    - Approved: Auto-fit grid `repeat(auto-fit, minmax(220px, 1fr))` — responsive. Theme variables used consistently.
+    - Approved: Search filters cards in-place by name + id (case-insensitive). Simple and fast.
+    - Approved: Rebuild is called after selection so the change is visible immediately.
+    - Approved: Ribbon placement on Analyze tab near "Normalize Review" is a defensible choice. View ribbon would also make sense but not a strong preference.
+    - Suggestion (non-blocking): rebuildNormalizationForList is potentially expensive for large lists. Users choosing a new vertical for a 200-product list will see a blank/spinner while all products re-normalize. Wire ShopScoutUI.progress (added in b8e5157) at the handleVerticalPickerAction 'use-selected' + 'use-defaults' paths: `progress.setTask(1, N, 'Applying vertical...'); progress.setTask(2, N, 'Rebuilding normalization for M products...'); progress.done();`. Perfect use case for the newly-added overlay component.
+    - Observation (not a finding): tests cover data-layer (setListVertical accepts skip, verticalSkipped persists) and DOM (ribbon button exists). No end-to-end test that clicking a card + "Use Selected" actually changes list.verticalId. Small functional gap but flow is simple; UI test infrastructure may not warrant the ceremony.
+- Follow-ups:
+  - Wire ShopScoutUI.progress into handleVerticalPickerAction — natural fit for the newly-shipped progress overlay.
+  - Combined with the Must-fix from the b8e5157 review (renderAll should await SS.flushProductRepoMirror), Codex has 2 small follow-ups on this cluster.
+
