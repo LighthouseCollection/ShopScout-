@@ -2564,3 +2564,36 @@ This file is the shared record for Claude and Codex. Append an entry for every m
   - data-v1 GitHub Release publication: pending manual workflow_dispatch (user reported gh CLI not installed). Not a Codex blocker.
 - Follow-ups:
   - Trigger .github/workflows/publish-data-packs.yml via GitHub Actions UI with version_tag=v1 when ready. Extension runtime is fail-safe if URLs are unreachable — no rush, but blocks users from getting richer normalization until it's live.
+
+## 2026-07-08 - Shipping milestone: main fast-forwarded + data-v1 published
+
+- Agent: Claude
+- Branch: grid-rebuild-codex (shared active dev branch, unchanged)
+- Commit: This commit (coordination + status log)
+- Status: FYI for Codex — read before next work
+- Summary:
+  - Session-end shipping milestone. All this session's work is now on both grid-rebuild-codex and main. The vertical pack GitHub Release is live.
+  - Coordination heads-up: main was fast-forwarded to grid-rebuild-codex per user direction. Existing single-branch rule for active dev collaboration (grid-rebuild-codex) is UNCHANGED — Codex should keep committing to grid-rebuild-codex; main just reflects the same tip as a side-effect of shipping.
+- Current state (verified via git rev-parse):
+  - origin/main               = e2e26fe
+  - origin/grid-rebuild-codex = e2e26fe
+  - data-v1 release tag       = e2e26fe
+  - All three point at the same commit — the tip of the session's work.
+- What changed on GitHub:
+  1. Fast-forwarded origin/main from 19b55b4 (pre-session baseline) to e2e26fe. main is no longer stale; anyone visiting the repo or cloning it now sees the current shipping code.
+  2. Manually created a GitHub Release tagged `data-v1` from that commit. All 21 vertical pack JSONs + manifest.json (22 files, 37.6 MB total) are attached as release assets. Publicly downloadable, no auth needed.
+  3. Bundled verticals-index.json points at github.com/LighthouseCollection/ShopScout-/releases/download/data-v1/{vertical}.json which now resolves.
+- What this means for the extension runtime:
+  - Users capturing their first product from any vertical now get a working pack fetch. Extension is fail-safe if the fetch fails (falls back to bundled defaults), but with data-v1 live the fetches now succeed and normalization is richer.
+  - No further ship-side action needed. The workflow at .github/workflows/publish-data-packs.yml remains available for automated future data updates (v2, v3, ...), but is not needed for the current release.
+- Files touched:
+  - AGENT_CHANGELOG.md (this entry only — no code change)
+- Validation:
+  - git rev-parse origin/main == git rev-parse origin/grid-rebuild-codex == commit tagged as data-v1
+  - Local grid-rebuild-codex working tree is clean, in sync with origin
+- Review / handoff:
+  - Reviewer: none (coordination log only)
+  - Codex: keep working on grid-rebuild-codex per AGENTS.md. main is now a mirror of the active tip; no different rules for it.
+- Follow-ups:
+  - None from this milestone. Session work is fully shipped.
+  - Open items on the roadmap remain in their earlier entries: task #70 (ProductSpec consumer migration, pre-existing before this session), possible Track B for ESCI search intent (deferred by design), real Icecat vocabulary generator (deferred, fixture in place), real ESCI parquet generator (deferred, needs parquet dep decision).
