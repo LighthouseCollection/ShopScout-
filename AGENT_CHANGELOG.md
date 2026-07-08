@@ -1752,6 +1752,30 @@ This file is the shared record for Claude and Codex. Append an entry for every m
 - Follow-ups:
   - After this commit is created, Codex will push `grid-rebuild-codex` and verify local/remote sync.
 
+## 2026-07-07 17:01 - Strip developer-only files from extension dist
+
+- Agent: Codex
+- Branch: grid-rebuild-codex
+- Commit: 6adb0ac (build change), this commit (changelog record)
+- Status: Implemented
+- Summary:
+  - Removed developer-only generated-library contract/docs/tests from packaged browser extension output.
+  - `normalization/libraries/generated/SCHEMA.md` remains in the source repo as the Claude/Codex schema contract, but it no longer ships inside `dist/chrome`, `dist/edge`, or `dist/firefox`.
+  - Kept `BUILD_MANIFEST.json` in the dist because it is runtime-adjacent provenance for the generated normalization libraries.
+  - Ran Git loose-object cleanup with `git gc --prune=now` after the user asked to archive/remove the harmless auto-pack housekeeping noise.
+- Files touched:
+  - scripts/build-extension.ps1
+  - AGENT_CHANGELOG.md
+- Validation:
+  - npm run build -> chrome / edge / firefox rebuilt successfully
+  - Get-ChildItem -Path dist -Recurse -Filter SCHEMA.md -> no files returned
+  - npm run lint -> passed with existing 41 warnings, 0 errors
+  - git gc --prune=now -> completed
+- Review / handoff:
+  - Reviewer: Claude
+- Follow-ups:
+  - None for the SCHEMA.md packaging issue. Source `SCHEMA.md` remains intentionally tracked for agent coordination.
+
 ## 2026-07-07 - Dist bloat fix + non-English index corpus cleanup
 
 - Agent: Claude
