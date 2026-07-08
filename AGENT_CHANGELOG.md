@@ -2513,3 +2513,54 @@ This file is the shared record for Claude and Codex. Append an entry for every m
 - Follow-ups or risks:
   - None for this slice.
 
+## 2026-07-08 - Claude review of Codex 23566ec (productRepo as source of truth)
+
+- Agent: Claude
+- Branch: grid-rebuild-codex
+- Commit: This commit (review only)
+- Status: Approved — no Must-fix. Closes all 3 remaining follow-ups from earlier briefs plus a bonus.
+- Summary:
+  - Codex delivered a single focused commit that closes every remaining architectural follow-up:
+    1. Full retirement of chrome.storage.local as product source-of-truth (was: partial debounce)
+    2. Delta SlickGrid updateRow / deleteRow APIs
+    3. In-flight pack fetch dedup (was Suggestion from the 3561c22 review)
+    4. Bonus: AI run history moved out of the shopscout_data blob into shopscout_ai_runs
+  - All 45 tests pass. Approved with a few non-blocking observations.
+- Files reviewed:
+  - utils.js (+139 -47): getData/saveData now check productRepoAvailable() first and route through new getDataFromProductRepo/saveDataToProductRepo helpers. Debounced mirror retained ONLY as legacy fallback when productRepo isn't loaded.
+  - background.js (+139 -22): importScripts adds full data/normalization stack at service worker init. Writes now go through productRepo APIs directly. ensureProductRepoReady memoizes init. AI runs moved to shopscout_ai_runs; per-product aiAnalysis attached via updateProduct with baseRevision.
+  - data/productRepo.js (+12): new replaceProducts(listId, products) API. withListLock, prepareNormalizationForList, per-product normalization, atomic delete+bulkAdd.
+  - grid-rebuild-codex/shopscoutGrid.js (+72 -12): removed mirrorLegacy (chrome.storage.local was writing back through the grid). Added updateRow(product) and deleteRow(productId) with canUseRowDelta guards.
+  - grid-rebuild-codex/slickGridAdapter.js (+16): SlickGrid updateRow/deleteRow methods using canonical dataView.updateItem / dataView.deleteItem.
+  - normalization/libraries/generatedPacks.js (+21): packLoadPromises: Map to dedup in-flight fetches. Concurrent callers get the same promise. Cleaned up via .finally.
+  - comparison.js (+23 -14): removeProduct now tries ShopScoutGrid.deleteRow(id) first; falls back to full renderAll only if delta fails. Removed the chrome.storage.onChanged live re-mirror listener.
+  - popup.js (-16): same live re-mirror listener removed.
+  - shared/edits/ratingWriter.js (+26 -18): updated to use productRepo APIs consistently.
+  - tests: adapter.test.js (+20), generated-packs.test.js (+14), write-through.test.js (+51 -14). Good coverage.
+- Validation:
+  - npm test -> all 45 test files pass on 23566ec (HEAD).
+  - Verified full data flow: user captures product from any source -> background writes directly to productRepo -> dashboard reads productRepo -> data is fresh without any re-mirror step.
+  - Verified pack fetch dedup: concurrent ensureVerticalPackLoaded('electronics') calls resolve from the same shared promise; map entry cleaned up on completion.
+- Review / handoff:
+  - Reviewer: Claude
+  - Findings:
+    - Approved: productRepoAvailable() guard checks 8 required methods. Defensive fallback if any missing.
+    - Approved: saveDataToProductRepo handles rename + create + delete correctly. Iterates desired list names, creates missing ones, replaces products wholesale via replaceProducts, deletes lists absent from the desired set, sets active list at the end.
+    - Approved: replaceProducts is atomic per list via withListLock. Normalization plan runs BEFORE delete so if it throws we don't lose data. Uses prepareNormalizationForList so multi-vertical detection stays consistent with addProducts.
+    - Approved: sameProductList short-circuits unnecessary rewrites via length-first check then JSON.stringify per element. Skipped entirely on length mismatch (common case for add/delete).
+    - Approved: Delta grid APIs return boolean success + callers fall back to renderAll if delta fails. Preserves correctness under mode switches.
+    - Approved: canUseRowDelta explicitly disables delta in matrix mode and when grouping is active — those modes reshape rows so dataView.updateItem would produce inconsistent output.
+    - Approved: In-flight pack fetch dedup is minimal and correct. Memory check first (fast path), then packLoadPromises map, then start-and-store new load. .finally(() => delete) ensures cleanup even on rejection.
+    - Approved: background.js importScripts order is correct: dexie -> db -> state -> normalization stack -> productRepo -> migrate. productRepoReadyPromise memoizes ensureProductRepoReady so concurrent handlers don't double-init.
+    - Approved: AI run history split. Retains legacy read path for one-time migration compat, only writes to new key. 30-run cap preserved. Per-product aiAnalysis attached via updateProduct with baseRevision + source: 'ai-analysis' — respects the revision-safe write contract.
+    - Approved: Removal of chrome.storage.onChanged live re-mirror listeners in both popup.js and comparison.js. With background writing directly to productRepo, the dashboard's own read path already sees fresh data.
+    - Observation (not a finding): In-flight dedup memory check runs BEFORE ensureBundledDataLoaded, so info = getVerticalInfo(id) can return undefined for a cached pack. Current callers only touch packResult.pack; a future caller reading packResult.info could see undefined on the memory path.
+    - Observation (not a finding): updateRow in shopscoutGrid.js rebuilds the full projection to derive the single row shape. It's a delta at the SlickGrid render level, not at the projection level. Still a big win vs full renderAll.
+    - Observation (not a finding): normalizeRepoActiveList calls repo.listLists() twice. Small overhead, defensive against races.
+- Cluster status update: Every remaining follow-up from earlier briefs is now closed:
+  - Full retirement of chrome.storage.local as source-of-truth: DONE (this commit)
+  - Delta SlickGrid updateRow/deleteRow APIs: DONE (this commit)
+  - In-flight pack fetch dedup: DONE (this commit)
+  - data-v1 GitHub Release publication: pending manual workflow_dispatch (user reported gh CLI not installed). Not a Codex blocker.
+- Follow-ups:
+  - Trigger .github/workflows/publish-data-packs.yml via GitHub Actions UI with version_tag=v1 when ready. Extension runtime is fail-safe if URLs are unreachable — no rush, but blocks users from getting richer normalization until it's live.
