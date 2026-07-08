@@ -12,9 +12,9 @@
          calls repo.updateProduct with source: 'myrating-edit'.
          Returns the repo result (extended with currentProduct
          for renderer convenience).
-     mirrorLegacyStorage({ chrome, productId, productUrl, value })
-         updates chrome.storage.local's legacy shopscout_data
-         blob so popup-side reads stay consistent.
+     mirrorLegacyStorage()
+         deprecated no-op retained for older callers. Product data now lives in
+         IndexedDB/productRepo only.
    ============================================================= */
 (function initShopScoutEdits(root) {
   const NS = (root.ShopScoutEdits = root.ShopScoutEdits || {});
@@ -48,24 +48,8 @@
     return Object.assign({ currentProduct: fresh }, result || {});
   }
 
-  async function mirrorLegacyStorage(options) {
-    const opts = options || {};
-    const chrome = opts.chrome;
-    if (!chrome || !chrome.storage || !chrome.storage.local) return;
-    const stored = await chrome.storage.local.get('shopscout_data');
-    const blob = stored.shopscout_data;
-    if (!blob || !blob.lists) return;
-    for (const name of Object.keys(blob.lists)) {
-      const products = blob.lists[name];
-      if (!Array.isArray(products)) continue;
-      const index = products.findIndex(product =>
-        product.id === opts.productId || product.url === opts.productUrl
-      );
-      if (index >= 0) {
-        products[index] = Object.assign({}, products[index], { userRating: opts.value });
-      }
-    }
-    await chrome.storage.local.set({ shopscout_data: blob });
+  async function mirrorLegacyStorage() {
+    return { ok: true, deprecated: true };
   }
 
   Object.assign(NS, { normalizeRating, writeRating, mirrorLegacyStorage });

@@ -16,6 +16,7 @@
   let categoryToVertical = null;
   let bundledLoadPromise = null;
   const memoryPacks = new Map();
+  const packLoadPromises = new Map();
   const enumLookupCache = new Map();
 
   function chromeUrl(path) {
@@ -178,9 +179,8 @@
     return pack && pack.version === 1 && (!pack.vertical?.id || pack.vertical.id === verticalId);
   }
 
-  async function ensureVerticalPackLoaded(verticalId) {
+  async function loadVerticalPack(id) {
     await ensureBundledDataLoaded();
-    const id = normalizeId(verticalId);
     if (!id) return { ok: false, fallback: true, reason: 'missing-vertical' };
     const info = getVerticalInfo(id);
     if (!info) return { ok: false, fallback: true, reason: 'unknown-vertical', verticalId: id };
@@ -207,6 +207,22 @@
       console.warn('ShopScoutGeneratedPacks: pack load failed', id, err);
       return { ok: false, fallback: true, reason: 'fetch-failed', verticalId: id, info };
     }
+  }
+
+  async function ensureVerticalPackLoaded(verticalId) {
+    const id = normalizeId(verticalId);
+    if (!id) return loadVerticalPack(id);
+    if (memoryPacks.has(id)) {
+      await ensureBundledDataLoaded();
+      const info = getVerticalInfo(id);
+      return { ok: true, source: 'memory', verticalId: id, info, pack: memoryPacks.get(id) };
+    }
+    if (packLoadPromises.has(id)) return packLoadPromises.get(id);
+    const promise = loadVerticalPack(id).finally(() => {
+      packLoadPromises.delete(id);
+    });
+    packLoadPromises.set(id, promise);
+    return promise;
   }
 
   function getLoadedPack(verticalId) {
@@ -244,6 +260,7 @@
 
   function _clearMemoryCacheForTest() {
     memoryPacks.clear();
+    packLoadPromises.clear();
     enumLookupCache.clear();
   }
 

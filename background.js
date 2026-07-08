@@ -2,6 +2,27 @@ var chrome = globalThis.browser || globalThis.chrome;
 if (typeof importScripts === 'function' && !globalThis.ShopScoutAI) {
   importScripts('ai-providers.js');
 }
+if (typeof importScripts === 'function' && !globalThis.SSProductRepo) {
+  try {
+    importScripts(
+      'vendor/dexie.min.js',
+      'data/db.js',
+      'state/actions.js',
+      'state/locks.js',
+      'state/appStore.js',
+      'normalization/libraries/defaultRules.js',
+      'normalization/libraries/generatedPacks.js',
+      'normalization/taxonomyBridge.js',
+      'normalization/userRules.js',
+      'normalization/attributes.js',
+      'normalization/matching.js',
+      'data/productRepo.js',
+      'data/migrate.js'
+    );
+  } catch (err) {
+    console.warn('ShopScout product repo load failed in background', err);
+  }
+}
 /* Open*Facts GTIN enrichment helper — exposed on globalThis.SSOpenFactsEnrich. */
 if (typeof importScripts === 'function' && !globalThis.SSOpenFactsEnrich) {
   try { importScripts('data/openFactsEnrich.js'); }
@@ -9,7 +30,9 @@ if (typeof importScripts === 'function' && !globalThis.SSOpenFactsEnrich) {
 }
 
 const STORAGE_KEY = 'shopscout_data';
+const AI_RUNS_KEY = 'shopscout_ai_runs';
 let activeAIAnalysisRun = null;
+let productRepoReadyPromise = null;
 
 // --- Context menus ---
 chrome.runtime.onInstalled.addListener(() => {
@@ -215,6 +238,24 @@ function displayProductNameBg(p) {
 }
 
 async function getShopScoutData() {
+  if (globalThis.SSProductRepo) {
+    const repo = await ensureProductRepoReady();
+    const lists = await repo.listLists();
+    let activeListId = await repo.getActiveListId();
+    let active = lists.find(list => list.id === activeListId) || lists[0] || null;
+    if (!active) {
+      activeListId = await repo.ensureDefaultList();
+      const refreshed = await repo.listLists();
+      active = refreshed.find(list => list.id === activeListId) || refreshed[0] || null;
+    }
+    if (active && active.id !== activeListId) await repo.setActiveListId(active.id);
+    const data = { lists: {}, activeList: active?.name || 'My Products', aiRuns: await loadAIAnalysisRuns() };
+    for (const list of await repo.listLists()) {
+      data.lists[list.name] = await repo.listProducts(list.id);
+    }
+    if (!Object.keys(data.lists).length) data.lists['My Products'] = [];
+    return data;
+  }
   const d = await chrome.storage.local.get(STORAGE_KEY);
   const data = d[STORAGE_KEY] || { lists: { 'My Products': [] }, activeList: 'My Products' };
   if (!data.lists || !Object.keys(data.lists).length) {
@@ -223,6 +264,44 @@ async function getShopScoutData() {
   }
   if (!data.lists[data.activeList]) data.activeList = Object.keys(data.lists)[0];
   return data;
+}
+
+async function ensureProductRepoReady() {
+  if (!globalThis.SSProductRepo) throw new Error('ShopScout product database is unavailable.');
+  if (!productRepoReadyPromise) {
+    productRepoReadyPromise = (async () => {
+      if (globalThis.SSMigrate?.migrateOnce) await globalThis.SSMigrate.migrateOnce();
+      await globalThis.SSProductRepo.ensureDefaultList();
+      return globalThis.SSProductRepo;
+    })();
+  }
+  return productRepoReadyPromise;
+}
+
+async function getActiveRepoList() {
+  const repo = await ensureProductRepoReady();
+  const lists = await repo.listLists();
+  let activeListId = await repo.getActiveListId();
+  let active = lists.find(list => list.id === activeListId) || lists[0] || null;
+  if (!active) {
+    activeListId = await repo.ensureDefaultList();
+    const refreshed = await repo.listLists();
+    active = refreshed.find(list => list.id === activeListId) || refreshed[0] || null;
+  }
+  if (active && active.id !== activeListId) await repo.setActiveListId(active.id);
+  const products = active ? await repo.listProducts(active.id) : [];
+  return { repo, list: active, products };
+}
+
+async function loadAIAnalysisRuns() {
+  const stored = await chrome.storage.local.get([AI_RUNS_KEY, STORAGE_KEY]);
+  if (Array.isArray(stored[AI_RUNS_KEY])) return stored[AI_RUNS_KEY];
+  const legacyRuns = stored[STORAGE_KEY]?.aiRuns;
+  return Array.isArray(legacyRuns) ? legacyRuns : [];
+}
+
+async function saveAIAnalysisRuns(runs) {
+  await chrome.storage.local.set({ [AI_RUNS_KEY]: Array.isArray(runs) ? runs.slice(0, 30) : [] });
 }
 
 // --- Add product (used by context menu) ---
@@ -240,15 +319,11 @@ async function captureCurrentTab(tab) {
     catch (err) { console.warn('Open*Facts enrichment failed', err); }
   }
   product.lastScannedAt = Date.now();
-  const d = await chrome.storage.local.get(STORAGE_KEY);
-  const data = d[STORAGE_KEY] || { lists: { 'My Products': [] }, activeList: 'My Products' };
-  const list = data.lists[data.activeList] || [];
-  const dup = list.find(p => p.url === product.url || (p.source === product.source && p.title === product.title));
-  if (dup && dup.newPrice === product.newPrice) return { ok: false, error: 'Already in list', listName: data.activeList };
-  list.push(product);
-  data.lists[data.activeList] = list;
-  await chrome.storage.local.set({ [STORAGE_KEY]: data });
-  return { ok: true, listName: data.activeList };
+  const { repo, list, products } = await getActiveRepoList();
+  const dup = products.find(p => p.url === product.url || (p.source === product.source && p.title === product.title));
+  if (dup && dup.newPrice === product.newPrice) return { ok: false, error: 'Already in list', listName: list?.name || 'My Products' };
+  await repo.addProduct(list.id, product);
+  return { ok: true, listName: list?.name || 'My Products' };
 }
 
 async function addProduct(tab) {
@@ -345,8 +420,7 @@ function buildPromptInstructionsBg(mode, productCount) {
 
 async function copyForAI(tab, mode) {
   try {
-    const d = await chrome.storage.local.get(STORAGE_KEY);
-    const data = d[STORAGE_KEY] || { lists: { 'My Products': [] }, activeList: 'My Products' };
+    const data = await getShopScoutData();
     const products = data.lists[data.activeList] || [];
     if (!products.length) { showToast(tab.id, 'No products to copy', true); return; }
     const n = products.length;
@@ -486,23 +560,35 @@ function finalizeAIAnalysisRunStatus(run) {
 }
 
 async function saveAIAnalysisRun(data, listName, list, selected, run) {
-  data.aiRuns = Array.isArray(data.aiRuns) ? data.aiRuns : [];
-  data.aiRuns = data.aiRuns.filter(item => item.id !== run.id);
-  data.aiRuns.unshift(run);
-  data.aiRuns = data.aiRuns.slice(0, 30);
+  const runs = Array.isArray(data.aiRuns) ? data.aiRuns.slice() : [];
+  const nextRuns = runs.filter(item => item.id !== run.id);
+  nextRuns.unshift(run);
+  data.aiRuns = nextRuns.slice(0, 30);
 
   for (const { idx } of selected || []) {
     if (!list[idx]) continue;
-    list[idx].aiAnalysis = {
+    const aiAnalysis = {
       runId: run.id,
       updatedAt: run.completedAt,
       status: run.status,
       stages: run.stages
     };
+    list[idx].aiAnalysis = aiAnalysis;
+    if (globalThis.SSProductRepo && list[idx].id) {
+      try {
+        await globalThis.SSProductRepo.updateProduct(list[idx].id, { aiAnalysis }, {
+          listId: list[idx].listId,
+          baseRevision: list[idx]._revision,
+          source: 'ai-analysis'
+        });
+      } catch (err) {
+        console.warn('ShopScout: failed to attach AI analysis to product', err);
+      }
+    }
   }
 
   data.lists[listName] = list;
-  await chrome.storage.local.set({ [STORAGE_KEY]: data });
+  await saveAIAnalysisRuns(data.aiRuns);
 }
 
 async function runAIAnalysis(message = {}) {
@@ -841,8 +927,9 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
 
 async function addProductsFromWindow(windowId) {
   const tabs = await chrome.tabs.query(windowId != null ? { windowId } : { currentWindow: true });
-  const data = await getShopScoutData();
-  const list = data.lists[data.activeList] || [];
+  const { repo, list: activeList, products } = await getActiveRepoList();
+  const list = products.slice();
+  const toAdd = [];
   const seenUrls = new Set();
   const summary = {
     success: true,
@@ -883,6 +970,7 @@ async function addProductsFromWindow(windowId) {
         continue;
       }
       list.push(product);
+      toAdd.push(product);
       summary.added++;
       summary.products.push({ title: product.title, source: product.source, url: product.url });
       await new Promise(r => setTimeout(r, 600));
@@ -892,8 +980,7 @@ async function addProductsFromWindow(windowId) {
     }
   }
 
-  data.lists[data.activeList] = list;
-  if (summary.added) await chrome.storage.local.set({ [STORAGE_KEY]: data });
+  if (toAdd.length) await repo.addProducts(activeList.id, toAdd);
   return summary;
 }
 
@@ -920,18 +1007,14 @@ async function addByUrl(url) {
     }
     product.lastScannedAt = Date.now();
 
-    // Save to storage
-    const d = await chrome.storage.local.get(STORAGE_KEY);
-    const data = d[STORAGE_KEY] || { lists: { 'My Products': [] }, activeList: 'My Products' };
-    const list = data.lists[data.activeList] || [];
+    const { repo, list: activeList, products } = await getActiveRepoList();
+    const list = products;
     const dup = list.find(p => p.url === product.url || (p.source === product.source && p.title === product.title));
     if (dup && dup.newPrice === product.newPrice) {
       await chrome.tabs.remove(tab.id);
       return { success: false, error: 'Same product & price already in list' };
     }
-    list.push(product);
-    data.lists[data.activeList] = list;
-    await chrome.storage.local.set({ [STORAGE_KEY]: data });
+    await repo.addProduct(activeList.id, product);
 
     // Close the background tab
     await chrome.tabs.remove(tab.id);

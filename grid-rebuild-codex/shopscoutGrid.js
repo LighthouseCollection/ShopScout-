@@ -660,17 +660,6 @@
     });
   }
 
-  async function mirrorLegacy(product) {
-    const chrome = root.browser || root.chrome;
-    const editing = root.ShopScoutGridCodexEditing;
-    if (!chrome?.storage?.local || !editing?.mirrorProductIntoLegacyBlob) return;
-    const stored = await chrome.storage.local.get('shopscout_data');
-    const blob = stored.shopscout_data;
-    if (!blob?.lists) return;
-    const next = editing.mirrorProductIntoLegacyBlob(blob, product);
-    await chrome.storage.local.set({ shopscout_data: next });
-  }
-
   async function commitCellEdit(edit) {
     const repo = root.SSProductRepo;
     const editing = root.ShopScoutGridCodexEditing;
@@ -696,8 +685,7 @@
       await refreshGridData();
       return;
     }
-    await mirrorLegacy(result.product);
-    await refreshGridData();
+    if (!await updateRow(result.product)) await refreshGridData();
   }
 
   async function refreshGridData() {
@@ -710,6 +698,60 @@
     if (state.adapter?.update) state.adapter.update(projection);
     const count = projection.productRowCount ?? products.length;
     setStatus(`${count} product${count === 1 ? '' : 's'} loaded`);
+  }
+
+  function canUseRowDelta() {
+    const viewState = ensureStore().getState();
+    return state.adapter
+      && viewState.mode !== 'matrix'
+      && !viewState.group;
+  }
+
+  function rowIdForProduct(product) {
+    return product?._shopScout?.productId || product?.id || '';
+  }
+
+  function rowForProduct(product, products) {
+    const projection = buildProjection(products);
+    const id = product?.id || product?._shopScout?.productId || '';
+    const row = (projection.rows || []).find(candidate => rowIdForProduct(candidate) === id || candidate.id === id);
+    return { projection, row };
+  }
+
+  async function updateRow(product) {
+    if (!product?.id || !canUseRowDelta() || !state.adapter?.updateRow) return false;
+    const index = state.lastProducts.findIndex(item => item.id === product.id);
+    if (index < 0) return false;
+    const nextProducts = state.lastProducts.slice();
+    nextProducts[index] = Object.assign({}, nextProducts[index], product);
+    const { projection, row } = rowForProduct(nextProducts[index], nextProducts);
+    if (!row) return false;
+    const ok = state.adapter.updateRow(row.id, row);
+    if (!ok) return false;
+    state.lastProducts = nextProducts;
+    state.lastProjection = projection;
+    updateRibbonControls(projection);
+    const count = projection.productRowCount ?? nextProducts.length;
+    setStatus(`${count} product${count === 1 ? '' : 's'} loaded`);
+    return true;
+  }
+
+  async function deleteRow(productId) {
+    const id = String(productId || '').trim();
+    if (!id || !canUseRowDelta() || !state.adapter?.deleteRow) return false;
+    const index = state.lastProducts.findIndex(item => item.id === id);
+    if (index < 0) return false;
+    const ok = state.adapter.deleteRow(id);
+    if (!ok) return false;
+    const nextProducts = state.lastProducts.slice();
+    nextProducts.splice(index, 1);
+    const projection = buildProjection(nextProducts);
+    state.lastProducts = nextProducts;
+    state.lastProjection = projection;
+    updateRibbonControls(projection);
+    const count = projection.productRowCount ?? nextProducts.length;
+    setStatus(`${count} product${count === 1 ? '' : 's'} loaded`);
+    return true;
   }
 
   async function handleAction(action, row) {
@@ -834,6 +876,8 @@
       return render();
     },
     openFiltersModal,
-    openColumnsModal
+    openColumnsModal,
+    updateRow,
+    deleteRow
   });
 })(globalThis);

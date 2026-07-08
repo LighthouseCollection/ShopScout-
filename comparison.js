@@ -327,20 +327,6 @@ function bindEvents() {
         renderAiTokenUsageText();
         updateSecondOpinionStageVisibility();
       }
-      /* Background-worker captures (single FAB capture, bulk-tabs scan,
-         add-by-URL, rescan) write directly to chrome.storage.local but
-         can't touch IndexedDB. The dashboard reads from IndexedDB via
-         productRepo, so without this listener those new products are
-         invisible until a full reload. Re-mirror, then refresh the grid. */
-      if (changes.shopscout_data) {
-        try {
-          const next = changes.shopscout_data.newValue;
-          if (next && SS.mirrorToProductRepo) await SS.mirrorToProductRepo(next);
-        } catch (err) { console.warn('Live re-mirror failed', err); }
-        try {
-          await renderAll();
-        } catch (err) { console.warn('Dashboard refresh failed', err); }
-      }
     });
   }
 
@@ -2357,10 +2343,15 @@ async function runConnectedAI(productIndexes, providerId = 'auto', analysisOptio
 async function removeProduct(idx) {
   const products = await getProducts();
   if (idx >= 0 && idx < products.length) {
-    selectedProductIds.delete(productSelectionKey(products[idx], idx));
+    const removed = products[idx];
+    selectedProductIds.delete(productSelectionKey(removed, idx));
     products.splice(idx, 1);
     await saveProducts(products);
-    await renderAll();
+    if (!removed?.id || !await globalThis.ShopScoutGrid?.deleteRow?.(removed.id)) {
+      await renderAll();
+    } else {
+      syncSelectionButtons(products);
+    }
     toast.show('Removed');
   }
 }

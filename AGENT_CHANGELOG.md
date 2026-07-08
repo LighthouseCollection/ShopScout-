@@ -2434,6 +2434,57 @@ This file is the shared record for Claude and Codex. Append an entry for every m
   - Wire ShopScoutUI.progress into handleVerticalPickerAction — natural fit for the newly-shipped progress overlay.
   - Combined with the Must-fix from the b8e5157 review (renderAll should await SS.flushProductRepoMirror), Codex has 2 small follow-ups on this cluster.
 
+## 2026-07-08 00:50 - Retire product chrome.storage source and add grid deltas
+
+- Agent: Codex
+- Branch: grid-rebuild-codex
+- Commit: This commit
+- Status: Implemented; reviewer Claude pending.
+- What changed:
+  - Retired `chrome.storage.local` as the product/list source of truth for normal runtime paths.
+  - Changed `SS.getData()` / `SS.saveData()` / `SS.getProducts()` / `SS.saveProducts()` compatibility APIs to read/write through `SSProductRepo` when the IndexedDB stack is available.
+  - Kept `shopscout_data` only as a legacy fallback/migration input for contexts without productRepo and for reading legacy AI run history during transition.
+  - Added `SSProductRepo.replaceProducts(listId, products)` for list-level replacement without rebuilding through chrome storage.
+  - Updated background capture flows (`captureCurrentTab`, `addByUrl`, `addProductsFromWindow`) to write products directly to productRepo.
+  - Moved AI run history to `shopscout_ai_runs` and attached per-product `aiAnalysis` through `repo.updateProduct`.
+  - Removed popup/dashboard live re-mirror listeners for `shopscout_data`.
+  - Made the old rating writer `mirrorLegacyStorage()` a deprecated no-op.
+  - Added SlickGrid/DataView delta APIs: adapter `updateRow` / `deleteRow`, orchestrator `ShopScoutGrid.updateRow` / `deleteRow`.
+  - Wired inline grid edits through `updateRow` and single delete through `deleteRow` when the active view is the normal ungrouped product table; grouped and compare-matrix views fall back to full render.
+  - Added same-vertical in-flight request de-duplication for generated vertical pack loading.
+  - Considered non-blocking pack fetch: did not change normalization ordering yet because pack data affects deterministic normalization output; implemented safe fetch coalescing first.
+  - Checked `data-v1` release publishing readiness. Local packs and workflow exist, but this machine does not have GitHub CLI or a GitHub token. Publishing `data-v1` requires manual `workflow_dispatch` or authenticated API trigger; pushing the `data` branch would create a `data-{sha}` release, not `data-v1`, so it was not used.
+- Files touched:
+  - `background.js`
+  - `comparison.js`
+  - `data/productRepo.js`
+  - `grid-rebuild-codex/shopscoutGrid.js`
+  - `grid-rebuild-codex/slickGridAdapter.js`
+  - `grid-rebuild-codex/tests/adapter.test.js`
+  - `normalization/libraries/generatedPacks.js`
+  - `popup.js`
+  - `shared/edits/ratingWriter.js`
+  - `tests/generated-packs.test.js`
+  - `tests/write-through.test.js`
+  - `utils.js`
+  - `AGENT_CHANGELOG.md`
+- Validation run:
+  - `node tests\write-through.test.js` -> passed
+  - `node tests\generated-packs.test.js` -> passed
+  - `node grid-rebuild-codex\tests\adapter.test.js` -> passed
+  - `node grid-rebuild-codex\tests\actions.test.js` -> passed
+  - `npm test` -> all 45 test files passed
+  - `npm run syntax` -> passed
+  - `npm run lint` -> passed
+  - `npm run typecheck` -> passed
+  - `npm run build` -> Chrome, Edge, Firefox rebuilt successfully
+- Review status / next reviewer:
+  - Claude to review the storage retirement, grid delta APIs, and generated-pack in-flight coalescing.
+- Follow-ups or risks:
+  - `shopscout_data` remains readable only for legacy migration/fallback; no normal product write path should use it when productRepo is loaded.
+  - `data-v1` vertical-pack release remains untriggered from this machine because `gh`/token are unavailable. Trigger `.github/workflows/publish-data-packs.yml` manually with `version_tag=v1`, then rebuild/update if the generated index needs a release-tag refresh.
+  - Delta row updates intentionally fall back to full render for grouped and comparison-matrix views.
+
 ## 2026-07-08 00:18 - Add progress overlay to vertical picker rebuilds
 
 - Agent: Codex

@@ -4,15 +4,107 @@ window.SS = (() => {
   const STORAGE_KEY = 'shopscout_data';
 
   // --- Storage ---
-  // Legacy shape: { lists: { [listName]: Product[] }, activeList: string }
-  // chrome.storage.local remains the primary store for backwards compatibility.
-  // Writes are mirrored into IndexedDB via SSProductRepo on a short debounce so
-  // repeated add/delete operations do not synchronously rebuild the whole repo.
+  // Legacy compatibility shape: { lists: { [listName]: Product[] }, activeList: string }
+  // Product/list truth is IndexedDB via SSProductRepo. chrome.storage.local is
+  // retained only as a fallback for contexts where the repo stack is not loaded
+  // and for one-time migration of old installs.
   let pendingProductRepoMirror = null;
   let productRepoMirrorTimer = null;
   const PRODUCT_REPO_MIRROR_DELAY_MS = 500;
 
+  function productRepoAvailable() {
+    const repo = globalThis.SSProductRepo;
+    return !!(repo
+      && typeof repo.ensureDefaultList === 'function'
+      && typeof repo.listLists === 'function'
+      && typeof repo.getActiveListId === 'function'
+      && typeof repo.setActiveListId === 'function'
+      && typeof repo.listProducts === 'function'
+      && typeof repo.createList === 'function'
+      && typeof repo.deleteList === 'function'
+      && typeof repo.replaceProducts === 'function');
+  }
+
+  async function normalizeRepoActiveList(lists) {
+    const repo = globalThis.SSProductRepo;
+    let activeListId = await repo.getActiveListId();
+    let active = lists.find(list => list.id === activeListId) || lists[0] || null;
+    if (!active) {
+      const id = await repo.ensureDefaultList();
+      const refreshed = await repo.listLists();
+      active = refreshed.find(list => list.id === id) || refreshed[0] || null;
+    }
+    if (active && active.id !== activeListId) await repo.setActiveListId(active.id);
+    return active;
+  }
+
+  async function getDataFromProductRepo() {
+    const repo = globalThis.SSProductRepo;
+    await repo.ensureDefaultList();
+    let lists = await repo.listLists();
+    const active = await normalizeRepoActiveList(lists);
+    lists = await repo.listLists();
+    const snapshot = { lists: {}, activeList: active?.name || 'My Products' };
+    for (const list of lists) {
+      snapshot.lists[list.name] = await repo.listProducts(list.id);
+    }
+    if (!Object.keys(snapshot.lists).length) {
+      snapshot.lists['My Products'] = [];
+      snapshot.activeList = 'My Products';
+    } else if (!snapshot.lists[snapshot.activeList]) {
+      snapshot.activeList = Object.keys(snapshot.lists)[0];
+    }
+    return snapshot;
+  }
+
+  async function saveDataToProductRepo(data) {
+    const repo = globalThis.SSProductRepo;
+    const legacy = data && typeof data === 'object' ? data : {};
+    const incomingLists = legacy.lists && typeof legacy.lists === 'object' ? legacy.lists : {};
+    let names = Object.keys(incomingLists);
+    if (!names.length) {
+      names = ['My Products'];
+      incomingLists['My Products'] = [];
+    }
+    await repo.ensureDefaultList();
+    let existing = await repo.listLists();
+    const byName = new Map(existing.map(list => [list.name, list]));
+    const desiredNames = new Set(names);
+    for (const name of names) {
+      let list = byName.get(name);
+      if (!list) {
+        const id = await repo.createList(name);
+        list = { id, name };
+        byName.set(name, list);
+      }
+      const nextProducts = Array.isArray(incomingLists[name]) ? incomingLists[name] : [];
+      const currentProducts = await repo.listProducts(list.id);
+      if (!sameProductList(currentProducts, nextProducts)) {
+        await repo.replaceProducts(list.id, nextProducts);
+      }
+    }
+    existing = await repo.listLists();
+    for (const list of existing) {
+      if (!desiredNames.has(list.name)) await repo.deleteList(list.id);
+    }
+    existing = await repo.listLists();
+    const activeName = desiredNames.has(legacy.activeList) ? legacy.activeList : names[0];
+    const active = existing.find(list => list.name === activeName) || existing[0] || null;
+    if (active) await repo.setActiveListId(active.id);
+  }
+
+  function sameProductList(left, right) {
+    const a = Array.isArray(left) ? left : [];
+    const b = Array.isArray(right) ? right : [];
+    if (a.length !== b.length) return false;
+    for (let i = 0; i < a.length; i++) {
+      if (JSON.stringify(a[i] || {}) !== JSON.stringify(b[i] || {})) return false;
+    }
+    return true;
+  }
+
   async function getData() {
+    if (productRepoAvailable()) return getDataFromProductRepo();
     const d = await chrome.storage.local.get(STORAGE_KEY);
     const data = d[STORAGE_KEY] || { lists: { 'My Products': [] }, activeList: 'My Products' };
     if (!data.lists || !Object.keys(data.lists).length) return { lists: { 'My Products': [] }, activeList: 'My Products' };
@@ -20,6 +112,10 @@ window.SS = (() => {
     return data;
   }
   async function saveData(data) {
+    if (productRepoAvailable()) {
+      await saveDataToProductRepo(data);
+      return;
+    }
     await chrome.storage.local.set({ [STORAGE_KEY]: data });
     scheduleProductRepoMirror(data);
   }
@@ -57,16 +153,15 @@ window.SS = (() => {
   /* Mirror the legacy blob into IndexedDB. Replaces lists/products wholesale —
      correct because the legacy code already passes the entire desired state. */
   async function mirrorToProductRepo(legacy) {
+    if (productRepoAvailable()) {
+      await saveDataToProductRepo(legacy);
+      return;
+    }
     const repo = globalThis.SSProductRepo;
     const ssdb = globalThis.SSDB;
     if (!repo || !ssdb) return; // Dexie not loaded (e.g. background service worker)
     const { db, uuid, now } = ssdb;
     const ts = now();
-    /* Track whether we generated any new ids on the chrome.storage side. If we
-       did, write the legacy blob back to chrome.storage so subsequent lookups
-       against the legacy store match the IndexedDB ids. Without this,
-       selection / row-actions can't reconcile the two stores. */
-    let mutatedLegacy = false;
     if (repo.ensureNormalizationReady) {
       try { await repo.ensureNormalizationReady(); }
       catch (err) { console.warn('SS.mirrorToProductRepo: normalization warm-up failed', err); }
@@ -82,7 +177,7 @@ window.SS = (() => {
         if (Array.isArray(products) && products.length) {
           const recs = [];
           for (const p of products) {
-            if (!p.id) { p.id = uuid(); mutatedLegacy = true; }
+            if (!p.id) p.id = uuid();
             const rec = repo.normalizeProductForStorage
               ? repo.normalizeProductForStorage(p, listId)
               : Object.assign({}, p, { listId, capturedAt: p.capturedAt || ts, updatedAt: ts });
@@ -97,32 +192,22 @@ window.SS = (() => {
       }
       if (activeListId) await db.meta.put({ key: 'activeListId', value: activeListId });
     });
-    if (mutatedLegacy) {
-      try { await chrome.storage.local.set({ [STORAGE_KEY]: legacy }); }
-      catch (err) { console.warn('SS.mirrorToProductRepo: legacy write-back failed', err); }
-    }
   }
 
   /* Idempotent bootstrap — call once per page on load.
-     Imports any prior chrome.storage.local data into IndexedDB AND
-     then RE-MIRRORS the current chrome.storage.local blob so the
-     dashboard always shows the latest state. Without the second step,
-     captures made by the background service worker (popup → "Add
-     Products from Open Tabs", FAB, add-by-URL) never reach IndexedDB
-     because migrateOnce is a one-shot — and dashboard reads from
-     IndexedDB. */
+     Imports any prior chrome.storage.local data into IndexedDB on old
+     installs, then ensures the repo has an active list. New writes no longer
+     rebuild IndexedDB from chrome.storage.local. */
   async function bootstrapDataLayer() {
     const migrate = globalThis.SSMigrate;
     if (migrate && migrate.migrateOnce) {
       try { await migrate.migrateOnce(); }
       catch (err) { console.warn('SSMigrate failed', err); }
     }
-    /* Reconcile current chrome.storage.local → IndexedDB. mirrorToProductRepo
-       does a clear-and-rebuild, so it's safe to run on every page load. */
-    try {
-      const data = await getData();
-      if (data) await mirrorToProductRepo(data);
-    } catch (err) { console.warn('SS.bootstrapDataLayer: reconcile failed', err); }
+    if (productRepoAvailable()) {
+      try { await globalThis.SSProductRepo.ensureDefaultList(); }
+      catch (err) { console.warn('SS.bootstrapDataLayer: productRepo init failed', err); }
+    }
   }
 
   // --- Escaping ---

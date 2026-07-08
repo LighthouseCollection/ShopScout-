@@ -349,6 +349,17 @@
     });
   }
 
+  async function replaceProducts(listId, products) {
+    const rows = Array.isArray(products) ? products : [];
+    return withListLock(listId, async () => {
+      const plan = await prepareNormalizationForList(listId, rows);
+      const recs = rows.map((p, index) => normalizeIncoming(p, listId, detectionAt(plan, index)));
+      await db.products.where('listId').equals(listId).delete();
+      if (recs.length) await db.products.bulkAdd(recs);
+      return recs;
+    });
+  }
+
   function cleanPatch(patch) {
     const next = Object.assign({}, patch || {});
     delete next.id;
@@ -675,6 +686,7 @@
     detectListVertical,
     addProduct,
     addProducts,
+    replaceProducts,
     updateProduct,
     removeProduct,
     removeProducts,

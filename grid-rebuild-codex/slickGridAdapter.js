@@ -480,6 +480,8 @@
       renderMissingRuntime(container);
       return {
         update() {},
+        updateRow() { return false; },
+        deleteRow() { return false; },
         destroy() {}
       };
     }
@@ -605,6 +607,20 @@
         if (!itemId || !nextItem || !dataView.getItemById || !dataView.updateItem) return;
         if (!dataView.getItemById(itemId)) return;
         dataView.updateItem(itemId, nextItem);
+      },
+      updateRow(itemId, nextItem) {
+        if (!itemId || !nextItem || !dataView.getItemById || !dataView.updateItem) return false;
+        if (!dataView.getItemById(itemId)) return false;
+        dataView.updateItem(itemId, nextItem);
+        return true;
+      },
+      deleteRow(itemId) {
+        if (!itemId || !dataView.getItemById || !dataView.deleteItem) return false;
+        if (!dataView.getItemById(itemId)) return false;
+        dataView.deleteItem(itemId);
+        if (typeof grid.updateRowCount === 'function') grid.updateRowCount();
+        grid.render();
+        return true;
       },
       flashCell(itemId, field) {
         if (!itemId || !field || !grid.getColumns || !dataView.getRowById) return;

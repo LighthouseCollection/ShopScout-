@@ -1,6 +1,7 @@
-/* Behavioral test for SS.saveData → productRepo write-through.
+/* Behavioral test for IndexedDB-primary product storage.
    We stub chrome.storage.local + the SSDB Dexie surface in memory, then assert
-   that saving the legacy blob populates products/lists in productRepo. */
+   that the legacy SS.getData/saveData compatibility API reads/writes through
+   productRepo instead of treating chrome.storage.local as product truth. */
 const assert = require('assert');
 const fs = require('fs');
 const path = require('path');
@@ -60,11 +61,18 @@ const fakeDb = {
 
 /* Chrome shim */
 const storageBackend = {};
+const storageCalls = { get: [], set: [] };
 const chromeStub = {
   storage: {
     local: {
-      async get(key) { return key in storageBackend ? { [key]: storageBackend[key] } : {}; },
-      async set(obj) { Object.assign(storageBackend, obj); }
+      async get(key) {
+        storageCalls.get.push(key);
+        return key in storageBackend ? { [key]: storageBackend[key] } : {};
+      },
+      async set(obj) {
+        storageCalls.set.push(obj);
+        Object.assign(storageBackend, obj);
+      }
     }
   }
 };
@@ -106,7 +114,6 @@ const SS = ctx.window.SS;
 assert.ok(SS, 'utils.js exposes window.SS');
 assert.ok(typeof SS.saveData === 'function', 'SS.saveData exists');
 assert.ok(typeof SS.bootstrapDataLayer === 'function', 'SS.bootstrapDataLayer exists');
-assert.ok(typeof SS.mirrorToProductRepo === 'function', 'SS.mirrorToProductRepo exists');
 assert.ok(typeof SS.flushProductRepoMirror === 'function', 'SS.flushProductRepoMirror exists for explicit reconciliation');
 
 (async () => {
@@ -125,16 +132,14 @@ assert.ok(typeof SS.flushProductRepoMirror === 'function', 'SS.flushProductRepoM
   };
   await SS.saveData(legacy);
 
-  /* chrome.storage.local still has it */
-  const stored = await chromeStub.storage.local.get('shopscout_data');
-  assert.deepStrictEqual(stored.shopscout_data.activeList, 'Phones', 'chrome.storage.local still primary');
+  assert.strictEqual(
+    storageCalls.set.some(obj => Object.prototype.hasOwnProperty.call(obj, 'shopscout_data')),
+    false,
+    'SS.saveData does not write product data to chrome.storage.local when productRepo is available'
+  );
 
-  assert.strictEqual(memLists.length, 0, 'saveData defers full IndexedDB mirror work');
-  await SS.flushProductRepoMirror();
-
-  /* productRepo has it too */
-  assert.strictEqual(memLists.length, 2, 'two lists mirrored');
-  assert.strictEqual(memProducts.length, 3, 'three products mirrored');
+  assert.strictEqual(memLists.length, 2, 'two lists saved to productRepo immediately');
+  assert.strictEqual(memProducts.length, 3, 'three products saved to productRepo immediately');
 
   /* active list pointer mirrored */
   const activeListId = memMeta.get('activeListId');
@@ -142,16 +147,26 @@ assert.ok(typeof SS.flushProductRepoMirror === 'function', 'SS.flushProductRepoM
   const phones = memLists.find(l => l.id === activeListId);
   assert.strictEqual(phones && phones.name, 'Phones', 'active list points at Phones');
 
-  /* mirror replaces, doesn't append: save again with one list */
+  /* Save replaces, doesn't append: save again with one list */
   await SS.saveData({
     activeList: 'Tablets',
     lists: { 'Tablets': [{ title: 'iPad', source: 'apple', newPrice: 499 }] }
   });
-  assert.strictEqual(memLists.length, 2, 'second save also defers mirror replacement until flushed');
-  await SS.flushProductRepoMirror();
   assert.strictEqual(memLists.length, 1,    'mirror replaces lists');
   assert.strictEqual(memProducts.length, 1, 'mirror replaces products');
   assert.strictEqual(memLists[0].name, 'Tablets', 'new list is Tablets');
 
-  console.log('write-through.test.js: 9 assertions passed');
+  storageBackend.shopscout_data = {
+    activeList: 'Stale',
+    lists: { Stale: [{ title: 'Old chrome row', source: 'stale' }] }
+  };
+  const snapshot = await SS.getData();
+  assert.strictEqual(snapshot.activeList, 'Tablets', 'SS.getData reads active list from productRepo');
+  assert.strictEqual(snapshot.lists.Tablets.length, 1, 'SS.getData snapshots productRepo rows');
+  assert.strictEqual(snapshot.lists.Tablets[0].title, 'iPad', 'SS.getData ignores stale chrome product blob');
+
+  const flushed = await SS.flushProductRepoMirror();
+  assert.strictEqual(flushed, false, 'flushProductRepoMirror is a no-op without queued legacy fallback work');
+
+  console.log('write-through.test.js: 11 assertions passed');
 })().catch(err => { console.error(err); process.exit(1); });

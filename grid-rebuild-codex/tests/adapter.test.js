@@ -61,6 +61,7 @@ let groupingCalls = [];
 let emittedSort = null;
 let destroyed = false;
 let capturedLogoErrorHandler = null;
+const dataViewItems = new Map();
 const eventStub = { subscribe() {} };
 const sortEventStub = { subscribe(fn) { capturedOnSort = fn; } };
 host.addEventListener = function addEventListener(type, fn) {
@@ -72,10 +73,16 @@ ctx.Slick = {
     DataView: function DataView() {
       return {
         beginUpdate() {},
-        setItems() {},
+        setItems(items) {
+          dataViewItems.clear();
+          for (const item of items || []) dataViewItems.set(item.id, item);
+        },
         setGrouping(grouping) { capturedGrouping = grouping; groupingCalls.push(grouping); },
         endUpdate() {},
         sort(comparator) { capturedSortComparator = comparator; },
+        getItemById(id) { return dataViewItems.get(id); },
+        updateItem(id, item) { dataViewItems.set(id, item); },
+        deleteItem(id) { dataViewItems.delete(id); },
         onRowCountChanged: eventStub,
         onRowsChanged: eventStub,
         destroy() { destroyed = true; }
@@ -95,6 +102,7 @@ ctx.Slick = {
       onDblClick: eventStub,
       setSortColumns(columns) { capturedSortColumns = columns; },
       setColumns(columns) { capturedColumns = columns; },
+      updateRowCount() {},
       resizeCanvas() {},
       render() {},
       destroy() {}
@@ -265,6 +273,16 @@ liveInstance.update({
 });
 assert.equal(groupingCalls[groupingCalls.length - 1], null,
   'adapter clears native DataView grouping when the projection is ungrouped');
+assert.equal(liveInstance.updateRow('p1', { id: 'p1', title: 'Gamma' }), true,
+  'adapter can update one SlickGrid DataView row by id');
+assert.equal(dataViewItems.get('p1').title, 'Gamma',
+  'adapter row update writes the next item into the DataView');
+assert.equal(liveInstance.deleteRow('p1'), true,
+  'adapter can delete one SlickGrid DataView row by id');
+assert.equal(dataViewItems.has('p1'), false,
+  'adapter row delete removes the item from the DataView');
+assert.equal(liveInstance.deleteRow('missing'), false,
+  'adapter row delete reports false when the row is not present');
 liveInstance.destroy();
 assert.equal(destroyed, true, 'live instance still destroys the DataView');
 

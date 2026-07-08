@@ -31,22 +31,6 @@ async function init() {
   await renderListSelector();
   await renderProducts();
   bindEvents();
-  /* When the background service worker writes new products to
-     chrome.storage.local (single capture, bulk-tabs scan, add-by-URL,
-     rescan), re-mirror them into IndexedDB and refresh the popup
-     list. Without this, the bulk-tabs count says "added 26" but the
-     popup view stays at the old count until the popup is reopened. */
-  if (chrome.storage?.onChanged) {
-    chrome.storage.onChanged.addListener(async (changes, areaName) => {
-      if (areaName !== 'local' || !changes.shopscout_data) return;
-      try {
-        const next = changes.shopscout_data.newValue;
-        if (next && SS.mirrorToProductRepo) await SS.mirrorToProductRepo(next);
-      } catch (err) { console.warn('Popup live re-mirror failed', err); }
-      try { await renderProducts(); }
-      catch (err) { console.warn('Popup refresh failed', err); }
-    });
-  }
 }
 
 // --- List management ---

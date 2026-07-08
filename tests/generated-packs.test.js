@@ -147,12 +147,26 @@ const bundled = {
 
   P._clearMemoryCacheForTest();
   await meta.delete('normalizationVerticalPack:electronics');
+  fetchCalls = 0;
+  const duplicateConcurrent = await Promise.all([
+    P.ensureVerticalPackLoaded('electronics'),
+    P.ensureVerticalPackLoaded('electronics')
+  ]);
+  assert.strictEqual(duplicateConcurrent[0].ok, true, 'first same-vertical concurrent pack load succeeds');
+  assert.strictEqual(duplicateConcurrent[1].ok, true, 'second same-vertical concurrent pack load succeeds');
+  assert.strictEqual(fetchCalls, 1, 'same-vertical concurrent pack loads share one fetch');
+
+  P._clearMemoryCacheForTest();
+  await meta.delete('normalizationVerticalPack:electronics');
+  await meta.delete('normalizationVerticalPack:furniture');
+  fetchCalls = 0;
   const concurrent = await Promise.all([
     P.ensureVerticalPackLoaded('electronics'),
     P.ensureVerticalPackLoaded('furniture')
   ]);
   assert.deepStrictEqual(concurrent.map(item => item.verticalId).sort(), ['electronics', 'furniture'],
     'concurrent pack loads resolve independently for multiple verticals');
+  assert.strictEqual(fetchCalls, 2, 'different vertical concurrent pack loads fetch each required pack once');
   assert.strictEqual(P.lookupEnum('furniture', 'Upholstery Material', 'pleather').normalized, 'Faux Leather',
     'second vertical pack vocabulary remains addressable after concurrent load');
 
