@@ -93,6 +93,22 @@
     return titleCase(field);
   }
 
+  /* True when a cell has some kind of real content the grid can display.
+     Handles plain strings, numbers, and the matrix-cell object shape
+     ({ value, corrected, raw, missing }). Treats empty strings, hyphens,
+     null/undefined, and { missing: true } as "no value". */
+  function hasNonEmptyCellValue(value) {
+    if (value == null) return false;
+    if (typeof value === 'object' && !Array.isArray(value)) {
+      if (value.missing) return false;
+      const s = String(value.value ?? value.corrected ?? value.raw ?? '').trim();
+      return s.length > 0 && s !== '-';
+    }
+    if (Array.isArray(value)) return value.length > 0;
+    const s = String(value).trim();
+    return s.length > 0 && s !== '-';
+  }
+
   function removedColumnSet(viewState) {
     return new Set((Array.isArray(viewState?.removedColumns) ? viewState.removedColumns : [])
       .map(String)
@@ -381,8 +397,20 @@
       editable: true,
       specKey: field.slice(5)
     }));
-    const allColumns = BASE_COLUMNS.concat(specColumns, [ACTIONS_COLUMN])
+    const allColumnsRaw = BASE_COLUMNS.concat(specColumns, [ACTIONS_COLUMN])
       .filter(column => column.required || !removed.has(column.id));
+    /* Auto-hide fields that are empty across every product in the current
+       view. A column that no row has any value for adds nothing but noise
+       to the default layout — the user can un-hide it from the columns
+       modal if they want to see the blanks. Required / fixed-shape columns
+       are exempt. */
+    const allColumns = allColumnsRaw.map(column => {
+      if (column.required || column.type === 'selection' || column.type === 'image' || column.type === 'actions') return column;
+      const field = column.field || column.id;
+      const hasAny = rows.some(row => hasNonEmptyCellValue(row?.[field]));
+      if (hasAny) return column;
+      return Object.assign({}, column, { defaultHidden: true });
+    });
     const filteredRows = applyFilters(rows, viewState.filters, scope);
     const sortedRows = applySort(filteredRows, viewState.sort);
     const grouping = viewState.group

@@ -121,10 +121,12 @@ const rowsProjection = projections.buildProductsRowsProjection(products, {
 
 assert.equal(rowsProjection.mode, 'productsRows');
 assert.deepEqual(
-  rowsProjection.columns.map(column => column.id).slice(0, 9),
-  ['select', 'thumb', 'title', 'brand', 'newPrice', 'modelName', 'rating', 'notes', 'spec:battery life'],
-  'products-as-rows hides Source from the default visible columns'
+  rowsProjection.columns.map(column => column.id).slice(0, 8),
+  ['select', 'thumb', 'title', 'brand', 'newPrice', 'modelName', 'rating', 'spec:battery life'],
+  'products-as-rows hides Source AND any all-empty column (fixtures have no notes value) from the default view'
 );
+assert.ok(rowsProjection.allColumns.some(column => column.id === 'notes'),
+  'Notes remains available in the columns modal even when hidden because no product currently has a value');
 assert.ok(rowsProjection.allColumns.some(column => column.id === 'source'),
   'Source remains available in the columns modal even when hidden by default');
 assert.ok(!rowsProjection.columns.some(column => column.id === 'source'),
