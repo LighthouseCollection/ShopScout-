@@ -42,6 +42,15 @@ $targets = @(
   @{ Name = 'firefox'; Manifest = 'manifest.firefox.json' }
 )
 
+# Patterns to strip from the copied dist. Recursive copies of runtime dirs
+# pull in developer-only files (tests, READMEs, SCHEMA.md) that are not
+# referenced by any manifest, HTML page, or runtime script and should not
+# ship in the extension package. BUILD_MANIFEST.json IS kept because it
+# carries source fingerprints and generator provenance for the generated
+# libraries.
+$distExcludeFilePatterns = @('*.test.js', 'README.md', 'SCHEMA.md')
+$distExcludeDirNames     = @('tests')
+
 New-Item -ItemType Directory -Force -Path $dist | Out-Null
 
 foreach ($target in $targets) {
@@ -70,6 +79,19 @@ foreach ($target in $targets) {
   }
 
   Copy-Item -LiteralPath (Join-Path $root $target.Manifest) -Destination (Join-Path $outDir 'manifest.json')
+
+  # Strip developer-only files (tests, READMEs, contract docs) from the
+  # copied dist. These come along for the ride when the runtime dirs are
+  # copied recursively but are not runtime-referenced.
+  foreach ($dirName in $distExcludeDirNames) {
+    Get-ChildItem -LiteralPath $outDir -Directory -Recurse -Force |
+      Where-Object { $_.Name -eq $dirName } |
+      ForEach-Object { Remove-Item -LiteralPath $_.FullName -Recurse -Force }
+  }
+  foreach ($pattern in $distExcludeFilePatterns) {
+    Get-ChildItem -LiteralPath $outDir -File -Recurse -Force -Filter $pattern |
+      ForEach-Object { Remove-Item -LiteralPath $_.FullName -Force }
+  }
 
   Write-Host "Built $($target.Name) extension at $outDir"
 }
