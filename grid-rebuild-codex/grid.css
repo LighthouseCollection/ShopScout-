@@ -20,9 +20,24 @@
 }
 
 .ss-grid-host {
-  height: calc(100vh - 250px);
   min-height: 0;
   width: 100%;
+}
+
+/* Kill SlickGrid's internal scrollbars. The host is sized to full content
+   height by applyHostHeight, so the viewport doesn't need vertical scroll;
+   the browser page handles it. Horizontal overflow goes to the page too
+   via overflow-x: visible on the viewport — many columns push out into
+   page-level horizontal scroll instead of a table-internal scrollbar. */
+.ss-grid-host .slick-viewport,
+.ss-grid-host .slick-viewport-top,
+.ss-grid-host .slick-viewport-bottom {
+  overflow: visible !important;
+}
+.ss-grid-host .slick-pane,
+.ss-grid-host .slick-pane-top,
+.ss-grid-host .slick-pane-bottom {
+  overflow: visible !important;
 }
 
 .ss-grid-host .slick-header-column {

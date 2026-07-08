@@ -333,24 +333,18 @@
     const field = String(value.field || '').replace(/^spec:/, '');
     if (shown && !corrected && field === 'brand') return htmlForBrand(shown);
     if (shown && !corrected && field === 'source') return htmlForSource(shown, { source: shown, url: value.url });
-    const sourceTitle = Array.isArray(value.sources) && value.sources.length
-      ? ` title="${escAttr(value.sources.join(', '))}"`
-      : '';
     const confidence = typeof value.confidence === 'number'
       ? `<span class="ss-grid-confidence">${Math.round(value.confidence * 100)}%</span>`
-      : '';
-    const source = Array.isArray(value.sources) && value.sources.length
-      ? `<span class="ss-grid-source-dot"${sourceTitle}>source</span>`
       : '';
     if (corrected) {
       const correctedPills = pillsHtml(corrected, { type: 'matrixCell' }, value.field);
       return `<span class="ss-grid-matrix-cell"><span class="ss-grid-corrected">${correctedPills || esc(corrected)}</span>`
-        + `${raw ? `<span class="ss-grid-was">was ${esc(raw)}</span>` : ''}${confidence}${source}</span>`;
+        + `${raw ? `<span class="ss-grid-was">was ${esc(raw)}</span>` : ''}${confidence}</span>`;
     }
     const shownHtml = shown
       ? (pillsHtml(shown, { type: 'matrixCell' }, value.field) || esc(shown))
       : '<span class="ss-grid-empty">-</span>';
-    return `<span class="ss-grid-matrix-cell"><span>${shownHtml}</span>${confidence}${source}</span>`;
+    return `<span class="ss-grid-matrix-cell"><span>${shownHtml}</span>${confidence}</span>`;
   }
 
   function cellFormatter(row, cell, value, column, item) {
@@ -803,11 +797,9 @@
       }
     });
 
-    grid.onDblClick.subscribe((_event, args) => {
-      const item = dataView.getItem(args.row);
-      if (item?.__group || item?.__groupTotals) return;
-      if (typeof opts.onAction === 'function') opts.onAction('open', item);
-    });
+    /* Double-click open intentionally left unbound — accidental double
+       clicks were opening the split product-detail page. Users trigger
+       Open via the ↗ row-action button instead. */
 
     applyProjection(dataView, grid, projection);
 

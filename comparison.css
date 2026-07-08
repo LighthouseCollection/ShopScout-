@@ -2891,16 +2891,32 @@ body.is-info-page .content { display: block; padding: 18px 22px 48px; }
   margin-top: 3px;
 }
 
+/* Normalization review + user rules use the same pill shape as the main
+   grid (rounded rectangle, outlined + shaded) so the visual language is
+   consistent across every table. */
 .normalization-review-raw,
 .normalization-review-normal,
 .normalization-review-reason {
   display: inline-flex;
   align-items: center;
   width: fit-content;
-  border-radius: 999px;
-  padding: 3px 8px;
-  background: #eef5f7;
-  color: var(--primary);
+  border-radius: 6px;
+  padding: 2px 8px;
+  border: 1px solid hsl(212 55% 62%);
+  background: hsl(212 65% 95%);
+  color: hsl(212 60% 32%);
+  font-size: 12px;
+  font-weight: 500;
+}
+.normalization-review-raw {
+  border-color: hsl(4 60% 62%);
+  background: hsl(4 70% 95%);
+  color: hsl(4 65% 36%);
+}
+.normalization-review-reason {
+  border-color: hsl(38 65% 52%);
+  background: hsl(38 80% 92%);
+  color: hsl(38 75% 30%);
 }
 
 .normalization-review-arrow {
@@ -2909,13 +2925,17 @@ body.is-info-page .content { display: block; padding: 18px 22px 48px; }
   color: var(--ink-4);
 }
 
-.normalization-review-table code {
+.normalization-review-table code,
+.ss-grid-host code {
   display: inline-block;
-  border: 1px solid var(--rule-soft, #d1d5db);
-  border-radius: var(--radius);
-  padding: 2px 6px;
-  background: var(--paper);
-  color: var(--ink-2);
+  border: 1px solid hsl(215 15% 60%);
+  border-radius: 6px;
+  padding: 2px 8px;
+  background: hsl(215 18% 93%);
+  color: hsl(215 20% 32%);
+  font-size: 12px;
+  font-weight: 500;
+  font-family: inherit;
 }
 
 .normalization-review-actions {
