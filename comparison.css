@@ -766,7 +766,8 @@
   .topbar { display: block; min-height: 0; padding: 0; background: transparent; color: var(--ink); box-shadow: none; border: 0; }
   .ribbon-shell { background: #fafbfc; border-bottom: 1px solid var(--rule); color: var(--ink); }
   .ribbon-tabs { min-height: 46px; padding: 0 18px; background: var(--menu-bg); color: var(--menu-fg); display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 18px; }
-  .ribbon-brand { padding-right: 18px; border-right: 1px solid var(--menu-divider); color: var(--menu-fg-bright); font-family: var(--font-display); font-size: 17px; font-weight: 800; white-space: nowrap; }
+  .ribbon-brand { padding-right: 18px; border-right: 1px solid var(--menu-divider); color: var(--menu-fg-bright); font-family: var(--font-display); font-size: 17px; font-weight: 800; white-space: nowrap; display: inline-flex; align-items: baseline; gap: 6px; }
+  .ribbon-brand .build-tag { font-family: var(--font-mono); font-size: 10px; font-weight: 500; letter-spacing: 0.02em; color: color-mix(in srgb, var(--menu-fg-bright) 55%, transparent); }
   .ribbon-tab-list { display: flex; justify-content: center; align-items: stretch; gap: 2px; min-width: 0; }
   .ribbon-tab { height: 46px; padding: 0 14px; border: 0; border-bottom: 3px solid transparent; background: transparent; color: var(--menu-fg); font-size: 12px; font-weight: 650; cursor: pointer; }
   .ribbon-tab:hover { background: var(--menu-btn-bg-hover); color: var(--menu-fg-bright); }

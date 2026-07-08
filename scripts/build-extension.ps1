@@ -4,6 +4,16 @@ $ErrorActionPreference = 'Stop'
 $root = Split-Path -Parent $PSScriptRoot
 $dist = Join-Path $root 'dist'
 
+# Build stamp: package version + short git SHA + UTC timestamp.
+# Injected into popup.html + comparison.html so the user can visually
+# confirm which build is loaded in Chrome/Edge/Firefox.
+$pkgVersion = (Get-Content -Raw -LiteralPath (Join-Path $root 'package.json') | ConvertFrom-Json).version
+try {
+  $shortSha = (& git -C $root rev-parse --short HEAD 2>$null).Trim()
+  if (-not $shortSha) { $shortSha = 'nogit' }
+} catch { $shortSha = 'nogit' }
+$buildStamp = "v$pkgVersion.$shortSha"
+
 # Flat files copied into each browser dist as-is.
 $runtimeFiles = @(
   'ai-provider-guide.html',
@@ -92,5 +102,20 @@ foreach ($target in $targets) {
       ForEach-Object { Remove-Item -LiteralPath $_.FullName -Force }
   }
 
-  Write-Host "Built $($target.Name) extension at $outDir"
+  # Stamp the build tag into every HTML file that contains the placeholder
+  # `data-build-tag>dev`. Any file whose header includes that marker gets
+  # the current version+SHA, so the user can visually verify the loaded
+  # build in Chrome/Edge/Firefox.
+  foreach ($htmlName in @('popup.html', 'comparison.html')) {
+    $htmlPath = Join-Path $outDir $htmlName
+    if (Test-Path -LiteralPath $htmlPath) {
+      $content = Get-Content -Raw -LiteralPath $htmlPath
+      $stamped = $content.Replace('data-build-tag>dev<', "data-build-tag>$buildStamp<")
+      if ($stamped -ne $content) {
+        Set-Content -LiteralPath $htmlPath -Value $stamped -NoNewline -Encoding utf8
+      }
+    }
+  }
+
+  Write-Host "Built $($target.Name) extension at $outDir ($buildStamp)"
 }
