@@ -21,6 +21,10 @@ assert.ok(
   /async function renderAll[\s\S]{0,500}ShopScoutGrid/.test(source),
   'renderAll delegates to globalThis.ShopScoutGrid (the new-grid mount point)'
 );
+assert.ok(
+  /async function renderAll[\s\S]{0,500}flushProductRepoMirror[\s\S]{0,500}grid\.render/.test(source),
+  'renderAll flushes pending productRepo mirrors before the grid reads IndexedDB'
+);
 
 /* ---- Old grid HTML is gone ---------------------------------- */
 assert.ok(!cmpHtml.includes('id="dbView"'),       '#dbView is removed');

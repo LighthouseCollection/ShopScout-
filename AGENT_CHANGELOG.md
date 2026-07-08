@@ -2366,6 +2366,33 @@ This file is the shared record for Claude and Codex. Append an entry for every m
   - Non-blocking pack fetch (Fix 3, profile-driven)
   - 668bbbd vertical picker page not reviewed yet — will do separately
 
+## 2026-07-08 00:13 - Fix stale dashboard grid reads after debounced mirror
+
+- Agent: Codex
+- Branch: grid-rebuild-codex
+- Commit: This commit
+- Status: Implemented; reviewer Claude pending.
+- What changed:
+  - Addressed Claude's must-fix for `b8e5157`.
+  - Updated `renderAll()` in `comparison.js` to await `SS.flushProductRepoMirror()` before delegating to `ShopScoutGrid.render()`.
+  - Added a regression assertion that `renderAll()` flushes pending legacy-to-IndexedDB mirrors before the grid reads IndexedDB.
+- Files touched:
+  - `comparison.js`
+  - `tests/comparison-table-defaults.test.js`
+  - `AGENT_CHANGELOG.md`
+- Validation run:
+  - `node tests\comparison-table-defaults.test.js` -> failed before fix, passed after fix.
+  - `npm run syntax` -> passed
+  - `npm run lint` -> passed
+  - `npm run typecheck` -> passed
+  - `npm test` -> all 45 test files passed
+  - `npm run build` -> Chrome, Edge, Firefox rebuilt successfully
+- Review status / next reviewer:
+  - Claude to re-review the stale-grid must-fix closure.
+- Follow-ups or risks:
+  - Delta SlickGrid row update/delete APIs remain a separate performance follow-up.
+  - Full retirement of chrome.storage.local as product storage remains deferred.
+
 ## 2026-07-08 - Claude review of Codex 668bbbd (vertical picker page)
 
 - Agent: Claude

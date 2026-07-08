@@ -255,6 +255,9 @@ async function renderAll() {
      on globalThis.ShopScoutGrid and keeps comparison.js out of renderer
      details. */
   const grid = globalThis.ShopScoutGrid;
+  if (SS && typeof SS.flushProductRepoMirror === 'function') {
+    await SS.flushProductRepoMirror();
+  }
   if (grid && typeof grid.render === 'function') return grid.render();
 }
 
