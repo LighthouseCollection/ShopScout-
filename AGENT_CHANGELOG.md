@@ -2301,3 +2301,68 @@ This file is the shared record for Claude and Codex. Append an entry for every m
   - Delta SlickGrid row update/delete APIs remain a separate follow-up.
   - Non-blocking vertical pack fetch remains profile-driven and was not changed in this slice.
 
+## 2026-07-08 - Claude review of Codex f95ee43 + b8e5157
+
+- Agent: Claude
+- Branch: grid-rebuild-codex
+- Commit: This commit (review only)
+- Status: f95ee43 approved as-is; b8e5157 approved with 1 Must-fix + 1 Suggestion
+- Summary:
+  - Reviewed both commits Codex shipped in response to the multi-vertical brief (ae63236) and the perf/quota/progress brief (97a2d0e). All 45 tests pass on both commits. Verified against each item of both design briefs.
+- Files reviewed:
+  - f95ee43: AGENT_CHANGELOG.md, comparison.js (small), data/productRepo.js (+171 -66), normalization/matching.js (+20), tests × 3 (+212)
+  - b8e5157: manifest.json, manifest.firefox.json, utils.js (+41), popup.js (progress wiring), popup.html (script tag), ui/progressOverlay.js (new 63 lines), ui/ui-core.css (+48), tests × 4 (+34)
+- Validation:
+  - npm test -> all 45 test files pass on b8e5157 (HEAD).
+  - Verified manifest permissions: both manifests now include "unlimitedStorage".
+  - Verified new list schema: primaryVerticalId, primaryVerticalSource, primaryVerticalConfidence, verticalsSeen[], verticalSkipped.
+  - Verified detection loop is per-product (detectVerticalForProducts([candidate]) per row).
+  - Verified pack loading uses Promise.all over uniqueVerticalIds(plan).
+  - Verified matching.js has buildSubstituteIndexes (pure) + mergeSubstituteIndexes (additive) so multiple packs' ESCI data accumulates without clobbering.
+
+### Review of f95ee43 (multi-vertical support) — approved
+
+  - Findings:
+    - Approved: Schema rename verticalId -> primaryVerticalId + verticalsSeen[] matches brief item 1.
+    - Approved: normalizeVerticalsSeen(list) folds legacy verticalId into the array on read — soft-migration handling even though user said existing lists retired. Nice defensive touch.
+    - Approved: primaryVerticalId(list) / primaryVerticalSource(list) / primaryVerticalConfidence(list) read either new or legacy field. Backward-compat during transition.
+    - Approved: detectListVertical now returns an ARRAY of per-product detections (matches brief item 2). Primary vertical is set from FIRST successful detection but NOT overwritten by later detections — respects the brief's "primary stays; verticalsSeen accumulates" contract.
+    - Approved: prepareNormalizationForList returns {primaryDetection, perProductDetections} and fetches all unique verticals in parallel via Promise.all (brief item 3).
+    - Approved: normalizeIncoming(product, listId, detectionAt(plan, index)) — per-product vertical id flows into _normalizationContext.vertical (brief item 4).
+    - Approved: matching.js refactor is clean. buildSubstituteIndexes builds indexes from any payload (pure). mergeSubstituteIndexes merges into the module-level state (additive). loadEsciSubstitutes retains the "replace" semantic for backward compat. loadVerticalPackSignals now uses merge — multiple packs' ESCI data accumulates. Correct semantics for mixed-vertical lists.
+    - Observation (not a finding): the detection loop calls packs.detectVerticalForProducts([candidate]) per iteration. Slightly wasteful (that function internally loops too), but semantically correct. Fine at typical list sizes.
+
+### Review of b8e5157 (perf + progress) — approved with 1 Must-fix + 1 Suggestion
+
+  - Findings:
+    - Approved: unlimitedStorage in BOTH manifests — brief Fix 1 done exactly as briefed. Immediate quota-crash fix.
+    - Approved: Debounced mirror pattern (500 ms) — scheduleProductRepoMirror -> timer -> flushProductRepoMirror. Multiple rapid saves coalesce. pendingProductRepoMirror holds latest state so flush always uses newest data. timer.unref() guard for Node tests. Good implementation.
+    - Approved: flushProductRepoMirror exposed on SS namespace — enables explicit reconciliation from callers.
+    - Approved: Progress overlay API (start({title}) -> {setTask, done, fail}) matches brief item 5 spec exactly.
+    - Approved: Accessibility done right — role="status" aria-live="polite" on overlay, role="progressbar" aria-valuemin/max/now on meter.
+    - Approved: z-index: 10020 — above modals (usually 10000). Correct stacking.
+    - Approved: Responsive card: width: min(400px, calc(100vw - 32px)). Works in narrow popup and wide dashboard.
+    - Approved: done() is idempotent-safe (checks parentNode before removing).
+    - Approved: Popup wiring in addFromTab has 5 explicit progress steps (read tab -> check verification -> parse -> check list -> save). Progress done() called on all early-return branches. fail() + done() both called in error handler — clean cleanup.
+    - Approved: Fallback startProgress(title) returns no-op object if ShopScoutUI.progress not loaded. Graceful degradation.
+    - Approved: Test write-through.test.js extended to specifically verify the deferred-mirror behavior (memLists.length === 0 before flush, === N after). Codex clearly understood the deferred semantics.
+
+    - Must-fix: Stale grid reads after debounced saveData in dashboard flow.
+      - Before b8e5157, saveData awaited mirrorToProductRepo, so callers could immediately renderAll() and the grid read fresh IndexedDB.
+      - Now saveData schedules the mirror for 500 ms later without awaiting.
+      - comparison.js still does the classic sequence at 4+ sites (removeProduct, deleteSelectedProducts, list-switch, import-clipboard): `await saveProducts(products); await renderAll();` — renderAll reads productRepo via SlickGrid, sees STALE data for up to 500 ms.
+      - Result: user deletes a row -> row remains visible for up to 500 ms -> confusing UX. Same for add/import.
+      - The popup flow is NOT affected because popup renders from chrome.storage.local directly, not from productRepo.
+      - Recommended fix: change renderAll() in comparison.js to `await SS.flushProductRepoMirror?.(); return grid.render();` — flushes before rendering. Covers all callers automatically. The 500 ms debounce still helps background/bulk paths where renderAll isn't called after every save.
+
+    - Suggestion (non-blocking): ssui-progress-overlay--error class is added on fail(message) but I could not confirm a --error red-tinted CSS rule from the visible diff. If missing, error state is functionally invisible except for the message text. Also — fail() doesn't auto-remove the overlay; callers must invoke done() after. Popup.js correctly does both, but if a future caller forgets done(), the failed overlay hangs. Consider auto-dismissing on fail after a short delay, or documenting the "fail + done" pattern in the file header.
+
+- Ownership/handoff:
+  - Codex: address the Must-fix (option 1 recommended). Optional: verify --error CSS + auto-dismiss on fail. Then push.
+  - Claude: re-review after Codex ships the fix.
+- Follow-ups (still open):
+  - Full retirement of chrome.storage.local as source-of-truth (partial fix in place)
+  - Delta SlickGrid updateRow/deleteRow APIs (Fix 4 from earlier brief)
+  - Non-blocking pack fetch (Fix 3, profile-driven)
+  - 668bbbd vertical picker page not reviewed yet — will do separately
+
