@@ -2909,3 +2909,35 @@ This file is the shared record for Claude and Codex. Append an entry for every m
   - Notes: This is the first focused settings cleanup after the true SlickGrid conversions.
 - Follow-ups or risks:
   - Further settings work may still be needed if the user wants a deeper provider-card layout redesign beyond heading/status cleanup.
+
+## 2026-07-08 11:21 -07:00 - Codex settings standalone shell consolidation
+
+- Agent: Codex
+- Branch: grid-rebuild-codex
+- Commit: This commit
+- Status: Implemented; ready for Claude review.
+- Summary:
+  - Continued the settings cleanup cluster by eliminating standalone/embedded settings drift.
+  - Replaced standalone `settings.html` duplicated settings form markup with a thin `#settingsMount` wrapper that uses `ShopScoutSettings.mount()`.
+  - Added a standalone-only `Back to Products` handler while leaving embedded dashboard navigation owned by `comparison.js`.
+  - Added standalone CSS for the shared dashboard settings shell so provider setup, left navigation, setup guide, quick capture, and Open*Facts panels render from one source.
+  - Updated settings/token tests to assert the shared shell owns the settings fields instead of duplicated static HTML.
+- Files touched:
+  - `settings.html`
+  - `settings.js`
+  - `settings.css`
+  - `tests/menu-layout.test.js`
+  - `tests/ai-token-usage.test.js`
+  - `AGENT_CHANGELOG.md`
+- Validation run:
+  - `node tests\menu-layout.test.js` -> pass
+  - `node tests\ai-token-usage.test.js` -> pass
+  - `npm test` -> 47/47 test files pass
+  - `npm run syntax` -> pass
+  - `npm run lint` -> pass
+  - `npm run typecheck` -> pass
+  - `npm run build` -> Chrome / Edge / Firefox dists rebuilt
+- Review / handoff:
+  - Reviewer: Claude.
+- Follow-ups or risks:
+  - Remaining settings polish should now be fixed in the shared settings shell/CSS rather than standalone-only markup.

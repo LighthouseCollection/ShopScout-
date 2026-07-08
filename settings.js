@@ -5,6 +5,11 @@ let selectedProviderId = 'openai';
 let keyVisible = false;
 
 document.addEventListener('DOMContentLoaded', () => {
+  const mountEl = document.getElementById('settingsMount');
+  if (mountEl) {
+    mount(mountEl);
+    return;
+  }
   if (document.getElementById('providerList')) init();
 });
 
@@ -459,6 +464,11 @@ function bindEvents() {
   document.getElementById('openKeyPage')?.addEventListener('click', () => openProviderUrl('keyUrl'));
   document.getElementById('openDocs')?.addEventListener('click', () => openProviderUrl('docsUrl'));
   document.getElementById('setupGuideBtn')?.addEventListener('click', openSetupGuideModal);
+  if (document.getElementById('settingsMount')) {
+    document.querySelector('[data-dashboard-back]')?.addEventListener('click', () => {
+      chrome.tabs.create({ url: chrome.runtime.getURL('comparison.html') });
+    });
+  }
   document.getElementById('openDashboard')?.addEventListener('click', () => {
     chrome.tabs.create({ url: chrome.runtime.getURL('comparison.html') });
   });

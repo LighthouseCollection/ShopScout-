@@ -7,7 +7,6 @@ const providerPath = path.join(__dirname, '..', 'ai-providers.js');
 const source = fs.readFileSync(providerPath, 'utf8');
 const comparisonHtml = fs.readFileSync(path.join(__dirname, '..', 'comparison.html'), 'utf8');
 const comparisonJs = fs.readFileSync(path.join(__dirname, '..', 'comparison.js'), 'utf8');
-const settingsHtml = fs.readFileSync(path.join(__dirname, '..', 'settings.html'), 'utf8');
 const settingsJs = fs.readFileSync(path.join(__dirname, '..', 'settings.js'), 'utf8');
 const backgroundJs = fs.readFileSync(path.join(__dirname, '..', 'background.js'), 'utf8');
 
@@ -72,9 +71,9 @@ assert.ok(summary.label.includes('OpenAI'), 'token summary includes provider lab
 assert.ok(summary.label.includes('48.5K left'), 'token summary formats remaining tokens compactly');
 assert.ok(summary.label.includes('1.6K used'), 'token summary formats used tokens compactly');
 
-assert.ok(settingsHtml.includes('id="tokenBudgetInput"'), 'settings exposes a token budget field');
-assert.ok(settingsHtml.includes('id="tokenUsageSummary"'), 'settings exposes a provider usage summary');
-assert.ok(settingsHtml.includes('id="resetTokenUsage"'), 'settings exposes reset token usage action');
+assert.ok(settingsJs.includes('id="tokenBudgetInput"'), 'settings exposes a token budget field');
+assert.ok(settingsJs.includes('id="tokenUsageSummary"'), 'settings exposes a provider usage summary');
+assert.ok(settingsJs.includes('id="resetTokenUsage"'), 'settings exposes reset token usage action');
 assert.ok(settingsJs.includes('renderTokenUsageSummary'), 'settings renders token usage');
 assert.ok(settingsJs.includes('tokenBudgetInput'), 'settings saves token budget');
 assert.ok(settingsJs.includes('resetTokenUsage'), 'settings can reset token usage');
