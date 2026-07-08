@@ -2132,3 +2132,92 @@ This file is the shared record for Claude and Codex. Append an entry for every m
   - "Reassign primary vertical" list-settings action
   - Column-picking behavior: does `pickDefaultSpecColumns` use primary only, or union across verticals-seen? Recommend primary for now, revisit if lists frequently span verticals.
 
+## 2026-07-07 - Design brief for Codex: quota + perf + progress overlay
+
+- Agent: Claude
+- Branch: grid-rebuild-codex
+- Commit: This commit (design brief only, no code change)
+- Status: Handoff to Codex — three related runtime issues from user report
+- Motivation:
+  - User reported: (1) "Quota bytes exceeded" errors, (2) deleting a product is unusually slow, (3) adding a product is also slow. Plus a UX request for a centered progress overlay showing "Task N of M: parsing / normalizing / ..." during long ops.
+- Investigation summary (Claude did the diagnostic pass):
+
+  **Problem 1: Quota bytes exceeded** — root cause
+  - Neither manifest.json nor manifest.firefox.json declares `unlimitedStorage`.
+  - Without it, chrome.storage.local is capped at 5 MB per extension.
+  - saveData(data) in utils.js writes the WHOLE data blob (all lists, all products, all normalization context) on every mutation.
+  - After ~50-150 richly-normalized products (spec arrays, rawSpecs, taxonomy context, normalized attributes), the blob crosses 5 MB and every write fails with QUOTA_BYTES_PER_ITEM_EXCEEDED.
+  - Fix: add "unlimitedStorage" to both manifests' permissions arrays.
+
+  **Problem 2 + 3: Slow delete and add** — same root cause
+  - Every removeProduct / addProduct triggers this chain in comparison.js -> utils.js -> productRepo:
+    1. getData() reads ENTIRE data blob from chrome.storage.local
+    2. mutates the local array in memory
+    3. saveData(data) writes ENTIRE data blob back (multi-MB serialize + disk write)
+    4. mirrorToProductRepo(data) walks the whole blob and re-syncs it into IndexedDB via Dexie
+    5. renderAll() rebuilds the entire grid
+  - Compound cost per mutation: O(products) serialize + O(products) IndexedDB writes + O(products) grid render.
+  - The chrome.storage.local writes are the slowest part — Chrome persists synchronously to disk.
+  - Dual-write (chrome.storage.local + IndexedDB mirror) doubles the cost with no benefit now that IndexedDB is the source of truth for the new grid.
+
+  **UX request: progress overlay**
+  - User wants a centered overlay ("Task 1 of N: parsing data...") during long ops.
+  - Modal-ish: background dimmed, dialog centered, updates live.
+  - ShopScoutUI already ships modal + toast — same layer extends cleanly.
+- Concrete changes requested (Codex to implement):
+
+  **Fix 1: Add unlimitedStorage permission**
+  - manifest.json: add `"unlimitedStorage"` to the permissions array.
+  - manifest.firefox.json: same addition (Firefox supports it).
+  - Verify: chrome.storage.local.getBytesInUse() no longer throws quota errors.
+  - One-line change per file. Ships the immediate crash fix.
+
+  **Fix 2: Cut the dual-write pattern**
+  - Preferred: retire chrome.storage.local as the storage source of truth. Migrate getData / saveData / saveProducts in utils.js to read/write IndexedDB directly via SSProductRepo. chrome.storage.local retains only small settings (AI keys, active list, last prompt).
+  - Alternative (smaller change): keep chrome.storage.local mirror but DEBOUNCE the mirror writes. Multiple mutations within N ms (e.g. 500 ms) coalesce into one write.
+  - Verify: single-product add or delete completes in < 100 ms on a list with 200 products.
+
+  **Fix 3: Non-blocking pack fetch during batch add** (optional, profile-driven)
+  - prepareNormalizationForList awaits ensureVerticalPackLoaded before returning. Bulk imports serialize on the first pack fetch.
+  - Suggested: split into beginNormalization (fires pack fetch as background promise) + commitNormalization (awaits when needed).
+  - Only worth doing if profiling confirms bottleneck after Fix 2 lands.
+
+  **Fix 4: Delta grid updates, not full re-render**
+  - renderAll() currently calls globalThis.ShopScoutGrid.render() which rebuilds the whole grid.
+  - SlickGrid supports grid.invalidateRow(idx), dataView.updateItem(id, item), dataView.deleteItem(id).
+  - Add ShopScoutGrid.updateRow(id, row) / ShopScoutGrid.deleteRow(id) APIs; comparison.js calls those instead of renderAll on single mutations.
+  - Falls back to renderAll for bulk operations.
+
+  **Fix 5: Progress overlay component (UX)**
+  - New file: ui/progressOverlay.js
+  - API:
+    ```
+    const progress = ShopScoutUI.progress.start({title: 'Adding products'});
+    progress.setTask(1, 5, 'Parsing data...');
+    // ... work ...
+    progress.setTask(2, 5, 'Normalizing attributes...');
+    // ... work ...
+    progress.done();
+    ```
+  - Visual: centered card, semi-transparent black backdrop (rgba(0,0,0,0.4)), 400px wide card, spinner + title + progress bar + task description. Matches existing modal design language.
+  - Auto-dismisses on done(). Not user-cancellable (system-status only).
+  - Wired at natural checkpoints in productRepo.addProducts and comparison.js bulk import flows.
+  - CSS: extend ui/ui-core.css with .ss-progress-overlay + inner card styles.
+- Files Codex should touch:
+  - manifest.json + manifest.firefox.json  (Fix 1, one-line each)
+  - utils.js  (Fix 2, remove or debounce chrome.storage.local writes)
+  - data/productRepo.js  (Fix 3 optional, Fix 5 wire progress hooks)
+  - grid-rebuild-codex/shopscoutGrid.js or slickGridAdapter.js  (Fix 4, add updateRow/deleteRow APIs)
+  - comparison.js  (Fix 4, call new granular APIs; Fix 5 wire progress at delete/add sites)
+  - ui/progressOverlay.js  (new, Fix 5)
+  - ui/ui-core.css  (Fix 5 styles)
+  - tests/  (extend with quota, delta-render, progress assertions)
+- Priority ranking:
+  1. Fix 1 (unlimitedStorage) — SHIP FIRST. One-line change, stops user crashes.
+  2. Fix 2 (dual-write pattern) — biggest perf win. Delete/add speeds up 5-10x on medium lists.
+  3. Fix 5 (progress overlay) — UX improvement while long ops still take time.
+  4. Fix 4 (delta render) — nice-to-have, more valuable after Fix 2.
+  5. Fix 3 (non-blocking pack fetch) — profile-driven, may not be needed after Fix 2.
+- Ownership: Codex owns runtime + UI. This whole brief is Codex's territory. Claude reviews after Codex ships each fix (can be batched or split by priority).
+- Follow-ups (out of scope): consider migrating chrome.storage.local settings into IndexedDB too, so there's ONE storage layer for the extension. Progress overlay hooks in AI analysis / scheduled scans / big imports — worth naming the component broadly enough to be reusable.
+
