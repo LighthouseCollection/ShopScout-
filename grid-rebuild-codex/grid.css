@@ -190,6 +190,9 @@ a.ss-grid-logo-token:visited {
   min-width: 0;
 }
 
+/* Matrix product header shows a real product name, not a monospace UPPERCASE
+   label. Override the header-column defaults so the letters have room to
+   render without being clipped by the tighter header line-height. */
 .ss-grid-product-head-title {
   display: -webkit-box;
   -webkit-box-orient: vertical;
@@ -198,8 +201,15 @@ a.ss-grid-logo-token:visited {
   min-width: 0;
   overflow: hidden;
   overflow-wrap: anywhere;
-  line-height: 1.2;
-  max-height: 2.4em;
+  font-family: var(--font-sans, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0;
+  text-transform: none;
+  line-height: 1.3;
+  max-height: 2.6em;
+  padding-top: 2px;
+  color: var(--ink, #0f1419);
   text-align: center;
 }
 

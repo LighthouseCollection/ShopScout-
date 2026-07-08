@@ -182,10 +182,14 @@
     return ['spec', 'text', 'matrixCell'].includes(column?.type || 'text');
   }
 
+  /* Decide if a string looks like prose (rendered flat) vs a list (pills).
+     splitToPills already refuses to split when parts are too long or
+     contain sentence punctuation, so length alone is not a signal —
+     an 8-item inventory list is easily 200+ chars and should still
+     get pill rendering. */
   function sentenceLike(value) {
     const text = textValue(value).trim();
     if (!text) return true;
-    if (text.length > 90) return true;
     if (/[.!?]\s*$/.test(text)) return true;
     if (/[.!?]\s+\w/.test(text)) return true;
     if (/[,;:]\s+(and|or|but|because|with|for|to|from|that|which|when)\b/i.test(text)) return true;

@@ -1814,6 +1814,8 @@
     gap: 10px;
   }
   .dashboard-settings-nav {
+    display: flex;
+    flex-direction: column;
     gap: 10px;
   }
   .dashboard-settings-nav a {

@@ -29,10 +29,12 @@ assert.ok(html.indexOf('src="ui/toast.js"') < html.indexOf('src="ui/progressOver
   'popup loads toast before progress overlay in the UI core bundle');
 assert.ok(html.indexOf('src="ui/progressOverlay.js"') < html.indexOf('src="utils.js"'),
   'popup loads progress overlay before utils and popup actions');
-assert.ok(html.includes('id="dashboardBtn"'), 'popup header includes the dashboard shortcut');
+assert.ok(html.includes('id="dashboardBtn"'), 'popup includes the dashboard shortcut');
 assert.ok(html.includes('Open Comparison Dashboard'), 'dashboard shortcut is labeled Open Comparison Dashboard');
-assert.ok(html.indexOf('id="dashboardBtn"') < html.indexOf('id="settingsBtn"'),
-  'dashboard shortcut appears immediately before settings in the popup header');
+assert.ok(html.includes('class="header-action-bar"'),
+  'labeled dashboard button lives in a dedicated action bar below the header');
+assert.ok(html.indexOf('class="dashboard-open-btn"') > html.indexOf('id="settingsBtn"'),
+  'dashboard action bar renders immediately below the settings-bearing header');
 assert.ok(!html.includes('AI Analyze'), 'popup gatherer does not render AI analysis controls');
 assert.ok(!html.includes('Auto AI'), 'popup gatherer does not render Auto AI');
 assert.ok(!html.includes('Manual AI'), 'popup gatherer does not render Manual AI');

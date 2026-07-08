@@ -2,6 +2,40 @@
 
 This file is the shared record for Claude and Codex. Append an entry for every meaningful change so both agents can continue from the same factual project history.
 
+## 2026-07-08 - Claude issue-batch #2 + full triage sweep via gh CLI
+
+- Agent: Claude
+- Branch: grid-rebuild-codex
+- Commit: This commit
+- Status: Complete; open GitHub issue count went from 20 → 4 (only #5, #7, #8, #13 shipped; then closed). New count: 0 open.
+- Summary:
+  - gh CLI was newly available, so I walked every open GitHub issue via `gh issue view/close/comment`.
+  - Closed with commit references (already shipped by prior work): #3, #4, #12, #14, #15, #16, #18, #19, #22.
+  - Closed with answers (questions, not bugs): #2, #6, #10, #11, #17, #20.
+  - Fixed and shipped in THIS commit:
+    - **#5 pill splitting for long lists**: `sentenceLike` in slickGridAdapter.js was gating pills on `text.length > 90`. An 8-item inventory like "Cordless Tire Inflator × 1, Quick Connector× 1, ..." is 170+ chars but is clearly a list, not prose. Removed the length gate. `splitToPills`'s per-part guards (52-char cap, no periods, ≥2 clean parts) plus sentenceLike's connective check still filter prose correctly. The existing `.ss-grid-pill-qty` class already renders "(×N)" in italic small font, matching the user's exact spec.
+    - **#7 dashboard icon → labeled button**: moved the 4-square dashboard icon out of the topbar into a dedicated `.header-action-bar` directly below the header. New `.dashboard-open-btn` styled with the accent orange, full-width, shows icon + "Open Comparison Dashboard". popup-layout.test.js updated to check the new location (labeled button lives after settings, in a header-action-bar).
+    - **#8 unnecessary vertical scrollbar**: removed `body { padding-bottom: 80px; }` from theme.css. This 80px was originally there to keep the last content visible when a `.ss-toast` popped up, but toasts are `position: fixed` and temporary — the permanent padding forced every page taller than the viewport and always showed a scrollbar. Toast may briefly overlap the very bottom of content in the rare case the user is scrolled all the way down mid-toast, which is standard toast behavior everywhere.
+    - **#9 settings left-menu spacing**: `.dashboard-settings-nav` in comparison.css had `gap: 10px` but no `display: flex`. Gap only applies to flex/grid containers, so items rendered flush. Added `display: flex; flex-direction: column;`. Menu items now have visible spacing per the user's "Correct" reference screenshot.
+    - **#13 product comparison text clipping**: matrix-mode product headers inherited `text-transform: uppercase; font-family: monospace; font-weight: 700; letter-spacing: 0.08em` from `.slick-header-column`. That squashed product names into hard-to-read UPPERCASE-BOLD-MONO and clipped the top of the letters because the line-height was tuned for the smaller header text. Gave `.ss-grid-product-head-title` its own typography: 12px Inter/sans, weight 600, no uppercase, line-height 1.3, `max-height: 2.6em` (up from 2.4), added `padding-top: 2px` to keep letters clear of the clamp.
+- Files touched:
+  - `grid-rebuild-codex/slickGridAdapter.js` (sentenceLike, unrelated to earlier #22 fix)
+  - `grid-rebuild-codex/grid.css` (product-head-title typography override)
+  - `comparison.css` (settings nav flex)
+  - `theme.css` (removed 80px body padding-bottom)
+  - `popup.html` (dashboard icon moved to labeled action bar)
+  - `popup.css` (`.header-action-bar` + `.dashboard-open-btn` styles)
+  - `tests/popup-layout.test.js` (updated to check new dashboard button location)
+  - `AGENT_CHANGELOG.md`
+- Validation run:
+  - `npm test` → 47/47 pass
+  - `npm run lint` → pass
+- Review / handoff:
+  - Reviewer: Codex or user. Preview panel confirmed popup.html in Launch view during work.
+- Follow-ups or risks:
+  - **Toast overlap edge case (#8)**: on a page where the user is scrolled to the very bottom and a toast fires, the toast will briefly overlap the last row (~50px). Standard toast behavior. If problematic, either (a) add `padding-bottom` only to specific scrollable content containers when a toast is showing, or (b) shift the toast up when at bottom. Neither is worth doing preemptively.
+  - Only 1 issue remains uncovered by this sweep: the pending pre-existing #70 (ProductSpec consumer migration) from before this session.
+
 ## 2026-07-08 - Claude fix batch: GitHub issues #22, #15, #16
 
 - Agent: Claude
