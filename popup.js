@@ -13,6 +13,17 @@ function setTrustedHtml(target, html) {
   if (target) target.innerHTML = html == null ? '' : String(html);
 }
 
+function startProgress(title) {
+  if (!globalThis.ShopScoutUI?.progress?.start) {
+    return {
+      setTask() {},
+      done() {},
+      fail() {}
+    };
+  }
+  return globalThis.ShopScoutUI.progress.start({ title });
+}
+
 document.addEventListener('DOMContentLoaded', init);
 
 async function init() {
@@ -193,45 +204,58 @@ async function extractProductFromCurrentTab(tabId) {
 }
 
 async function addFromTab() {
+  const progress = startProgress('Adding product');
   try {
+    progress.setTask(1, 5, 'Reading active tab...');
     const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+    progress.setTask(2, 5, 'Checking for verification pages...');
     if (await detectCurrentPageFriction(tab.id)) {
+      progress.done();
       toast.show('Site verification page detected. Capture stopped.', 'error');
       return;
     }
+    progress.setTask(3, 5, 'Parsing product page...');
     const product = await extractProductFromCurrentTab(tab.id);
-    if (!product || !product.title) { toast.show('No product found on this page', 'error'); return; }
+    if (!product || !product.title) { progress.done(); toast.show('No product found on this page', 'error'); return; }
     product.lastScannedAt = Date.now();
+    progress.setTask(4, 5, 'Checking current list...');
     const products = await getProducts();
     const dup = products.find(p => p.url === product.url || (p.source === product.source && p.title === product.title));
-    if (dup && dup.newPrice === product.newPrice) { toast.show('Already in your list', 'error'); return; }
+    if (dup && dup.newPrice === product.newPrice) { progress.done(); toast.show('Already in your list', 'error'); return; }
     products.push(product);
+    progress.setTask(5, 5, 'Saving product...');
     await saveProducts(products);
     toast.show(`Added "${product.title.substring(0, 40)}..."`);
     await renderProducts();
-  } catch (e) { toast.show('Could not extract product', 'error'); }
+    progress.done();
+  } catch (e) { progress.fail('Could not extract product'); progress.done(); toast.show('Could not extract product', 'error'); }
 }
 
 async function addFromWindow() {
-  toast.show('Scanning open tabs...', 'loading');
+  const progress = startProgress('Adding products from open tabs');
   const btn = document.getElementById('addWindowBtn');
   btn.disabled = true;
   try {
+    progress.setTask(1, 3, 'Scanning open tabs...');
     const result = await chrome.runtime.sendMessage({ action: 'addProductsFromWindow' });
-    toast.hide();
     if (!result?.success) {
+      progress.done();
       toast.show(result?.error || 'Window scan failed', 'error');
       return;
     }
+    progress.setTask(2, 3, 'Saving captured products...');
     const parts = [`Added ${result.added || 0}`];
     if (result.duplicates) parts.push(`${result.duplicates} duplicate`);
     if (result.noProduct) parts.push(`${result.noProduct} no product`);
     if (result.skipped) parts.push(`${result.skipped} skipped`);
     if (result.failed) parts.push(`${result.failed} failed`);
     toast.show(parts.join(', '));
+    progress.setTask(3, 3, 'Refreshing list...');
     await renderProducts();
+    progress.done();
   } catch (e) {
-    toast.hide();
+    progress.fail('Window scan failed');
+    progress.done();
     toast.show('Window scan failed', 'error');
   } finally {
     btn.disabled = false;
@@ -243,26 +267,36 @@ async function addByUrl() {
   const input = document.getElementById('urlInput');
   const url = input.value.trim();
   if (!url) return;
-  toast.show('Fetching product...', 'loading');
+  const progress = startProgress('Adding product from URL');
   try {
+    progress.setTask(1, 3, 'Fetching product page...');
     const result = await chrome.runtime.sendMessage({ action: 'addByUrl', url });
-    toast.hide();
     if (result?.success) {
+      progress.setTask(2, 3, 'Saving product...');
       toast.show(`Added from ${result.product?.source || 'URL'}`);
       input.value = '';
+      progress.setTask(3, 3, 'Refreshing list...');
       await renderProducts();
-    } else toast.show(result?.error || 'Failed', 'error');
-  } catch (e) { toast.hide(); toast.show('Failed to fetch', 'error'); }
+      progress.done();
+    } else { progress.done(); toast.show(result?.error || 'Failed', 'error'); }
+  } catch (e) { progress.fail('Failed to fetch'); progress.done(); toast.show('Failed to fetch', 'error'); }
 }
 
 // --- Remove product ---
 async function removeProduct(idx) {
+  const progress = startProgress('Removing product');
   const products = await getProducts();
   if (idx >= 0 && idx < products.length) {
+    progress.setTask(1, 3, 'Removing item...');
     products.splice(idx, 1);
+    progress.setTask(2, 3, 'Saving list...');
     await saveProducts(products);
+    progress.setTask(3, 3, 'Refreshing list...');
     await renderProducts();
+    progress.done();
     toast.show('Removed');
+  } else {
+    progress.done();
   }
 }
 
@@ -297,10 +331,14 @@ async function saveEdit() {
   p.modelNumber = document.getElementById('editModel').value.trim();
   p.url = document.getElementById('editUrl').value.trim();
   p.notes = document.getElementById('editNotes').value.trim();
+  const progress = startProgress('Saving product');
+  progress.setTask(1, 2, 'Saving changes...');
   await saveProducts(products);
   document.getElementById('editModal').classList.remove('active');
   toast.show('Product updated');
+  progress.setTask(2, 2, 'Refreshing list...');
   await renderProducts();
+  progress.done();
 }
 
 // --- List modals ---
@@ -315,24 +353,30 @@ function openListModal(mode) {
 async function saveListModal() {
   const name = document.getElementById('listNameInput').value.trim();
   if (!name) return;
+  const progress = startProgress(listModalMode === 'new' ? 'Creating list' : 'Renaming list');
   const data = await getData();
   if (listModalMode === 'new') {
-    if (data.lists[name]) { toast.show('List already exists', 'error'); return; }
+    if (data.lists[name]) { progress.done(); toast.show('List already exists', 'error'); return; }
+    progress.setTask(1, 3, 'Creating list...');
     data.lists[name] = [];
     data.activeList = name;
   } else {
     const old = data.activeList;
     if (name !== old) {
-      if (data.lists[name]) { toast.show('Name already taken', 'error'); return; }
+      if (data.lists[name]) { progress.done(); toast.show('Name already taken', 'error'); return; }
+      progress.setTask(1, 3, 'Renaming list...');
       data.lists[name] = data.lists[old];
       delete data.lists[old];
       data.activeList = name;
     }
   }
+  progress.setTask(2, 3, 'Saving list...');
   await saveData(data);
   document.getElementById('listModal').classList.remove('active');
+  progress.setTask(3, 3, 'Refreshing lists...');
   await renderListSelector();
   await renderProducts();
+  progress.done();
 }
 
 async function deleteList() {
@@ -344,10 +388,15 @@ async function deleteList() {
     { title: 'Delete list', okLabel: 'Delete', kind: 'danger' }
   );
   if (!ok) return;
+  const progress = startProgress('Deleting list');
+  progress.setTask(1, 3, 'Deleting list...');
   delete data.lists[data.activeList];
   data.activeList = Object.keys(data.lists)[0];
+  progress.setTask(2, 3, 'Saving changes...');
   await saveData(data);
+  progress.setTask(3, 3, 'Refreshing lists...');
   await renderListSelector();
   await renderProducts();
+  progress.done();
   toast.show('List deleted');
 }

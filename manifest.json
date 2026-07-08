@@ -9,6 +9,7 @@
     "scripting",
     "tabs",
     "contextMenus",
+    "unlimitedStorage",
     "sidePanel"
   ],
   "host_permissions": [

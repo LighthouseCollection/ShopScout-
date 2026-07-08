@@ -96,6 +96,7 @@ for (const [name, mf] of [['manifest.json', manifest], ['manifest.firefox.json',
   const scripts = mf.content_scripts[0].js;
   assert.ok(scripts.includes('security/sanitize.js'), `${name} injects sanitizer into content pages`);
   assert.ok(scripts.indexOf('security/sanitize.js') < scripts.indexOf('utils.js'), `${name} injects sanitizer before utils.js`);
+  assert.ok(mf.permissions.includes('unlimitedStorage'), `${name} requests unlimitedStorage for large product lists`);
 }
 
 const buildScript = fs.readFileSync(path.join(root, 'scripts', 'build-extension.ps1'), 'utf8');

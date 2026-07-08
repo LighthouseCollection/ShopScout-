@@ -107,6 +107,7 @@ assert.ok(SS, 'utils.js exposes window.SS');
 assert.ok(typeof SS.saveData === 'function', 'SS.saveData exists');
 assert.ok(typeof SS.bootstrapDataLayer === 'function', 'SS.bootstrapDataLayer exists');
 assert.ok(typeof SS.mirrorToProductRepo === 'function', 'SS.mirrorToProductRepo exists');
+assert.ok(typeof SS.flushProductRepoMirror === 'function', 'SS.flushProductRepoMirror exists for explicit reconciliation');
 
 (async () => {
   /* legacy save with two lists */
@@ -128,6 +129,9 @@ assert.ok(typeof SS.mirrorToProductRepo === 'function', 'SS.mirrorToProductRepo 
   const stored = await chromeStub.storage.local.get('shopscout_data');
   assert.deepStrictEqual(stored.shopscout_data.activeList, 'Phones', 'chrome.storage.local still primary');
 
+  assert.strictEqual(memLists.length, 0, 'saveData defers full IndexedDB mirror work');
+  await SS.flushProductRepoMirror();
+
   /* productRepo has it too */
   assert.strictEqual(memLists.length, 2, 'two lists mirrored');
   assert.strictEqual(memProducts.length, 3, 'three products mirrored');
@@ -143,6 +147,8 @@ assert.ok(typeof SS.mirrorToProductRepo === 'function', 'SS.mirrorToProductRepo 
     activeList: 'Tablets',
     lists: { 'Tablets': [{ title: 'iPad', source: 'apple', newPrice: 499 }] }
   });
+  assert.strictEqual(memLists.length, 2, 'second save also defers mirror replacement until flushed');
+  await SS.flushProductRepoMirror();
   assert.strictEqual(memLists.length, 1,    'mirror replaces lists');
   assert.strictEqual(memProducts.length, 1, 'mirror replaces products');
   assert.strictEqual(memLists[0].name, 'Tablets', 'new list is Tablets');

@@ -6,8 +6,12 @@ window.SS = (() => {
   // --- Storage ---
   // Legacy shape: { lists: { [listName]: Product[] }, activeList: string }
   // chrome.storage.local remains the primary store for backwards compatibility.
-  // Every write is mirrored ("write-through") into IndexedDB via SSProductRepo
-  // so any grid/view backed by the repo always sees fresh data.
+  // Writes are mirrored into IndexedDB via SSProductRepo on a short debounce so
+  // repeated add/delete operations do not synchronously rebuild the whole repo.
+  let pendingProductRepoMirror = null;
+  let productRepoMirrorTimer = null;
+  const PRODUCT_REPO_MIRROR_DELAY_MS = 500;
+
   async function getData() {
     const d = await chrome.storage.local.get(STORAGE_KEY);
     const data = d[STORAGE_KEY] || { lists: { 'My Products': [] }, activeList: 'My Products' };
@@ -17,11 +21,38 @@ window.SS = (() => {
   }
   async function saveData(data) {
     await chrome.storage.local.set({ [STORAGE_KEY]: data });
-    try { await mirrorToProductRepo(data); }
-    catch (err) { console.warn('SS.saveData: productRepo mirror failed', err); }
+    scheduleProductRepoMirror(data);
   }
   async function getProducts() { const d = await getData(); return d.lists[d.activeList] || []; }
   async function saveProducts(products) { const d = await getData(); d.lists[d.activeList] = products; await saveData(d); }
+
+  function scheduleProductRepoMirror(data) {
+    if (!globalThis.SSProductRepo || !globalThis.SSDB) return;
+    pendingProductRepoMirror = data;
+    if (productRepoMirrorTimer) clearTimeout(productRepoMirrorTimer);
+    productRepoMirrorTimer = setTimeout(() => {
+      productRepoMirrorTimer = null;
+      flushProductRepoMirror().catch(err => console.warn('SS.saveData: productRepo mirror failed', err));
+    }, PRODUCT_REPO_MIRROR_DELAY_MS);
+    if (productRepoMirrorTimer && typeof productRepoMirrorTimer.unref === 'function') productRepoMirrorTimer.unref();
+  }
+
+  async function flushProductRepoMirror() {
+    if (productRepoMirrorTimer) {
+      clearTimeout(productRepoMirrorTimer);
+      productRepoMirrorTimer = null;
+    }
+    const data = pendingProductRepoMirror;
+    pendingProductRepoMirror = null;
+    if (!data) return false;
+    try {
+      await mirrorToProductRepo(data);
+      return true;
+    } catch (err) {
+      console.warn('SS.flushProductRepoMirror: productRepo mirror failed', err);
+      return false;
+    }
+  }
 
   /* Mirror the legacy blob into IndexedDB. Replaces lists/products wholesale —
      correct because the legacy code already passes the entire desired state. */
@@ -1578,5 +1609,5 @@ a{color:#2563eb;word-break:break-all;text-decoration:none}
     return { cheapest, expensive, bestRated, missingData, total: products.length };
   }
 
-  return { STORAGE_KEY, getData, saveData, getProducts, saveProducts, bootstrapDataLayer, mirrorToProductRepo, esc, escAttr, escXml, sanitizeUrl, sanitizeProductDescription, isSafeHttpUrl, parsePrice, normalizeReviewCount, normalizeRatingValue, formatRatingDisplay, normalizeSpecKeyLabel, normalizeSpecValue, normalizeProductSpecs, buildProductIdentity, dedupProductName, escapeCsvField, parseCsvLine, buildCsv, safeFilename, downloadFile, buildAIText, buildPrompt, inferCategory, getCategoryRubric, detectMissingAttributes, getCategoryComparisonSpecKeys, CATEGORY_RUBRICS, buildExportHtml, parseImport, toast, buildSummary, canonicalizeProductUrl, unwrapWrappedValue };
+  return { STORAGE_KEY, getData, saveData, getProducts, saveProducts, bootstrapDataLayer, mirrorToProductRepo, flushProductRepoMirror, esc, escAttr, escXml, sanitizeUrl, sanitizeProductDescription, isSafeHttpUrl, parsePrice, normalizeReviewCount, normalizeRatingValue, formatRatingDisplay, normalizeSpecKeyLabel, normalizeSpecValue, normalizeProductSpecs, buildProductIdentity, dedupProductName, escapeCsvField, parseCsvLine, buildCsv, safeFilename, downloadFile, buildAIText, buildPrompt, inferCategory, getCategoryRubric, detectMissingAttributes, getCategoryComparisonSpecKeys, CATEGORY_RUBRICS, buildExportHtml, parseImport, toast, buildSummary, canonicalizeProductUrl, unwrapWrappedValue };
 })();

@@ -23,6 +23,12 @@ assert.ok(html.indexOf('src="normalization/matching.js"') > -1,
   'popup loads dedupe matching helpers for product lists');
 assert.ok(html.indexOf('src="normalization/matching.js"') < html.indexOf('src="data/productRepo.js"'),
   'dedupe matching loads before productRepo in the popup');
+assert.ok(html.indexOf('src="ui/progressOverlay.js"') > -1,
+  'popup loads the centered progress overlay UI primitive');
+assert.ok(html.indexOf('src="ui/toast.js"') < html.indexOf('src="ui/progressOverlay.js"'),
+  'popup loads toast before progress overlay in the UI core bundle');
+assert.ok(html.indexOf('src="ui/progressOverlay.js"') < html.indexOf('src="utils.js"'),
+  'popup loads progress overlay before utils and popup actions');
 assert.ok(html.includes('id="dashboardBtn"'), 'popup header includes the dashboard shortcut');
 assert.ok(html.includes('Open Comparison Dashboard'), 'dashboard shortcut is labeled Open Comparison Dashboard');
 assert.ok(html.indexOf('id="dashboardBtn"') < html.indexOf('id="settingsBtn"'),
@@ -76,6 +82,7 @@ assert.ok(!js.includes("action: 'runAIAnalysis'"), 'popup no longer starts the b
 assert.ok(!js.includes('openDashboardResults'), 'popup no longer opens AI dashboard results');
 assert.ok(js.includes("getElementById('dashboardBtn')"), 'popup binds the dashboard header shortcut');
 assert.ok(js.includes("chrome.runtime.getURL('comparison.html')"), 'dashboard shortcut opens comparison.html');
+assert.ok(js.includes('ShopScoutUI.progress.start'), 'popup actions use the centered progress overlay for long operations');
 assert.ok(!js.includes('buildManualHybridPrompt'), 'popup no longer builds manual AI prompts');
 assert.ok(!js.includes("quickCompare"), 'popup no longer binds the old Quick compare button');
 assert.ok(!js.includes("deepCompare"), 'popup no longer binds the old Deep compare button');

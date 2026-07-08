@@ -100,6 +100,7 @@ const files = [
   'ui/core/events.js',
   'ui/modal.js',
   'ui/toast.js',
+  'ui/progressOverlay.js',
   'ui/confirmDialog.js',
   'ui/promptDialog.js'
 ];
@@ -117,6 +118,7 @@ assert.ok(UI.render.escapeHtml, 'UI.render.escapeHtml present');
 assert.ok(UI.events && UI.events.on, 'UI.events.on present');
 assert.ok(UI.modal && UI.modal.open, 'UI.modal.open present');
 assert.ok(UI.toast && UI.toast.show, 'UI.toast.show present');
+assert.ok(UI.progress && UI.progress.start, 'UI.progress.start present');
 assert.ok(typeof UI.confirm === 'function', 'UI.confirm present');
 assert.ok(typeof UI.prompt === 'function', 'UI.prompt present');
 
@@ -213,6 +215,24 @@ assert.strictEqual(mix.childNodes.length, 2, 'string + node appended; null/false
   assert.strictEqual(bodyContainer.children.length, 1, 'modal body mounted exactly one child');
   assert.strictEqual(bodyContainer.children[0], bodyNode, 'modal body uses the passed Node directly');
   handle.close();
+}
+
+/* Progress overlay exposes a lightweight system-status surface for long
+   extension tasks. */
+{
+  const handle = UI.progress.start({ title: 'Adding products' });
+  assert.ok(handle.root.classList.has('ssui-progress-overlay'), 'progress overlay root uses namespaced class');
+  assert.strictEqual(ctx.document.body.children.includes(handle.root), true, 'progress overlay mounts to body');
+  handle.setTask(2, 5, 'Normalizing attributes...');
+  const card = handle.root.children[0];
+  const titleNode = card.children[0];
+  const meter = card.children[1];
+  const taskNode = card.children[2];
+  assert.strictEqual(titleNode.textContent, 'Adding products', 'progress title is plain text');
+  assert.strictEqual(meter.getAttribute('aria-valuenow'), '40', 'progress meter tracks percent');
+  assert.strictEqual(taskNode.textContent, 'Task 2 of 5: Normalizing attributes...', 'progress task text includes task count');
+  handle.done('Added products');
+  assert.strictEqual(ctx.document.body.children.includes(handle.root), false, 'done removes progress overlay');
 }
 
 /* renderInto must NOT silently fall back to target.innerHTML when

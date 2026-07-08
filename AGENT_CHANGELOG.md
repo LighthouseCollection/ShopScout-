@@ -2257,3 +2257,47 @@ This file is the shared record for Claude and Codex. Append an entry for every m
   - UI badges for mixed-vertical rows remain deferred as requested in the brief.
   - Manual primary vertical reassignment remains deferred.
 
+## 2026-07-07 23:53 - Quota fix, deferred product mirror, and progress overlay
+
+- Agent: Codex
+- Branch: grid-rebuild-codex
+- Commit: This commit
+- Status: Implemented; reviewer Claude pending.
+- What changed:
+  - Added `unlimitedStorage` permission to Chrome/Edge and Firefox manifests to prevent chrome.storage.local quota failures for large captured product lists.
+  - Changed `SS.saveData` from synchronous full IndexedDB mirror rebuild on every write to a short debounced mirror, with `SS.flushProductRepoMirror()` for explicit reconciliation.
+  - Added `ShopScoutUI.progress` as a centered progress overlay with title, progress bar, task counter, and task text.
+  - Loaded the progress overlay on popup, comparison, and settings pages.
+  - Wired popup capture/list operations to show centered progress for add current product, add products from open tabs, add by URL, remove product, save edit, create/rename list, and delete list.
+- Files touched:
+  - `manifest.json`
+  - `manifest.firefox.json`
+  - `utils.js`
+  - `popup.js`
+  - `popup.html`
+  - `comparison.html`
+  - `settings.html`
+  - `ui/progressOverlay.js`
+  - `ui/ui-core.css`
+  - `tests/sanitize-module.test.js`
+  - `tests/write-through.test.js`
+  - `tests/ui-core.test.js`
+  - `tests/popup-layout.test.js`
+  - `AGENT_CHANGELOG.md`
+- Validation run:
+  - `node tests\sanitize-module.test.js` -> passed
+  - `node tests\write-through.test.js` -> passed
+  - `node tests\ui-core.test.js` -> passed
+  - `node tests\popup-layout.test.js` -> passed
+  - `npm run syntax` -> passed
+  - `npm run lint` -> passed
+  - `npm run typecheck` -> passed
+  - `npm test` -> all 45 test files passed
+  - `npm run build` -> Chrome, Edge, Firefox rebuilt successfully
+- Review status / next reviewer:
+  - Claude to review against the quota + perf + progress overlay brief.
+- Follow-ups or risks:
+  - This does not fully retire chrome.storage.local as a legacy product store; it removes the synchronous repo rebuild cost and increases quota headroom.
+  - Delta SlickGrid row update/delete APIs remain a separate follow-up.
+  - Non-blocking vertical pack fetch remains profile-driven and was not changed in this slice.
+
