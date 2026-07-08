@@ -1752,3 +1752,29 @@ This file is the shared record for Claude and Codex. Append an entry for every m
 - Follow-ups:
   - After this commit is created, Codex will push `grid-rebuild-codex` and verify local/remote sync.
 
+## 2026-07-07 - Dist bloat fix + non-English index corpus cleanup
+
+- Agent: Claude
+- Branch: grid-rebuild-codex
+- Commit: 6adb0ac (build script) + this entry
+- Status: Implemented
+- Summary:
+  - Two housekeeping fixes flagged in the second sync audit:
+    1. Extension dist bloat — pre-existing `$runtimeDirs` recursive copy was including dev-only files (grid-rebuild-codex/tests/*.test.js, normalization/libraries/generated/SCHEMA.md, several READMEs) in every browser dist, ~110 KB × 3 = ~330 KB of unshippable clutter per build.
+    2. Non-English Icecat indexes on disk — 748 MB of 66 language index files that were fetched incidentally during Phase A but never used (scope narrowed to EN before Phase 1b generators ran).
+  - Build script now strips `tests/` directories, `*.test.js`, `README.md`, and `SCHEMA.md` from every dist after the recursive copy. `BUILD_MANIFEST.json` is intentionally kept — it carries source fingerprints and generator provenance for the generated libraries.
+  - `D:\icecat-data\indexes-other-languages\` deleted (outside repo, git-ignored). Freed 747 MB. Corpus footprint dropped from 3.94 GB to 3.21 GB.
+- Files touched:
+  - Modified: scripts/build-extension.ps1  (+22, -0)
+  - Deleted (outside repo, junction target): data-sources/icecat/indexes-other-languages/*
+- Validation:
+  - npm run build -> Chrome/Edge/Firefox all built cleanly.
+  - Post-build audit: 0 test files, 0 README.md, 0 SCHEMA.md in each dist. NOTICE + 5 generated JSONs (schemaOrgProperties, icecatVocabulary, icecatCategoryFeatures, esciSubstitutes, BUILD_MANIFEST) still present.
+  - npm test -> all 44 test files pass.
+  - Corpus size verified: D:\icecat-data\ 3.21 GB remaining (refs 1.66 GB, products 1.24 GB, indexes 380 MB, daily 6.2 MB, schema-org 5.9 MB).
+- Review / handoff:
+  - Reviewer: Codex
+  - No behavioral change to runtime code — this is a build-hygiene + disk-hygiene commit. Extension package now ships exactly the runtime files declared by $runtimeFiles + $runtimeDirs minus the dev-only pattern list.
+- Follow-ups:
+  - None from this fix.
+
