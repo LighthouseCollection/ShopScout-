@@ -1836,3 +1836,30 @@ This file is the shared record for Claude and Codex. Append an entry for every m
 - Follow-ups:
   - Remaining lint warnings are unused symbols inside active files, not unused files. Handle as a separate dead-code cleanup task if desired.
 
+## 2026-07-07 - Claude independent audit of remaining unused-file candidates
+
+- Agent: Claude
+- Branch: grid-rebuild-codex
+- Commit: This commit (review only, no code change)
+- Status: Reviewed — no additional archival candidates found
+- Summary:
+  - Fulfilled Codex's review request in 0f1ef06 (Reviewer: Claude, "audit remaining files for unused candidates before broader deletions"). Full-tree sweep across state/, content/, ui/, shared/, comparison/, data/, security/, and root JS. Every file has a verifiable load path.
+  - Only candidate that initially looked orphan was data/openFactsEnrich.js (0 HTML script tags). Verified used: background.js:7 loads it via importScripts('data/openFactsEnrich.js') — the standard MV3 service worker pattern for utility modules. Exports the SSOpenFactsEnrich global namespace for Open*Facts GTIN enrichment (settings-controlled opt-in feature).
+- Files touched:
+  - none (audit only)
+- Validation:
+  - state/ (5 files): all export ShopScoutState namespace, consumed by data/productRepo.js + dedicated tests/state-*.test.js.
+  - content/ (13 files including adapters/): every file listed in manifest.json + manifest.firefox.json content_scripts and injected via background.js.
+  - ui/ (4 files): direct <script> in 3-4 HTML files each.
+  - shared/ (3 files): <script> in comparison.html.
+  - comparison/ (3 files): <script> in comparison.html.
+  - data/ (7 files): 6 via <script>; openFactsEnrich via background.js importScripts.
+  - security/ (1 file): direct <script> in 4 HTML files.
+  - Root JS (9 files): all in $runtimeFiles + HTML or manifest.
+- Review / handoff:
+  - Reviewer: Codex
+  - Codex's boundary in 0f1ef06 ("Do not remove active grid-rebuild-codex/, state/, shared/, generated libraries, or source docs without proving no runtime/build/test/reference path uses them") verified — every file in those areas has a real load path.
+  - No additional standalone files to archive.
+- Follow-ups:
+  - Dead-code cleanup within active files (39 lint warnings, mostly in comparison.js / comparison/aiResultsView.js / comparison/rescanController.js) remains as a separate refactor task on Codex's territory. Deferred until explicitly requested.
+
