@@ -455,6 +455,38 @@ function bindEvents() {
       return;
     }
 
+    const normalizationBulkAll = e.target.closest('[data-normalization-bulk-all]');
+    if (normalizationBulkAll) {
+      const repo = globalThis.SSProductRepo;
+      const action = normalizationBulkAll.dataset.normalizationBulkAll || '';
+      if (!repo || typeof repo.getActiveListId !== 'function' || typeof repo.saveNormalizationReviewDecision !== 'function') {
+        toast.show('Normalization rule storage is not available.', 'error');
+        return;
+      }
+      const items = await collectCurrentNormalizationReviewItems();
+      if (!items.length) {
+        toast.show('Nothing left in the review queue.');
+        return;
+      }
+      const confirmLabel = action === 'ignore' ? 'Ignore all' : 'Accept all';
+      const confirmMessage = action === 'ignore'
+        ? `Ignore all ${items.length} remaining item${items.length === 1 ? '' : 's'}? They will not return to the review queue for this list.`
+        : `Save every remaining item's mapping as a user rule (${items.length} item${items.length === 1 ? '' : 's'})? You can edit or delete them later from User Rules.`;
+      const ok = await ShopScoutUI.confirm(confirmMessage, { title: `${confirmLabel} remaining items?`, okLabel: confirmLabel });
+      if (!ok) return;
+      const listId = await repo.getActiveListId();
+      let saved = 0;
+      for (const item of items) {
+        const result = await repo.saveNormalizationReviewDecision(listId, { action, item });
+        if (result?.ok) saved++;
+      }
+      toast.show(action === 'ignore'
+        ? `Ignored ${saved} item${saved === 1 ? '' : 's'}.`
+        : `Saved ${saved} alias${saved === 1 ? '' : 'es'} to user rules.`);
+      await openNormalizationReviewPage();
+      return;
+    }
+
     const normalizationBulkAction = e.target.closest('[data-normalization-bulk-action]');
     if (normalizationBulkAction) {
       const repo = globalThis.SSProductRepo;
@@ -1278,18 +1310,12 @@ function normalizationReviewProjection(items) {
     columns: [
       { id: 'product', name: 'Product', field: 'productTitle', type: 'normalizationProduct',
         toolTip: 'The product this normalization decision belongs to.' },
-      { id: 'category', name: 'Category', field: 'category', type: 'text', width: 230,
+      { id: 'category', name: 'Category', field: 'category', type: 'text',
         toolTip: 'The vertical/category detected for this product.' },
       { id: 'fieldPair', name: 'Field', field: 'rawField', type: 'normalizationPair', rawField: 'rawField', normalizedField: 'field',
         toolTip: 'Raw attribute name from the source page → what ShopScout would normalize it to.' },
       { id: 'valuePair', name: 'Value', field: 'raw', type: 'normalizationPair', rawField: 'raw', normalizedField: 'normalized',
         toolTip: 'Raw value from the source page → normalized value ShopScout would use.' },
-      { id: 'reason', name: 'Reason', field: 'reason', type: 'normalizationReason',
-        toolTip: 'Why this ended up in the review queue (unmapped, low-confidence, conflict, etc.).' },
-      { id: 'confidence', name: 'Confidence', field: 'confidenceLabel', type: 'text', width: 120,
-        toolTip: 'How sure the normalization engine is about its guess. 0% means no canonical match was found.' },
-      { id: 'rule', name: 'Rule', field: 'rule', type: 'normalizationRule',
-        toolTip: 'Which normalization rule flagged this item (unmapped, brand-alias, spec-alias, etc.).' },
       { id: 'actions', name: '', field: '_actions', type: 'normalizationActions' }
     ],
     rows
@@ -1484,10 +1510,17 @@ async function openNormalizationReviewPage() {
         <p>All currently normalized attributes are either exact library matches or high-confidence deterministic mappings.</p>
       </div>`
     : `<div class="normalization-review-page">
-        <div class="normalization-review-note">
-          <strong>${items.length} item${items.length === 1 ? '' : 's'} need review.</strong>
-          Accept an alias to add it to this list's user rules library, or ignore noisy values that should not return to the review queue.
-          <br>Unmapped means ShopScout did not find a confident library rule yet. Accept alias saves a list-specific user rule; Ignore hides repeated noise for this list.
+        <div class="normalization-review-toolbar">
+          <div class="normalization-review-toolbar-summary">
+            <strong>${items.length} item${items.length === 1 ? '' : 's'} need review.</strong>
+            Accept aliases individually below, or use the bulk actions on the right to work the whole queue in one shot.
+          </div>
+          <div class="normalization-review-toolbar-actions">
+            <button class="dashboard-primary-action" type="button" data-normalization-bulk-all="accept-alias"
+              title="Save every remaining item's raw → normalized mapping as a user rule.">Accept all as aliases</button>
+            <button class="dashboard-secondary-action" type="button" data-normalization-bulk-all="ignore"
+              title="Ignore every remaining item so it never returns to the queue.">Ignore all remaining</button>
+          </div>
         </div>
         <div class="normalization-review-grid-wrap ss-grid-review-wrap">
           <div id="normalizationReviewGrid" class="ss-grid-host slick-default-theme normalization-review-grid" aria-label="Normalization review grid"></div>

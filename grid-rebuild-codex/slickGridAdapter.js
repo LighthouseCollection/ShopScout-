@@ -289,9 +289,7 @@
     const attrs = normalizationActionAttrs(item);
     return `<div class="normalization-review-actions ss-grid-review-actions">
       <button class="dashboard-primary-action dashboard-secondary-action--small" type="button" data-normalization-action="accept-alias" title="Save this raw → normalized mapping as a user rule for this row only." ${attrs}>Accept alias</button>
-      <button class="dashboard-secondary-action dashboard-secondary-action--small" type="button" data-normalization-bulk-action="accept-alias" title="Save the mapping AND apply it to every other row in the queue with the same raw text." ${attrs}>Accept all matching</button>
       <button class="dashboard-secondary-action dashboard-secondary-action--small" type="button" data-normalization-action="ignore" title="Mark this row as intentionally ignored so ShopScout never asks about this exact case again." ${attrs}>Ignore</button>
-      <button class="dashboard-secondary-action dashboard-secondary-action--small" type="button" data-normalization-bulk-action="ignore" title="Ignore this row plus every other row in the queue with the same raw text." ${attrs}>Ignore all matching</button>
       ${item?.productId ? `<button class="dashboard-secondary-action dashboard-secondary-action--small" type="button" data-duplicate-open="${escAttr(item.productId)}" title="Open this product's detail page so you can inspect the source value in context.">Open</button>` : ''}
     </div>`;
   }
@@ -664,11 +662,20 @@
     const isUserRules = projection?.mode === 'userRules';
     const headerHeight = isMatrix ? 132 : 42;
     const rowHeight = isNormalizationReview ? 64 : (isUserRules ? 60 : 82);
-    const padding = 0;
     const minHeight = rowCount ? headerHeight + rowHeight : 140;
-    const maxRowsBeforeScroll = isMatrix ? 8 : (isNormalizationReview ? 6 : 12);
+    /* Normalization review + user rules take over available page height —
+       they're full-page views, not embedded panels, so the small
+       6-visible-row cap made them feel iframed inside empty space.
+       Everything else keeps a fixed max cap so tables inside cards
+       don't blow past their container. */
+    if (isNormalizationReview || isUserRules) {
+      container.style.height = 'calc(100vh - 260px)';
+      container.style.minHeight = `${minHeight}px`;
+      return;
+    }
+    const maxRowsBeforeScroll = isMatrix ? 8 : 12;
     const visibleRows = Math.max(1, Math.min(rowCount || 1, maxRowsBeforeScroll));
-    const height = Math.max(minHeight, headerHeight + (visibleRows * rowHeight) + padding);
+    const height = Math.max(minHeight, headerHeight + (visibleRows * rowHeight));
     container.style.height = `${height}px`;
     container.style.minHeight = '0';
   }

@@ -2715,6 +2715,30 @@ body.is-info-page .content { display: block; padding: 18px 22px 48px; }
   color: var(--ink-2);
 }
 
+.normalization-review-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+  border: 1px solid var(--rule-soft, #d1d5db);
+  border-radius: var(--radius);
+  background: var(--paper-2);
+  padding: 10px 14px;
+  color: var(--ink-2);
+}
+
+.normalization-review-toolbar-summary {
+  flex: 1 1 320px;
+  min-width: 220px;
+  line-height: 1.4;
+}
+
+.normalization-review-toolbar-actions {
+  display: flex;
+  gap: 8px;
+  flex: 0 0 auto;
+}
+
 .normalization-review-table-wrap {
   border: 1px solid var(--rule, #d1d5db);
   border-radius: 8px;

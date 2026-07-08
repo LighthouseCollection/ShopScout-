@@ -98,8 +98,10 @@ assert.ok(js.includes('collectNormalizationReviewItems'), 'normalization review 
 assert.ok(js.includes('rebuildNormalizationForList'), 'normalization review backfills existing captured products before rendering');
 assert.ok(gridAdapterJs.includes('data-normalization-action="accept-alias"'), 'normalization review exposes accept-alias workflow');
 assert.ok(gridAdapterJs.includes('data-normalization-action="ignore"'), 'normalization review exposes ignore workflow');
-assert.ok(gridAdapterJs.includes('data-normalization-bulk-action="accept-alias"'), 'normalization review exposes bulk accept workflow');
-assert.ok(gridAdapterJs.includes('data-normalization-bulk-action="ignore"'), 'normalization review exposes bulk ignore workflow');
+assert.ok(js.includes('data-normalization-bulk-all="accept-alias"'),
+  'normalization review page has an accept-all bulk toolbar action');
+assert.ok(js.includes('data-normalization-bulk-all="ignore"'),
+  'normalization review page has an ignore-all bulk toolbar action');
 assert.ok(js.includes('saveNormalizationReviewDecision'), 'normalization review persists decisions through productRepo');
 assert.ok(js.includes('openNormalizationRulesPage'), 'comparison script renders user normalization rules page');
 assert.ok(js.includes('deleteUserNormalizationRule'), 'user rules page deletes approved mappings through productRepo');

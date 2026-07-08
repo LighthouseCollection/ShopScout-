@@ -235,7 +235,9 @@ assert.match(normalizationPairHtml, /normalization-review-raw/, 'normalization p
 assert.match(normalizationPairHtml, /normalization-review-arrow/, 'normalization pair cell renders the raw-to-normalized arrow');
 assert.match(normalizationPairHtml, /Navy Blue/, 'normalization pair cell renders the normalized value');
 assert.match(normalizationActionsHtml, /data-normalization-action="accept-alias"/, 'normalization action cell preserves accept alias action');
-assert.match(normalizationActionsHtml, /data-normalization-bulk-action="ignore"/, 'normalization action cell preserves ignore matching action');
+assert.match(normalizationActionsHtml, /data-normalization-action="ignore"/, 'normalization action cell preserves ignore action');
+assert.doesNotMatch(normalizationActionsHtml, /data-normalization-bulk-action/,
+  'per-row bulk-matching buttons removed; bulk actions live in the page toolbar instead');
 assert.match(normalizationActionsHtml, /data-review-key="p1\|colour\|color\|midnight blue\|navy blue"/,
   'normalization action cell carries review identity data');
 const userRuleCodeHtml = capturedColumns[0].formatter(0, 1, 'Colour', userRuleCodeColumn, {

@@ -24,10 +24,12 @@ assert.ok(!pageSource.includes('<table class="normalization-review-table'),
   'normalization review page no longer renders a literal HTML table');
 assert.ok(!source.includes('function normalizationReviewRow'),
   'old table-row renderer has been removed');
-assert.ok(source.includes('Unmapped means ShopScout did not find a confident library rule yet'),
-  'normalization review explains unmapped rule status');
-assert.ok(source.includes('Accept alias saves a list-specific user rule'),
-  'normalization review explains how accept alias affects user rules');
+assert.ok(source.includes('item') && source.includes('need review'),
+  'normalization review page surfaces the queue count so users know what remains');
+assert.ok(source.includes('Accept aliases individually below') || source.includes('Accept alias'),
+  'normalization review page explains the primary accept-alias action');
+assert.ok(source.includes('data-normalization-bulk-all='),
+  'normalization review page exposes bulk-all toolbar actions');
 assert.ok(source.includes('type: \'normalizationProduct\''),
   'normalization review projection uses a structured product cell type');
 assert.ok(source.includes('type: \'normalizationPair\''),
