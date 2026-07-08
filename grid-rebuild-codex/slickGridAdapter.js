@@ -237,6 +237,61 @@
     </div>`;
   }
 
+  function normalizationValuesMatch(left, right) {
+    return textValue(left).trim().toLowerCase() === textValue(right).trim().toLowerCase();
+  }
+
+  function htmlForNormalizationProduct(item) {
+    const title = textValue(item?.productTitle || item?.title).trim() || 'Product';
+    const source = textValue(item?.source).trim();
+    return `<div class="normalization-review-product">
+      <strong title="${escAttr(title)}">${esc(title)}</strong>
+      ${source ? `<span>${esc(source)}</span>` : ''}
+    </div>`;
+  }
+
+  function htmlForNormalizationPair(value, column, item) {
+    const raw = textValue(item?.[column.rawField || 'raw'] ?? value).trim();
+    const normalized = textValue(item?.[column.normalizedField || 'normalized']).trim();
+    const shown = normalized || raw || '-';
+    if (normalizationValuesMatch(raw, normalized)) {
+      return `<span class="normalization-review-normal">${esc(shown)}</span>`;
+    }
+    return `<span class="normalization-review-raw">${esc(raw || '-')}</span>`
+      + '<span class="normalization-review-arrow">→</span>'
+      + `<span class="normalization-review-normal">${esc(shown)}</span>`;
+  }
+
+  function htmlForNormalizationReason(value) {
+    return `<span class="normalization-review-reason">${esc(textValue(value).trim() || 'review')}</span>`;
+  }
+
+  function htmlForNormalizationRule(value, item) {
+    const rule = textValue(value || item?.rule || 'unmapped').trim() || 'unmapped';
+    const source = textValue(item?.fieldSource).trim();
+    return `<code>${esc(rule)}</code>${source ? `<span>${esc(source)}</span>` : ''}`;
+  }
+
+  function normalizationActionAttrs(item) {
+    return `data-review-key="${escAttr(item?.reviewKey || '')}" `
+      + `data-product-id="${escAttr(item?.productId || '')}" `
+      + `data-raw-field="${escAttr(item?.rawField || '')}" `
+      + `data-field="${escAttr(item?.field || '')}" `
+      + `data-raw-value="${escAttr(item?.raw || '')}" `
+      + `data-normalized-value="${escAttr(item?.normalized || '')}"`;
+  }
+
+  function htmlForNormalizationActions(item) {
+    const attrs = normalizationActionAttrs(item);
+    return `<div class="normalization-review-actions ss-grid-review-actions">
+      <button class="dashboard-primary-action dashboard-secondary-action--small" type="button" data-normalization-action="accept-alias" ${attrs}>Accept alias</button>
+      <button class="dashboard-secondary-action dashboard-secondary-action--small" type="button" data-normalization-bulk-action="accept-alias" ${attrs}>Accept all matching</button>
+      <button class="dashboard-secondary-action dashboard-secondary-action--small" type="button" data-normalization-action="ignore" ${attrs}>Ignore</button>
+      <button class="dashboard-secondary-action dashboard-secondary-action--small" type="button" data-normalization-bulk-action="ignore" ${attrs}>Ignore all matching</button>
+      ${item?.productId ? `<button class="dashboard-secondary-action dashboard-secondary-action--small" type="button" data-duplicate-open="${escAttr(item.productId)}">Open</button>` : ''}
+    </div>`;
+  }
+
   function htmlForMatrixCell(value) {
     if (!value || typeof value !== 'object') {
       const text = textValue(value).trim();
@@ -280,6 +335,11 @@
       case 'rating':    return htmlForRating(value, item);
       case 'matrixCell':return htmlForMatrixCell(value);
       case 'actions':   return htmlForActions();
+      case 'normalizationProduct': return htmlForNormalizationProduct(item);
+      case 'normalizationPair': return htmlForNormalizationPair(value, column, item);
+      case 'normalizationReason': return htmlForNormalizationReason(value);
+      case 'normalizationRule': return htmlForNormalizationRule(value, item);
+      case 'normalizationActions': return htmlForNormalizationActions(item);
       default: {
         return plainCellHtml(value, column);
       }
@@ -405,6 +465,11 @@
   function columnWidthBounds(column) {
     if (column?.type === 'selection') return { min: column.width || 40, max: column.width || 40, pad: 0 };
     if (column?.type === 'actions') return { min: column.width || 112, max: column.width || 112, pad: 0 };
+    if (column?.type === 'normalizationActions') return { min: column.width || 500, max: column.width || 560, pad: 0 };
+    if (column?.type === 'normalizationProduct') return { min: 240, max: 380, pad: 42 };
+    if (column?.type === 'normalizationPair') return { min: 190, max: 340, pad: 38 };
+    if (column?.type === 'normalizationRule') return { min: 130, max: 220, pad: 34 };
+    if (column?.type === 'normalizationReason') return { min: 130, max: 180, pad: 34 };
     if (column?.type === 'image') return { min: column.width || 96, max: column.width || 112, pad: 0 };
     if ((column?.field || column?.id) === 'title') return { min: 260, max: 520, pad: 42 };
     if (column?.type === 'matrixCell') return { min: 180, max: 300, pad: 36 };
@@ -444,11 +509,11 @@
       minWidth: column.minWidth || measuredColumnWidth(column, rows),
       maxWidth: column.maxWidth || undefined,
       resizable: true,
-      sortable: column.type !== 'selection' && column.type !== 'actions' && column.type !== 'image',
-      selectable: column.type !== 'selection' && column.type !== 'actions',
+      sortable: column.type !== 'selection' && column.type !== 'actions' && column.type !== 'normalizationActions' && column.type !== 'image',
+      selectable: column.type !== 'selection' && column.type !== 'actions' && column.type !== 'normalizationActions',
       editor: column.editable && TextEditor ? TextEditor : undefined,
       formatter: cellFormatter,
-      cssClass: `ss-grid-cell ss-grid-cell-${column.type || 'text'}${column.type === 'actions' ? ' ss-grid-cell-actions' : ''}`,
+      cssClass: `ss-grid-cell ss-grid-cell-${column.type || 'text'}${column.type === 'actions' || column.type === 'normalizationActions' ? ' ss-grid-cell-actions' : ''}`,
       headerCssClass: 'ss-grid-header'
     }));
   }
@@ -550,11 +615,12 @@
     if (!container?.style) return;
     const rowCount = Array.isArray(projection?.rows) ? projection.rows.length : 0;
     const isMatrix = projection?.mode === 'comparisonMatrix';
+    const isNormalizationReview = projection?.mode === 'normalizationReview';
     const headerHeight = isMatrix ? 132 : 42;
-    const rowHeight = 82;
+    const rowHeight = isNormalizationReview ? 126 : 82;
     const padding = 0;
     const minHeight = rowCount ? headerHeight + rowHeight : 140;
-    const maxRowsBeforeScroll = isMatrix ? 8 : 12;
+    const maxRowsBeforeScroll = isMatrix ? 8 : (isNormalizationReview ? 6 : 12);
     const visibleRows = Math.max(1, Math.min(rowCount || 1, maxRowsBeforeScroll));
     const height = Math.max(minHeight, headerHeight + (visibleRows * rowHeight) + padding);
     container.style.height = `${height}px`;
@@ -588,7 +654,7 @@
       explicitInitialization: false,
       forceFitColumns: false,
       multiColumnSort: true,
-      rowHeight: 82,
+      rowHeight: projection?.mode === 'normalizationReview' ? 126 : 82,
       showCellSelection: false
     };
     const grid = new Slick.Grid(container, dataView, columns, gridOptions);

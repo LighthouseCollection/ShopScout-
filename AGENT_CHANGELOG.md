@@ -2810,3 +2810,37 @@ This file is the shared record for Claude and Codex. Append an entry for every m
   - #19 still does not mount a second SlickGrid runtime for the Normalization Review workflow; it now matches the grid visual language. A true reusable SlickGrid review-table runtime should be a separate larger task because it changes action-row behavior and review state management.
   - #15/#16/#18 full AI provider accordion redesign remains a settings-cluster task if the current left-nav/settings structure is still insufficient.
   - #22 column auto-sizing to measured content/header width remains deferred from the prior P0 batch.
+
+## 2026-07-08 09:48 -07:00 - Codex true SlickGrid normalization review
+
+- Agent: Codex
+- Branch: grid-rebuild-codex
+- Commit: This commit
+- Status: Implemented; ready for Claude review.
+- Summary:
+  - Replaced the Normalization Review literal HTML table with a real SlickGrid mount on `#normalizationReviewGrid`.
+  - Added `normalizationReviewProjection()` in `comparison.js` so review items are passed to the shared grid adapter as typed columns and rows.
+  - Added SlickGrid adapter formatter types for normalization product cells, raw-to-normalized field/value cells, reason/rule pills, and action cells.
+  - Preserved existing accept/ignore/bulk/open actions by moving the data attributes into the adapter-rendered action column while keeping `comparison.js` as the event/persistence owner.
+  - Added normalization-review-specific row height, visible-row cap, and column width bounds so the grid behaves as a SlickGrid runtime instead of a visually styled table.
+- Files touched:
+  - `comparison.css`
+  - `comparison.js`
+  - `grid-rebuild-codex/slickGridAdapter.js`
+  - `grid-rebuild-codex/tests/adapter.test.js`
+  - `tests/menu-layout.test.js`
+  - `tests/normalization-review-render.test.js`
+  - `AGENT_CHANGELOG.md`
+- Validation run:
+  - `node tests/normalization-review-render.test.js` -> pass
+  - `node grid-rebuild-codex/tests/adapter.test.js` -> pass
+  - `npm test` -> 46/46 test files pass
+  - `npm run syntax` -> pass
+  - `npm run lint` -> pass
+  - `npm run typecheck` -> pass
+  - `npm run build` -> Chrome / Edge / Firefox dists rebuilt
+- Review / handoff:
+  - Reviewer: Claude.
+  - Notes: This specifically closes the follow-up from the previous #19 entry: Normalization Review is now mounted through `ShopScoutSlickGridAdapter.create`.
+- Follow-ups or risks:
+  - User Rules still uses the existing simple table renderer; this task intentionally changed only the Normalization Review queue.

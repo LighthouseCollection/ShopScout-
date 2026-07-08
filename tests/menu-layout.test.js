@@ -4,6 +4,7 @@ const path = require('path');
 
 const html = fs.readFileSync(path.join(__dirname, '..', 'comparison.html'), 'utf8');
 const js = fs.readFileSync(path.join(__dirname, '..', 'comparison.js'), 'utf8');
+const gridAdapterJs = fs.readFileSync(path.join(__dirname, '..', 'grid-rebuild-codex', 'slickGridAdapter.js'), 'utf8');
 const css = fs.readFileSync(path.join(__dirname, '..', 'comparison.css'), 'utf8');
 const feedbackJs = fs.readFileSync(path.join(__dirname, '..', 'comparison-feedback.js'), 'utf8');
 const settingsJs = fs.readFileSync(path.join(__dirname, '..', 'settings.js'), 'utf8');
@@ -95,10 +96,10 @@ assert.ok(js.includes('setDuplicateCandidateDecision'), 'duplicate review saves 
 assert.ok(js.includes('openNormalizationReviewPage'), 'comparison script renders normalization review in main content');
 assert.ok(js.includes('collectNormalizationReviewItems'), 'normalization review uses the shared review collector');
 assert.ok(js.includes('rebuildNormalizationForList'), 'normalization review backfills existing captured products before rendering');
-assert.ok(js.includes('data-normalization-action="accept-alias"'), 'normalization review exposes accept-alias workflow');
-assert.ok(js.includes('data-normalization-action="ignore"'), 'normalization review exposes ignore workflow');
-assert.ok(js.includes('data-normalization-bulk-action="accept-alias"'), 'normalization review exposes bulk accept workflow');
-assert.ok(js.includes('data-normalization-bulk-action="ignore"'), 'normalization review exposes bulk ignore workflow');
+assert.ok(gridAdapterJs.includes('data-normalization-action="accept-alias"'), 'normalization review exposes accept-alias workflow');
+assert.ok(gridAdapterJs.includes('data-normalization-action="ignore"'), 'normalization review exposes ignore workflow');
+assert.ok(gridAdapterJs.includes('data-normalization-bulk-action="accept-alias"'), 'normalization review exposes bulk accept workflow');
+assert.ok(gridAdapterJs.includes('data-normalization-bulk-action="ignore"'), 'normalization review exposes bulk ignore workflow');
 assert.ok(js.includes('saveNormalizationReviewDecision'), 'normalization review persists decisions through productRepo');
 assert.ok(js.includes('openNormalizationRulesPage'), 'comparison script renders user normalization rules page');
 assert.ok(js.includes('deleteUserNormalizationRule'), 'user rules page deletes approved mappings through productRepo');

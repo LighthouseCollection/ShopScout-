@@ -2698,6 +2698,29 @@ body.is-info-page .content { display: block; padding: 18px 22px 48px; }
   overflow: auto;
 }
 
+.normalization-review-grid-wrap {
+  border: 1px solid var(--rule, #d1d5db);
+  border-radius: 8px;
+  background: var(--card);
+  overflow: hidden;
+}
+
+.normalization-review-grid {
+  min-height: 0;
+}
+
+.normalization-review-grid .slick-row:nth-child(odd) .slick-cell {
+  background: #f1f1f1;
+}
+
+.normalization-review-grid .slick-row:nth-child(even) .slick-cell {
+  background: #f5f5f5;
+}
+
+.normalization-review-grid .slick-row:hover .slick-cell {
+  background: var(--primary-tint, #e6eef1);
+}
+
 .normalization-review-table {
   width: 100%;
   border-collapse: collapse;
@@ -2851,6 +2874,14 @@ body.is-info-page .content { display: block; padding: 18px 22px 48px; }
 
 .vertical-picker-card:hover {
   border-color: var(--accent);
+  background: var(--paper-2);
+}
+
+.normalization-review-grid code {
+  display: inline-block;
+  border: 1px solid var(--rule-soft, #d1d5db);
+  border-radius: var(--radius);
+  padding: 3px 6px;
   background: var(--paper-2);
 }
 

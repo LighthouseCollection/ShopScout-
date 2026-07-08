@@ -1250,70 +1250,6 @@ async function openDuplicateReviewPage() {
   );
 }
 
-function normalizationReviewRow(item) {
-  const confidence = Math.round(Number(item.confidence || 0) * 100);
-  const reason = item.reason || 'review';
-  const signatureAttrs = `
-    data-review-key="${escAttr(item.reviewKey || '')}"
-    data-product-id="${escAttr(item.productId || '')}"
-    data-raw-field="${escAttr(item.rawField || '')}"
-    data-field="${escAttr(item.field || '')}"
-    data-raw-value="${escAttr(item.raw || '')}"
-    data-normalized-value="${escAttr(item.normalized || '')}"`;
-  const fieldPair = normalizationPairHtml(item.rawField, item.field);
-  const valuePair = normalizationPairHtml(item.raw, item.normalized);
-  return `<tr>
-    <td>
-      <div class="normalization-review-product">
-        <strong title="${escAttr(item.productTitle)}">${esc(truncateText(item.productTitle, 64))}</strong>
-        ${item.source ? `<span>${esc(item.source)}</span>` : ''}
-      </div>
-    </td>
-    <td>${esc(item.category || '-')}</td>
-    <td>${fieldPair}</td>
-    <td>${valuePair}</td>
-    <td><span class="normalization-review-reason">${esc(reason)}</span></td>
-    <td>${confidence}%</td>
-    <td>
-      <code>${esc(item.rule || 'unmapped')}</code>
-      ${item.fieldSource ? `<span>${esc(item.fieldSource)}</span>` : ''}
-    </td>
-    <td>
-      <div class="normalization-review-actions ss-grid-review-actions">
-        <button class="dashboard-primary-action dashboard-secondary-action--small" type="button"
-          data-normalization-action="accept-alias"
-          ${signatureAttrs}>Accept alias</button>
-        <button class="dashboard-secondary-action dashboard-secondary-action--small" type="button"
-          data-normalization-bulk-action="accept-alias"
-          ${signatureAttrs}>Accept all matching</button>
-        <button class="dashboard-secondary-action dashboard-secondary-action--small" type="button"
-          data-normalization-action="ignore"
-          ${signatureAttrs}>Ignore</button>
-        <button class="dashboard-secondary-action dashboard-secondary-action--small" type="button"
-          data-normalization-bulk-action="ignore"
-          ${signatureAttrs}>Ignore all matching</button>
-        ${item.productId ? `<button class="dashboard-secondary-action dashboard-secondary-action--small" type="button" data-duplicate-open="${escAttr(item.productId)}">Open</button>` : ''}
-      </div>
-    </td>
-  </tr>`;
-}
-
-function normalizationValuesMatch(left, right) {
-  return String(left || '').trim().toLowerCase() === String(right || '').trim().toLowerCase();
-}
-
-function normalizationPairHtml(rawValue, normalizedValue) {
-  const raw = String(rawValue || '').trim();
-  const normalized = String(normalizedValue || '').trim();
-  const shown = normalized || raw || '-';
-  if (normalizationValuesMatch(raw, normalized)) {
-    return `<span class="normalization-review-normal">${esc(shown)}</span>`;
-  }
-  return `<span class="normalization-review-raw">${esc(raw || '-')}</span>`
-    + '<span class="normalization-review-arrow">→</span>'
-    + `<span class="normalization-review-normal">${esc(shown)}</span>`;
-}
-
 function normalizationItemFromDataset(dataset) {
   return {
     reviewKey: dataset.reviewKey || '',
@@ -1323,6 +1259,49 @@ function normalizationItemFromDataset(dataset) {
     raw: dataset.rawValue || '',
     normalized: dataset.normalizedValue || ''
   };
+}
+
+function normalizationReviewProjection(items) {
+  const rows = (items || []).map((item, index) => {
+    const confidence = Math.round(Number(item.confidence || 0) * 100);
+    return Object.assign({}, item, {
+      id: item.reviewKey ? `${item.reviewKey}|${index}` : `normalization-review-${index}`,
+      productTitle: item.productTitle || 'Product',
+      category: item.category || '-',
+      reason: item.reason || 'review',
+      confidenceLabel: `${confidence}%`,
+      rule: item.rule || 'unmapped'
+    });
+  });
+  return {
+    mode: 'normalizationReview',
+    columns: [
+      { id: 'product', name: 'Product', field: 'productTitle', type: 'normalizationProduct' },
+      { id: 'category', name: 'Category', field: 'category', type: 'text', width: 230 },
+      { id: 'fieldPair', name: 'Field', field: 'rawField', type: 'normalizationPair', rawField: 'rawField', normalizedField: 'field' },
+      { id: 'valuePair', name: 'Value', field: 'raw', type: 'normalizationPair', rawField: 'raw', normalizedField: 'normalized' },
+      { id: 'reason', name: 'Reason', field: 'reason', type: 'normalizationReason' },
+      { id: 'confidence', name: 'Confidence', field: 'confidenceLabel', type: 'text', width: 120 },
+      { id: 'rule', name: 'Rule', field: 'rule', type: 'normalizationRule' },
+      { id: 'actions', name: '', field: '_actions', type: 'normalizationActions' }
+    ],
+    rows
+  };
+}
+
+function mountNormalizationReviewGrid(items) {
+  const host = document.getElementById('normalizationReviewGrid');
+  const adapter = globalThis.ShopScoutSlickGridAdapter;
+  if (!host) return null;
+  if (!adapter || typeof adapter.create !== 'function') {
+    const message = document.createElement('div');
+    message.className = 'ss-grid-empty';
+    message.textContent = 'SlickGrid runtime is not available.';
+    host.replaceChildren(message);
+    return null;
+  }
+  host.classList.add('ss-grid-host', 'slick-default-theme', 'normalization-review-grid');
+  return adapter.create(host, normalizationReviewProjection(items), {});
 }
 
 function sameNormalizationSignature(a, b) {
@@ -1503,22 +1482,8 @@ async function openNormalizationReviewPage() {
           Accept an alias to add it to this list's user rules library, or ignore noisy values that should not return to the review queue.
           <br>Unmapped means ShopScout did not find a confident library rule yet. Accept alias saves a list-specific user rule; Ignore hides repeated noise for this list.
         </div>
-        <div class="normalization-review-table-wrap ss-grid-review-wrap">
-          <table class="normalization-review-table ss-grid-review-table">
-            <thead>
-              <tr>
-                <th>Product</th>
-                <th>Category</th>
-                <th>Field</th>
-                <th>Value</th>
-                <th>Reason</th>
-                <th>Confidence</th>
-                <th>Rule</th>
-                <th></th>
-              </tr>
-            </thead>
-            <tbody>${items.map(normalizationReviewRow).join('')}</tbody>
-          </table>
+        <div class="normalization-review-grid-wrap ss-grid-review-wrap">
+          <div id="normalizationReviewGrid" class="ss-grid-host slick-default-theme normalization-review-grid" aria-label="Normalization review grid"></div>
         </div>
       </div>`;
 
@@ -1528,6 +1493,7 @@ async function openNormalizationReviewPage() {
     body,
     { wide: true }
   );
+  if (items.length) mountNormalizationReviewGrid(items);
 }
 
 function userRuleRowsHtml(rules) {

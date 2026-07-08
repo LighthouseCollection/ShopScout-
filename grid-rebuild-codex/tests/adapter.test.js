@@ -207,6 +207,35 @@ assert.deepEqual(emittedSort, [
   { field: 'title', dir: 'asc' }
 ], 'SlickGrid multi-sort events emit the full sort chain');
 const actionsHtml = actionsColumn.formatter(0, 1, null, actionsColumn, { id: 'p1' });
+const normalizationProductColumn = { id: 'reviewProduct', field: 'productTitle', type: 'normalizationProduct' };
+const normalizationPairColumn = { id: 'reviewValue', field: 'raw', type: 'normalizationPair', rawField: 'raw', normalizedField: 'normalized' };
+const normalizationActionsColumn = { id: 'reviewActions', field: '_actions', type: 'normalizationActions' };
+const normalizationProductHtml = normalizationProductColumn.formatter
+  ? ''
+  : capturedColumns[0].formatter(0, 1, 'unused', normalizationProductColumn, {
+    productTitle: 'Logitech MX Keys Mini for Mac',
+    source: 'Amazon'
+  });
+const normalizationPairHtml = capturedColumns[0].formatter(0, 1, 'midnight blue', normalizationPairColumn, {
+  raw: 'midnight blue',
+  normalized: 'Navy Blue'
+});
+const normalizationActionsHtml = capturedColumns[0].formatter(0, 1, null, normalizationActionsColumn, {
+  reviewKey: 'p1|colour|color|midnight blue|navy blue',
+  productId: 'p1',
+  rawField: 'Colour',
+  field: 'Color',
+  raw: 'midnight blue',
+  normalized: 'Navy Blue'
+});
+assert.match(normalizationProductHtml, /normalization-review-product/, 'normalization review product cell renders structured product markup');
+assert.match(normalizationPairHtml, /normalization-review-raw/, 'normalization pair cell renders the raw value when it differs');
+assert.match(normalizationPairHtml, /normalization-review-arrow/, 'normalization pair cell renders the raw-to-normalized arrow');
+assert.match(normalizationPairHtml, /Navy Blue/, 'normalization pair cell renders the normalized value');
+assert.match(normalizationActionsHtml, /data-normalization-action="accept-alias"/, 'normalization action cell preserves accept alias action');
+assert.match(normalizationActionsHtml, /data-normalization-bulk-action="ignore"/, 'normalization action cell preserves ignore matching action');
+assert.match(normalizationActionsHtml, /data-review-key="p1\|colour\|color\|midnight blue\|navy blue"/,
+  'normalization action cell carries review identity data');
 const sourceHtml = sourceColumn.formatter(0, 2, 'generic', sourceColumn, {
   source: 'generic',
   url: 'https://www.amazon.com/dp/B0TEST'
