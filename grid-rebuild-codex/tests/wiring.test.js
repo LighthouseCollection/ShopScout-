@@ -53,8 +53,8 @@ assert.ok(/\.ss-grid-host \.slick-cell\.ss-grid-cell-title[\s\S]{0,220}text-alig
   'product-name cells keep product names left aligned');
 assert.ok(/\.ss-grid-logo-token[\s\S]{0,320}text-decoration:\s*none/.test(gridCss),
   'source and brand logo tokens suppress link underlines');
-assert.ok(/\.ss-grid-logo-token[\s\S]{0,360}max-width:\s*80px/.test(gridCss),
-  'source and brand text tokens are capped without image sizing');
+assert.ok(/\.ss-grid-logo-token[\s\S]{0,360}max-width:\s*100%/.test(gridCss),
+  'source and brand text tokens honor their auto-sized column width without a hardcoded pixel cap');
 assert.ok(!gridCss.includes('.ss-grid-logo-img'),
   'grid CSS does not define logo image rules');
 assert.ok(/\.ss-grid-title-text[\s\S]{0,260}-webkit-line-clamp:\s*2/.test(gridCss),
