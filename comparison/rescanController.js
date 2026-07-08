@@ -199,12 +199,21 @@ async function rescanList(productIndexes) {
       }
 
       try {
+        /* Anti-throttling pause between products — scaled to list size.
+           Tiny rescans (<= 3) skip it entirely; small rescans (4-10) get
+           a short 300-800ms breath; large rescans (11+) keep the 3-6s
+           pause so a 50-product sweep doesn't look like a bot. */
         if (scannedUrls > 0) {
-          progressText.textContent = `Pausing before ${i + 1} of ${targetIndexes.length}: ${shortName}...`;
-          await randomDelay(3000, 6000);
+          const total = targetIndexes.length;
+          if (total >= 11) {
+            progressText.textContent = `Pausing before ${i + 1} of ${total}: ${shortName}...`;
+            await randomDelay(3000, 6000);
+          } else if (total >= 4) {
+            await randomDelay(300, 800);
+          }
         }
         scannedUrls++;
-        progressText.textContent = `Scanning ${i + 1} of ${targetIndexes.length}: ${shortName}...`;
+        progressText.textContent = `Scanning ${i + 1} of ${targetIndexes.length}: ${shortName} — loading page...`;
         const resp = await chrome.runtime.sendMessage({ action: 'rescanProduct', url: p.url });
         if (resp?.success && resp.product) {
           const changes = mergeProduct(p, resp.product);
