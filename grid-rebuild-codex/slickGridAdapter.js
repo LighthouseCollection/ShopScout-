@@ -388,7 +388,51 @@
       + `</span>`;
   }
 
-  function toSlickColumns(columns) {
+  function plainHeaderText(column) {
+    return textValue(column?.name || column?.id || '').replace(/<[^>]+>/g, '').trim();
+  }
+
+  function estimateTextWidth(value) {
+    const text = textValue(value).replace(/\s+/g, ' ').trim();
+    if (!text) return 0;
+    return Math.ceil(Math.min(text.length, 72) * 7.2);
+  }
+
+  function clampWidth(value, min, max) {
+    return Math.max(min, Math.min(max, Math.ceil(value)));
+  }
+
+  function columnWidthBounds(column) {
+    if (column?.type === 'selection') return { min: column.width || 40, max: column.width || 40, pad: 0 };
+    if (column?.type === 'actions') return { min: column.width || 112, max: column.width || 112, pad: 0 };
+    if (column?.type === 'image') return { min: column.width || 96, max: column.width || 112, pad: 0 };
+    if ((column?.field || column?.id) === 'title') return { min: 260, max: 520, pad: 42 };
+    if (column?.type === 'matrixCell') return { min: 180, max: 300, pad: 36 };
+    if (column?.type === 'price') return { min: 110, max: 140, pad: 34 };
+    if (column?.type === 'rating') return { min: 128, max: 160, pad: 34 };
+    if (column?.type === 'source' || column?.type === 'brand') return { min: 116, max: 190, pad: 34 };
+    if (column?.type === 'spec') return { min: 170, max: 280, pad: 38 };
+    return { min: 120, max: 280, pad: 34 };
+  }
+
+  function measuredColumnWidth(column, rows) {
+    if (column?.width) return column.width;
+    const bounds = columnWidthBounds(column);
+    const field = column.field || column.id;
+    const header = plainHeaderText(column);
+    let measured = estimateTextWidth(header) + bounds.pad;
+    for (const row of (rows || []).slice(0, 25)) {
+      const value = row?.[field];
+      if (value && typeof value === 'object') {
+        measured = Math.max(measured, estimateTextWidth(value.corrected || value.value || value.raw) + bounds.pad);
+      } else {
+        measured = Math.max(measured, estimateTextWidth(value) + bounds.pad);
+      }
+    }
+    return clampWidth(measured, bounds.min, bounds.max);
+  }
+
+  function toSlickColumns(columns, rows) {
     const Slick = root.Slick || {};
     const TextEditor = Slick.Editors && Slick.Editors.Text;
     return (columns || []).map(column => ({
@@ -396,8 +440,8 @@
       field: column.field || column.id,
       name: headerNameForColumn(column),
       type: column.type || 'text',
-      width: column.width || undefined,
-      minWidth: column.minWidth || column.width || 80,
+      width: measuredColumnWidth(column, rows),
+      minWidth: column.minWidth || measuredColumnWidth(column, rows),
       maxWidth: column.maxWidth || undefined,
       resizable: true,
       sortable: column.type !== 'selection' && column.type !== 'actions' && column.type !== 'image',
@@ -535,7 +579,7 @@
       inlineFilters: true,
       groupItemMetadataProvider: groupProvider
     });
-    const columns = toSlickColumns(projection.columns);
+    const columns = toSlickColumns(projection.columns, projection.rows);
     const gridOptions = {
       autoEdit: false,
       editable: true,
@@ -643,7 +687,7 @@
       grid,
       dataView,
       update(nextProjection) {
-        grid.setColumns(toSlickColumns(nextProjection.columns));
+        grid.setColumns(toSlickColumns(nextProjection.columns, nextProjection.rows));
         applyProjection(dataView, grid, nextProjection);
       },
       updateItem(itemId, nextItem) {

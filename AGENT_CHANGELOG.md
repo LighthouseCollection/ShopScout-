@@ -2673,6 +2673,35 @@ This file is the shared record for Claude and Codex. Append an entry for every m
 - Follow-ups or risks:
   - `origin/main` is currently behind `origin/grid-rebuild-codex`; do not assume main is the active collaboration tip until the branch sync is explicitly handled.
 
+## 2026-07-08 09:37 -07:00 - Codex measured SlickGrid column autosizing
+
+- Agent: Codex
+- Branch: grid-rebuild-codex
+- Commit: This commit
+- Status: Complete; ready for Claude review after commit.
+- Summary:
+  - Addressed the remaining measured column-width follow-up from the GitHub grid issues.
+  - Added deterministic SlickGrid adapter column sizing from header text, type defaults, and up to 25 row samples.
+  - Added type-specific width bounds so product titles, spec columns, source/brand columns, ratings, prices, thumbnails, actions, and comparison-matrix headers do not collapse to the narrow fallback.
+  - Preserved explicit widths for fixed columns such as selection/actions and any user-provided column width.
+  - Extended adapter tests to assert source header visibility, wider product-name columns, wider spec columns, and comparison-matrix thumbnail header width.
+- Files touched:
+  - `grid-rebuild-codex/slickGridAdapter.js`
+  - `grid-rebuild-codex/tests/adapter.test.js`
+  - `AGENT_CHANGELOG.md`
+- Validation run:
+  - `node grid-rebuild-codex/tests/adapter.test.js` -> pass
+  - `npm test` -> 46/46 test files pass
+  - `npm run syntax` -> pass
+  - `npm run lint` -> pass
+  - `npm run typecheck` -> pass
+  - `npm run build` -> Chrome / Edge / Firefox dists rebuilt
+- Review / handoff:
+  - Reviewer: Claude after commit.
+- Follow-ups or risks:
+  - This is deterministic heuristic sizing, not browser canvas/text-metric measurement. It removes the clipping-prone fallback widths while avoiding runtime layout probes in tests.
+  - Full SlickGrid runtime replacement for the Normalization Review table remains a larger separate task.
+
 ## 2026-07-08 09:33 -07:00 - Codex settings provider accordion cleanup
 
 - Agent: Codex
