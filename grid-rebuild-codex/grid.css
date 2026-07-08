@@ -270,13 +270,56 @@ a.ss-grid-logo-token:visited {
   align-items: center;
   gap: 3px;
   max-width: 100%;
-  padding: 2px 7px;
+  padding: 2px 8px;
   border: 1px solid var(--rule-soft, #d1d5db);
-  border-radius: 999px;
+  border-radius: 6px;
   background: var(--paper-2, #eaedf1);
   color: var(--ink-2, #2a3441);
   font-size: 12px;
+  font-weight: 500;
   line-height: 1.35;
+}
+
+/* Semantic pill palette — outline (darker) + filled interior (lighter).
+   ShopScoutValues.pillColorKey(field, value) picks one of these keys
+   based on value-semantic overrides (Available/Missing/etc.), then
+   field-name category (brand→blue, category→purple), then a stable
+   hash of the field name so every value in the same column shares
+   its color. */
+.ss-grid-value-pill[data-pill-color="blue"] {
+  background: hsl(212 65% 95%);
+  border-color: hsl(212 55% 62%);
+  color: hsl(212 60% 32%);
+}
+.ss-grid-value-pill[data-pill-color="green"] {
+  background: hsl(140 55% 94%);
+  border-color: hsl(140 45% 55%);
+  color: hsl(140 55% 26%);
+}
+.ss-grid-value-pill[data-pill-color="red"] {
+  background: hsl(4 70% 95%);
+  border-color: hsl(4 60% 62%);
+  color: hsl(4 65% 36%);
+}
+.ss-grid-value-pill[data-pill-color="amber"] {
+  background: hsl(38 80% 92%);
+  border-color: hsl(38 65% 52%);
+  color: hsl(38 75% 30%);
+}
+.ss-grid-value-pill[data-pill-color="purple"] {
+  background: hsl(270 55% 95%);
+  border-color: hsl(270 45% 65%);
+  color: hsl(270 55% 35%);
+}
+.ss-grid-value-pill[data-pill-color="teal"] {
+  background: hsl(180 55% 93%);
+  border-color: hsl(180 45% 50%);
+  color: hsl(180 55% 25%);
+}
+.ss-grid-value-pill[data-pill-color="slate"] {
+  background: hsl(215 18% 93%);
+  border-color: hsl(215 15% 60%);
+  color: hsl(215 20% 32%);
 }
 
 .ss-grid-pill-qty {

@@ -282,6 +282,60 @@
     };
   }
 
+  /* ---- Pill color palette + semantic assignment ---------------
+     Pills use a fixed 7-color palette rather than hash-of-value HSL,
+     so two rows never accidentally get the same color for unrelated
+     values. Precedence:
+       1. Value-semantic overrides (Available/Missing/Yes/No/etc.)
+       2. Field-name semantic mapping (brand → blue, category → purple)
+       3. Hash of field name → palette bucket (stable per column)
+     A returned key of '' means no color pill (muted gray default).  */
+  const PILL_COLOR_KEYS = ['blue', 'green', 'red', 'amber', 'purple', 'teal', 'slate'];
+
+  const POSITIVE_STATUS = new Set([
+    'active', 'available', 'yes', 'in stock', 'enabled', 'on', 'visible',
+    'ready', 'valid', 'included', 'supported', 'passed'
+  ]);
+  const NEGATIVE_STATUS = new Set([
+    'deactivated', 'disabled', 'missing', 'no', 'off', 'unavailable',
+    'out of stock', 'failed', 'invalid', 'not included', 'not supported',
+    'error', 'blocked', 'removed', 'expired'
+  ]);
+  const WARNING_STATUS = new Set([
+    'low stock', 'limited', 'pending', 'expiring soon', 'partial',
+    'warning', 'review', 'unmapped'
+  ]);
+  const IDENTIFIER_FIELDS = new Set([
+    'brand', 'source', 'model', 'modelname', 'modelnumber', 'sku', 'gtin',
+    'upc', 'ean', 'asin', 'sellerid'
+  ]);
+  const TAXONOMY_FIELDS = new Set([
+    'category', 'type', 'sellername', 'seller', 'vertical', 'subcategory'
+  ]);
+  const NUMERIC_LIKE_FIELDS = new Set([
+    'weight', 'height', 'width', 'depth', 'length', 'capacity',
+    'batterycapacity', 'airflowcapacity', 'voltage', 'current',
+    'maximumpressure', 'wattage'
+  ]);
+
+  function normalizeKey(str) {
+    return String(str || '').toLowerCase().replace(/^spec:/, '').replace(/[\s_-]/g, '');
+  }
+
+  function pillColorKey(field, value) {
+    const val = String(value || '').trim().toLowerCase();
+    if (val && POSITIVE_STATUS.has(val)) return 'green';
+    if (val && NEGATIVE_STATUS.has(val)) return 'red';
+    if (val && WARNING_STATUS.has(val)) return 'amber';
+    const key = normalizeKey(field);
+    if (!key) return '';
+    if (IDENTIFIER_FIELDS.has(key)) return 'blue';
+    if (TAXONOMY_FIELDS.has(key)) return 'purple';
+    if (NUMERIC_LIKE_FIELDS.has(key)) return 'teal';
+    if (key === 'notes' || key === 'description' || key === 'title') return '';
+    return PILL_COLOR_KEYS[hashString(key) % PILL_COLOR_KEYS.length];
+  }
+
   /* ---- Multi-value split (one-pill-per-part) ------------------- */
   function normalizePillPart(raw) {
     const text = String(raw || '').trim();
@@ -344,6 +398,7 @@
 
   Object.assign(NS, {
     prettify, parseNumeric, stableColor, splitToPills,
+    pillColorKey, PILL_COLOR_KEYS,
     computeRanks, polarityForField,
     /* exposed for parity with the old internals if needed */
     normalizeTime, normalizeMetric, normalizeDimensions,

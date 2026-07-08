@@ -205,7 +205,12 @@
     const parts = Array.isArray(splitParts) && splitParts.length
       ? splitParts
       : [text];
-    return `<span class="ss-grid-pill-list">${parts.map(part => `<span class="ss-grid-value-pill">${pillPartHtml(part)}</span>`).join('')}</span>`;
+    const keyFn = root.ShopScoutValues?.pillColorKey;
+    return `<span class="ss-grid-pill-list">${parts.map(part => {
+      const colorKey = typeof keyFn === 'function' ? keyFn(field, part) : '';
+      const attr = colorKey ? ` data-pill-color="${escAttr(colorKey)}"` : '';
+      return `<span class="ss-grid-value-pill"${attr}>${pillPartHtml(part)}</span>`;
+    }).join('')}</span>`;
   }
 
   function pillPartHtml(part) {
