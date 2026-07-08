@@ -521,6 +521,12 @@ function bindEvents() {
       return;
     }
 
+    const userRuleNew = e.target.closest('[data-user-rule-new]');
+    if (userRuleNew) {
+      await openNewUserRuleDialog(userRuleNew.dataset.userRuleNew || '');
+      return;
+    }
+
     const userRuleAction = e.target.closest('[data-user-rule-action]');
     if (userRuleAction) {
       const repo = globalThis.SSProductRepo;
@@ -1631,8 +1637,17 @@ async function openNormalizationRulesPage() {
     'User Normalization Rules',
     `${data.activeList || 'Current list'} · list-specific approved mappings`,
     `<div class="normalization-review-page">
-      <div class="normalization-review-note">
-        Edit or delete mappings approved from Normalization Review. These rules apply only to this product list.
+      <div class="normalization-review-toolbar">
+        <div class="normalization-review-toolbar-summary">
+          <strong>${userRuleRows(rules).length} rule${userRuleRows(rules).length === 1 ? '' : 's'}.</strong>
+          Add a field or value alias directly, or accept mappings from Normalization Review as you review products.
+        </div>
+        <div class="normalization-review-toolbar-actions">
+          <button class="dashboard-primary-action" type="button" data-user-rule-new="field-alias"
+            title="Map one raw attribute name (e.g. Battery Life) to another canonical name (e.g. Battery Runtime).">New field alias</button>
+          <button class="dashboard-secondary-action" type="button" data-user-rule-new="value-alias"
+            title="Map one raw value (e.g. 4000mAh) to a canonical value (e.g. 4Ah) for a specific attribute.">New value alias</button>
+        </div>
       </div>
       ${hasRules
         ? `<div class="user-rules-grid-wrap ss-grid-review-wrap">
@@ -1640,11 +1655,73 @@ async function openNormalizationRulesPage() {
           </div>`
         : `<div class="dashboard-empty">
             <h3>No user rules yet</h3>
-            <p>Accept aliases or ignore items from Normalization Review to build this list-specific library.</p>
+            <p>Use "New field alias" / "New value alias" above, or accept mappings from Normalization Review as you review products.</p>
           </div>`}
     </div>`
   );
   if (hasRules) mountUserRulesGrid(rules);
+}
+
+async function openNewUserRuleDialog(kind) {
+  const repo = globalThis.SSProductRepo;
+  const ui = globalThis.ShopScoutUI;
+  if (!repo || typeof repo.getActiveListId !== 'function' || typeof repo.saveNormalizationReviewDecision !== 'function') {
+    toast.show('User rule storage is not available.', 'error');
+    return;
+  }
+  if (!ui || typeof ui.modal?.open !== 'function') {
+    toast.show('UI modal is not available.', 'error');
+    return;
+  }
+  const isField = kind === 'field-alias';
+  const bodyHtml = isField
+    ? `<div class="user-rule-form">
+        <label class="user-rule-form-label" for="userRuleRawField">Raw field name (as it appears on the product page)</label>
+        <input class="user-rule-form-input" id="userRuleRawField" type="text" placeholder="e.g. Battery Life" autocomplete="off">
+        <label class="user-rule-form-label" for="userRuleCanonicalField">Canonical field name (what ShopScout should use)</label>
+        <input class="user-rule-form-input" id="userRuleCanonicalField" type="text" placeholder="e.g. Battery Runtime" autocomplete="off">
+        <p class="user-rule-form-hint">All products with the raw field will roll into the canonical field going forward.</p>
+      </div>`
+    : `<div class="user-rule-form">
+        <label class="user-rule-form-label" for="userRuleValueField">Attribute this value belongs to</label>
+        <input class="user-rule-form-input" id="userRuleValueField" type="text" placeholder="e.g. Battery Capacity" autocomplete="off">
+        <label class="user-rule-form-label" for="userRuleRawValue">Raw value</label>
+        <input class="user-rule-form-input" id="userRuleRawValue" type="text" placeholder="e.g. 4000mAh" autocomplete="off">
+        <label class="user-rule-form-label" for="userRuleNormalizedValue">Normalized value</label>
+        <input class="user-rule-form-input" id="userRuleNormalizedValue" type="text" placeholder="e.g. 4 Ah" autocomplete="off">
+        <p class="user-rule-form-hint">Every occurrence of the raw value on this attribute will be rewritten to the normalized value.</p>
+      </div>`;
+  const trusted = ui.render.html`${ui.render.raw(bodyHtml)}`;
+  const outcome = await ui.modal.open({
+    title: isField ? 'New field alias' : 'New value alias',
+    body: trusted,
+    width: 'min(520px, 92vw)',
+    actions: [
+      { label: 'Cancel', value: 'cancel' },
+      { label: 'Save rule', value: 'save', isDefault: true, isPrimary: true }
+    ]
+  });
+  if (outcome !== 'save') return;
+  const readVal = id => (document.getElementById(id)?.value || '').trim();
+  const item = isField
+    ? { rawField: readVal('userRuleRawField'), field: readVal('userRuleCanonicalField'), raw: '', normalized: '' }
+    : { rawField: readVal('userRuleValueField'), field: readVal('userRuleValueField'), raw: readVal('userRuleRawValue'), normalized: readVal('userRuleNormalizedValue') };
+  if (isField && (!item.rawField || !item.field)) {
+    toast.show('Both raw field name and canonical field name are required.', 'error');
+    return;
+  }
+  if (!isField && (!item.field || !item.raw || !item.normalized)) {
+    toast.show('Attribute, raw value, and normalized value are all required.', 'error');
+    return;
+  }
+  const listId = await repo.getActiveListId();
+  const result = await repo.saveNormalizationReviewDecision(listId, { action: 'accept-alias', item });
+  if (!result?.ok) {
+    toast.show('Could not save user rule.', 'error');
+    return;
+  }
+  toast.show(isField ? 'Field alias saved.' : 'Value alias saved.');
+  await openNormalizationRulesPage();
 }
 
 function closeSettingsPage(shouldRender = true) {

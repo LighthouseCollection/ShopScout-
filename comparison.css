@@ -2739,6 +2739,40 @@ body.is-info-page .content { display: block; padding: 18px 22px 48px; }
   flex: 0 0 auto;
 }
 
+.user-rule-form {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.user-rule-form-label {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--ink-3, #5a6470);
+  margin-top: 10px;
+}
+.user-rule-form-input {
+  padding: 8px 10px;
+  border: 1px solid var(--rule, #d1d5db);
+  border-radius: var(--radius-sm, 4px);
+  background: var(--surface, #fff);
+  color: var(--ink, #0f1419);
+  font: inherit;
+  font-size: 13px;
+}
+.user-rule-form-input:focus {
+  outline: none;
+  border-color: var(--primary, #0b3d4f);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--primary, #0b3d4f) 20%, transparent);
+}
+.user-rule-form-hint {
+  margin-top: 12px;
+  color: var(--ink-3, #5a6470);
+  font-size: 12px;
+  line-height: 1.5;
+}
+
 .normalization-review-table-wrap {
   border: 1px solid var(--rule, #d1d5db);
   border-radius: 8px;
