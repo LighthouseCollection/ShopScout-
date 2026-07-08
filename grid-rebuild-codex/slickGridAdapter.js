@@ -288,11 +288,11 @@
   function htmlForNormalizationActions(item) {
     const attrs = normalizationActionAttrs(item);
     return `<div class="normalization-review-actions ss-grid-review-actions">
-      <button class="dashboard-primary-action dashboard-secondary-action--small" type="button" data-normalization-action="accept-alias" ${attrs}>Accept alias</button>
-      <button class="dashboard-secondary-action dashboard-secondary-action--small" type="button" data-normalization-bulk-action="accept-alias" ${attrs}>Accept all matching</button>
-      <button class="dashboard-secondary-action dashboard-secondary-action--small" type="button" data-normalization-action="ignore" ${attrs}>Ignore</button>
-      <button class="dashboard-secondary-action dashboard-secondary-action--small" type="button" data-normalization-bulk-action="ignore" ${attrs}>Ignore all matching</button>
-      ${item?.productId ? `<button class="dashboard-secondary-action dashboard-secondary-action--small" type="button" data-duplicate-open="${escAttr(item.productId)}">Open</button>` : ''}
+      <button class="dashboard-primary-action dashboard-secondary-action--small" type="button" data-normalization-action="accept-alias" title="Save this raw → normalized mapping as a user rule for this row only." ${attrs}>Accept alias</button>
+      <button class="dashboard-secondary-action dashboard-secondary-action--small" type="button" data-normalization-bulk-action="accept-alias" title="Save the mapping AND apply it to every other row in the queue with the same raw text." ${attrs}>Accept all matching</button>
+      <button class="dashboard-secondary-action dashboard-secondary-action--small" type="button" data-normalization-action="ignore" title="Mark this row as intentionally ignored so ShopScout never asks about this exact case again." ${attrs}>Ignore</button>
+      <button class="dashboard-secondary-action dashboard-secondary-action--small" type="button" data-normalization-bulk-action="ignore" title="Ignore this row plus every other row in the queue with the same raw text." ${attrs}>Ignore all matching</button>
+      ${item?.productId ? `<button class="dashboard-secondary-action dashboard-secondary-action--small" type="button" data-duplicate-open="${escAttr(item.productId)}" title="Open this product's detail page so you can inspect the source value in context.">Open</button>` : ''}
     </div>`;
   }
 
@@ -548,6 +548,7 @@
       id: column.id,
       field: column.field || column.id,
       name: headerNameForColumn(column),
+      toolTip: column.toolTip || undefined,
       type: column.type || 'text',
       width: measuredColumnWidth(column, rows),
       minWidth: column.minWidth || measuredColumnWidth(column, rows),
@@ -662,7 +663,7 @@
     const isNormalizationReview = projection?.mode === 'normalizationReview';
     const isUserRules = projection?.mode === 'userRules';
     const headerHeight = isMatrix ? 132 : 42;
-    const rowHeight = isNormalizationReview ? 126 : (isUserRules ? 78 : 82);
+    const rowHeight = isNormalizationReview ? 64 : (isUserRules ? 60 : 82);
     const padding = 0;
     const minHeight = rowCount ? headerHeight + rowHeight : 140;
     const maxRowsBeforeScroll = isMatrix ? 8 : (isNormalizationReview ? 6 : 12);
@@ -699,7 +700,7 @@
       explicitInitialization: false,
       forceFitColumns: false,
       multiColumnSort: true,
-      rowHeight: projection?.mode === 'normalizationReview' ? 126 : (projection?.mode === 'userRules' ? 78 : 82),
+      rowHeight: projection?.mode === 'normalizationReview' ? 64 : (projection?.mode === 'userRules' ? 60 : 82),
       showCellSelection: false,
       enableTextSelectionOnCells: true
     };

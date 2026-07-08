@@ -1276,13 +1276,20 @@ function normalizationReviewProjection(items) {
   return {
     mode: 'normalizationReview',
     columns: [
-      { id: 'product', name: 'Product', field: 'productTitle', type: 'normalizationProduct' },
-      { id: 'category', name: 'Category', field: 'category', type: 'text', width: 230 },
-      { id: 'fieldPair', name: 'Field', field: 'rawField', type: 'normalizationPair', rawField: 'rawField', normalizedField: 'field' },
-      { id: 'valuePair', name: 'Value', field: 'raw', type: 'normalizationPair', rawField: 'raw', normalizedField: 'normalized' },
-      { id: 'reason', name: 'Reason', field: 'reason', type: 'normalizationReason' },
-      { id: 'confidence', name: 'Confidence', field: 'confidenceLabel', type: 'text', width: 120 },
-      { id: 'rule', name: 'Rule', field: 'rule', type: 'normalizationRule' },
+      { id: 'product', name: 'Product', field: 'productTitle', type: 'normalizationProduct',
+        toolTip: 'The product this normalization decision belongs to.' },
+      { id: 'category', name: 'Category', field: 'category', type: 'text', width: 230,
+        toolTip: 'The vertical/category detected for this product.' },
+      { id: 'fieldPair', name: 'Field', field: 'rawField', type: 'normalizationPair', rawField: 'rawField', normalizedField: 'field',
+        toolTip: 'Raw attribute name from the source page → what ShopScout would normalize it to.' },
+      { id: 'valuePair', name: 'Value', field: 'raw', type: 'normalizationPair', rawField: 'raw', normalizedField: 'normalized',
+        toolTip: 'Raw value from the source page → normalized value ShopScout would use.' },
+      { id: 'reason', name: 'Reason', field: 'reason', type: 'normalizationReason',
+        toolTip: 'Why this ended up in the review queue (unmapped, low-confidence, conflict, etc.).' },
+      { id: 'confidence', name: 'Confidence', field: 'confidenceLabel', type: 'text', width: 120,
+        toolTip: 'How sure the normalization engine is about its guess. 0% means no canonical match was found.' },
+      { id: 'rule', name: 'Rule', field: 'rule', type: 'normalizationRule',
+        toolTip: 'Which normalization rule flagged this item (unmapped, brand-alias, spec-alias, etc.).' },
       { id: 'actions', name: '', field: '_actions', type: 'normalizationActions' }
     ],
     rows
