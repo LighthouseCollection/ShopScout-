@@ -45,6 +45,8 @@ assert.ok(/\.ss-grid-host \.slick-cell[\s\S]{0,180}align-items:\s*center/.test(g
   'grid cells vertically center their contents');
 assert.ok(/\.ss-grid-host \.slick-cell[\s\S]{0,220}justify-content:\s*center/.test(gridCss),
   'grid cells horizontally center their contents by default');
+assert.ok(/\.ss-grid-host \.slick-cell[\s\S]{0,520}user-select:\s*text/.test(gridCss),
+  'grid cells allow normal browser text selection for copy/paste');
 assert.ok(/\.ss-grid-host \.slick-cell\.ss-grid-cell-title[\s\S]{0,180}justify-content:\s*flex-start/.test(gridCss),
   'product-name cells keep the title wrapper left aligned');
 assert.ok(/\.ss-grid-host \.slick-cell\.ss-grid-cell-title[\s\S]{0,220}text-align:\s*left/.test(gridCss),
@@ -69,6 +71,8 @@ assert.ok(/\.ss-grid-group-title[\s\S]{0,160}font-weight:\s*700/.test(gridCss),
   'native grouping titles are bold');
 assert.ok(gridCss.includes('.ss-grid-group-label'),
   'native grouping title includes an explicit Group label element');
+assert.ok(/\.ss-grid-action-btn[\s\S]{0,360}user-select:\s*none/.test(gridCss),
+  'icon action buttons opt out of text selection while data cells remain selectable');
 
 for (const logoName of ['amazon.svg', 'logitech.svg', 'microsoft.svg', 'newegg.svg']) {
   assert.ok(!fs.existsSync(path.join(root, 'logos', logoName)), `${logoName} is removed from the local logo cache`);

@@ -102,6 +102,12 @@ assert.deepStrictEqual(
 );
 
 assert.deepStrictEqual(
+  JSON.parse(JSON.stringify(featureItems.map(item => item.field))),
+  ['Backlit', 'Low-Profile Key', 'Rechargeable'],
+  'wrapper feature values are promoted to individual review attributes instead of repeating Additional Features'
+);
+
+assert.deepStrictEqual(
   JSON.parse(JSON.stringify(featureItems.map(item => item.normalized))),
   ['Backlit', 'Low-Profile Key', 'Rechargeable'],
   'split feature review items keep raw and normalized values aligned'

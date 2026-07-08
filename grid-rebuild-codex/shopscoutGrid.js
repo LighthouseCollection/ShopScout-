@@ -595,7 +595,8 @@
         groupColumns.forEach(column => {
           const field = column.id;
           const required = !!column.required;
-          const hidden = !required && localVisibility[field] === false;
+          const hidden = !required && (localVisibility[field] === false
+            || (column.defaultHidden && localVisibility[field] !== true));
           const hideInput = dom.elem('input', {
             attrs: { type: 'checkbox', value: field }
           });
@@ -603,6 +604,7 @@
           hideInput.disabled = required;
           hideInput.addEventListener('change', () => {
             if (hideInput.checked) localVisibility[field] = false;
+            else if (column.defaultHidden) localVisibility[field] = true;
             else delete localVisibility[field];
             ensureStore().dispatch({ columnVisibility: Object.assign({}, localVisibility) });
             return refreshGridData();

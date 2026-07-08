@@ -2598,6 +2598,51 @@ This file is the shared record for Claude and Codex. Append an entry for every m
   - None from this milestone. Session work is fully shipped.
   - Open items on the roadmap remain in their earlier entries: task #70 (ProductSpec consumer migration, pre-existing before this session), possible Track B for ESCI search intent (deferred by design), real Icecat vocabulary generator (deferred, fixture in place), real ESCI parquet generator (deferred, needs parquet dep decision).
 
+## 2026-07-08 08:05 -07:00 - Codex P0 GitHub issue batch: normalization review + grid display
+
+- Agent: Codex
+- Branch: grid-rebuild-codex
+- Commit: This commit
+- Status: Complete; ready for Claude review.
+- Summary:
+  - User clarified that "resolve" means inspect the issue, implement a fix, validate it, and then mark it ready for GitHub closure.
+  - GitHub issue page is not accessible from this Codex session without authenticated browser/CLI access; used `docs/ISSUE_TRIAGE_2026-07-08.md` as the local issue source for items with enough detail.
+  - Addressed the first P0 batch:
+    - #14: Source is no longer shown in the default product rows grid, but remains available in `allColumns` and can be explicitly re-enabled from the columns modal.
+    - #4: list-wrapper fields such as `Additional Features` now promote each split value into its own review attribute instead of repeating the wrapper field.
+    - #21: normalization review rows no longer render `raw -> normalized` when both sides are identical; unchanged values render once.
+    - #12: SlickGrid host height now shrinks for small product lists instead of leaving a large empty viewport-height table.
+    - #22 partial: rating count is rendered on a second line, and data cells allow normal text selection while action buttons opt out.
+- Files touched:
+  - `comparison.js`
+  - `normalization/review.js`
+  - `grid-rebuild-codex/projections.js`
+  - `grid-rebuild-codex/shopscoutGrid.js`
+  - `grid-rebuild-codex/slickGridAdapter.js`
+  - `grid-rebuild-codex/grid.css`
+  - `grid-rebuild-codex/tests/adapter.test.js`
+  - `grid-rebuild-codex/tests/projections.test.js`
+  - `grid-rebuild-codex/tests/wiring.test.js`
+  - `tests/normalization-review.test.js`
+  - `tests/normalization-review-render.test.js`
+  - `AGENT_CHANGELOG.md`
+- Validation run:
+  - `node grid-rebuild-codex/tests/adapter.test.js` -> pass
+  - `node grid-rebuild-codex/tests/projections.test.js` -> pass
+  - `node grid-rebuild-codex/tests/wiring.test.js` -> pass
+  - `node tests/normalization-review.test.js` -> pass
+  - `node tests/normalization-review-render.test.js` -> pass
+  - `npm test` -> 46/46 test files pass
+  - `npm run syntax` -> pass
+  - `npm run lint` -> pass
+  - `npm run typecheck` -> pass
+  - `npm run build` -> Chrome / Edge / Firefox dists rebuilt
+- Review / handoff:
+  - Reviewer: Claude after commit.
+- Follow-ups or risks:
+  - #22 column auto-sizing to content/header width is not complete in this batch; that needs a measured SlickGrid autosize pass and should be handled separately.
+  - Image-only issues (#7, #8, #13, #18, #19) still require GitHub authenticated access or pasted screenshots.
+
 ## 2026-07-08 03:07 -07:00 - Codex fix for issue #3 runtime breadcrumb matcher + side-panel test
 
 - Agent: Codex

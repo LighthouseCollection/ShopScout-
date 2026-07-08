@@ -1260,22 +1260,16 @@ function normalizationReviewRow(item) {
     data-field="${escAttr(item.field || '')}"
     data-raw-value="${escAttr(item.raw || '')}"
     data-normalized-value="${escAttr(item.normalized || '')}"`;
+  const fieldPair = normalizationPairHtml(item.rawField, item.field);
+  const valuePair = normalizationPairHtml(item.raw, item.normalized);
   return `<tr>
     <td>
       <strong title="${escAttr(item.productTitle)}">${esc(truncateText(item.productTitle, 64))}</strong>
       ${item.source ? `<span>${esc(item.source)}</span>` : ''}
     </td>
     <td>${esc(item.category || '-')}</td>
-    <td>
-      <span class="normalization-review-raw">${esc(item.rawField || '-')}</span>
-      <span class="normalization-review-arrow">→</span>
-      <span class="normalization-review-normal">${esc(item.field || '-')}</span>
-    </td>
-    <td>
-      <span class="normalization-review-raw">${esc(item.raw || '-')}</span>
-      <span class="normalization-review-arrow">→</span>
-      <span class="normalization-review-normal">${esc(item.normalized || '-')}</span>
-    </td>
+    <td>${fieldPair}</td>
+    <td>${valuePair}</td>
     <td><span class="normalization-review-reason">${esc(reason)}</span></td>
     <td>${confidence}%</td>
     <td>
@@ -1300,6 +1294,22 @@ function normalizationReviewRow(item) {
       </div>
     </td>
   </tr>`;
+}
+
+function normalizationValuesMatch(left, right) {
+  return String(left || '').trim().toLowerCase() === String(right || '').trim().toLowerCase();
+}
+
+function normalizationPairHtml(rawValue, normalizedValue) {
+  const raw = String(rawValue || '').trim();
+  const normalized = String(normalizedValue || '').trim();
+  const shown = normalized || raw || '-';
+  if (normalizationValuesMatch(raw, normalized)) {
+    return `<span class="normalization-review-normal">${esc(shown)}</span>`;
+  }
+  return `<span class="normalization-review-raw">${esc(raw || '-')}</span>`
+    + '<span class="normalization-review-arrow">→</span>'
+    + `<span class="normalization-review-normal">${esc(shown)}</span>`;
 }
 
 function normalizationItemFromDataset(dataset) {

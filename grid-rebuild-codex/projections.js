@@ -15,7 +15,7 @@
     { id: 'title', field: 'title', name: 'Name', type: 'text', minWidth: 260, editable: true, required: true },
     { id: 'brand', field: 'brand', name: 'Brand', type: 'brand', minWidth: 120, editable: true },
     { id: 'newPrice', field: 'newPrice', name: 'Price', type: 'price', width: 104, editable: true },
-    { id: 'source', field: 'source', name: 'Source', type: 'source', width: 118 },
+    { id: 'source', field: 'source', name: 'Source', type: 'source', width: 118, defaultHidden: true },
     { id: 'modelName', field: 'modelName', name: 'Model', type: 'text', minWidth: 160, editable: true },
     { id: 'rating', field: 'rating', name: 'Rating', type: 'rating', width: 128, editable: true },
     { id: 'notes', field: 'notes', name: 'Notes', type: 'text', minWidth: 160, editable: true }
@@ -279,7 +279,12 @@
         if (pinned.has(next.id)) next.pinned = true;
         return next;
       })
-      .filter(column => column.required || visibility[column.id] !== false);
+      .filter(column => {
+        if (column.required) return true;
+        if (visibility[column.id] === false) return false;
+        if (column.defaultHidden && visibility[column.id] !== true) return false;
+        return true;
+      });
     const trailingActions = prepared.filter(column => column.type === 'actions');
     const reorderable = prepared.filter(column => column.type !== 'actions');
     if (!order.length) return reorderable.concat(trailingActions);

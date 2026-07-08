@@ -122,9 +122,19 @@ const rowsProjection = projections.buildProductsRowsProjection(products, {
 assert.equal(rowsProjection.mode, 'productsRows');
 assert.deepEqual(
   rowsProjection.columns.map(column => column.id).slice(0, 9),
-  ['select', 'thumb', 'title', 'brand', 'newPrice', 'source', 'modelName', 'rating', 'notes'],
-  'products-as-rows starts with stable base columns'
+  ['select', 'thumb', 'title', 'brand', 'newPrice', 'modelName', 'rating', 'notes', 'spec:battery life'],
+  'products-as-rows hides Source from the default visible columns'
 );
+assert.ok(rowsProjection.allColumns.some(column => column.id === 'source'),
+  'Source remains available in the columns modal even when hidden by default');
+assert.ok(!rowsProjection.columns.some(column => column.id === 'source'),
+  'Source is not visible until the user explicitly enables it');
+const sourceEnabledProjection = projections.buildProductsRowsProjection(products, {
+  visibleSpecKeys: ['battery life'],
+  viewState: { columnVisibility: { source: true } }
+});
+assert.ok(sourceEnabledProjection.columns.some(column => column.id === 'source'),
+  'Source can be explicitly re-enabled from column visibility state');
 assert.ok(rowsProjection.columns.some(column => column.id === 'spec:battery life'),
   'requested canonical spec columns are included');
 assert.ok(rowsProjection.columns.some(column => column.id === 'spec:dpi'),

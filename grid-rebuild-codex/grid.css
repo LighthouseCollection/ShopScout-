@@ -68,6 +68,7 @@
   white-space: normal;
   overflow: hidden;
   text-overflow: ellipsis;
+  user-select: text;
 }
 
 .ss-grid-host .slick-cell.active,
@@ -204,9 +205,25 @@ a.ss-grid-logo-token:visited {
 
 .ss-grid-rating {
   display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  font-weight: 650;
+  text-align: center;
+}
+
+.ss-grid-rating-main {
+  display: inline-flex;
   align-items: center;
   gap: 4px;
-  font-weight: 650;
+}
+
+.ss-grid-rating-count {
+  color: var(--ink-3, #5a6470);
+  font-size: 11px;
+  font-weight: 500;
+  line-height: 1.2;
 }
 
 .ss-grid-stars {
@@ -267,6 +284,7 @@ a.ss-grid-logo-token:visited {
   font-size: 14px;
   line-height: 1;
   cursor: pointer;
+  user-select: none;
 }
 
 .ss-grid-action-btn:hover {

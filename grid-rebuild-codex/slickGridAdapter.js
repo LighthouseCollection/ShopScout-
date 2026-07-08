@@ -150,7 +150,10 @@
     const filled = Number.isFinite(numeric) ? Math.max(0, Math.min(5, Math.round(numeric))) : 0;
     const stars = '★'.repeat(filled) + '☆'.repeat(5 - filled);
     const aria = rating ? ` aria-label="${escAttr(`${rating} out of 5`)}"` : '';
-    return `<span class="ss-grid-rating"${aria}><span class="ss-grid-stars" aria-hidden="true">${stars}</span> <span>${esc(rating || '-')}</span></span>${reviews ? ` <span class="ss-grid-sub">(${esc(reviews)})</span>` : ''}`;
+    return `<span class="ss-grid-rating"${aria}>`
+      + `<span class="ss-grid-rating-main"><span class="ss-grid-stars" aria-hidden="true">${stars}</span> <span>${esc(rating || '-')}</span></span>`
+      + `${reviews ? `<span class="ss-grid-rating-count">${esc(reviews)} reviews</span>` : ''}`
+      + '</span>';
   }
 
   function htmlForPrice(value) {
@@ -461,6 +464,7 @@
 
   function applyProjection(dataView, grid, projection) {
     grid.getContainerNode?.()?.classList?.toggle?.('ss-grid-is-matrix', projection?.mode === 'comparisonMatrix');
+    applyHostHeight(grid.getContainerNode?.(), projection);
     dataView.beginUpdate();
     dataView.setItems(projection.rows || [], 'id');
     dataView.setGrouping(groupingInfo(projection));
@@ -472,6 +476,21 @@
     applySortIndicator(grid, projection);
     grid.resizeCanvas();
     grid.render();
+  }
+
+  function applyHostHeight(container, projection) {
+    if (!container?.style) return;
+    const rowCount = Array.isArray(projection?.rows) ? projection.rows.length : 0;
+    const isMatrix = projection?.mode === 'comparisonMatrix';
+    const headerHeight = isMatrix ? 104 : 42;
+    const rowHeight = 82;
+    const padding = 0;
+    const minHeight = rowCount ? headerHeight + rowHeight : 140;
+    const maxRowsBeforeScroll = isMatrix ? 8 : 12;
+    const visibleRows = Math.max(1, Math.min(rowCount || 1, maxRowsBeforeScroll));
+    const height = Math.max(minHeight, headerHeight + (visibleRows * rowHeight) + padding);
+    container.style.height = `${height}px`;
+    container.style.minHeight = '0';
   }
 
   function create(container, projection, options) {

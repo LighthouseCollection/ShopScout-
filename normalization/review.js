@@ -94,17 +94,19 @@
       || key === 'recommended use';
   }
 
-  function splitReviewValues(field, raw, normalized) {
+function splitReviewValues(field, raw, normalized) {
     if (!isListLikeFeatureField(field)) {
-      return [{ raw, normalized }];
+      return [{ field, rawField: '', raw, normalized }];
     }
     const rawParts = text(raw).split(/\s*(?:[,;|])\s*/).map(text).filter(Boolean);
     if (rawParts.length <= 1) {
-      return [{ raw, normalized }];
+      return [{ field, rawField: '', raw, normalized }];
     }
     const normalizedParts = text(normalized).split(/\s*(?:[,;|])\s*/).map(text).filter(Boolean);
     const sameShape = normalizedParts.length === rawParts.length;
     return rawParts.map((part, index) => ({
+      field: sameShape ? normalizedParts[index] : part,
+      rawField: part,
       raw: part,
       normalized: sameShape ? normalizedParts[index] : part
     }));
@@ -122,14 +124,16 @@
         const rawField = text(entry.rawField || field);
         const splitValues = splitReviewValues(field, entry.raw, entry.normalized);
         for (const value of splitValues) {
+          const reviewField = text(value.field || field);
+          const reviewRawField = text(value.rawField || rawField);
           const row = {
             productId: text(product.id || product.url || `product-${productIndex + 1}`),
             productIndex,
             productTitle: text(product.title || product.productName || product.listingTitle || 'Untitled product'),
             source: text(product.source || product.retailer || ''),
             category: categoryLeaf(product),
-            field,
-            rawField,
+            field: reviewField,
+            rawField: reviewRawField,
             raw: value.raw,
             normalized: value.normalized,
             confidence: Number(entry.confidence) || 0,

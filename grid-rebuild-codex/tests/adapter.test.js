@@ -39,6 +39,7 @@ assert.ok(adapter, 'adapter namespace is registered');
 const host = {
   children: [],
   ownerDocument: ctx.document,
+  style: {},
   replaceChildren(...children) {
     this.children = children;
   }
@@ -102,6 +103,7 @@ ctx.Slick = {
       onDblClick: eventStub,
       setSortColumns(columns) { capturedSortColumns = columns; },
       setColumns(columns) { capturedColumns = columns; },
+      getContainerNode() { return _container; },
       updateRowCount() {},
       resizeCanvas() {},
       render() {},
@@ -144,6 +146,8 @@ assert.equal(capturedGridOptions.enableColumnReorder, false,
   'missing Sortable disables SlickGrid column drag instead of throwing');
 assert.equal(capturedGridOptions.showCellSelection, false,
   'grid does not show a selected-cell border when a cell is clicked');
+assert.equal(host.style.height, '206px',
+  'small product lists shrink the grid host height instead of leaving viewport-sized empty space');
 const titleColumn = capturedColumns.find(column => column.id === 'title');
 const brandColumn = capturedColumns.find(column => column.id === 'brand');
 const selectColumn = capturedColumns.find(column => column.id === 'select');
@@ -232,6 +236,9 @@ assert.match(singleSpecHtml, />Bluetooth</, 'single non-sentence spec value text
 const ratingHtml = ratingColumn.formatter(0, 3, '4.7', ratingColumn, { rating: '4.7', reviewCount: '704' });
 assert.match(ratingHtml, /★★★★★/, 'ratings render a five-star display based on the numeric rating');
 assert.match(ratingHtml, />4\.7</, 'ratings still show the numeric value');
+assert.match(ratingHtml, /ss-grid-rating-count/, 'rating count renders as its own second-line element');
+assert.ok(ratingHtml.indexOf('ss-grid-rating-main') < ratingHtml.indexOf('ss-grid-rating-count'),
+  'rating count appears below the star/value row');
 const longTitleHtml = titleColumn.formatter(0, 1,
   'Dremel 4300-5/40 High-Performance Rotary Tool Kit with LED Light and Flex Shaft',
   titleColumn,
