@@ -1897,3 +1897,49 @@ This file is the shared record for Claude and Codex. Append an entry for every m
 - Follow-ups:
   - None.
 
+## 2026-07-07 - Vertical pack architecture Phase 1 (Claude side)
+
+- Agent: Claude
+- Branch: grid-rebuild-codex
+- Commit: b3eca3b (mapper), f6ba0c4 (splitter + workflow), this entry
+- Status: Phase 1 (Claude offline side) complete. Codex Phase 2 (runtime consumer) can start.
+- Summary:
+  - User decision: replace bundling 137 MB monolithic data in the extension with per-vertical packs fetched on demand from GitHub Releases + cached in IndexedDB. Ships this pattern:
+    - Bundle in extension: tiny index files (verticals-index.json, icecat_category_to_vertical.json — ~75 KB combined) + Schema.org (52 KB) + defaults + ESCI fixture. Total ~200 KB of data code.
+    - Fetch on demand: per-vertical pack containing that vertical's Icecat category features, Icecat vocabulary, Shopify sub-tree, ESCI substitutes, Schema.org copy. 21 packs, avg ~2 MB, total 37.6 MB across all packs.
+    - Runtime picks vertical per list. Auto-detect from product data first (Path A). Fallback picker if detection confidence is low (Path B). User can skip; list operates on bundled defaults (Path C).
+  - Two generators + one workflow shipped:
+    1. build-vertical-mapping.js — deterministic keyword classifier that maps each Icecat category to its most likely Shopify vertical. 2,386 of 6,808 mapped (35%); unclassified fall through to bundled defaults.
+    2. build-vertical-packs.js — reads the monolithic files, slices per vertical, writes dist/packs/{vertical}.json ×21, populates verticals-index.json with real packUrl/packBytes/packSha256.
+    3. .github/workflows/publish-data-packs.yml — triggers on push to `data` branch or manual dispatch; runs the splitter and uploads packs to a GitHub Release. Fail-fast rejection if any pack < 10 KB.
+  - Distribution across verticals: electronics 436 (largest bucket), sporting-goods 287, home-garden 284, furniture 190, cameras-optics 135, baby-toddler 133, apparel-accessories 118, vehicles-parts 112, hardware 101, health-beauty 95, office-supplies 93, business-industrial 83, arts-entertainment 62, toys-games 62, food-beverages-tobacco 62, animals-pet-supplies 57, media 30, software 23, luggage-bags 23. Religious-ceremonial and mature have 0 mappings — verticals exist in the index for completeness.
+- Files touched:
+  - Added: scripts/build-normalization-libraries/build-vertical-mapping.js
+  - Added: scripts/build-normalization-libraries/build-vertical-packs.js
+  - Added: normalization/libraries/generated/icecat_category_to_vertical.json (69 KB, bundled)
+  - Added: normalization/libraries/generated/verticals-index.json (~5 KB, bundled)
+  - Added: .github/workflows/publish-data-packs.yml
+  - Modified: scripts/build-normalization-libraries/build-all.js (runs the vertical mapper)
+  - Modified: normalization/libraries/generated/BUILD_MANIFEST.json (adds 2 new entries)
+  - Modified: tests/generated-libraries.test.js (REQUIRED_MANIFEST_KEYS extended to require both new files)
+- Validation:
+  - node scripts/build-normalization-libraries/build-all.js -> ok
+  - node scripts/build-normalization-libraries/build-vertical-packs.js -> 21 packs in dist/packs/, largest electronics 6.91 MB, smallest religious-ceremonial 48.7 KB, total 37.6 MB
+  - npm test -> all 44 test files pass
+  - No new npm dependencies (uses fs, crypto, only)
+- Review / handoff:
+  - Reviewer: Codex
+  - Codex Phase 2 can now start on runtime consumer:
+    1. Add `vertical` field to list schema in productRepo (fresh schema — no migration; user confirmed existing lists will be retired).
+    2. Vertical detection function: input = ProductSpec, output = { verticalId, confidence, source }. Uses icecat_category_to_vertical.json for auto-detection.
+    3. Pack fetcher: ensurePackLoaded(verticalId) — IndexedDB check → fetch from verticals-index.json URL → cache → return. Fail-safe fallback to bundled defaults.
+    4. Path A/B/C runtime flow (auto-detect / user picker / skip).
+    5. Extend normalization/attributes.js + normalization/matching.js + normalization/taxonomyBridge.js to consume pack data.
+    6. Manifest host_permissions for github.com + objects.githubusercontent.com.
+  - When Codex is ready to publish real packs to origin, push to a `data` branch and the workflow runs automatically. Currently packUrl fields say `data-vdev` (local dev tag); the workflow substitutes the real tag at publish time.
+- Follow-ups:
+  - Extend classification rules — the 4,422 unclassified Icecat categories are mostly ultra-specific industrial niches. Future rule additions grow coverage without breaking anything.
+  - When real ESCI generator lands with ASIN → vertical mapping, slice ESCI substitutes per vertical too.
+  - When real Icecat vocabulary generator lands, packs will grow — may need to compact further (e.g. leaf-only categories) or split large verticals (Electronics may exceed 20 MB).
+  - Runtime testing: Codex should verify pack fetch performance end-to-end (first fetch latency, cache hit path, offline fallback).
+
