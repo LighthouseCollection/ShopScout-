@@ -25,6 +25,7 @@ const schemaOrg = require('./build-schema-org-properties');
 const icecatCategoryFeatures = require('./build-icecat-category-features');
 const icecatVocabulary = require('./build-icecat-vocabulary');
 const esciSubstitutes = require('./build-esci-substitutes');
+const verticalMapping = require('./build-vertical-mapping');
 
 const MANIFEST_NAME = 'BUILD_MANIFEST.json';
 
@@ -65,10 +66,21 @@ async function main() {
     `${e.outputBytes} bytes\n`
   );
 
+  process.stdout.write('=== icecat_category_to_vertical.json + verticals-index.json ===\n');
+  const vm = verticalMapping.build();
+  process.stdout.write(
+    `  wrote icecat_category_to_vertical.json: ${vm.totalMapped}/${vm.totalCategories} categories mapped across ${vm.verticals} verticals\n`
+  );
+  process.stdout.write(
+    `  wrote verticals-index.json: ${vm.indexBytes} bytes (packUrl/packBytes/packSha256 will be filled by pack splitter)\n`
+  );
+
   const schemaOrgFp = readGeneratedFingerprint(s.outputName);
   const catFeatFp = readGeneratedFingerprint(c.outputName);
   const vocabFp = readGeneratedFingerprint(v.outputName);
   const esciFp = readGeneratedFingerprint(e.outputName);
+  const mappingFp = readGeneratedFingerprint('icecat_category_to_vertical.json');
+  const indexFp = readGeneratedFingerprint('verticals-index.json');
 
   const manifest = {
     $schema: 'shopscout://normalization-libraries/build-manifest/v1',
@@ -117,6 +129,24 @@ async function main() {
         outputSha256: esciFp.outputSha256,
         substitutePairCount: e.substitutePairCount,
         note: 'Stub — real parquet parsing deferred. Current output is a Track A minimum-viable fixture illustrating the v1 shape. Real generator will read data-sources/esci/shopping_queries_dataset_examples.parquet when a parquet dependency is approved (hyparquet or parquet-wasm).'
+      },
+      'icecat_category_to_vertical.json': {
+        generator: verticalMapping.GENERATOR_NAME,
+        generatorVersion: verticalMapping.GENERATOR_VERSION,
+        outputBytes: mappingFp.outputBytes,
+        outputSha256: mappingFp.outputSha256,
+        totalCategories: vm.totalCategories,
+        totalMapped: vm.totalMapped,
+        unclassified: vm.unclassified,
+        verticals: vm.verticals,
+        note: 'Bundled — enables runtime auto-detection of a product\'s vertical without fetching any pack. Unmapped Icecat category ids fall through to bundled defaults (fail-safe).'
+      },
+      'verticals-index.json': {
+        generator: verticalMapping.GENERATOR_NAME,
+        generatorVersion: verticalMapping.GENERATOR_VERSION,
+        outputBytes: indexFp.outputBytes,
+        outputSha256: indexFp.outputSha256,
+        note: 'Bundled — lists all vertical packs by id + display name + pack URL/sha256/size. packUrl/packBytes/packSha256 are placeholder-null until the pack splitter (future commit) runs.'
       }
     }
   };

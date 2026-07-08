@@ -1,0 +1,181 @@
+{
+  "$schema": "shopscout://normalization-libraries/verticalsIndex/v1",
+  "version": 1,
+  "source": {
+    "shopifyVersion": "2026-05",
+    "generatedAt": "2026-07-08T04:41:06Z",
+    "generator": "scripts/build-normalization-libraries/build-vertical-mapping.js",
+    "generatorVersion": 1,
+    "note": "packUrl / packBytes / packSha256 fields are placeholders. The vertical pack splitter overwrites these with real values when packs are built. When those fields are placeholder-null, runtime should skip fetching and fall back to bundled defaults."
+  },
+  "verticals": [
+    {
+      "id": "cameras-optics",
+      "displayName": "Cameras & Optics",
+      "icecatCategoryCount": 135,
+      "packUrl": null,
+      "packBytes": null,
+      "packSha256": null
+    },
+    {
+      "id": "software",
+      "displayName": "Software",
+      "icecatCategoryCount": 23,
+      "packUrl": null,
+      "packBytes": null,
+      "packSha256": null
+    },
+    {
+      "id": "media",
+      "displayName": "Media",
+      "icecatCategoryCount": 30,
+      "packUrl": null,
+      "packBytes": null,
+      "packSha256": null
+    },
+    {
+      "id": "vehicles-parts",
+      "displayName": "Vehicles & Parts",
+      "icecatCategoryCount": 112,
+      "packUrl": null,
+      "packBytes": null,
+      "packSha256": null
+    },
+    {
+      "id": "sporting-goods",
+      "displayName": "Sporting Goods",
+      "icecatCategoryCount": 287,
+      "packUrl": null,
+      "packBytes": null,
+      "packSha256": null
+    },
+    {
+      "id": "toys-games",
+      "displayName": "Toys & Games",
+      "icecatCategoryCount": 62,
+      "packUrl": null,
+      "packBytes": null,
+      "packSha256": null
+    },
+    {
+      "id": "baby-toddler",
+      "displayName": "Baby & Toddler",
+      "icecatCategoryCount": 133,
+      "packUrl": null,
+      "packBytes": null,
+      "packSha256": null
+    },
+    {
+      "id": "apparel-accessories",
+      "displayName": "Apparel & Accessories",
+      "icecatCategoryCount": 118,
+      "packUrl": null,
+      "packBytes": null,
+      "packSha256": null
+    },
+    {
+      "id": "luggage-bags",
+      "displayName": "Luggage & Bags",
+      "icecatCategoryCount": 23,
+      "packUrl": null,
+      "packBytes": null,
+      "packSha256": null
+    },
+    {
+      "id": "furniture",
+      "displayName": "Furniture",
+      "icecatCategoryCount": 190,
+      "packUrl": null,
+      "packBytes": null,
+      "packSha256": null
+    },
+    {
+      "id": "business-industrial",
+      "displayName": "Business & Industrial",
+      "icecatCategoryCount": 83,
+      "packUrl": null,
+      "packBytes": null,
+      "packSha256": null
+    },
+    {
+      "id": "hardware",
+      "displayName": "Hardware",
+      "icecatCategoryCount": 101,
+      "packUrl": null,
+      "packBytes": null,
+      "packSha256": null
+    },
+    {
+      "id": "health-beauty",
+      "displayName": "Health & Beauty",
+      "icecatCategoryCount": 95,
+      "packUrl": null,
+      "packBytes": null,
+      "packSha256": null
+    },
+    {
+      "id": "office-supplies",
+      "displayName": "Office Supplies",
+      "icecatCategoryCount": 93,
+      "packUrl": null,
+      "packBytes": null,
+      "packSha256": null
+    },
+    {
+      "id": "home-garden",
+      "displayName": "Home & Garden",
+      "icecatCategoryCount": 284,
+      "packUrl": null,
+      "packBytes": null,
+      "packSha256": null
+    },
+    {
+      "id": "food-beverages-tobacco",
+      "displayName": "Food, Beverages & Tobacco",
+      "icecatCategoryCount": 62,
+      "packUrl": null,
+      "packBytes": null,
+      "packSha256": null
+    },
+    {
+      "id": "animals-pet-supplies",
+      "displayName": "Animals & Pet Supplies",
+      "icecatCategoryCount": 57,
+      "packUrl": null,
+      "packBytes": null,
+      "packSha256": null
+    },
+    {
+      "id": "arts-entertainment",
+      "displayName": "Arts & Entertainment",
+      "icecatCategoryCount": 62,
+      "packUrl": null,
+      "packBytes": null,
+      "packSha256": null
+    },
+    {
+      "id": "religious-ceremonial",
+      "displayName": "Religious & Ceremonial",
+      "icecatCategoryCount": 0,
+      "packUrl": null,
+      "packBytes": null,
+      "packSha256": null
+    },
+    {
+      "id": "mature",
+      "displayName": "Mature",
+      "icecatCategoryCount": 0,
+      "packUrl": null,
+      "packBytes": null,
+      "packSha256": null
+    },
+    {
+      "id": "electronics",
+      "displayName": "Electronics",
+      "icecatCategoryCount": 436,
+      "packUrl": null,
+      "packBytes": null,
+      "packSha256": null
+    }
+  ]
+}

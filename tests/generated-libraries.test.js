@@ -211,7 +211,9 @@ const REQUIRED_MANIFEST_KEYS = new Set([
   'schemaOrgProperties.json',
   'icecatVocabulary.json',
   'icecatCategoryFeatures.json',
-  'esciSubstitutes.json'
+  'esciSubstitutes.json',
+  'icecat_category_to_vertical.json',
+  'verticals-index.json'
 ]);
 for (const key of REQUIRED_MANIFEST_KEYS) {
   assert.ok(manifest.outputs[key],
