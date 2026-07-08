@@ -476,16 +476,31 @@
     return textValue(column?.name || column?.id || '').replace(/<[^>]+>/g, '').trim();
   }
 
-  function estimateTextWidth(value) {
+  /* Character-width estimate for auto-sizing. Body cells render Inter 13px
+     regular (~7.2px/char). Headers render 11px monospace-uppercase-bold —
+     the uppercase letters push effective width closer to 9.6px/char. */
+  function estimateTextWidth(value, opts) {
     const text = textValue(value).replace(/\s+/g, ' ').trim();
     if (!text) return 0;
-    return Math.ceil(Math.min(text.length, 72) * 7.2);
+    const perChar = opts?.header ? 9.6 : 7.2;
+    return Math.ceil(Math.min(text.length, 72) * perChar);
   }
 
   function clampWidth(value, min, max) {
     return Math.max(min, Math.min(max, Math.ceil(value)));
   }
 
+  /* Column-width bounds.
+
+     Content-driven columns (text, spec, brand, source, rating, title, price)
+     size to max(header, widest sampled cell) + pad, floored at 56 so the
+     sort-indicator glyph and a one-character header stay legible. The upper
+     bound just prevents any single column from running away and swallowing
+     the viewport.
+
+     Fixed-shape columns (selection, actions, image, matrixCell, and the
+     normalization/userRule review columns) keep tight per-type bounds
+     because their DOM contents don't correspond to a text length.        */
   function columnWidthBounds(column) {
     if (column?.type === 'selection') return { min: column.width || 40, max: column.width || 40, pad: 0 };
     if (column?.type === 'actions') return { min: column.width || 112, max: column.width || 112, pad: 0 };
@@ -499,11 +514,10 @@
     if (column?.type === 'image') return { min: column.width || 96, max: column.width || 112, pad: 0 };
     if ((column?.field || column?.id) === 'title') return { min: 260, max: 520, pad: 42 };
     if (column?.type === 'matrixCell') return { min: 180, max: 300, pad: 36 };
-    if (column?.type === 'price') return { min: 110, max: 140, pad: 34 };
+    if (column?.type === 'source' || column?.type === 'brand') return { min: 96, max: 200, pad: 34 };
     if (column?.type === 'rating') return { min: 128, max: 160, pad: 34 };
-    if (column?.type === 'source' || column?.type === 'brand') return { min: 116, max: 190, pad: 34 };
-    if (column?.type === 'spec') return { min: 170, max: 280, pad: 38 };
-    return { min: 120, max: 280, pad: 34 };
+    if (column?.type === 'price') return { min: 88, max: 140, pad: 34 };
+    return { min: 56, max: 360, pad: 34 };
   }
 
   function measuredColumnWidth(column, rows) {
@@ -511,7 +525,7 @@
     const bounds = columnWidthBounds(column);
     const field = column.field || column.id;
     const header = plainHeaderText(column);
-    let measured = estimateTextWidth(header) + bounds.pad;
+    let measured = estimateTextWidth(header, { header: true }) + bounds.pad;
     for (const row of (rows || []).slice(0, 25)) {
       const value = row?.[field];
       if (value && typeof value === 'object') {
@@ -682,7 +696,8 @@
       forceFitColumns: false,
       multiColumnSort: true,
       rowHeight: projection?.mode === 'normalizationReview' ? 126 : (projection?.mode === 'userRules' ? 78 : 82),
-      showCellSelection: false
+      showCellSelection: false,
+      enableTextSelectionOnCells: true
     };
     const grid = new Slick.Grid(container, dataView, columns, gridOptions);
     if (container?.classList) container.classList.toggle('ss-grid-is-matrix', projection?.mode === 'comparisonMatrix');

@@ -2,6 +2,36 @@
 
 This file is the shared record for Claude and Codex. Append an entry for every meaningful change so both agents can continue from the same factual project history.
 
+## 2026-07-08 - Claude fix batch: GitHub issues #22, #15, #16
+
+- Agent: Claude
+- Branch: grid-rebuild-codex
+- Commit: This commit
+- Status: Complete; ready for Codex/user review.
+- Summary:
+  - Batch fix for 3 triaged GitHub issues that Codex flagged as hard to resolve.
+  - **#22 grid**: two problems, both in `grid-rebuild-codex/slickGridAdapter.js`.
+    1. Column widths were floored at hardcoded per-type mins (e.g. spec = 170px). Cells with short content like "COLOR: Blue" still rendered at 170px, wasting horizontal space. Reworked `columnWidthBounds()` so content-driven columns (text/spec/other) floor at 56px and content max(header, cell) drives the actual width. Kept sensible per-type mins for title (260), source/brand (96), rating (128), price (88), image (96), matrixCell (180), normalization/review columns (unchanged). Also improved `estimateTextWidth()` to distinguish header vs body text — headers are bold uppercase 11px so they measure at ~9.6px/char vs 7.2px/char for body Inter 13px. This gives more accurate measured widths for header-driven columns like "Compatible Devices".
+    2. Text selection didn't work in cells. Root cause: SlickGrid binds a `selectstart -> preventDefault()` handler on the viewport UNLESS `enableTextSelectionOnCells: true` is passed in options (see `vendor/slickgrid/slick.grid.js:470`). Added the option. The existing CSS `user-select: text` on `.slick-cell` (already there) now takes effect.
+  - **#15 AI provider accordions**: reworked so each provider's editor fields (API key, model, endpoint, notes, actions, test result, security note) live INSIDE its own accordion body, not in a separate block below the list. Only the currently-expanded card renders the editor form (single instance keeps IDs unique). Card headers now tinted muted-green when the provider is On (Ready) and muted-pink when Off, with a warn/amber state for Needs-key. `renderProviderList` writes a `data-provider-state` attribute + a `provider-card-{state}` class hook. Both `settings.css` (standalone) and `comparison.css` (dashboard) have matching styles. `bindEvents` now split into static handlers (nav, list delegation) and `bindEditorEvents` (per-render buttons/inputs) since the editor DOM is replaced on each provider switch. All save/test/remove/reset paths now route through `selectProvider(id)` to keep the editor state consistent after mutations.
+  - **#16 left menu descriptions**: `settingsNavHtml` already had descriptive subtitles for AI Providers / Quick Capture / Open*Facts. Added **Pipeline Roles** as its own left-nav entry (was previously nested inside the AI Providers panel) with the description "Choose which provider handles each stage. Auto uses your enabled providers." Pipeline Roles is now a separate `data-settings-panel="pipeline-roles"` panel with its own card.
+- Files touched:
+  - `grid-rebuild-codex/slickGridAdapter.js` (widths + text selection)
+  - `settings.js` (accordion redesign + Pipeline Roles panel + editor-form template + bind refactor)
+  - `settings.css` (muted-green/pink card tinting for standalone)
+  - `comparison.css` (muted-green/pink card tinting for dashboard)
+  - `AGENT_CHANGELOG.md`
+- Validation run:
+  - `node grid-rebuild-codex/tests/adapter.test.js` -> pass
+  - `npm test` -> 47/47 test files pass
+  - `npm run lint` -> pass
+  - `npm run syntax` -> pass
+- Review / handoff:
+  - Reviewer: Codex or user.
+  - Notes: Widened test-friendly per-type mins for title (260), source/brand (96), rating (128), price (88) so we don't regress the "narrow columns crush headers" case. Everything else drops to 56 min so narrow content (Blue, Yes/No, 4.4) no longer wastes 100+px per column.
+- Follow-ups or risks:
+  - None known. If any consumer of `selectProvider` bypasses `bindEditorEvents`, the editor buttons will be inert — but every current call path either uses `selectProvider` or is unaffected.
+
 ## Entry Template
 
 ```md

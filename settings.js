@@ -19,6 +19,10 @@ function settingsNavHtml() {
       <strong>AI Providers</strong>
       <span>Enable one or more providers and choose the model ShopScout should use.</span>
     </a>
+    <a href="#pipelineRolesCard" data-settings-nav="pipeline-roles">
+      <strong>Pipeline Roles</strong>
+      <span>Choose which provider handles each stage. Auto uses your enabled providers.</span>
+    </a>
     <a href="#captureButtonCard" data-settings-nav="quick-capture">
       <strong>Quick Capture Button</strong>
       <span>Show or hide the one-click capture button on product pages.</span>
@@ -28,6 +32,84 @@ function settingsNavHtml() {
       <span>Use GTIN/UPC/EAN enrichment from open product databases.</span>
     </a>
   </nav>`;
+}
+
+/* Editor form for the currently-expanded provider card. Injected inline
+   into the accordion body of the selected provider by renderProviderList.
+   Only one instance ever exists in the DOM (only one card is expanded at
+   a time), so IDs stay unique.                                          */
+function providerEditorFormHtml() {
+  return `<div class="dashboard-settings-setup" data-provider-editor>
+    <div class="setup-head">
+      <div>
+        <h3 id="providerTitle">Provider</h3>
+        <p id="providerHint"></p>
+      </div>
+      <div class="spacer"></div>
+      <span class="status off" id="providerStatus">Off</span>
+    </div>
+
+    <label class="toggle">
+      <input type="checkbox" id="providerEnabled">
+      Enable this provider
+    </label>
+
+    <div class="field">
+      <label id="apiKeyLabel">API key</label>
+      <div class="key-row">
+        <input type="password" id="apiKeyInput" autocomplete="off" spellcheck="false">
+        <button class="btn" id="toggleKey" type="button">Show</button>
+      </div>
+    </div>
+
+    <div class="dashboard-settings-two-col">
+      <div class="field">
+        <label>Recommended Model</label>
+        <select id="modelSelect"></select>
+        <div class="model-note" id="modelNote"></div>
+      </div>
+      <div class="field">
+        <label>Custom Model Name</label>
+        <input type="text" id="modelInput" spellcheck="false">
+      </div>
+    </div>
+
+    <div class="dashboard-settings-two-col">
+      <div class="field" id="baseUrlField">
+        <label>Endpoint / Base URL</label>
+        <input type="text" id="baseUrlInput" spellcheck="false">
+      </div>
+      <div class="field">
+        <label>Token Budget</label>
+        <input type="number" id="tokenBudgetInput" min="0" step="1000" placeholder="Optional monthly/session budget">
+      </div>
+    </div>
+
+    <div class="usage-card">
+      <h4>Tracked ShopScout Usage</h4>
+      <div class="usage-summary" id="tokenUsageSummary">No usage tracked yet.</div>
+      <div class="usage-detail" id="tokenUsageDetail">Provider-reported tokens are used when available. Otherwise ShopScout stores a local estimate.</div>
+    </div>
+
+    <div class="field">
+      <label>Notes</label>
+      <textarea id="providerNotes" placeholder="Optional internal note, account name, billing reminder..."></textarea>
+    </div>
+
+    <div class="actions">
+      <button class="dashboard-primary-action" id="saveProvider" type="button">Save Provider</button>
+      <button class="btn success" id="testProvider" type="button">Test Connection</button>
+      <button class="btn" id="setupGuideBtn" type="button">Setup Guide</button>
+      <button class="btn" id="openKeyPage" type="button">Open Key Page</button>
+      <button class="btn" id="openDocs" type="button">Docs</button>
+      <button class="btn" id="resetTokenUsage" type="button">Reset Usage</button>
+      <button class="btn danger" id="removeKey" type="button">Remove Key</button>
+    </div>
+    <div class="test-result" id="testResult"></div>
+    <div class="security-note">
+      API keys are stored in browser extension storage on this machine. Browser storage is convenient, not a password vault. Remove keys anytime from this screen.
+    </div>
+  </div>`;
 }
 
 function settingsShellHtml() {
@@ -50,90 +132,18 @@ function settingsShellHtml() {
           <div class="dashboard-settings-card dashboard-settings-providers">
             <div class="dashboard-settings-section-head">
               <h3>Provider Connections</h3>
-              <p>Enable one or more providers and choose the model ShopScout should use.</p>
+              <p>Enable one or more providers and choose the model ShopScout should use. Expand a provider to configure its API key and model.</p>
             </div>
             <div id="providerList" class="dashboard-settings-provider-list"></div>
           </div>
+        </section>
 
-          <div class="dashboard-settings-card dashboard-settings-setup">
-            <div class="setup-head">
-              <div>
-                <h3 id="providerTitle">Provider</h3>
-                <p id="providerHint"></p>
-              </div>
-              <div class="spacer"></div>
-              <span class="status off" id="providerStatus">Off</span>
-            </div>
-
-            <label class="toggle">
-              <input type="checkbox" id="providerEnabled">
-              Enable this provider
-            </label>
-
-            <div class="field">
-              <label id="apiKeyLabel">API key</label>
-              <div class="key-row">
-                <input type="password" id="apiKeyInput" autocomplete="off" spellcheck="false">
-                <button class="btn" id="toggleKey" type="button">Show</button>
-              </div>
-            </div>
-
-            <div class="dashboard-settings-two-col">
-              <div class="field">
-                <label>Recommended Model</label>
-                <select id="modelSelect"></select>
-                <div class="model-note" id="modelNote"></div>
-              </div>
-              <div class="field">
-                <label>Custom Model Name</label>
-                <input type="text" id="modelInput" spellcheck="false">
-              </div>
-            </div>
-
-            <div class="dashboard-settings-two-col">
-              <div class="field" id="baseUrlField">
-                <label>Endpoint / Base URL</label>
-                <input type="text" id="baseUrlInput" spellcheck="false">
-              </div>
-              <div class="field">
-                <label>Token Budget</label>
-                <input type="number" id="tokenBudgetInput" min="0" step="1000" placeholder="Optional monthly/session budget">
-              </div>
-            </div>
-
-            <div class="usage-card">
-              <h4>Tracked ShopScout Usage</h4>
-              <div class="usage-summary" id="tokenUsageSummary">No usage tracked yet.</div>
-              <div class="usage-detail" id="tokenUsageDetail">Provider-reported tokens are used when available. Otherwise ShopScout stores a local estimate.</div>
-            </div>
-
-            <div class="field">
-              <label>Notes</label>
-              <textarea id="providerNotes" placeholder="Optional internal note, account name, billing reminder..."></textarea>
-            </div>
-
-            <div class="actions">
-              <button class="dashboard-primary-action" id="saveProvider" type="button">Save Provider</button>
-              <button class="btn success" id="testProvider" type="button">Test Connection</button>
-              <button class="btn" id="setupGuideBtn" type="button">Setup Guide</button>
-              <button class="btn" id="openKeyPage" type="button">Open Key Page</button>
-              <button class="btn" id="openDocs" type="button">Docs</button>
-              <button class="btn" id="resetTokenUsage" type="button">Reset Usage</button>
-              <button class="btn danger" id="removeKey" type="button">Remove Key</button>
-            </div>
-            <div class="test-result" id="testResult"></div>
-            <div class="security-note">
-              API keys are stored in browser extension storage on this machine. Browser storage is convenient, not a password vault. Remove keys anytime from this screen.
-            </div>
-          </div>
-
-          <div class="dashboard-settings-card">
+        <section class="dashboard-settings-card dashboard-settings-panel" id="pipelineRolesCard" data-settings-panel="pipeline-roles" hidden>
           <div class="dashboard-settings-section-head">
             <h3>Pipeline Roles</h3>
             <p>Choose which provider handles each stage. Auto uses your enabled providers.</p>
           </div>
           <div id="roleRows"></div>
-          </div>
         </section>
 
         <section class="dashboard-settings-card dashboard-settings-panel" id="captureButtonCard" data-settings-panel="quick-capture" hidden>
@@ -372,7 +382,7 @@ function renderProviderList() {
     const providerId = ShopScoutSanitize.escapeAttribute(provider.id);
     const guideId = `provider-panel-${providerId}`;
     const model = provider.defaultModel || provider.models?.find(item => item.recommended)?.label || 'User-selected model';
-    return `<article class="provider-card ${expanded ? 'active' : ''}" data-provider="${providerId}">
+    return `<article class="provider-card ${expanded ? 'active' : ''} provider-card-${state.cls}" data-provider="${providerId}" data-provider-state="${state.cls}">
       <button class="provider-card-toggle" type="button" data-provider-toggle="${providerId}" aria-expanded="${expanded ? 'true' : 'false'}" aria-controls="${guideId}">
         <span>
           <span class="provider-name">${ShopScoutSanitize.escapeHtml(provider.name)}</span>
@@ -381,10 +391,7 @@ function renderProviderList() {
         <span class="provider-state ${state.cls}">${ShopScoutSanitize.escapeHtml(state.text)}</span>
       </button>
       <div class="provider-accordion-panel" id="${guideId}" ${expanded ? '' : 'hidden'}>
-        <p>${ShopScoutSanitize.escapeHtml(provider.roleHint)}</p>
-        <div class="provider-card-actions">
-          <button class="btn" type="button" data-provider-guide="${providerId}">Setup Guide</button>
-        </div>
+        ${expanded ? providerEditorFormHtml() : ''}
       </div>
     </article>`;
   }).join(''));
@@ -411,40 +418,48 @@ function renderRoles() {
 function selectProvider(providerId) {
   const provider = ShopScoutAI.getProvider(providerId) || ShopScoutAI.PROVIDERS[0];
   selectedProviderId = provider.id;
-  const cfg = providerConfig(provider.id);
-  const status = providerStatus(provider);
   keyVisible = false;
 
-  document.getElementById('providerTitle').textContent = provider.name;
-  document.getElementById('providerHint').textContent = provider.roleHint;
-  document.getElementById('providerStatus').className = `status ${status.cls}`;
-  document.getElementById('providerStatus').textContent = status.text;
-  document.getElementById('providerEnabled').checked = !!cfg.enabled;
-  document.getElementById('apiKeyLabel').textContent = provider.keyLabel || 'API key';
-  document.getElementById('apiKeyInput').type = 'password';
-  document.getElementById('apiKeyInput').placeholder = provider.keyPlaceholder || '';
-  document.getElementById('apiKeyInput').value = cfg.apiKey || '';
-  document.getElementById('toggleKey').textContent = 'Show';
-  document.getElementById('modelInput').value = cfg.model || provider.defaultModel || '';
-  renderModelOptions(provider, cfg.model || provider.defaultModel || '');
-  document.getElementById('baseUrlInput').value = cfg.baseUrl || provider.defaultBaseUrl || '';
-  document.getElementById('tokenBudgetInput').value = cfg.tokenBudget || '';
-  document.getElementById('providerNotes').value = cfg.notes || '';
-  document.getElementById('baseUrlField').style.display = provider.defaultBaseUrl ? 'block' : 'none';
-  document.getElementById('testProvider').disabled = provider.adapter === 'manual';
+  /* Render provider list first — this inflates the editor form inside the
+     newly expanded card so we can populate its fields below. */
+  renderProviderList();
+  populateEditorFields(provider);
+  bindEditorEvents();
   clearTestResult();
   renderTokenUsageSummary();
-  renderProviderList();
+}
+
+function populateEditorFields(provider) {
+  const cfg = providerConfig(provider.id);
+  const status = providerStatus(provider);
+  const editor = document.querySelector('[data-provider-editor]');
+  if (!editor) return;
+  editor.querySelector('#providerTitle').textContent = provider.name;
+  editor.querySelector('#providerHint').textContent = provider.roleHint;
+  const statusEl = editor.querySelector('#providerStatus');
+  statusEl.className = `status ${status.cls}`;
+  statusEl.textContent = status.text;
+  editor.querySelector('#providerEnabled').checked = !!cfg.enabled;
+  editor.querySelector('#apiKeyLabel').textContent = provider.keyLabel || 'API key';
+  const apiKeyInput = editor.querySelector('#apiKeyInput');
+  apiKeyInput.type = 'password';
+  apiKeyInput.placeholder = provider.keyPlaceholder || '';
+  apiKeyInput.value = cfg.apiKey || '';
+  editor.querySelector('#toggleKey').textContent = 'Show';
+  editor.querySelector('#modelInput').value = cfg.model || provider.defaultModel || '';
+  renderModelOptions(provider, cfg.model || provider.defaultModel || '');
+  editor.querySelector('#baseUrlInput').value = cfg.baseUrl || provider.defaultBaseUrl || '';
+  editor.querySelector('#tokenBudgetInput').value = cfg.tokenBudget || '';
+  editor.querySelector('#providerNotes').value = cfg.notes || '';
+  editor.querySelector('#baseUrlField').style.display = provider.defaultBaseUrl ? 'block' : 'none';
+  editor.querySelector('#testProvider').disabled = provider.adapter === 'manual';
 }
 
 function bindEvents() {
   document.getElementById('providerList')?.addEventListener('click', e => {
-    const guideButton = e.target.closest('[data-provider-guide]');
-    if (guideButton) {
-      selectProvider(guideButton.dataset.providerGuide);
-      openSetupGuideModal();
-      return;
-    }
+    /* Ignore clicks inside the editor form itself so its own buttons/inputs
+       do not double-fire as accordion toggles. */
+    if (e.target.closest('[data-provider-editor]')) return;
     const card = e.target.closest('[data-provider-toggle]');
     if (card) selectProvider(card.dataset.providerToggle);
   });
@@ -456,14 +471,6 @@ function bindEvents() {
     await saveAISettings();
   });
 
-  document.getElementById('saveProvider')?.addEventListener('click', saveSelectedProvider);
-  document.getElementById('testProvider')?.addEventListener('click', testSelectedProvider);
-  document.getElementById('removeKey')?.addEventListener('click', removeSelectedKey);
-  document.getElementById('resetTokenUsage')?.addEventListener('click', resetTokenUsage);
-  document.getElementById('toggleKey')?.addEventListener('click', toggleKeyVisibility);
-  document.getElementById('openKeyPage')?.addEventListener('click', () => openProviderUrl('keyUrl'));
-  document.getElementById('openDocs')?.addEventListener('click', () => openProviderUrl('docsUrl'));
-  document.getElementById('setupGuideBtn')?.addEventListener('click', openSetupGuideModal);
   if (document.getElementById('settingsMount')) {
     document.querySelector('[data-dashboard-back]')?.addEventListener('click', () => {
       chrome.tabs.create({ url: chrome.runtime.getURL('comparison.html') });
@@ -472,9 +479,25 @@ function bindEvents() {
   document.getElementById('openDashboard')?.addEventListener('click', () => {
     chrome.tabs.create({ url: chrome.runtime.getURL('comparison.html') });
   });
-  document.getElementById('modelSelect')?.addEventListener('change', e => {
+}
+
+/* Editor form is re-rendered on each provider switch, so its buttons and
+   inputs need fresh listeners each time. renderProviderList replaces the
+   accordion DOM entirely, so the old listeners are garbage-collected. */
+function bindEditorEvents() {
+  const editor = document.querySelector('[data-provider-editor]');
+  if (!editor) return;
+  editor.querySelector('#saveProvider')?.addEventListener('click', saveSelectedProvider);
+  editor.querySelector('#testProvider')?.addEventListener('click', testSelectedProvider);
+  editor.querySelector('#removeKey')?.addEventListener('click', removeSelectedKey);
+  editor.querySelector('#resetTokenUsage')?.addEventListener('click', resetTokenUsage);
+  editor.querySelector('#toggleKey')?.addEventListener('click', toggleKeyVisibility);
+  editor.querySelector('#openKeyPage')?.addEventListener('click', () => openProviderUrl('keyUrl'));
+  editor.querySelector('#openDocs')?.addEventListener('click', () => openProviderUrl('docsUrl'));
+  editor.querySelector('#setupGuideBtn')?.addEventListener('click', openSetupGuideModal);
+  editor.querySelector('#modelSelect')?.addEventListener('change', e => {
     const value = e.target.value;
-    if (value) document.getElementById('modelInput').value = value;
+    if (value) editor.querySelector('#modelInput').value = value;
     updateModelNote();
   });
 }
@@ -561,7 +584,6 @@ async function saveSelectedProvider() {
   aiSettings.providers[selectedProviderId] = cfg;
   if (cfg.enabled && !aiSettings.defaultProvider) aiSettings.defaultProvider = selectedProviderId;
   await saveAISettings();
-  renderProviderList();
   selectProvider(selectedProviderId);
   showTestResult('ok', 'Saved.');
 }
@@ -580,8 +602,7 @@ async function testSelectedProvider() {
   } finally {
     btn.disabled = false;
     aiSettings = await loadAISettings();
-    renderProviderList();
-    renderTokenUsageSummary();
+    selectProvider(selectedProviderId);
   }
 }
 
@@ -606,8 +627,7 @@ async function resetTokenUsage() {
   cfg.tokenUsage = ShopScoutAI.createEmptyTokenUsage();
   aiSettings.providers[selectedProviderId] = cfg;
   await saveAISettings();
-  renderTokenUsageSummary();
-  renderProviderList();
+  selectProvider(selectedProviderId);
   showTestResult('ok', 'Token usage reset.');
 }
 

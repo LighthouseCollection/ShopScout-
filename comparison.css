@@ -1939,6 +1939,27 @@
     background: #fdeeee;
     color: #a64242;
   }
+  .dashboard-settings .provider-state-warn {
+    background: #fffbeb;
+    color: #b45309;
+  }
+  .dashboard-settings .provider-card-on .provider-card-toggle {
+    background: color-mix(in srgb, #e8f5ee 55%, transparent);
+  }
+  .dashboard-settings .provider-card-on .provider-card-toggle:hover,
+  .dashboard-settings .provider-card-on .provider-card-toggle:focus {
+    background: color-mix(in srgb, #e8f5ee 85%, transparent);
+  }
+  .dashboard-settings .provider-card-off .provider-card-toggle {
+    background: color-mix(in srgb, #fdeeee 55%, transparent);
+  }
+  .dashboard-settings .provider-card-off .provider-card-toggle:hover,
+  .dashboard-settings .provider-card-off .provider-card-toggle:focus {
+    background: color-mix(in srgb, #fdeeee 85%, transparent);
+  }
+  .dashboard-settings .provider-card-warn .provider-card-toggle {
+    background: color-mix(in srgb, #fffbeb 60%, transparent);
+  }
   .provider-guide-inline {
     border: 1px solid var(--rule-soft);
     border-radius: var(--radius-sm);

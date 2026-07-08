@@ -61,6 +61,14 @@
   .provider-state { border-radius:999px; padding:3px 9px; font-size:11px; line-height:1.2; white-space:nowrap; }
   .provider-state-on { background:#e8f5ee; color:#157347; }
   .provider-state-off { background:#fdeeee; color:#a64242; }
+  .provider-state-warn { background:#fffbeb; color:#b45309; }
+  .provider-card-on .provider-card-toggle { background: color-mix(in srgb, #e8f5ee 55%, transparent); }
+  .provider-card-on .provider-card-toggle:hover,
+  .provider-card-on .provider-card-toggle:focus { background: color-mix(in srgb, #e8f5ee 85%, transparent); }
+  .provider-card-off .provider-card-toggle { background: color-mix(in srgb, #fdeeee 55%, transparent); }
+  .provider-card-off .provider-card-toggle:hover,
+  .provider-card-off .provider-card-toggle:focus { background: color-mix(in srgb, #fdeeee 85%, transparent); }
+  .provider-card-warn .provider-card-toggle { background: color-mix(in srgb, #fffbeb 60%, transparent); }
   .status { font-size:10px; font-weight:800; border-radius:999px; padding:2px 7px; white-space:nowrap; }
   .status.off { background:var(--surface-muted); color:var(--muted); }
   .status.on { background:var(--success-light); color:var(--success); }
