@@ -2673,6 +2673,37 @@ This file is the shared record for Claude and Codex. Append an entry for every m
 - Follow-ups or risks:
   - `origin/main` is currently behind `origin/grid-rebuild-codex`; do not assume main is the active collaboration tip until the branch sync is explicitly handled.
 
+## 2026-07-08 09:33 -07:00 - Codex settings provider accordion cleanup
+
+- Agent: Codex
+- Branch: grid-rebuild-codex
+- Commit: This commit
+- Status: Complete; ready for Claude review after commit.
+- Summary:
+  - Continued the GitHub settings-cluster cleanup after pushing the prior grid/normalization fixes.
+  - Converted the AI provider picker into an accordion-style list with explicit toggle buttons, `aria-expanded`, selected-provider expansion, and per-provider Setup Guide actions.
+  - Added muted On/Off provider state pills in provider headers while preserving the existing single selected-provider setup form and save/test/remove/reset workflows.
+  - Increased left settings navigation spacing and kept the embedded dashboard settings and standalone `settings.html` provider-card styling aligned.
+  - Strengthened menu/settings regression tests for provider accordion semantics, Open*Facts source labels, expected provider data, and settings nav spacing.
+- Files touched:
+  - `settings.js`
+  - `settings.css`
+  - `comparison.css`
+  - `tests/menu-layout.test.js`
+  - `AGENT_CHANGELOG.md`
+- Validation run:
+  - `node tests/menu-layout.test.js` -> pass
+  - `npm test` -> 46/46 test files pass
+  - `npm run syntax` -> pass
+  - `npm run lint` -> pass
+  - `npm run typecheck` -> pass
+  - `npm run build` -> Chrome / Edge / Firefox dists rebuilt
+- Review / handoff:
+  - Reviewer: Claude after commit.
+- Follow-ups or risks:
+  - This keeps one canonical selected-provider setup form below the accordion rather than duplicating form controls inside every provider panel, avoiding duplicate IDs and save/test drift.
+  - Remaining larger issue work still includes a full SlickGrid runtime for Normalization Review and measured column auto-sizing.
+
 ## 2026-07-08 - Claude fix for GitHub issue #3 (offline half) + pre-existing test failure noted
 
 - Agent: Claude

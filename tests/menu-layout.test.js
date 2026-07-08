@@ -8,6 +8,7 @@ const css = fs.readFileSync(path.join(__dirname, '..', 'comparison.css'), 'utf8'
 const feedbackJs = fs.readFileSync(path.join(__dirname, '..', 'comparison-feedback.js'), 'utf8');
 const settingsJs = fs.readFileSync(path.join(__dirname, '..', 'settings.js'), 'utf8');
 const settingsHtml = fs.readFileSync(path.join(__dirname, '..', 'settings.html'), 'utf8');
+const aiProvidersJs = fs.readFileSync(path.join(__dirname, '..', 'ai-providers.js'), 'utf8');
 
 function assertIncludes(value, message) {
   assert.ok(html.includes(value), message);
@@ -215,6 +216,9 @@ assert.ok(settingsJs.includes('mount: mount'), 'settings module exposes an embed
 assert.ok(settingsJs.includes('data-settings-nav="ai-providers"'), 'embedded settings has a left-pane AI Providers navigation item');
 assert.ok(settingsJs.includes('data-settings-nav="quick-capture"'), 'embedded settings has a left-pane Quick Capture Button navigation item');
 assert.ok(settingsJs.includes('data-settings-nav="open-facts"'), 'embedded settings has a left-pane Open*Facts Enrichment navigation item');
+assert.ok(settingsJs.includes('AI Providers</strong>'), 'settings left nav names AI Providers');
+assert.ok(settingsJs.includes('Quick Capture Button</strong>'), 'settings left nav names Quick Capture Button');
+assert.ok(settingsJs.includes('Open*Facts Enrichment</strong>'), 'settings left nav names Open*Facts Enrichment');
 assert.ok(settingsJs.includes('data-settings-panel="ai-providers"'), 'embedded settings has a main AI Providers panel');
 assert.ok(settingsJs.includes('data-settings-panel="quick-capture"'), 'embedded settings has a main Quick Capture panel');
 assert.ok(settingsJs.includes('data-settings-panel="open-facts"'), 'embedded settings has a main Open*Facts panel');
@@ -234,6 +238,16 @@ assert.ok(!settingsHtml.includes('guide-frame'), 'standalone settings does not r
 assert.ok(settingsJs.includes('One click adds the product to'), 'embedded settings preserves quick-capture guidance');
 assert.ok(settingsJs.includes('No personal data is sent'), 'embedded settings preserves Open*Facts privacy guidance');
 assert.ok(settingsJs.includes('Open Food Facts (groceries)'), 'embedded settings preserves detailed Open*Facts source labels');
+assert.ok(settingsJs.includes('Open Beauty Facts (cosmetics)'), 'embedded settings preserves Open Beauty Facts source label');
+assert.ok(settingsJs.includes('Open Pet Food Facts (pet food)'), 'embedded settings preserves Open Pet Facts source label');
+assert.ok(settingsJs.includes('Open Products Facts (everything else)'), 'embedded settings preserves Open Products Facts source label');
+assert.ok(settingsJs.includes('aria-expanded="${expanded ? \'true\' : \'false\'}"'), 'provider list uses accordion expanded state');
+assert.ok(settingsJs.includes('data-provider-toggle'), 'provider list has explicit accordion toggle buttons');
+assert.ok(settingsJs.includes('provider-state-on'), 'provider cards render muted enabled state');
+assert.ok(settingsJs.includes('provider-state-off'), 'provider cards render muted disabled state');
+assert.ok(aiProvidersJs.includes('Microsoft Copilot'), 'settings provider data includes Microsoft Copilot');
+assert.ok(aiProvidersJs.includes('Local LLM (Ollama / LM Studio)'), 'settings provider data includes local LLM setup');
+assert.ok(css.includes('.dashboard-settings-nav {') && css.includes('gap: 10px;'), 'embedded settings left nav has visible spacing between menu items');
 assert.ok(!settingsJs.includes('class="guide-frame"'), 'embedded settings does not restore the old iframe guide');
 assert.ok(js.includes('renderTopbarAiProviderMenu'), 'comparison script renders AI provider choices in the analyze ribbon');
 assert.ok(!js.includes('modelLabel'), 'AI provider menu shows provider names only, not model names');

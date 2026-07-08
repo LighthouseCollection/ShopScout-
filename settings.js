@@ -349,18 +349,39 @@ function providerStatus(provider) {
   return { cls: 'off', text: 'Off' };
 }
 
+function providerCardState(provider) {
+  const cfg = providerConfig(provider.id);
+  const enabled = !!cfg.enabled || (provider.adapter === 'manual' && !!cfg.enabled);
+  return {
+    cls: enabled ? 'provider-state-on' : 'provider-state-off',
+    text: enabled ? 'On' : 'Off'
+  };
+}
+
 function renderProviderList() {
   const list = document.getElementById('providerList');
   if (!list) return;
   setTrustedHtml(list, ShopScoutAI.PROVIDERS.map(provider => {
-    const status = providerStatus(provider);
-    return `<button class="provider-card ${provider.id === selectedProviderId ? 'active' : ''}" data-provider="${provider.id}">
-      <div class="row">
-        <span class="provider-name">${ShopScoutSanitize.escapeHtml(provider.name)}</span>
-        <span class="status ${status.cls}">${ShopScoutSanitize.escapeHtml(status.text)}</span>
+    const state = providerCardState(provider);
+    const expanded = provider.id === selectedProviderId;
+    const providerId = ShopScoutSanitize.escapeAttribute(provider.id);
+    const guideId = `provider-panel-${providerId}`;
+    const model = provider.defaultModel || provider.models?.find(item => item.recommended)?.label || 'User-selected model';
+    return `<article class="provider-card ${expanded ? 'active' : ''}" data-provider="${providerId}">
+      <button class="provider-card-toggle" type="button" data-provider-toggle="${providerId}" aria-expanded="${expanded ? 'true' : 'false'}" aria-controls="${guideId}">
+        <span>
+          <span class="provider-name">${ShopScoutSanitize.escapeHtml(provider.name)}</span>
+          <span class="provider-type">${ShopScoutSanitize.escapeHtml(provider.setupType)} · ${ShopScoutSanitize.escapeHtml(model)}</span>
+        </span>
+        <span class="provider-state ${state.cls}">${ShopScoutSanitize.escapeHtml(state.text)}</span>
+      </button>
+      <div class="provider-accordion-panel" id="${guideId}" ${expanded ? '' : 'hidden'}>
+        <p>${ShopScoutSanitize.escapeHtml(provider.roleHint)}</p>
+        <div class="provider-card-actions">
+          <button class="btn" type="button" data-provider-guide="${providerId}">Setup Guide</button>
+        </div>
       </div>
-      <div class="provider-type">${ShopScoutSanitize.escapeHtml(provider.setupType)} · ${ShopScoutSanitize.escapeHtml(provider.roleHint)}</div>
-    </button>`;
+    </article>`;
   }).join(''));
 }
 
@@ -414,8 +435,14 @@ function selectProvider(providerId) {
 
 function bindEvents() {
   document.getElementById('providerList')?.addEventListener('click', e => {
-    const card = e.target.closest('[data-provider]');
-    if (card) selectProvider(card.dataset.provider);
+    const guideButton = e.target.closest('[data-provider-guide]');
+    if (guideButton) {
+      selectProvider(guideButton.dataset.providerGuide);
+      openSetupGuideModal();
+      return;
+    }
+    const card = e.target.closest('[data-provider-toggle]');
+    if (card) selectProvider(card.dataset.providerToggle);
   });
 
   document.getElementById('roleRows')?.addEventListener('change', async e => {

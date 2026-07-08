@@ -1814,7 +1814,7 @@
     gap: 10px;
   }
   .dashboard-settings-nav {
-    gap: 6px;
+    gap: 10px;
   }
   .dashboard-settings-nav a {
     display: block;
@@ -1880,7 +1880,64 @@
   }
   .dashboard-settings .provider-card {
     width: 100%;
-    min-height: 58px;
+    border: 1px solid var(--rule);
+    border-radius: var(--radius);
+    background: var(--card);
+    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+    overflow: hidden;
+  }
+  .dashboard-settings .provider-card.active {
+    border-color: var(--primary);
+    background: #f8fbfd;
+  }
+  .dashboard-settings .provider-card-toggle {
+    width: 100%;
+    min-height: 54px;
+    border: 0;
+    background: transparent;
+    color: var(--ink);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 10px 12px;
+    text-align: left;
+    font: inherit;
+  }
+  .dashboard-settings .provider-card-toggle:hover,
+  .dashboard-settings .provider-card-toggle:focus {
+    background: var(--paper-2);
+    outline: 0;
+  }
+  .dashboard-settings .provider-accordion-panel {
+    border-top: 1px solid var(--rule-soft);
+    padding: 10px 12px 12px;
+  }
+  .dashboard-settings .provider-accordion-panel p {
+    margin: 0 0 8px;
+    color: var(--ink-3);
+    font-size: 12px;
+    line-height: 1.4;
+  }
+  .dashboard-settings .provider-card-actions {
+    display: flex;
+    justify-content: flex-end;
+  }
+  .dashboard-settings .provider-state {
+    border-radius: 999px;
+    padding: 3px 9px;
+    font-size: 11px;
+    line-height: 1.2;
+    white-space: nowrap;
+  }
+  .dashboard-settings .provider-state-on {
+    background: #e8f5ee;
+    color: #157347;
+  }
+  .dashboard-settings .provider-state-off {
+    background: #fdeeee;
+    color: #a64242;
   }
   .provider-guide-inline {
     border: 1px solid var(--rule-soft);
