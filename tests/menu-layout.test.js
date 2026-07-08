@@ -106,6 +106,8 @@ assert.ok(js.includes('ShopScoutGeneratedPacks.listVerticals'), 'vertical picker
 assert.ok(js.includes('setListVertical'), 'vertical picker saves selected vertical through productRepo');
 assert.ok(js.includes('data-vertical-action="use-selected"'), 'vertical picker exposes selected-vertical save action');
 assert.ok(js.includes('data-vertical-action="use-defaults"'), 'vertical picker exposes bundled-defaults skip action');
+assert.ok(js.includes("startProgress('Updating vertical pack')"),
+  'vertical picker uses the centered progress overlay while rebuilding normalization');
 assert.ok(/\.vertical-picker-grid[\s\S]{0,220}grid-template-columns:\s*repeat\(auto-fit,\s*minmax\(220px,\s*1fr\)\)/.test(css),
   'vertical picker uses a responsive grid of vertical choices');
 assertNotIncludes('data-command="cancel-run"', 'Cancel Scan is removed from the ribbon (per UX cleanup)');

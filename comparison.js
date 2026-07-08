@@ -10,6 +10,17 @@ function setTrustedHtml(target, html) {
   if (target) target.innerHTML = html == null ? '' : String(html);
 }
 
+function startProgress(title) {
+  if (!globalThis.ShopScoutUI?.progress?.start) {
+    return {
+      setTask() {},
+      done() {},
+      fail() {}
+    };
+  }
+  return globalThis.ShopScoutUI.progress.start({ title });
+}
+
 /* Legacy product-view state vars (currentView, tableSortCol/Asc,
    compactMode, gridlinesEnabled, selectedOnlyFilter, notedOnlyFilter,
    groupBySource, groupByField, groupsCollapsed) were retired with the
@@ -1373,7 +1384,7 @@ function filterVerticalPickerChoices(query) {
 }
 
 async function handleVerticalPickerAction(action) {
-  const { repo, listId } = await getActiveRepoListContext();
+  const { repo, listId, products } = await getActiveRepoListContext();
   if (!repo || !listId || typeof repo.setListVertical !== 'function') {
     toast.show('Vertical settings are not available.', 'error');
     return;
@@ -1384,15 +1395,43 @@ async function handleVerticalPickerAction(action) {
       toast.show('Choose a vertical first.', 'error');
       return;
     }
-    await repo.setListVertical(listId, { verticalId: selectedId, source: 'manual-picker', confidence: 1 });
-    if (typeof repo.rebuildNormalizationForList === 'function') await repo.rebuildNormalizationForList(listId);
-    toast.show('Vertical pack selected and normalization rebuilt.');
-    await openVerticalPickerPage();
+    const progress = startProgress('Updating vertical pack');
+    try {
+      progress.setTask(1, 3, 'Applying selected vertical...');
+      await repo.setListVertical(listId, { verticalId: selectedId, source: 'manual-picker', confidence: 1 });
+      if (typeof repo.rebuildNormalizationForList === 'function') {
+        progress.setTask(2, 3, `Rebuilding normalization for ${products.length} products...`);
+        await repo.rebuildNormalizationForList(listId);
+      }
+      progress.setTask(3, 3, 'Refreshing vertical picker...');
+      toast.show('Vertical pack selected and normalization rebuilt.');
+      await openVerticalPickerPage();
+      progress.done();
+    } catch (err) {
+      progress.fail('Could not update vertical pack.');
+      progress.done();
+      console.warn('Vertical picker update failed', err);
+      toast.show('Could not update vertical pack.', 'error');
+    }
   } else if (action === 'use-defaults') {
-    await repo.setListVertical(listId, { skip: true, source: 'bundled-defaults', confidence: 0 });
-    if (typeof repo.rebuildNormalizationForList === 'function') await repo.rebuildNormalizationForList(listId);
-    toast.show('Using bundled normalization defaults for this list.');
-    await openVerticalPickerPage();
+    const progress = startProgress('Updating vertical pack');
+    try {
+      progress.setTask(1, 3, 'Switching to bundled defaults...');
+      await repo.setListVertical(listId, { skip: true, source: 'bundled-defaults', confidence: 0 });
+      if (typeof repo.rebuildNormalizationForList === 'function') {
+        progress.setTask(2, 3, `Rebuilding normalization for ${products.length} products...`);
+        await repo.rebuildNormalizationForList(listId);
+      }
+      progress.setTask(3, 3, 'Refreshing vertical picker...');
+      toast.show('Using bundled normalization defaults for this list.');
+      await openVerticalPickerPage();
+      progress.done();
+    } catch (err) {
+      progress.fail('Could not update vertical pack.');
+      progress.done();
+      console.warn('Vertical picker defaults update failed', err);
+      toast.show('Could not update vertical pack.', 'error');
+    }
   }
 }
 

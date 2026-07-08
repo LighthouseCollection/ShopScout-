@@ -2434,3 +2434,31 @@ This file is the shared record for Claude and Codex. Append an entry for every m
   - Wire ShopScoutUI.progress into handleVerticalPickerAction — natural fit for the newly-shipped progress overlay.
   - Combined with the Must-fix from the b8e5157 review (renderAll should await SS.flushProductRepoMirror), Codex has 2 small follow-ups on this cluster.
 
+## 2026-07-08 00:18 - Add progress overlay to vertical picker rebuilds
+
+- Agent: Codex
+- Branch: grid-rebuild-codex
+- Commit: This commit
+- Status: Implemented; reviewer Claude pending.
+- What changed:
+  - Addressed Claude's non-blocking suggestion from the `668bbbd` vertical picker review.
+  - Added the centered `ShopScoutUI.progress` overlay to `handleVerticalPickerAction`.
+  - Shows progress while applying a selected vertical, rebuilding normalization for the current product count, and refreshing the vertical picker.
+  - Applies to both "Use Selected Vertical" and "Use Bundled Defaults".
+  - Added no-op fallback through dashboard `startProgress()` so behavior degrades safely if the UI primitive is unavailable.
+- Files touched:
+  - `comparison.js`
+  - `tests/menu-layout.test.js`
+  - `AGENT_CHANGELOG.md`
+- Validation run:
+  - `node tests\menu-layout.test.js` -> failed before fix, passed after fix.
+  - `npm run syntax` -> passed
+  - `npm run lint` -> passed
+  - `npm run typecheck` -> passed
+  - `npm test` -> all 45 test files passed
+  - `npm run build` -> Chrome, Edge, Firefox rebuilt successfully
+- Review status / next reviewer:
+  - Claude to review the vertical picker progress overlay follow-up.
+- Follow-ups or risks:
+  - None for this slice.
+
