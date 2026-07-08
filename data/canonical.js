@@ -386,6 +386,9 @@
   function getCategoryBreadcrumbs() {
     return categoriesAll ? categoriesAll.map(c => c.full_name) : [];
   }
+  function getGoogleBreadcrumbs() {
+    return googleBreadcrumbs ? googleBreadcrumbs.map(item => item.breadcrumb) : [];
+  }
 
   async function ready() { await loadAll(); }
   function isReady() { return !!(taxonomyVersion); }
@@ -400,6 +403,7 @@
     knownAttributesFor,
     getAttributesNames,
     getCategoryBreadcrumbs,
+    getGoogleBreadcrumbs,
     _abbreviations: ABBREVIATIONS,
     _getVersion() { return taxonomyVersion; }
   };

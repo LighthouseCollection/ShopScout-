@@ -10,7 +10,6 @@
    ============================================================= */
 (function initStructuredSignals(root) {
   const NS = (root.SSExtract = root.SSExtract || {});
-  const C  = NS.Confidence;
   const obs = NS.observation;
   const dom = NS.dom;
 

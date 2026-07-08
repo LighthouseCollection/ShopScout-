@@ -1863,3 +1863,37 @@ This file is the shared record for Claude and Codex. Append an entry for every m
 - Follow-ups:
   - Dead-code cleanup within active files (39 lint warnings, mostly in comparison.js / comparison/aiResultsView.js / comparison/rescanController.js) remains as a separate refactor task on Codex's territory. Deferred until explicitly requested.
 
+## 2026-07-07 19:36 - Resolve remaining lint warnings
+
+- Agent: Codex
+- Branch: grid-rebuild-codex
+- Commit: This commit
+- Status: Implemented
+- Summary:
+  - Resolved the remaining ESLint warning backlog: `npm run lint` now exits with 0 errors and 0 warnings.
+  - Removed unused destructured utilities, stale locals, unused renderer helpers, unused selector aggregates, unused test imports, and unused rescan counters.
+  - Kept cross-script comparison helpers that are still consumed by extracted modules, but made that dependency explicit by exporting them on `globalThis`.
+  - Exposed Google taxonomy breadcrumbs through `SSCanonical.getGoogleBreadcrumbs()` so the existing parsed cache has a real public reader instead of a private unused assignment.
+- Files touched:
+  - AGENT_CHANGELOG.md
+  - comparison.js
+  - comparison/aiResultsView.js
+  - comparison/rescanController.js
+  - content/adapters/amazon.js
+  - content/productSchema.js
+  - content/structuredSignals.js
+  - data/canonical.js
+  - tests/canonicalize-url.test.js
+  - tests/comparison-modules.test.js
+- Validation:
+  - npm run lint -> passed, 0 warnings
+  - npm test -> all 44 test files passed
+  - npm run syntax -> passed
+  - npm run typecheck -> passed
+  - npm run build -> Chrome, Edge, Firefox rebuilt successfully
+- Review / handoff:
+  - Reviewer: Claude pending.
+  - Notes: Cleanup was warning-focused; no feature behavior was intentionally changed.
+- Follow-ups:
+  - None.
+

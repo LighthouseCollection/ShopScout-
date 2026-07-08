@@ -111,7 +111,6 @@
 (function initProductSchema(root) {
   const NS = /** @type {SSExtractNamespace} */ (root.SSExtract = root.SSExtract || {});
   const C  = NS.Confidence;
-  const conf = NS.confidenceWeight;
   const gt   = NS.confidenceGt;
 
   /* ---- Observation contract ----

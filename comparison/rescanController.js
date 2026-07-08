@@ -288,9 +288,7 @@ function mergeProduct(existing, fresh) {
 
 function showRescanResults(products, results) {
   const updated = results.filter(r => r.status === 'updated');
-  const nochange = results.filter(r => r.status === 'nochange');
   const failed = results.filter(r => r.status === 'failed');
-  const skipped = results.filter(r => r.status === 'skipped');
 
   // Category analysis for all products
   const catAnalysis = products.map(p => {
@@ -301,7 +299,6 @@ function showRescanResults(products, results) {
   });
 
   const totalMissing = catAnalysis.reduce((sum, a) => sum + a.missing.length, 0);
-  const totalFound = catAnalysis.reduce((sum, a) => sum + a.found.length, 0);
 
   let html = `<div class="rescan-summary">
     <div class="rescan-stat"><div class="stat-val">${products.length}</div><div class="stat-label">Scanned</div></div>

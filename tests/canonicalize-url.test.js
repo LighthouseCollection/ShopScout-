@@ -5,7 +5,6 @@
 const assert = require('assert');
 const fs = require('fs');
 const path = require('path');
-const vm = require('vm');
 
 const src = fs.readFileSync(path.join(__dirname, '..', 'utils.js'), 'utf8');
 const m = src.match(/function canonicalizeProductUrl\([\s\S]*?\n  \}/);

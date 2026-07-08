@@ -771,22 +771,8 @@ function readableStageHtml(stage, emptyMessage = 'No readable AI output is avail
   }
   let text = String(stage.responseText || '').trim();
   if (globalThis.ShopScoutAIUI?.stripStructuredJson) text = ShopScoutAIUI.stripStructuredJson(text);
-  if (!text || /^[\[{]/.test(text.trim())) return `<div class="empty-state">${esc(emptyMessage)}</div>`;
+  if (!text || /^[{[]/.test(text.trim())) return `<div class="empty-state">${esc(emptyMessage)}</div>`;
   return `<div class="ai-readable">${renderAiOutputHtml(text)}</div>`;
-}
-
-function renderReportMeta(vm) {
-  return `<div class="ai-results-meta">
-    <div><span>Run</span><strong>${esc(vm.run.id || 'Latest run')}</strong></div>
-    <div><span>Status</span><strong>${esc(stageStatusText(vm.run.status))}</strong></div>
-    <div><span>Products</span><strong>${esc(vm.productText)}</strong></div>
-    <div><span>Completed</span><strong>${esc(String(vm.completedStages))} stage${vm.completedStages === 1 ? '' : 's'}</strong></div>
-  </div>`;
-}
-
-function renderProductThumb(row, extraClass = '') {
-  const cls = `prod-thumb p${((row.index % 8) + 1)}${extraClass ? ` ${extraClass}` : ''}`;
-  return `<span class="${escAttr(cls)}">${row.image ? `<img src="${escAttr(row.image)}" alt="">` : esc(row.rank)}</span>`;
 }
 
 function renderProductThumbSize(row, size = 'md') {
@@ -999,28 +985,6 @@ function renderAiRiskProfileSection(vm) {
   </section>`;
 }
 
-function verificationFindingForProduct(vm, row) {
-  const audit = vm.reportModel?.verificationAudits?.find(item => item.row.id === row.id);
-  if (audit) return {
-    entry: audit.entry || {},
-    status: audit.status,
-    note: audit.note,
-    source: row.url,
-    tone: audit.tone
-  };
-  const entry = findJsonProductEntry(vm.verificationJson, row) || {};
-  const status = plainCellText(entry.overall_status || entry.status || entry.verification_status || entry.result || entry.listing_status || 'Reviewed');
-  const note = plainCellText(entry.key_result || entry.notes || entry.summary || entry.finding || entry.reason || entry.verdict || 'See the verification details for this product.');
-  const source = entry.source_url || entry.source || entry.sourceLink || row.url;
-  return {
-    entry,
-    status,
-    note,
-    source,
-    tone: reportTagTone(`${status} ${note}`)
-  };
-}
-
 function claimRowsForProduct(vm, row, finding) {
   const entry = finding.entry || {};
   const claims = [
@@ -1208,29 +1172,6 @@ function renderAiSpecsTab(vm) {
       ${missingNotes}
     </section>
   </div>`;
-}
-
-function buildRiskRows(vm) {
-  const risks = [
-    vm.comparisonJson?.risks,
-    vm.comparisonJson?.risk_summary,
-    vm.comparisonJson?.riskSummary,
-    vm.verificationJson?.risks
-  ].find(Array.isArray);
-  if (risks?.length) {
-    return risks.slice(0, 12).map((risk, index) => ({
-      rank: String(index + 1).padStart(2, '0'),
-      title: plainCellText(risk.product || risk.product_name || risk.name || risk.axis || risk.type || 'Risk'),
-      level: plainCellText(risk.level || risk.severity || risk.status || 'Review'),
-      note: plainCellText(risk.reason || risk.summary || risk.description || risk.finding || risk)
-    }));
-  }
-  return vm.products.map(row => ({
-    rank: row.rank,
-    title: row.shortName,
-    level: row.source && /amazon|best buy|target|walmart|costco/i.test(row.source) ? 'Marketplace review' : 'Seller review',
-    note: `${row.seller !== '-' ? row.seller : 'Seller'} · ${row.source || 'Unknown source'}`
-  }));
 }
 
 function renderAiRisksTab(vm) {

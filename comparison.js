@@ -1,6 +1,6 @@
 var chrome = globalThis.browser || globalThis.chrome;
 
-const { getData, saveData, getProducts, saveProducts, esc, escAttr, escXml, sanitizeUrl, sanitizeProductDescription, parsePrice, normalizeReviewCount, formatRatingDisplay, normalizeSpecKeyLabel, normalizeSpecValue, normalizeProductSpecs, getCategoryComparisonSpecKeys, escapeCsvField, downloadFile, buildAIText, buildPrompt, inferCategory, detectMissingAttributes, CATEGORY_RUBRICS, parseImport, toast } = SS;
+const { getData, saveData, getProducts, saveProducts, esc, escAttr, escXml, sanitizeUrl, formatRatingDisplay, escapeCsvField, downloadFile, parseImport, toast } = SS;
 
 function setTrustedHtml(target, html) {
   if (globalThis.ShopScoutSanitize?.setTrustedHtml) {
@@ -27,9 +27,7 @@ let activeAiMonitorClientRunId = '';
 let pendingAiRunOptions = null;
 let aiRunInProgress = false;
 let selectedAiUsageProviderId = 'auto';
-let activeInlineEdit = null;
 const selectedProductIds = new Set();
-let renderedProductLocations = new WeakMap();
 
 const SEARCH_FIELD_DEFINITIONS = [
   { id: 'title', label: 'Titles and names' },
@@ -39,27 +37,6 @@ const SEARCH_FIELD_DEFINITIONS = [
   { id: 'notes', label: 'Notes and descriptions' }
 ];
 const activeSearchFields = new Set(SEARCH_FIELD_DEFINITIONS.map(field => field.id));
-
-const GROUP_FIELDS = [
-  { id: 'listName', label: 'List' },
-  { id: 'source', label: 'Source' },
-  { id: 'brand', label: 'Brand' },
-  { id: 'manufacturer', label: 'Manufacturer' },
-  { id: 'category', label: 'Category' },
-  { id: 'sellerName', label: 'Seller' },
-  { id: 'modelName', label: 'Model name' },
-  { id: 'modelNumber', label: 'Model' },
-  { id: 'sku', label: 'SKU' },
-  { id: 'asin', label: 'ASIN' },
-  { id: 'upc', label: 'UPC' },
-  { id: 'mpn', label: 'MPN' },
-  { id: 'gtin', label: 'GTIN' },
-  { id: 'rating', label: 'Rating' },
-  { id: 'availability', label: 'Availability' },
-  { id: 'newPrice', label: 'Price band' },
-  { id: 'shippingPrice', label: 'Shipping' },
-  { id: 'notes', label: 'Notes' }
-];
 
 
 function getActiveListName() {
@@ -134,6 +111,12 @@ function renderCorrectedSpecValue(product, specKey, value) {
   if (correction && globalThis.ShopScoutAIUI) return ShopScoutAIUI.renderCorrectedValue(value, correction);
   return esc(value || '');
 }
+
+Object.assign(globalThis, {
+  getCorrectedValue,
+  renderCorrectedField,
+  renderCorrectedSpecValue
+});
 
 document.addEventListener('DOMContentLoaded', init);
 
@@ -251,14 +234,6 @@ function toggleSearchField(fieldId) {
   renderAll();
 }
 
-function readProductLocation(el) {
-  const source = el?.closest?.('[data-idx][data-list]') || el;
-  return {
-    listName: source?.dataset?.list || getActiveListName(),
-    index: parseInt(source?.dataset?.idx, 10)
-  };
-}
-
 async function activateProductListForAction(listName) {
   if (!listName || listName === getActiveListName()) return false;
   const data = await getData();
@@ -269,6 +244,11 @@ async function activateProductListForAction(listName) {
   await renderAll();
   return true;
 }
+
+Object.assign(globalThis, {
+  getSearchableProductText,
+  activateProductListForAction
+});
 
 async function renderAll() {
   /* Grid-neutral render hook. Task 11 Phase 2 registers the active grid
@@ -907,7 +887,6 @@ function bindRibbonEvents() {
   const shell = document.querySelector('.ribbon-shell');
   if (!shell) return;
   const tabs = shell.querySelectorAll('.ribbon-tab[data-tab], .ribbon-tab[data-ribbon-tab]');
-  const panes = shell.querySelectorAll('.ribbon-pane[data-pane]');
   tabs.forEach(tab => tab.addEventListener('click', () => activateRibbonTab(tab.dataset.tab || tab.dataset.ribbonTab)));
 }
 
@@ -1115,33 +1094,6 @@ function showModal(id) {
 function closeModal(id) {
   document.getElementById(id)?.classList.remove('active');
 }
-
-/* Task 11 Phase 1: openComparePanel previously delegated to
-   SSDatabaseView.getSelectedRows / applyCompareFilter /
-   clearCompareFilter on the Tabulator grid. All three are gone with
-   the grid layer. The Phase 2 grid will re-implement selection +
-   compare-filter on its own data view and reattach this entry point.
-   Until then, fall back to the instructions modal so the action is
-   not silently broken. */
-async function openComparePanel() {
-  openCompareInstructions();
-}
-
-function openCompareInstructions() {
-  const body = document.getElementById('compareBody');
-  if (body) setTrustedHtml(body, `
-    <div class="ss-compare-help">
-      <h3>How to compare products</h3>
-      <ol>
-        <li><strong>Check the boxes</strong> next to the products you want to compare — pick 2 to 4.</li>
-        <li><strong>Click "Selected only"</strong> again. The table filters down to just those products so you can scan them side-by-side.</li>
-        <li><strong>Click "Selected only" once more</strong> to clear the filter and show every product again.</li>
-      </ol>
-      <p class="ai-muted">Tip: the default <strong>Compare</strong> view (in the Layout group) lays the products out as columns and specs as rows — perfect for spec-by-spec head-to-head. Switch to <strong>List</strong> if you'd rather see products as rows.</p>
-    </div>`);
-  showModal('compareModal');
-}
-
 
 async function openManualAiModal() {
   /* The ai-select iframe expects shopscout_last_prompt to already be in
@@ -2041,20 +1993,6 @@ function renderAiDevStage(stage) {
     </div>
     <div class="ai-dev-provider">${esc(stage.providerName || 'Provider not selected yet')}${stage.model ? ` / ${esc(stage.model)}` : ''}</div>
     ${details ? `<div class="ai-dev-stage-detail">${details}</div>` : ''}
-  </div>`;
-}
-
-function renderAiDevEvent(event) {
-  const extras = [
-    event.error ? `<div class="ai-dev-event-error">${esc(event.error)}</div>` : '',
-    event.sourceUrls?.length ? `<div class="ai-dev-event-sources">${event.sourceUrls.slice(0, 5).map(url => esc(url)).join('<br>')}</div>` : ''
-  ].filter(Boolean).join('');
-  return `<div class="ai-dev-event">
-    <div class="ai-dev-event-time">${esc(event.timestamp ? new Date(event.timestamp).toLocaleTimeString() : '')}</div>
-    <div class="ai-dev-event-body">
-      <div>${esc(event.summary || event.type || '')}</div>
-      ${extras}
-    </div>
   </div>`;
 }
 

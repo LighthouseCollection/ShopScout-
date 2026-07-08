@@ -75,11 +75,6 @@
     '#comparison_table_feature_div table tr'
   ];
 
-  const ALL_TABLE_SELECTORS = []
-    .concat(MODERN_PO_SELECTORS)
-    .concat(LEGACY_TABLE_SELECTORS)
-    .concat(PRODUCT_FACTS_SELECTORS);
-
   /* Detail bullets ("About this item" left-rail list — usually identifiers
      and dimensions written as "Brand : <value>" pairs). */
   const DETAIL_BULLET_SELECTORS = [
