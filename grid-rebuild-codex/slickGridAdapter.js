@@ -292,6 +292,28 @@
     </div>`;
   }
 
+  function userRuleActionAttrs(item) {
+    return `data-review-key="${escAttr(item?.reviewKey || '')}" `
+      + `data-raw-field="${escAttr(item?.rawField || '')}" `
+      + `data-field="${escAttr(item?.field || '')}" `
+      + `data-raw-value="${escAttr(item?.raw || '')}" `
+      + `data-normalized-value="${escAttr(item?.normalized || '')}"`;
+  }
+
+  function htmlForUserRuleCode(value, item) {
+    const ruleKey = textValue(value || item?.reviewKey || item?.rawField || item?.raw || '-').trim() || '-';
+    return `<code>${esc(ruleKey)}</code>`;
+  }
+
+  function htmlForUserRuleActions(item) {
+    const attrs = userRuleActionAttrs(item);
+    const canEdit = item?.type !== 'Ignored review item';
+    return `<div class="normalization-review-actions ss-grid-review-actions">
+      ${canEdit ? `<button class="dashboard-secondary-action dashboard-secondary-action--small" type="button" data-user-rule-action="edit" ${attrs}>Edit</button>` : ''}
+      <button class="dashboard-secondary-action dashboard-secondary-action--small" type="button" data-user-rule-action="delete" ${attrs}>Delete</button>
+    </div>`;
+  }
+
   function htmlForMatrixCell(value) {
     if (!value || typeof value !== 'object') {
       const text = textValue(value).trim();
@@ -340,6 +362,8 @@
       case 'normalizationReason': return htmlForNormalizationReason(value);
       case 'normalizationRule': return htmlForNormalizationRule(value, item);
       case 'normalizationActions': return htmlForNormalizationActions(item);
+      case 'userRuleCode': return htmlForUserRuleCode(value, item);
+      case 'userRuleActions': return htmlForUserRuleActions(item);
       default: {
         return plainCellHtml(value, column);
       }
@@ -470,6 +494,8 @@
     if (column?.type === 'normalizationPair') return { min: 190, max: 340, pad: 38 };
     if (column?.type === 'normalizationRule') return { min: 130, max: 220, pad: 34 };
     if (column?.type === 'normalizationReason') return { min: 130, max: 180, pad: 34 };
+    if (column?.type === 'userRuleActions') return { min: column.width || 190, max: column.width || 220, pad: 0 };
+    if (column?.type === 'userRuleCode') return { min: 180, max: 360, pad: 34 };
     if (column?.type === 'image') return { min: column.width || 96, max: column.width || 112, pad: 0 };
     if ((column?.field || column?.id) === 'title') return { min: 260, max: 520, pad: 42 };
     if (column?.type === 'matrixCell') return { min: 180, max: 300, pad: 36 };
@@ -509,11 +535,11 @@
       minWidth: column.minWidth || measuredColumnWidth(column, rows),
       maxWidth: column.maxWidth || undefined,
       resizable: true,
-      sortable: column.type !== 'selection' && column.type !== 'actions' && column.type !== 'normalizationActions' && column.type !== 'image',
-      selectable: column.type !== 'selection' && column.type !== 'actions' && column.type !== 'normalizationActions',
+      sortable: column.type !== 'selection' && column.type !== 'actions' && column.type !== 'normalizationActions' && column.type !== 'userRuleActions' && column.type !== 'image',
+      selectable: column.type !== 'selection' && column.type !== 'actions' && column.type !== 'normalizationActions' && column.type !== 'userRuleActions',
       editor: column.editable && TextEditor ? TextEditor : undefined,
       formatter: cellFormatter,
-      cssClass: `ss-grid-cell ss-grid-cell-${column.type || 'text'}${column.type === 'actions' || column.type === 'normalizationActions' ? ' ss-grid-cell-actions' : ''}`,
+      cssClass: `ss-grid-cell ss-grid-cell-${column.type || 'text'}${column.type === 'actions' || column.type === 'normalizationActions' || column.type === 'userRuleActions' ? ' ss-grid-cell-actions' : ''}`,
       headerCssClass: 'ss-grid-header'
     }));
   }
@@ -616,8 +642,9 @@
     const rowCount = Array.isArray(projection?.rows) ? projection.rows.length : 0;
     const isMatrix = projection?.mode === 'comparisonMatrix';
     const isNormalizationReview = projection?.mode === 'normalizationReview';
+    const isUserRules = projection?.mode === 'userRules';
     const headerHeight = isMatrix ? 132 : 42;
-    const rowHeight = isNormalizationReview ? 126 : 82;
+    const rowHeight = isNormalizationReview ? 126 : (isUserRules ? 78 : 82);
     const padding = 0;
     const minHeight = rowCount ? headerHeight + rowHeight : 140;
     const maxRowsBeforeScroll = isMatrix ? 8 : (isNormalizationReview ? 6 : 12);
@@ -654,7 +681,7 @@
       explicitInitialization: false,
       forceFitColumns: false,
       multiColumnSort: true,
-      rowHeight: projection?.mode === 'normalizationReview' ? 126 : 82,
+      rowHeight: projection?.mode === 'normalizationReview' ? 126 : (projection?.mode === 'userRules' ? 78 : 82),
       showCellSelection: false
     };
     const grid = new Slick.Grid(container, dataView, columns, gridOptions);

@@ -2698,26 +2698,31 @@ body.is-info-page .content { display: block; padding: 18px 22px 48px; }
   overflow: auto;
 }
 
-.normalization-review-grid-wrap {
+.normalization-review-grid-wrap,
+.user-rules-grid-wrap {
   border: 1px solid var(--rule, #d1d5db);
   border-radius: 8px;
   background: var(--card);
   overflow: hidden;
 }
 
-.normalization-review-grid {
+.normalization-review-grid,
+.user-rules-grid {
   min-height: 0;
 }
 
-.normalization-review-grid .slick-row:nth-child(odd) .slick-cell {
+.normalization-review-grid .slick-row:nth-child(odd) .slick-cell,
+.user-rules-grid .slick-row:nth-child(odd) .slick-cell {
   background: #f1f1f1;
 }
 
-.normalization-review-grid .slick-row:nth-child(even) .slick-cell {
+.normalization-review-grid .slick-row:nth-child(even) .slick-cell,
+.user-rules-grid .slick-row:nth-child(even) .slick-cell {
   background: #f5f5f5;
 }
 
-.normalization-review-grid .slick-row:hover .slick-cell {
+.normalization-review-grid .slick-row:hover .slick-cell,
+.user-rules-grid .slick-row:hover .slick-cell {
   background: var(--primary-tint, #e6eef1);
 }
 
@@ -2877,7 +2882,8 @@ body.is-info-page .content { display: block; padding: 18px 22px 48px; }
   background: var(--paper-2);
 }
 
-.normalization-review-grid code {
+.normalization-review-grid code,
+.user-rules-grid code {
   display: inline-block;
   border: 1px solid var(--rule-soft, #d1d5db);
   border-radius: var(--radius);

@@ -1496,7 +1496,7 @@ async function openNormalizationReviewPage() {
   if (items.length) mountNormalizationReviewGrid(items);
 }
 
-function userRuleRowsHtml(rules) {
+function userRuleRows(rules) {
   const rows = [];
   for (const [key, aliases] of Object.entries(rules.fieldAliases || {})) {
     const canonical = rules.canonicalFields?.[key] || key;
@@ -1535,43 +1535,46 @@ function userRuleRowsHtml(rules) {
       reviewKey
     });
   }
-  if (!rows.length) {
-    return `<div class="dashboard-empty">
-      <h3>No user rules yet</h3>
-      <p>Accept aliases or ignore items from Normalization Review to build this list-specific library.</p>
-    </div>`;
+  return rows;
+}
+
+function userRulesProjection(rules) {
+  const rows = userRuleRows(rules).map((row, index) => Object.assign({}, row, {
+    id: row.reviewKey
+      ? `ignored-rule-${row.reviewKey}-${index}`
+      : `user-rule-${row.type}-${row.field}-${row.rawField}-${row.raw}-${row.normalized}-${index}`,
+    ruleKey: row.reviewKey || row.rawField || row.raw || '-',
+    fieldLabel: row.field || '-',
+    rawLabel: row.raw || row.rawField || '-',
+    normalizedLabel: row.normalized || '-'
+  }));
+  return {
+    mode: 'userRules',
+    columns: [
+      { id: 'type', name: 'Type', field: 'type', type: 'text', width: 170 },
+      { id: 'field', name: 'Field', field: 'fieldLabel', type: 'text', width: 220 },
+      { id: 'raw', name: 'Raw alias', field: 'rawLabel', type: 'text', width: 260 },
+      { id: 'normalized', name: 'Normalized value', field: 'normalizedLabel', type: 'text', width: 260 },
+      { id: 'ruleKey', name: 'Rule key', field: 'ruleKey', type: 'userRuleCode' },
+      { id: 'actions', name: '', field: '_actions', type: 'userRuleActions' }
+    ],
+    rows
+  };
+}
+
+function mountUserRulesGrid(rules) {
+  const host = document.getElementById('userRulesGrid');
+  const adapter = globalThis.ShopScoutSlickGridAdapter;
+  if (!host) return null;
+  if (!adapter || typeof adapter.create !== 'function') {
+    const message = document.createElement('div');
+    message.className = 'ss-grid-empty';
+    message.textContent = 'SlickGrid runtime is not available.';
+    host.replaceChildren(message);
+    return null;
   }
-  return `<div class="normalization-review-table-wrap">
-    <table class="normalization-review-table">
-      <thead>
-        <tr><th>Type</th><th>Field</th><th>Raw alias</th><th>Normalized value</th><th>Rule key</th><th></th></tr>
-      </thead>
-      <tbody>${rows.map(row => `<tr>
-        <td>${esc(row.type)}</td>
-        <td>${esc(row.field || '-')}</td>
-        <td>${esc(row.raw || row.rawField || '-')}</td>
-        <td>${esc(row.normalized || '-')}</td>
-        <td><code>${esc(row.reviewKey || row.rawField || row.raw || '-')}</code></td>
-        <td>
-          <div class="normalization-review-actions">
-            ${row.type !== 'Ignored review item' ? `<button class="dashboard-secondary-action dashboard-secondary-action--small" type="button"
-              data-user-rule-action="edit"
-              data-raw-field="${escAttr(row.rawField)}"
-              data-field="${escAttr(row.field)}"
-              data-raw-value="${escAttr(row.raw)}"
-              data-normalized-value="${escAttr(row.normalized)}">Edit</button>` : ''}
-            <button class="dashboard-secondary-action dashboard-secondary-action--small" type="button"
-              data-user-rule-action="delete"
-              data-review-key="${escAttr(row.reviewKey)}"
-              data-raw-field="${escAttr(row.rawField)}"
-              data-field="${escAttr(row.field)}"
-              data-raw-value="${escAttr(row.raw)}"
-              data-normalized-value="${escAttr(row.normalized)}">Delete</button>
-          </div>
-        </td>
-      </tr>`).join('')}</tbody>
-    </table>
-  </div>`;
+  host.classList.add('ss-grid-host', 'slick-default-theme', 'user-rules-grid');
+  return adapter.create(host, userRulesProjection(rules), {});
 }
 
 async function openNormalizationRulesPage() {
@@ -1583,6 +1586,7 @@ async function openNormalizationRulesPage() {
   }
   const listId = await repo.getActiveListId();
   const rules = await repo.getUserNormalizationRules(listId);
+  const hasRules = userRuleRows(rules).length > 0;
   openDashboardInfoPage(
     'User Normalization Rules',
     `${data.activeList || 'Current list'} · list-specific approved mappings`,
@@ -1590,9 +1594,17 @@ async function openNormalizationRulesPage() {
       <div class="normalization-review-note">
         Edit or delete mappings approved from Normalization Review. These rules apply only to this product list.
       </div>
-      ${userRuleRowsHtml(rules)}
+      ${hasRules
+        ? `<div class="user-rules-grid-wrap ss-grid-review-wrap">
+            <div id="userRulesGrid" class="ss-grid-host slick-default-theme user-rules-grid" aria-label="User normalization rules grid"></div>
+          </div>`
+        : `<div class="dashboard-empty">
+            <h3>No user rules yet</h3>
+            <p>Accept aliases or ignore items from Normalization Review to build this list-specific library.</p>
+          </div>`}
     </div>`
   );
+  if (hasRules) mountUserRulesGrid(rules);
 }
 
 function closeSettingsPage(shouldRender = true) {

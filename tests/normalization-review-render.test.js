@@ -13,7 +13,7 @@ assert.ok(source.includes('adapter.create(host, normalizationReviewProjection(it
   'normalization review creates the grid through the SlickGrid adapter');
 
 const pageStart = source.indexOf('async function openNormalizationReviewPage');
-const pageEnd = source.indexOf('function userRuleRowsHtml', pageStart);
+const pageEnd = source.indexOf('function userRuleRows', pageStart);
 const pageSource = pageStart >= 0 && pageEnd > pageStart ? source.slice(pageStart, pageEnd) : '';
 
 assert.ok(pageSource.includes('id="normalizationReviewGrid"'),

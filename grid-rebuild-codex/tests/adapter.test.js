@@ -210,6 +210,8 @@ const actionsHtml = actionsColumn.formatter(0, 1, null, actionsColumn, { id: 'p1
 const normalizationProductColumn = { id: 'reviewProduct', field: 'productTitle', type: 'normalizationProduct' };
 const normalizationPairColumn = { id: 'reviewValue', field: 'raw', type: 'normalizationPair', rawField: 'raw', normalizedField: 'normalized' };
 const normalizationActionsColumn = { id: 'reviewActions', field: '_actions', type: 'normalizationActions' };
+const userRuleCodeColumn = { id: 'ruleKey', field: 'ruleKey', type: 'userRuleCode' };
+const userRuleActionsColumn = { id: 'ruleActions', field: '_actions', type: 'userRuleActions' };
 const normalizationProductHtml = normalizationProductColumn.formatter
   ? ''
   : capturedColumns[0].formatter(0, 1, 'unused', normalizationProductColumn, {
@@ -236,6 +238,28 @@ assert.match(normalizationActionsHtml, /data-normalization-action="accept-alias"
 assert.match(normalizationActionsHtml, /data-normalization-bulk-action="ignore"/, 'normalization action cell preserves ignore matching action');
 assert.match(normalizationActionsHtml, /data-review-key="p1\|colour\|color\|midnight blue\|navy blue"/,
   'normalization action cell carries review identity data');
+const userRuleCodeHtml = capturedColumns[0].formatter(0, 1, 'Colour', userRuleCodeColumn, {
+  ruleKey: 'Colour'
+});
+const userRuleActionsHtml = capturedColumns[0].formatter(0, 1, null, userRuleActionsColumn, {
+  type: 'Value alias',
+  rawField: 'Color',
+  field: 'Color',
+  raw: 'midnight blue',
+  normalized: 'Navy Blue'
+});
+const ignoredUserRuleActionsHtml = capturedColumns[0].formatter(0, 1, null, userRuleActionsColumn, {
+  type: 'Ignored review item',
+  reviewKey: 'p1|Color|Color|noise|noise'
+});
+assert.match(userRuleCodeHtml, /<code>Colour<\/code>/, 'user rule key cell renders rule key as code');
+assert.match(userRuleActionsHtml, /data-user-rule-action="edit"/, 'user rule action cell exposes edit action');
+assert.match(userRuleActionsHtml, /data-user-rule-action="delete"/, 'user rule action cell exposes delete action');
+assert.match(userRuleActionsHtml, /data-normalized-value="Navy Blue"/, 'user rule action cell carries normalized value');
+assert.doesNotMatch(ignoredUserRuleActionsHtml, /data-user-rule-action="edit"/,
+  'ignored user rule rows do not expose edit action');
+assert.match(ignoredUserRuleActionsHtml, /data-user-rule-action="delete"/,
+  'ignored user rule rows still expose delete action');
 const sourceHtml = sourceColumn.formatter(0, 2, 'generic', sourceColumn, {
   source: 'generic',
   url: 'https://www.amazon.com/dp/B0TEST'

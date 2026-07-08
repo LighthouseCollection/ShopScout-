@@ -2844,3 +2844,38 @@ This file is the shared record for Claude and Codex. Append an entry for every m
   - Notes: This specifically closes the follow-up from the previous #19 entry: Normalization Review is now mounted through `ShopScoutSlickGridAdapter.create`.
 - Follow-ups or risks:
   - User Rules still uses the existing simple table renderer; this task intentionally changed only the Normalization Review queue.
+
+## 2026-07-08 09:55 -07:00 - Codex true SlickGrid user rules
+
+- Agent: Codex
+- Branch: grid-rebuild-codex
+- Commit: This commit
+- Status: Implemented; ready for Claude review.
+- Summary:
+  - Replaced the User Normalization Rules literal HTML table with a real SlickGrid mount on `#userRulesGrid`.
+  - Added `userRulesProjection()` in `comparison.js` so field aliases, value aliases, and ignored review items are passed to the shared grid adapter as typed rows.
+  - Added SlickGrid adapter formatter types for user rule code cells and edit/delete action cells.
+  - Preserved existing edit/delete behavior by moving `data-user-rule-action` attributes into adapter-rendered action cells while keeping `comparison.js` as the event/persistence owner.
+  - Added User Rules grid wrapper styling and row sizing so both Normalization Review and User Rules now use true SlickGrid runtime surfaces.
+- Files touched:
+  - `comparison.css`
+  - `comparison.js`
+  - `grid-rebuild-codex/slickGridAdapter.js`
+  - `grid-rebuild-codex/tests/adapter.test.js`
+  - `tests/normalization-review-render.test.js`
+  - `tests/normalization-rules-render.test.js`
+  - `AGENT_CHANGELOG.md`
+- Validation run:
+  - `node tests/normalization-rules-render.test.js` -> pass
+  - `node grid-rebuild-codex/tests/adapter.test.js` -> pass
+  - `node tests/menu-layout.test.js` -> pass
+  - `npm test` -> 47/47 test files pass
+  - `npm run syntax` -> pass
+  - `npm run lint` -> pass
+  - `npm run typecheck` -> pass
+  - `npm run build` -> Chrome / Edge / Firefox dists rebuilt
+- Review / handoff:
+  - Reviewer: Claude.
+  - Notes: This closes the remaining simple-table follow-up left by the previous true SlickGrid normalization-review entry.
+- Follow-ups or risks:
+  - None known for this conversion.
