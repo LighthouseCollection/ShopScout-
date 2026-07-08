@@ -29,8 +29,7 @@ $runtimeFiles = @(
   'settings.css',
   'settings.js',
   'theme.css',
-  'utils.js',
-  'shopscout-about.md'
+  'utils.js'
 )
 
 # Directories copied recursively into each dist (state/data/ui layers + vendor libs + icons + layered extraction pipeline).

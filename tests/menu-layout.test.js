@@ -193,7 +193,9 @@ assert.ok(/if\s*\(\s*target\s*!==\s*['"]about['"][\s\S]{0,160}restoreProductList
   'switching away from About/info pages restores the product grid');
 assert.ok(/dashboardBack[\s\S]{0,120}restoreProductListChrome\(\)/.test(js),
   'Back to Products restores the product grid chrome');
-assert.ok(js.includes('renderMarkdownToHtml'), 'markdown help/about files render inside the dashboard');
+assert.ok(js.includes('openAboutPage'), 'About renders from the dashboard content page');
+assert.ok(js.includes('openHelpPage'), 'Help renders from the dashboard content page');
+assert.ok(!js.includes('renderMarkdownToHtml'), 'legacy markdown help/about renderer is removed');
 assert.ok(js.includes('openDashboardInfoPage'), 'ribbon informational commands open inside the main content area');
 assert.ok(js.includes('openFeedbackPage'), 'suggest feature and report bug open inside the main content area');
 assert.ok(feedbackJs.includes('dashboard-primary-action'), 'feedback Send button uses the dashboard themed action style');

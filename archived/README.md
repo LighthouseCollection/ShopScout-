@@ -12,6 +12,7 @@ from copying dead bytes into every browser dist.
 | File | Reason |
 |---|---|
 | `dev-log.js` | Self-described "NOT part of the consumer extension" developer-only logging helper. No `<script>` reference, no `runtimeFiles` entry, no manifest reference. |
+| `shopscout-about.md` | Legacy long-form About/Help markdown. The dashboard now renders dedicated About and Help pages inline from `comparison.js`, so no runtime fetches this file anymore. |
 
 ### `archived/icons/`
 
@@ -31,12 +32,6 @@ These design files moved here because `scripts/build-extension.ps1` copies the
 With them in `icons/` they were shipping unused bytes into every browser build
 for no runtime benefit.
 
-### `archived/packages/`
-
-| File | Reason |
-|---|---|
-| `icons.zip` | Local icon/source asset package. It is ignored by Git via `*.zip`, not referenced by any manifest, HTML page, script, test, or build step, and is not needed by the shipped extension. |
-
 ## How to re-enable
 
 For dev-log style files: move back to project root, add a `<script src="...">`
@@ -47,10 +42,6 @@ For icons: move the file back into `icons/` and declare it in `manifest.json`
 (and `manifest.firefox.json`) under `icons` or `action.default_icon`. The
 build script already copies the whole directory, so no build-script change is
 needed once the manifest references it.
-
-For package archives: unzip or move the archive back only when you need the
-source material. If a zip should become part of the repository, update
-`.gitignore` intentionally and force-add it with Git.
 
 ## What's *not* archived but might look orphaned
 

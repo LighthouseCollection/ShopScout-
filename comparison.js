@@ -963,61 +963,6 @@ function prepareMainContentPage() {
   return content;
 }
 
-function renderMarkdownToHtml(markdown) {
-  const lines = String(markdown || '').replace(/\r\n/g, '\n').split('\n');
-  let html = '';
-  let inList = false;
-  const closeList = () => {
-    if (inList) {
-      html += '</ul>';
-      inList = false;
-    }
-  };
-  for (const rawLine of lines) {
-    const line = rawLine.trim();
-    if (!line) {
-      closeList();
-      continue;
-    }
-    if (line.startsWith('### ')) {
-      closeList();
-      html += `<h3>${esc(line.slice(4))}</h3>`;
-    } else if (line.startsWith('## ')) {
-      closeList();
-      html += `<h2>${esc(line.slice(3))}</h2>`;
-    } else if (line.startsWith('# ')) {
-      closeList();
-      html += `<h1>${esc(line.slice(2))}</h1>`;
-    } else if (/^[-*]\s+/.test(line)) {
-      if (!inList) {
-        html += '<ul>';
-        inList = true;
-      }
-      html += `<li>${esc(line.replace(/^[-*]\s+/, ''))}</li>`;
-    } else {
-      closeList();
-      html += `<p>${esc(line)}</p>`;
-    }
-  }
-  closeList();
-  return html || '<p>No content available.</p>';
-}
-
-async function loadTextResource(path) {
-  const urls = [];
-  try {
-    if (chrome.runtime?.getURL) urls.push(chrome.runtime.getURL(path));
-  } catch {}
-  urls.push(path);
-  for (const url of urls) {
-    try {
-      const response = await fetch(url);
-      if (response.ok) return await response.text();
-    } catch {}
-  }
-  return '';
-}
-
 function openDashboardInfoPage(title, subtitle, bodyHtml, options) {
   const content = prepareMainContentPage();
   const opts = options || {};

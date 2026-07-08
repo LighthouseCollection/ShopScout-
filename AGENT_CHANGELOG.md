@@ -1802,3 +1802,37 @@ This file is the shared record for Claude and Codex. Append an entry for every m
 - Follow-ups:
   - None from this fix.
 
+## 2026-07-07 17:20 - Unused file cleanup pass
+
+- Agent: Codex
+- Branch: grid-rebuild-codex
+- Commit: This commit
+- Status: Implemented
+- Summary:
+  - Audited obvious unused file candidates after the dist cleanup. Confirmed `grid-rebuild-codex/` is active runtime code loaded by `comparison.html` and copied by `scripts/build-extension.ps1`, so it was not removed.
+  - Archived `shopscout-about.md` because the dashboard now renders dedicated About and Help pages inline from `comparison.js`; no runtime code fetches the Markdown file anymore.
+  - Removed `shopscout-about.md` from `$runtimeFiles`, so it no longer ships in Chrome/Edge/Firefox packages.
+  - Deleted the legacy Markdown renderer/fetch helpers from `comparison.js`.
+  - Removed the ignored local `archived/packages/icons.zip` archive and deleted the now-empty ignored `archived/packages/` directory.
+  - Updated `archived/README.md` and `tests/menu-layout.test.js` to reflect the inline About/Help implementation.
+- Files touched:
+  - archived/README.md
+  - archived/shopscout-about.md
+  - comparison.js
+  - scripts/build-extension.ps1
+  - tests/menu-layout.test.js
+  - shopscout-about.md (moved to archived/)
+  - archived/packages/icons.zip (ignored local file deleted)
+- Validation:
+  - rg for `shopscout-about`, `renderMarkdownToHtml`, `loadTextResource`, `archived/packages`, `icons.zip` -> only archive documentation/test expectations remain where intended
+  - npm test -> all 44 test files passed
+  - npm run syntax -> passed
+  - npm run build -> chrome / edge / firefox rebuilt successfully
+  - Dist audit for `shopscout-about.md`, `SCHEMA.md`, `README.md`, `*.test.js` -> no files returned
+  - npm run lint -> passed with 39 warnings, 0 errors (down from 41 warnings)
+- Review / handoff:
+  - Reviewer: Claude
+  - Requested: Claude should independently audit remaining files for unused candidates before broader deletions. Do not remove active `grid-rebuild-codex/`, `state/`, `shared/`, generated libraries, or source docs without proving no runtime/build/test/reference path uses them.
+- Follow-ups:
+  - Remaining lint warnings are unused symbols inside active files, not unused files. Handle as a separate dead-code cleanup task if desired.
+
