@@ -9,177 +9,177 @@
     "note": "packUrl / packBytes / packSha256 fields are placeholders. The vertical pack splitter overwrites these with real values when packs are built. When those fields are placeholder-null, runtime should skip fetching and fall back to bundled defaults.",
     "packSplitterGenerator": "scripts/build-normalization-libraries/build-vertical-packs.js",
     "packSplitterGeneratorVersion": 1,
-    "dataVersion": "dev",
-    "updatedAt": "2026-07-08T04:42:37Z"
+    "dataVersion": "v1",
+    "updatedAt": "2026-07-08T08:00:56Z"
   },
   "verticals": [
     {
       "id": "cameras-optics",
       "displayName": "Cameras & Optics",
       "icecatCategoryCount": 135,
-      "packUrl": "https://github.com/LighthouseCollection/ShopScout-/releases/download/data-vdev/cameras-optics.json",
-      "packBytes": 1525606,
-      "packSha256": "fda5724d26777665ae489719f4574ccf09b4525582b6be87369cce1e79f64083"
+      "packUrl": "https://github.com/LighthouseCollection/ShopScout-/releases/download/data-v1/cameras-optics.json",
+      "packBytes": 1525605,
+      "packSha256": "b1654c2da6de0f0995e103ac464b51ab7526a775f56692ac900f481d2b97e082"
     },
     {
       "id": "software",
       "displayName": "Software",
       "icecatCategoryCount": 23,
-      "packUrl": "https://github.com/LighthouseCollection/ShopScout-/releases/download/data-vdev/software.json",
-      "packBytes": 298678,
-      "packSha256": "404e9e58190dd5b6df2bd827ee20171eb8dfbc084c816a4b87632164bb986c5c"
+      "packUrl": "https://github.com/LighthouseCollection/ShopScout-/releases/download/data-v1/software.json",
+      "packBytes": 298677,
+      "packSha256": "22871f2300eb55ac08ed0592a8dcf5194a8352504058b6bd77d853a1a0e2167f"
     },
     {
       "id": "media",
       "displayName": "Media",
       "icecatCategoryCount": 30,
-      "packUrl": "https://github.com/LighthouseCollection/ShopScout-/releases/download/data-vdev/media.json",
-      "packBytes": 306349,
-      "packSha256": "2ca29ef7dd3bbe5c249454362fe91768ac267d7f77f1882ffd73f5c66326b63c"
+      "packUrl": "https://github.com/LighthouseCollection/ShopScout-/releases/download/data-v1/media.json",
+      "packBytes": 306348,
+      "packSha256": "8197a082ccfa8f52bcd0b37295ba4156cf114685163ebb5daacc463b6e809055"
     },
     {
       "id": "vehicles-parts",
       "displayName": "Vehicles & Parts",
       "icecatCategoryCount": 112,
-      "packUrl": "https://github.com/LighthouseCollection/ShopScout-/releases/download/data-vdev/vehicles-parts.json",
-      "packBytes": 1886495,
-      "packSha256": "1d653bdf3c3d7f5e0c0a8115a67e8795f99b3e2f66851d9d109fde73821d998a"
+      "packUrl": "https://github.com/LighthouseCollection/ShopScout-/releases/download/data-v1/vehicles-parts.json",
+      "packBytes": 1886494,
+      "packSha256": "b9ceac7c369b0d6cae5f08c3356198dc3366112eaea2bad907a1acbef50fd024"
     },
     {
       "id": "sporting-goods",
       "displayName": "Sporting Goods",
       "icecatCategoryCount": 287,
-      "packUrl": "https://github.com/LighthouseCollection/ShopScout-/releases/download/data-vdev/sporting-goods.json",
-      "packBytes": 5640376,
-      "packSha256": "1a64260691ce7969ee181950ef5a2f45a76812ba0592136fefebe398c20ae654"
+      "packUrl": "https://github.com/LighthouseCollection/ShopScout-/releases/download/data-v1/sporting-goods.json",
+      "packBytes": 5640375,
+      "packSha256": "bfa810c814b09ffb50e365c0d0b88ca8c5e47f4dfb91f865108ec6c340bef2b6"
     },
     {
       "id": "toys-games",
       "displayName": "Toys & Games",
       "icecatCategoryCount": 62,
-      "packUrl": "https://github.com/LighthouseCollection/ShopScout-/releases/download/data-vdev/toys-games.json",
-      "packBytes": 1404590,
-      "packSha256": "cb3c0037f2089c2e95455817ec0ac59c0da6ba6b5e2f7345904477bf7a1978e5"
+      "packUrl": "https://github.com/LighthouseCollection/ShopScout-/releases/download/data-v1/toys-games.json",
+      "packBytes": 1404589,
+      "packSha256": "4e58c4f84627909cbf7494d38a2759768f6d4058134c31b984ce8a1aefc6498a"
     },
     {
       "id": "baby-toddler",
       "displayName": "Baby & Toddler",
       "icecatCategoryCount": 133,
-      "packUrl": "https://github.com/LighthouseCollection/ShopScout-/releases/download/data-vdev/baby-toddler.json",
-      "packBytes": 1230387,
-      "packSha256": "15d26db7aaa1fef80941ba78753c7c8eb4cf5968f07476a46ce1c64c4997bd0f"
+      "packUrl": "https://github.com/LighthouseCollection/ShopScout-/releases/download/data-v1/baby-toddler.json",
+      "packBytes": 1230386,
+      "packSha256": "0a699f42b78efe3bfffb0a8a1a114e3b4a978bd5ff70004db5a29432213ba56d"
     },
     {
       "id": "apparel-accessories",
       "displayName": "Apparel & Accessories",
       "icecatCategoryCount": 118,
-      "packUrl": "https://github.com/LighthouseCollection/ShopScout-/releases/download/data-vdev/apparel-accessories.json",
-      "packBytes": 2000427,
-      "packSha256": "4fdf5950d6bd64362c03f88a4d536d975ff840822a2a439b27fefcad7bebb881"
+      "packUrl": "https://github.com/LighthouseCollection/ShopScout-/releases/download/data-v1/apparel-accessories.json",
+      "packBytes": 2000426,
+      "packSha256": "12ff76bb6cd80c2b14967b9a541634bb507ac4f82ecee69e9b302075b3d4ac66"
     },
     {
       "id": "luggage-bags",
       "displayName": "Luggage & Bags",
       "icecatCategoryCount": 23,
-      "packUrl": "https://github.com/LighthouseCollection/ShopScout-/releases/download/data-vdev/luggage-bags.json",
-      "packBytes": 289017,
-      "packSha256": "1412413ca5c63ec3506a40a2b9ea0e1555c55c29aca5cee6e62e73886468b042"
+      "packUrl": "https://github.com/LighthouseCollection/ShopScout-/releases/download/data-v1/luggage-bags.json",
+      "packBytes": 289016,
+      "packSha256": "4f86715d440850b9ff228fcedb8c66fd42ebdfadb95c05f347aaa4b5b76deaa4"
     },
     {
       "id": "furniture",
       "displayName": "Furniture",
       "icecatCategoryCount": 190,
-      "packUrl": "https://github.com/LighthouseCollection/ShopScout-/releases/download/data-vdev/furniture.json",
-      "packBytes": 1831792,
-      "packSha256": "79e12f03bc588dccebb49dc853b7349877f8288cb9fc846e49038e0e924f2fc1"
+      "packUrl": "https://github.com/LighthouseCollection/ShopScout-/releases/download/data-v1/furniture.json",
+      "packBytes": 1831791,
+      "packSha256": "a63976f077aec521ed0fe378d938a1682e20c2ead6edb8b5e53f83e7ba0a14a6"
     },
     {
       "id": "business-industrial",
       "displayName": "Business & Industrial",
       "icecatCategoryCount": 83,
-      "packUrl": "https://github.com/LighthouseCollection/ShopScout-/releases/download/data-vdev/business-industrial.json",
-      "packBytes": 1043477,
-      "packSha256": "0a3ec1eb91e57124f1e188db2d3ba69574b03d02d354bbb7f94fb35df119755f"
+      "packUrl": "https://github.com/LighthouseCollection/ShopScout-/releases/download/data-v1/business-industrial.json",
+      "packBytes": 1043476,
+      "packSha256": "881d74b83247c2caa7504101073be6d797e311fe484522f19f7adc4fded2e72d"
     },
     {
       "id": "hardware",
       "displayName": "Hardware",
       "icecatCategoryCount": 101,
-      "packUrl": "https://github.com/LighthouseCollection/ShopScout-/releases/download/data-vdev/hardware.json",
-      "packBytes": 1652671,
-      "packSha256": "9bb3eb490c26510472e3c0cfc1135ca1c27b989b28fe4a90ee7334b3ec5845ee"
+      "packUrl": "https://github.com/LighthouseCollection/ShopScout-/releases/download/data-v1/hardware.json",
+      "packBytes": 1652670,
+      "packSha256": "690c01ef8b3cbb012249c7f813c9f3e2f68d581bf9f9c491c90e87706736bdb9"
     },
     {
       "id": "health-beauty",
       "displayName": "Health & Beauty",
       "icecatCategoryCount": 95,
-      "packUrl": "https://github.com/LighthouseCollection/ShopScout-/releases/download/data-vdev/health-beauty.json",
-      "packBytes": 2438405,
-      "packSha256": "d55393c61a25f29fca4b0f141414462fc70bcaac00413c71b3713ae0d1d4ceff"
+      "packUrl": "https://github.com/LighthouseCollection/ShopScout-/releases/download/data-v1/health-beauty.json",
+      "packBytes": 2438404,
+      "packSha256": "ae711e535a6ccce31dba5b851d0246fdc5852a20da633c44d316631db89a3ba9"
     },
     {
       "id": "office-supplies",
       "displayName": "Office Supplies",
       "icecatCategoryCount": 93,
-      "packUrl": "https://github.com/LighthouseCollection/ShopScout-/releases/download/data-vdev/office-supplies.json",
-      "packBytes": 810174,
-      "packSha256": "9e50d500f020924bed6bd00bffabf9ea41e987b50f9c5b441b6682cbf863c608"
+      "packUrl": "https://github.com/LighthouseCollection/ShopScout-/releases/download/data-v1/office-supplies.json",
+      "packBytes": 810173,
+      "packSha256": "99c40f7b8b05e67c612096815d69c349d250b48509d7536b06cd8296f417f745"
     },
     {
       "id": "home-garden",
       "displayName": "Home & Garden",
       "icecatCategoryCount": 284,
-      "packUrl": "https://github.com/LighthouseCollection/ShopScout-/releases/download/data-vdev/home-garden.json",
-      "packBytes": 5482026,
-      "packSha256": "e1b10bdccce3d1516585900d9c73d10c2526e4e06411e1f3b2d2822b5ea39d27"
+      "packUrl": "https://github.com/LighthouseCollection/ShopScout-/releases/download/data-v1/home-garden.json",
+      "packBytes": 5482025,
+      "packSha256": "45bfaa425cfa0e32c6fe7d1435b2ca4103f76b4928fc483d6abb41f6d12386d3"
     },
     {
       "id": "food-beverages-tobacco",
       "displayName": "Food, Beverages & Tobacco",
       "icecatCategoryCount": 62,
-      "packUrl": "https://github.com/LighthouseCollection/ShopScout-/releases/download/data-vdev/food-beverages-tobacco.json",
-      "packBytes": 1306591,
-      "packSha256": "e528de238ba9ed31772efbb82adff5cf1fc924e79db88277cc450aead217a1f2"
+      "packUrl": "https://github.com/LighthouseCollection/ShopScout-/releases/download/data-v1/food-beverages-tobacco.json",
+      "packBytes": 1306590,
+      "packSha256": "a2a57e9c2a6fd568abc4af4d4fea7d3ea0199d99aed0a063feb07e7b54d86e1f"
     },
     {
       "id": "animals-pet-supplies",
       "displayName": "Animals & Pet Supplies",
       "icecatCategoryCount": 57,
-      "packUrl": "https://github.com/LighthouseCollection/ShopScout-/releases/download/data-vdev/animals-pet-supplies.json",
-      "packBytes": 660418,
-      "packSha256": "35fe4003cb3fc691952ee0f9b804cca049b275fbdbeb566d33d7a8735a8e98b3"
+      "packUrl": "https://github.com/LighthouseCollection/ShopScout-/releases/download/data-v1/animals-pet-supplies.json",
+      "packBytes": 660417,
+      "packSha256": "1f7999af89fce4a5c4c36d0a4e3dd7044fb30aea2fdfd223a5d3a597114cef72"
     },
     {
       "id": "arts-entertainment",
       "displayName": "Arts & Entertainment",
       "icecatCategoryCount": 62,
-      "packUrl": "https://github.com/LighthouseCollection/ShopScout-/releases/download/data-vdev/arts-entertainment.json",
-      "packBytes": 2224893,
-      "packSha256": "945bc24b22d7a9bbc131d396da0db43a395a9d488bd290f5d9ec3db5f10b5230"
+      "packUrl": "https://github.com/LighthouseCollection/ShopScout-/releases/download/data-v1/arts-entertainment.json",
+      "packBytes": 2224892,
+      "packSha256": "8759822e4a1a8e88190b40cee402054b2128a5997e463f0a475c5bec53ff75d1"
     },
     {
       "id": "religious-ceremonial",
       "displayName": "Religious & Ceremonial",
       "icecatCategoryCount": 0,
-      "packUrl": "https://github.com/LighthouseCollection/ShopScout-/releases/download/data-vdev/religious-ceremonial.json",
-      "packBytes": 49891,
-      "packSha256": "adf8b09236d830e19aaa940ff3022ace9c9023699cd7aac1bb6a28a3368e3ea8"
+      "packUrl": "https://github.com/LighthouseCollection/ShopScout-/releases/download/data-v1/religious-ceremonial.json",
+      "packBytes": 49890,
+      "packSha256": "85dbb72477fb913dd60041830f4ea7c18daafef9154365a456daca01ae911e1e"
     },
     {
       "id": "mature",
       "displayName": "Mature",
       "icecatCategoryCount": 0,
-      "packUrl": "https://github.com/LighthouseCollection/ShopScout-/releases/download/data-vdev/mature.json",
-      "packBytes": 58169,
-      "packSha256": "c47792da949f3d1791cee5bfb891b181f4555c09142c0844be86da0f4273327f"
+      "packUrl": "https://github.com/LighthouseCollection/ShopScout-/releases/download/data-v1/mature.json",
+      "packBytes": 58168,
+      "packSha256": "80979b405fa42d21ebf9bdbd8ad75fe143f1b0eed7c62740929117bc922615da"
     },
     {
       "id": "electronics",
       "displayName": "Electronics",
       "icecatCategoryCount": 436,
-      "packUrl": "https://github.com/LighthouseCollection/ShopScout-/releases/download/data-vdev/electronics.json",
-      "packBytes": 7242886,
-      "packSha256": "a7e15980fd0049069383ee4229fac4a28de264f8d9e14f9d891c89a99580b937"
+      "packUrl": "https://github.com/LighthouseCollection/ShopScout-/releases/download/data-v1/electronics.json",
+      "packBytes": 7242885,
+      "packSha256": "a4f02ce62da3c9ac33182824ae0af410fdb3c088c7e1755308b22361d6000ece"
     }
   ]
 }

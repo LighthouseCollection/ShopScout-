@@ -42,8 +42,11 @@ const GENERATOR_NAME =
 const GENERATOR_VERSION = 1;
 
 const PACKS_OUT_DIR = path.join(REPO_ROOT, 'dist', 'packs');
+/* Template placeholders: {version} is the release tag (e.g. "v1"); {vertical}
+   is the vertical id. Publishers should pass SHOPSCOUT_DATA_VERSION as the
+   exact tag suffix ("v1", "v2", ...) matching the workflow_dispatch input. */
 const RELEASE_URL_TEMPLATE = process.env.SHOPSCOUT_PACK_URL_TEMPLATE ||
-  'https://github.com/LighthouseCollection/ShopScout-/releases/download/data-v{version}/{vertical}.json';
+  'https://github.com/LighthouseCollection/ShopScout-/releases/download/data-{version}/{vertical}.json';
 const RELEASE_VERSION_TAG = process.env.SHOPSCOUT_DATA_VERSION || 'dev';
 
 function loadGenerated(name) {
