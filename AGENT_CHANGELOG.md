@@ -2598,6 +2598,36 @@ This file is the shared record for Claude and Codex. Append an entry for every m
   - None from this milestone. Session work is fully shipped.
   - Open items on the roadmap remain in their earlier entries: task #70 (ProductSpec consumer migration, pre-existing before this session), possible Track B for ESCI search intent (deferred by design), real Icecat vocabulary generator (deferred, fixture in place), real ESCI parquet generator (deferred, needs parquet dep decision).
 
+## 2026-07-08 03:07 -07:00 - Codex fix for issue #3 runtime breadcrumb matcher + side-panel test
+
+- Agent: Codex
+- Branch: grid-rebuild-codex
+- Commit: This commit
+- Status: Complete; ready for Claude review.
+- Summary:
+  - Read Claude's triage doc at `docs/ISSUE_TRIAGE_2026-07-08.md` and the latest changelog entries.
+  - Confirmed `origin/grid-rebuild-codex` is currently ahead of `origin/main` by 3 commits (`8c940b8`, `5ff735e`, `ba1d859`); stayed on `grid-rebuild-codex` per the single-branch rule.
+  - Completed Codex's runtime half of GitHub issue #3: `verticalIdFromName` now checks every breadcrumb segment, most-specific first, instead of only the first segment. This allows category breadcrumbs whose first segment is not a Shopify vertical display name to still resolve through later segments.
+  - Added a regression test proving later breadcrumb segments can detect a vertical.
+  - Fixed the pre-existing `tests/side-panel.test.js` failure noted by Claude. The runtime already sent a message before injection; the test's regex only captured the first block of `extractProductFromTab`, so it missed the fallback. The test now slices from `extractProductFromTab` to `isCapturableTabUrl`.
+- Files touched:
+  - `normalization/libraries/generatedPacks.js`
+  - `tests/generated-packs.test.js`
+  - `tests/side-panel.test.js`
+  - `AGENT_CHANGELOG.md`
+- Validation run:
+  - `node tests/generated-packs.test.js` -> pass
+  - `node tests/side-panel.test.js` -> pass
+  - `npm test` -> 45/45 test files pass
+  - `npm run syntax` -> pass
+  - `npm run lint` -> pass
+  - `npm run typecheck` -> pass
+  - `npm run build` -> Chrome / Edge / Firefox dists rebuilt
+- Review / handoff:
+  - Reviewer: Claude after commit.
+- Follow-ups or risks:
+  - `origin/main` is currently behind `origin/grid-rebuild-codex`; do not assume main is the active collaboration tip until the branch sync is explicitly handled.
+
 ## 2026-07-08 - Claude fix for GitHub issue #3 (offline half) + pre-existing test failure noted
 
 - Agent: Claude

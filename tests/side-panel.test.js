@@ -20,7 +20,11 @@ assert.ok(backgroundJs.includes('openPanelOnActionClick: true'),
   'clicking the extension action opens the side panel');
 assert.ok(/chrome\.sidePanel\?\.setPanelBehavior/.test(backgroundJs),
   'side panel setup is guarded for browsers without the API');
-const extractProductFromTab = backgroundJs.match(/async function extractProductFromTab[\s\S]*?\n}\n/)?.[0] || '';
+const extractStart = backgroundJs.indexOf('async function extractProductFromTab');
+const extractEnd = backgroundJs.indexOf('function isCapturableTabUrl', extractStart);
+const extractProductFromTab = extractStart >= 0 && extractEnd > extractStart
+  ? backgroundJs.slice(extractStart, extractEnd)
+  : '';
 assert.ok(
   extractProductFromTab.indexOf('chrome.tabs.sendMessage') > -1
     && extractProductFromTab.indexOf('chrome.tabs.sendMessage') < extractProductFromTab.indexOf('ensureContentScript'),

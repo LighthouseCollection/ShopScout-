@@ -93,11 +93,17 @@
   }
 
   function verticalIdFromName(value) {
-    const first = String(value || '').split('>').map(part => part.trim()).filter(Boolean)[0] || '';
-    if (!first) return '';
-    const firstSlug = slug(first);
-    const hit = verticalList().find(v => slug(v.displayName || v.id) === firstSlug || v.id === firstSlug);
-    return hit ? hit.id : '';
+    const parts = String(value || '').split('>').map(part => part.trim()).filter(Boolean).reverse();
+    if (!parts.length) return '';
+    const idsBySlug = new Map();
+    for (const vertical of verticalList()) {
+      const id = normalizeId(vertical?.id);
+      if (!id) continue;
+      idsBySlug.set(slug(vertical.displayName || id), id);
+      idsBySlug.set(slug(id), id);
+    }
+    const hit = parts.map(slug).map(partSlug => idsBySlug.get(partSlug)).find(Boolean);
+    return hit || '';
   }
 
   function categoryCandidates(product) {

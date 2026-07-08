@@ -128,6 +128,14 @@ const bundled = {
   assert.strictEqual(detected.source, 'icecat-category-id', 'preserves detection source');
   assert.strictEqual(detected.categoryId, '119', 'preserves source category id');
 
+  const breadcrumbDetected = P.detectVerticalForProducts([{
+    category: 'Tools & Home Improvement > Power & Hand Tools > Power Tools > Electronics'
+  }]);
+  assert.strictEqual(breadcrumbDetected.verticalId, 'electronics',
+    'detects a vertical from later breadcrumb segments when the first segment is not a vertical');
+  assert.strictEqual(breadcrumbDetected.source, 'category-breadcrumb',
+    'breadcrumb segment detection preserves the breadcrumb source');
+
   let result = await P.ensureVerticalPackLoaded('electronics');
   assert.strictEqual(result.ok, true, 'remote pack load succeeds');
   assert.strictEqual(result.source, 'remote', 'first load comes from remote');
