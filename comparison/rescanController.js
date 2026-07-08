@@ -180,49 +180,61 @@ async function rescanList(productIndexes) {
   setScanActive(true, cancelCurrentScan);
 
   try {
-    for (let i = 0; i < targetIndexes.length; i++) {
-      const productIndex = targetIndexes[i];
-      if (cancelled) {
-        results.push({ idx: productIndex, status: 'skipped', reason: 'Cancelled' });
-        continue;
-      }
+    const total = targetIndexes.length;
+    /* Concurrency scales with list size. Tiny lists rip all at once
+       (no rate-limit risk with 1-3 products). Larger lists cap at 3
+       parallel tabs so we don't hammer a single retailer. Very large
+       lists (11+) keep concurrency 3 AND get inter-product pauses. */
+    const concurrency = total <= 3 ? total : 3;
+    let completed = 0;
+    let nextIdx = 0;
 
-      const p = products[productIndex];
-      const shortName = (p.title || 'Untitled').substring(0, 40);
-      const pct = Math.round(((i + 1) / targetIndexes.length) * 100);
-      progressText.textContent = `Scanning ${i + 1} of ${targetIndexes.length}: ${shortName}...`;
+    const updateProgress = () => {
+      const pct = Math.round((completed / total) * 100);
       progressFill.style.width = pct + '%';
+      progressText.textContent = `Scanned ${completed} of ${total}${completed < total ? ` — ${Math.min(concurrency, total - completed)} in flight` : ''}...`;
+    };
+    updateProgress();
 
-      if (!p.url) {
-        results.push({ idx: productIndex, status: 'skipped', reason: 'No URL' });
-        continue;
-      }
-
-      try {
-        /* Anti-throttling pause between products — scaled to list size.
-           Tiny rescans (<= 3) skip it entirely; small rescans (4-10) get
-           a short 300-800ms breath; large rescans (11+) keep the 3-6s
-           pause so a 50-product sweep doesn't look like a bot. */
-        if (scannedUrls > 0) {
-          const total = targetIndexes.length;
-          if (total >= 11) {
-            progressText.textContent = `Pausing before ${i + 1} of ${total}: ${shortName}...`;
+    async function worker() {
+      while (!cancelled && nextIdx < total) {
+        const i = nextIdx++;
+        const productIndex = targetIndexes[i];
+        const p = products[productIndex];
+        if (!p) { completed++; updateProgress(); continue; }
+        if (!p.url) {
+          results.push({ idx: productIndex, status: 'skipped', reason: 'No URL' });
+          completed++; updateProgress(); continue;
+        }
+        try {
+          if (total >= 11 && i >= concurrency) {
+            /* Anti-throttling pause between products for large sweeps. */
             await randomDelay(3000, 6000);
-          } else if (total >= 4) {
-            await randomDelay(300, 800);
+            if (cancelled) break;
+          } else if (total >= 4 && i >= concurrency) {
+            await randomDelay(200, 500);
           }
+          const resp = await chrome.runtime.sendMessage({ action: 'rescanProduct', url: p.url });
+          if (resp?.success && resp.product) {
+            const changes = mergeProduct(p, resp.product);
+            results.push({ idx: productIndex, status: changes.length ? 'updated' : 'nochange', changes, product: p });
+          } else {
+            results.push({ idx: productIndex, status: 'failed', reason: resp?.error || 'No data returned' });
+          }
+        } catch (e) {
+          results.push({ idx: productIndex, status: 'failed', reason: e.message || 'Request failed' });
         }
-        scannedUrls++;
-        progressText.textContent = `Scanning ${i + 1} of ${targetIndexes.length}: ${shortName} — loading page...`;
-        const resp = await chrome.runtime.sendMessage({ action: 'rescanProduct', url: p.url });
-        if (resp?.success && resp.product) {
-          const changes = mergeProduct(p, resp.product);
-          results.push({ idx: productIndex, status: changes.length ? 'updated' : 'nochange', changes, product: p });
-        } else {
-          results.push({ idx: productIndex, status: 'failed', reason: resp?.error || 'No data returned' });
-        }
-      } catch (e) {
-        results.push({ idx: productIndex, status: 'failed', reason: e.message || 'Request failed' });
+        completed++;
+        updateProgress();
+      }
+    }
+
+    const workers = Array.from({ length: concurrency }, () => worker());
+    await Promise.all(workers);
+
+    if (cancelled) {
+      for (let i = nextIdx; i < total; i++) {
+        results.push({ idx: targetIndexes[i], status: 'skipped', reason: 'Cancelled' });
       }
     }
 

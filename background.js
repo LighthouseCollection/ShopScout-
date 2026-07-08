@@ -1032,7 +1032,7 @@ async function rescanProduct(url) {
   let tab;
   try {
     tab = await chrome.tabs.create({ url, active: false });
-    await waitForTabComplete(tab.id, 25000, 2500);
+    await waitForTabComplete(tab.id, 10000, 1500);
 
     if (await detectPageFriction(tab.id, safeExecScript)) {
       await chrome.tabs.remove(tab.id);
