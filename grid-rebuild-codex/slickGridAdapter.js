@@ -684,18 +684,26 @@
     const canvasWidth = canvas.scrollWidth || canvas.offsetWidth || 0;
     const doc = shell.ownerDocument || root.document;
     const viewportInner = (doc?.documentElement?.clientWidth || root.innerWidth || 1400) - SHELL_HORIZONTAL_MARGIN;
-    /* 'full' mode: stretch to viewport - gutter. Skips the max-width
-       cap and content-hugging behavior. 'fit' (default) sizes to
-       content + chrome, capped at SHELL_MAX_WIDTH. */
+    /* Auto behavior:
+       - Content that fits under SHELL_MAX_WIDTH → card is content-sized
+         and centered (comfortable reading, no wasted space).
+       - Content wider than SHELL_MAX_WIDTH → card stretches to full
+         viewport width so more columns are visible before internal
+         horizontal scroll kicks in.
+       User can force 'full' mode via the Width toggle in the ribbon.
+       +12px absorbs SlickGrid's subpixel rounding + the host's 4px
+       padding-right buffer without triggering a scrollbar. */
     const mode = shell.getAttribute('data-shell-width') === 'full' ? 'full' : 'fit';
+    const contentTarget = canvasWidth + 12;
     let targetWidth;
     if (mode === 'full') {
       targetWidth = viewportInner;
+    } else if (contentTarget > SHELL_MAX_WIDTH) {
+      /* Too many columns for a centered 1400px card — go full width
+         automatically so users don't have to hunt for the toggle. */
+      targetWidth = viewportInner;
     } else {
-      /* +12px absorbs SlickGrid's subpixel rounding + the host's 4px
-         padding-right buffer without triggering a scrollbar. */
-      const contentTarget = canvasWidth + 12;
-      targetWidth = Math.min(contentTarget, SHELL_MAX_WIDTH, viewportInner);
+      targetWidth = Math.min(contentTarget, viewportInner);
     }
     shell.style.width = targetWidth + 'px';
     shell.style.overflowX = canvasWidth > shell.clientWidth + 2 ? 'auto' : 'hidden';
