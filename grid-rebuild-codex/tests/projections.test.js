@@ -121,16 +121,18 @@ const rowsProjection = projections.buildProductsRowsProjection(products, {
 
 assert.equal(rowsProjection.mode, 'productsRows');
 assert.deepEqual(
-  rowsProjection.columns.map(column => column.id).slice(0, 8),
-  ['select', 'thumb', 'title', 'brand', 'newPrice', 'modelName', 'rating', 'spec:battery life'],
-  'products-as-rows hides Source AND any all-empty column (fixtures have no notes value) from the default view'
+  rowsProjection.columns.map(column => column.id).slice(0, 9),
+  ['select', 'thumb', 'title', 'brand', 'newPrice', 'modelName', 'rating', 'notes', 'spec:battery life'],
+  'products-as-rows shows every not-explicitly-hidden column, including empty ones (source is defaultHidden on the column itself, so it stays hidden)'
 );
 assert.ok(rowsProjection.allColumns.some(column => column.id === 'notes'),
-  'Notes remains available in the columns modal even when hidden because no product currently has a value');
+  'Notes column is available (and now visible by default even when empty)');
+assert.ok(rowsProjection.columns.some(column => column.id === 'notes'),
+  'Notes is visible by default — the auto-hide-when-empty pass has been removed');
 assert.ok(rowsProjection.allColumns.some(column => column.id === 'source'),
   'Source remains available in the columns modal even when hidden by default');
 assert.ok(!rowsProjection.columns.some(column => column.id === 'source'),
-  'Source is not visible until the user explicitly enables it');
+  'Source is not visible until the user explicitly enables it — its BASE_COLUMNS entry sets defaultHidden');
 const sourceEnabledProjection = projections.buildProductsRowsProjection(products, {
   visibleSpecKeys: ['battery life'],
   viewState: { columnVisibility: { source: true } }

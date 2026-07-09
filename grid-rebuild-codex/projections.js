@@ -404,20 +404,14 @@
        thumbnail in the image cell. Keeping ACTIONS_COLUMN in allColumns
        would surface an empty column at the far right that can't be
        hidden. */
-    const allColumnsRaw = BASE_COLUMNS.concat(specColumns)
+    /* Every not-explicitly-hidden column is shown by default.
+       Previously we auto-hid any column whose values were empty
+       across every row, but that turned out to be too aggressive —
+       users lost columns they wanted visible, with no obvious signal
+       for why they disappeared. Users can still hide columns
+       explicitly from the columns modal; nothing hides silently. */
+    const allColumns = BASE_COLUMNS.concat(specColumns)
       .filter(column => column.required || !removed.has(column.id));
-    /* Auto-hide fields that are empty across every product in the current
-       view. A column that no row has any value for adds nothing but noise
-       to the default layout — the user can un-hide it from the columns
-       modal if they want to see the blanks. Required / fixed-shape columns
-       are exempt. */
-    const allColumns = allColumnsRaw.map(column => {
-      if (column.required || column.type === 'selection' || column.type === 'image' || column.type === 'actions') return column;
-      const field = column.field || column.id;
-      const hasAny = rows.some(row => hasNonEmptyCellValue(row?.[field]));
-      if (hasAny) return column;
-      return Object.assign({}, column, { defaultHidden: true });
-    });
     const filteredRows = applyFilters(rows, viewState.filters, scope);
     const sortedRows = applySort(filteredRows, viewState.sort);
     const grouping = viewState.group
