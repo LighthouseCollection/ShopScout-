@@ -171,40 +171,45 @@
   gap: 0;
 }
 
-/* Space between tabs — a subtle 1px separator, 4px top/bottom
-   margin per [Fluent:RibbonTabItem.xaml:32-35]. */
-.rb-office-ribbon .ribbon-tab + .ribbon-tab {
-  border-left: var(--rbn-tab-separator-w) solid rgba(255, 255, 255, 0.06);
-  margin-left: 0;
-}
+/* Space between tabs — Office 365 uses spacing (via the tab's own
+   padding), no visible separators. Fluent.Ribbon adds them but that
+   pattern looks dated in the modern Office 365 light-strip look. */
 
+/* Office 365 tab — symmetric vertical spacing, box-sizing: border-box
+   so the declared height is what you see. Text vertically centered
+   via flex; 2px accent underline sits flush at the bottom. */
 .rb-office-ribbon .ribbon-tab {
-  height: var(--rbn-tab-h);
-  padding: var(--rbn-tab-pad-t) var(--rbn-tab-pad-r) var(--rbn-tab-pad-b) var(--rbn-tab-pad-l);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  height: 34px;
+  padding: 0 14px;
   border: 0;
-  /* Underline inset from the very bottom by 3px — [Fluent:RibbonTabItem.xaml:10] */
-  border-bottom: var(--rbn-tab-underline-h) solid transparent;
+  border-bottom: 2px solid transparent;
   margin-bottom: 0;
-  background: transparent;
-  color: var(--menu-fg, rgba(255, 255, 255, 0.82));
+  background: transparent !important;    /* override any ambient box */
+  color: var(--menu-fg, rgba(255, 255, 255, 0.75));
   font-size: 14px;
   font-weight: 600;
   letter-spacing: 0;
   line-height: 1;
   cursor: pointer;
   user-select: none;
-  transition: color 90ms ease, background 90ms ease, border-color 120ms ease;
+  transition: color 90ms ease, border-color 120ms ease;
 }
 
+/* Hover: NO background box — just brighten the text. Matches Office
+   365 modern behavior (no boxy hover on the ribbon tab strip). */
 .rb-office-ribbon .ribbon-tab:hover {
-  background: rgba(255, 255, 255, 0.06);
   color: var(--menu-fg-bright, #fff);
 }
 
+/* Active: 2px accent underline flush at bottom, brighter text, no
+   background box. */
 .rb-office-ribbon .ribbon-tab.active {
   color: var(--menu-fg-bright, #fff);
   border-bottom-color: var(--rbn-focus-outline);
-  background: transparent;
 }
 
 .rb-office-ribbon .ribbon-tab:focus-visible {
