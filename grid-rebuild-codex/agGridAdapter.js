@@ -295,7 +295,24 @@
         resizable: true,
         filter: false,
         suppressHeaderMenuButton: true,
-        wrapText: false
+        wrapText: false,
+        /* Don't let columns flex to fill remaining space — each column
+           should be exactly the width needed by its widest cell. */
+        flex: 0
+      },
+      onGridReady(evt) {
+        /* Size each column to its rendered content. Runs after the
+           initial render so measurements are accurate. */
+        setTimeout(() => {
+          const allIds = evt.api.getColumnState().map(c => c.colId);
+          evt.api.autoSizeColumns(allIds, false);
+        }, 0);
+      },
+      onFirstDataRendered(evt) {
+        setTimeout(() => {
+          const allIds = evt.api.getColumnState().map(c => c.colId);
+          evt.api.autoSizeColumns(allIds, false);
+        }, 0);
       },
       onSortChanged(evt) {
         if (typeof opts.onSortChange !== 'function') return;

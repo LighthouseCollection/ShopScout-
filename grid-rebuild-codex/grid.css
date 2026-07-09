@@ -47,6 +47,90 @@
   box-sizing: border-box;
 }
 
+/* ==========================================================
+   AG Grid overrides — align its default chrome with the same
+   look the SlickGrid CSS gave us: shaded header, soft row and
+   column separators, centered cell content, thumb+actions
+   stack in the image column, pill treatment for value cells.
+   ========================================================== */
+.ss-grid-host.ag-theme-shopscout {
+  --ag-borders: none;
+  --ag-border-color: #eaeef2;
+  --ag-header-background-color: #f4f6f9;
+  --ag-header-foreground-color: var(--ink-2, #2a3441);
+  --ag-header-column-separator-display: none;
+  --ag-header-height: 42px;
+  --ag-row-hover-color: color-mix(in srgb, var(--primary, #0b3d4f) 5%, #fff);
+  --ag-row-border-color: #eaeef2;
+  --ag-cell-horizontal-border: 1px solid #eaeef2;
+  --ag-font-family: var(--font-body, "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif);
+  --ag-font-size: 13px;
+  --ag-foreground-color: var(--ink, #0f1419);
+  --ag-background-color: #fff;
+  --ag-odd-row-background-color: #fff;
+}
+
+.ss-grid-host.ag-theme-shopscout .ag-header {
+  border-bottom: 1px solid #d1d5db;
+}
+
+.ss-grid-host.ag-theme-shopscout .ag-header-cell {
+  padding: 10px 12px;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  border-right: 1px solid #eaeef2;
+}
+
+.ss-grid-host.ag-theme-shopscout .ag-header-cell .ag-header-cell-label {
+  justify-content: center;
+}
+
+.ss-grid-host.ag-theme-shopscout .ag-header-cell[col-id="title"] .ag-header-cell-label,
+.ss-grid-host.ag-theme-shopscout .ag-header-cell[col-id="thumb"] .ag-header-cell-label,
+.ss-grid-host.ag-theme-shopscout .ag-header-cell[col-id="select"] .ag-header-cell-label {
+  justify-content: flex-start;
+}
+
+.ss-grid-host.ag-theme-shopscout .ag-cell {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 12px;
+  border-right: 1px solid #eaeef2;
+  color: var(--ink, #0f1419);
+  line-height: 1.4;
+  overflow: hidden;
+  user-select: text;
+}
+
+.ss-grid-host.ag-theme-shopscout .ag-cell.ss-grid-cell-title {
+  justify-content: flex-start;
+  text-align: left;
+}
+
+.ss-grid-host.ag-theme-shopscout .ag-cell.ss-grid-cell-selection,
+.ss-grid-host.ag-theme-shopscout .ag-cell.ss-grid-cell-image {
+  justify-content: center;
+  padding: 6px 4px;
+}
+
+.ss-grid-host.ag-theme-shopscout .ag-row {
+  border-bottom: 1px solid #eaeef2;
+}
+
+.ss-grid-host.ag-theme-shopscout .ag-row-hover {
+  background: color-mix(in srgb, var(--primary, #0b3d4f) 5%, #fff);
+}
+
+/* Disable AG Grid's own vertical scroll — page handles it via
+   domLayout: autoHeight. Also kill horizontal scrollbar; the shell
+   handles horizontal via updateShellOverflow. */
+.ss-grid-host.ag-theme-shopscout .ag-body-viewport,
+.ss-grid-host.ag-theme-shopscout .ag-body-horizontal-scroll,
+.ss-grid-host.ag-theme-shopscout .ag-body-vertical-scroll {
+  overflow: visible !important;
+}
+
 .ss-grid-status {
   position: absolute;
   width: 1px;
