@@ -73,8 +73,14 @@ assert.ok(!/border[^;{]*#[eE]5[eE]7[eE][bB]/.test(css),
 assertNotIncludes('<div class="rb-group-label">New</div>', 'File tab no longer owns list creation');
 assertNotIncludes('<div class="rb-group-label">Existing Lists</div>', 'File tab no longer shows recent/existing lists');
 
-/* The Lists group moved out of the Products ribbon and into the File ribbon. */
-assertIncludes('<div class="rb-group-label">Lists</div>', 'Lists group exists (in File ribbon)');
+/* The List group is mirrored across every ribbon tab (File / Products
+   / Analyze / Search) using data-group-id="list" and shared
+   data-list-action attributes so all copies drive the same handlers. */
+assertIncludes('<div class="rb-group-label">List</div>', 'List group label present');
+assertIncludes('data-group-id="list"', 'List group uses data-group-id="list"');
+assertIncludes('data-list-action="new"', 'New-list action wired via data attribute');
+assertIncludes('data-list-action="rename"', 'Rename-list action wired via data attribute');
+assertIncludes('data-list-action="delete"', 'Delete-list action wired via data attribute');
 assertIncludes('id="listSelect"',     'List selector exists');
 assertIncludes('id="newListBtn"',     'New-list action exists');
 assertIncludes('id="renameListBtn"',  'Rename-list action exists');

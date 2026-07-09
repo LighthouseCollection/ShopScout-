@@ -38,16 +38,23 @@
 
   <div class="ribbon-body">
     <div class="ribbon-pane" data-pane="file">
-      <!-- Mirror selector so the active list is switchable from File too.
-           Canonical Lists group (with New/Rename/Delete) lives in the Products ribbon. -->
-      <div class="rb-group rb-group--list-mirror" aria-label="Active list">
+      <!-- List group — mirrored across all tabs (File / Products /
+           Analyze / Search) so users can switch lists and manage
+           them from any ribbon. Wired via data-list-action so
+           duplicate DOM copies all trigger the same handlers. -->
+      <div class="rb-group" data-group-id="list" aria-label="Lists">
         <div class="rb-group-content">
           <div class="rb-stack">
             <label class="rb-mini-label">Product list</label>
             <select class="rb-select rb-select--wide" data-list-mirror="file"></select>
           </div>
+          <div class="rb-stack">
+            <button class="rb-btn-sm" data-list-action="new" title="Create a new product list" aria-label="New list"><span class="rb-btn-sm-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></span><span class="rb-btn-sm-label">New&nbsp;list</span></button>
+            <button class="rb-btn-sm" data-list-action="rename" title="Rename the current list" aria-label="Rename list"><span class="rb-btn-sm-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg></span><span class="rb-btn-sm-label">Rename</span></button>
+            <button class="rb-btn-sm" data-list-action="delete" title="Delete the current list" aria-label="Delete list"><span class="rb-btn-sm-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg></span><span class="rb-btn-sm-label">Delete</span></button>
+          </div>
         </div>
-        <div class="rb-group-label">Lists</div>
+        <div class="rb-group-label">List</div>
       </div>
 
       <div class="rb-divider" aria-hidden="true"></div>
@@ -100,9 +107,9 @@
             <select class="rb-select" id="listSelect"></select>
           </div>
           <div class="rb-stack">
-            <button class="rb-btn-sm" id="newListBtn" title="Create a new product list" aria-label="New list"><span class="rb-btn-sm-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></span><span class="rb-btn-sm-label">New&nbsp;list</span></button>
-            <button class="rb-btn-sm" id="renameListBtn" title="Rename the current list" aria-label="Rename list"><span class="rb-btn-sm-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg></span><span class="rb-btn-sm-label">Rename</span></button>
-            <button class="rb-btn-sm" id="deleteListBtn" title="Delete the current list" aria-label="Delete list"><span class="rb-btn-sm-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg></span><span class="rb-btn-sm-label">Delete</span></button>
+            <button class="rb-btn-sm" id="newListBtn" data-list-action="new" title="Create a new product list" aria-label="New list"><span class="rb-btn-sm-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></span><span class="rb-btn-sm-label">New&nbsp;list</span></button>
+            <button class="rb-btn-sm" id="renameListBtn" data-list-action="rename" title="Rename the current list" aria-label="Rename list"><span class="rb-btn-sm-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg></span><span class="rb-btn-sm-label">Rename</span></button>
+            <button class="rb-btn-sm" id="deleteListBtn" data-list-action="delete" title="Delete the current list" aria-label="Delete list"><span class="rb-btn-sm-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg></span><span class="rb-btn-sm-label">Delete</span></button>
           </div>
         </div>
         <div class="rb-group-label">List</div>
@@ -248,14 +255,19 @@
     </div>
 
     <div class="ribbon-pane" data-pane="analyze">
-      <div class="rb-group rb-group--list-mirror" aria-label="Active list">
+      <div class="rb-group" data-group-id="list" aria-label="Lists">
         <div class="rb-group-content">
           <div class="rb-stack">
             <label class="rb-mini-label">Product list</label>
             <select class="rb-select rb-select--wide" data-list-mirror="analyze"></select>
           </div>
+          <div class="rb-stack">
+            <button class="rb-btn-sm" data-list-action="new" title="Create a new product list" aria-label="New list"><span class="rb-btn-sm-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></span><span class="rb-btn-sm-label">New&nbsp;list</span></button>
+            <button class="rb-btn-sm" data-list-action="rename" title="Rename the current list" aria-label="Rename list"><span class="rb-btn-sm-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg></span><span class="rb-btn-sm-label">Rename</span></button>
+            <button class="rb-btn-sm" data-list-action="delete" title="Delete the current list" aria-label="Delete list"><span class="rb-btn-sm-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg></span><span class="rb-btn-sm-label">Delete</span></button>
+          </div>
         </div>
-        <div class="rb-group-label">Lists</div>
+        <div class="rb-group-label">List</div>
       </div>
       <div class="rb-divider" aria-hidden="true"></div>
       <!-- AI — merged group holding both Auto AI (split-button with
@@ -312,14 +324,19 @@
     </div>
 
     <div class="ribbon-pane" data-pane="search">
-      <div class="rb-group rb-group--list-mirror" aria-label="Active list">
+      <div class="rb-group" data-group-id="list" aria-label="Lists">
         <div class="rb-group-content">
           <div class="rb-stack">
             <label class="rb-mini-label">Product list</label>
             <select class="rb-select rb-select--wide" data-list-mirror="search"></select>
           </div>
+          <div class="rb-stack">
+            <button class="rb-btn-sm" data-list-action="new" title="Create a new product list" aria-label="New list"><span class="rb-btn-sm-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></span><span class="rb-btn-sm-label">New&nbsp;list</span></button>
+            <button class="rb-btn-sm" data-list-action="rename" title="Rename the current list" aria-label="Rename list"><span class="rb-btn-sm-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg></span><span class="rb-btn-sm-label">Rename</span></button>
+            <button class="rb-btn-sm" data-list-action="delete" title="Delete the current list" aria-label="Delete list"><span class="rb-btn-sm-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg></span><span class="rb-btn-sm-label">Delete</span></button>
+          </div>
         </div>
-        <div class="rb-group-label">Lists</div>
+        <div class="rb-group-label">List</div>
       </div>
       <div class="rb-divider" aria-hidden="true"></div>
       <div class="rb-group rb-group-wide" aria-label="Search">

@@ -319,10 +319,15 @@ function bindEvents() {
   syncRibbonStageCheckboxes();
   updateSecondOpinionStageVisibility();
 
-  // Toolbar buttons
-  document.getElementById('newListBtn')?.addEventListener('click', () => openListModal('new'));
-  document.getElementById('renameListBtn')?.addEventListener('click', () => openListModal('rename'));
-  document.getElementById('deleteListBtn')?.addEventListener('click', deleteList);
+  // Toolbar buttons — list actions are mirrored across every ribbon
+  // tab (File / Products / Analyze / Search), so wire by
+  // data-list-action selector to catch all copies in one pass.
+  document.querySelectorAll('[data-list-action="new"]').forEach(el =>
+    el.addEventListener('click', () => openListModal('new')));
+  document.querySelectorAll('[data-list-action="rename"]').forEach(el =>
+    el.addEventListener('click', () => openListModal('rename')));
+  document.querySelectorAll('[data-list-action="delete"]').forEach(el =>
+    el.addEventListener('click', deleteList));
   document.getElementById('clearBtn')?.addEventListener('click', clearProducts);
   document.getElementById('exportToggle')?.addEventListener('click', openExportPage);
   document.getElementById('importBtn')?.addEventListener('click', doImport);
