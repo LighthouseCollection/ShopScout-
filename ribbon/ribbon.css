@@ -924,11 +924,13 @@
    19a. Group label centering — comparison.css uses `align-self: end`
    which aligns the label to the right edge of the group in a flex
    column layout. Center it horizontally instead so it sits under
-   the group's visual center.
+   the group's visual center. Uses !important + width: 100% to
+   survive any ambient rule that would push it toward an edge.
    ============================================================== */
 .rb-office-ribbon .rb-group > .rb-group-label {
-  align-self: center;
-  text-align: center;
+  align-self: center !important;
+  width: 100%;
+  text-align: center !important;
 }
 
 /* ==============================================================
@@ -957,6 +959,55 @@
 .rb-office-ribbon .rb-group[data-group-id="list"] .rb-btn-sm .rb-btn-sm-icon svg {
   width: 100%;
   height: 100%;
+}
+
+/* ==============================================================
+   19c. Review & Rules group — 2×2 grid with each button rendered
+   as icon-left + text-right, not the vertical stack default.
+   ============================================================== */
+.rb-office-ribbon .rb-group[data-group-id="review"] > .rb-group-content {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: auto auto;
+  gap: 4px 8px;
+  align-items: stretch;
+  padding: 4px;
+}
+
+.rb-office-ribbon .rb-group[data-group-id="review"] .rb-btn-lg {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 8px;
+  height: auto;
+  min-height: 32px;
+  padding: 4px 8px;
+  text-align: left;
+  min-width: 0;
+  white-space: normal;
+}
+
+.rb-office-ribbon .rb-group[data-group-id="review"] .rb-btn-lg .rb-icon-lg {
+  width: 20px;
+  height: 20px;
+  margin: 0;
+  flex: 0 0 20px;
+}
+
+.rb-office-ribbon .rb-group[data-group-id="review"] .rb-btn-lg .rb-icon-lg svg {
+  width: 100%;
+  height: 100%;
+}
+
+.rb-office-ribbon .rb-group[data-group-id="review"] .rb-btn-lg .rb-btn-lg-label {
+  text-align: left !important;
+  white-space: normal;
+  font-size: 11px;
+  line-height: 1.15;
+  font-weight: 500;
+  -webkit-line-clamp: 2;
+  max-height: 2.4em;
 }
 
 /* ==============================================================
