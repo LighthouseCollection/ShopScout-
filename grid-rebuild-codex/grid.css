@@ -368,6 +368,10 @@ a.ss-grid-logo-token:visited {
   font-size: 12px;
   font-weight: 500;
   line-height: 1.5;
+  /* Pills never break their content onto two lines — the column
+     auto-sizes to fit the widest pill so wrapping should never be
+     needed, and when it happens it looks broken. */
+  white-space: nowrap;
 }
 
 /* Semantic pill palette — outline (darker) + filled interior (lighter).

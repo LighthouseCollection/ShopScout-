@@ -523,8 +523,10 @@
     if (column?.type === 'rating') return { min: 132, max: 200, pad: 20 };
     /* Pill-wrapped cells (brand, source, spec, plain text pills) have
        border+padding chrome the text-length estimator misses — bump the
-       pad so the pill has room on both sides. */
-    if (column?.type === 'brand' || column?.type === 'source' || column?.type === 'spec') {
+       pad so the pill has room on both sides. Text columns also render
+       their content as pills via plainCellHtml, so they need the same
+       chrome allowance — otherwise short values like "VHEP02" wrap. */
+    if (column?.type === 'brand' || column?.type === 'source' || column?.type === 'spec' || column?.type === 'text') {
       return { min: 40, max: 520, pad: 28 };
     }
     if (column?.type === 'price') return { min: 40, max: 200, pad: 16 };
