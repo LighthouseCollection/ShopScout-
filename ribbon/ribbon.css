@@ -910,6 +910,105 @@
 }
 
 /* ==============================================================
+   19. Organize group — stacked Sort By / Group By with integrated
+   direction toggle button on the Sort By dropdown.
+   ============================================================== */
+.rb-office-ribbon .rb-organize-stack {
+  display: inline-flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 190px;
+}
+
+.rb-office-ribbon .rb-organize-row {
+  display: grid;
+  grid-template-columns: 62px 1fr;
+  align-items: center;
+  gap: 6px;
+}
+
+.rb-office-ribbon .rb-organize-label {
+  margin: 0;
+  padding: 0;
+  color: var(--ink-3, #5a6470);
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  text-align: left;
+}
+
+/* Sort input — dropdown + integrated direction toggle glyph
+   sitting flush on the right edge of the combo, sharing the same
+   visual container. */
+.rb-office-ribbon .rb-sort-input {
+  display: inline-flex;
+  align-items: stretch;
+  border: 1px solid var(--rule, #d1d5db);
+  border-radius: 3px;
+  background: #fff;
+  overflow: hidden;
+  min-height: 22px;
+}
+
+.rb-office-ribbon .rb-sort-input > .rb-select {
+  flex: 1;
+  min-width: 0;
+  height: 20px;                             /* container border adds 2px */
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  padding-right: 18px;
+  background-position: right 4px center;
+}
+
+.rb-office-ribbon .rb-sort-input > .rb-select:focus-visible {
+  outline: 2px solid var(--rbn-focus-outline);
+  outline-offset: -2px;
+}
+
+.rb-office-ribbon .rb-sort-dir-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: auto;
+  padding: 0;
+  border: 0;
+  border-left: 1px solid var(--rule, #d1d5db);
+  background: var(--paper-2, #f4f6f9);
+  color: var(--ink, #0f1419);
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1;
+  transition: background 90ms ease, color 90ms ease;
+}
+
+.rb-office-ribbon .rb-sort-dir-toggle:hover {
+  background: var(--rbn-hover-bg, rgba(15, 23, 42, 0.06));
+  color: var(--primary, #0b3d4f);
+}
+
+.rb-office-ribbon .rb-sort-dir-toggle:focus-visible {
+  outline: 2px solid var(--rbn-focus-outline);
+  outline-offset: -2px;
+}
+
+.rb-office-ribbon .rb-sort-dir-toggle[data-sort-dir="desc"] .rb-sort-dir-glyph {
+  color: var(--primary, #0b3d4f);
+}
+
+/* Group By row's select — no toggle, so it stretches full width */
+.rb-office-ribbon .rb-organize-row > .rb-select {
+  min-width: 0;
+  width: 100%;
+  max-width: none;
+}
+
+/* ==============================================================
    18. Contextual tabs — Ribbon.ContextualTabs / TabGroup
    ============================================================== */
 

@@ -246,9 +246,49 @@
     });
   }
 
+  /* --- Sort direction toggle ---------------------------------- */
+  /* The Sort By dropdown has an integrated ↑ / ↓ toggle button.
+     Clicking cycles the direction and fires the corresponding
+     data-ss-grid-command so shopscoutGrid's existing sort-asc /
+     sort-desc handlers pick it up unchanged. */
+  function wireSortDirToggle() {
+    const btn = doc?.getElementById?.('sortDirToggle');
+    const select = doc?.getElementById?.('gridSortField');
+    if (!btn) return;
+    btn.addEventListener('click', event => {
+      event.preventDefault();
+      /* Refuse to sort if no field is chosen — same guard as the
+         old Asc/Desc buttons. */
+      if (select && !select.value) {
+        if (typeof root.SS?.toast?.show === 'function') {
+          root.SS.toast.show('Choose a field to sort by first.', 'error');
+        }
+        return;
+      }
+      const current = btn.getAttribute('data-sort-dir') === 'desc' ? 'desc' : 'asc';
+      const next = current === 'asc' ? 'desc' : 'asc';
+      btn.setAttribute('data-sort-dir', next);
+      const glyph = btn.querySelector('.rb-sort-dir-glyph');
+      if (glyph) glyph.textContent = next === 'desc' ? '↓' : '↑';
+      btn.setAttribute(
+        'aria-label',
+        `Toggle sort direction — currently ${next === 'desc' ? 'descending' : 'ascending'}`
+      );
+      /* Dispatch a synthetic click on a data-ss-grid-command anchor
+         so shopscoutGrid's existing command dispatcher picks it up. */
+      const synthetic = doc.createElement('button');
+      synthetic.setAttribute('data-ss-grid-command', next === 'desc' ? 'sort-desc' : 'sort-asc');
+      synthetic.style.display = 'none';
+      doc.body.appendChild(synthetic);
+      synthetic.click();
+      synthetic.remove();
+    });
+  }
+
   /* --- Bootstrap ---------------------------------------------- */
   ready(() => {
     registerCommands();
     registerScalingPolicy();
+    wireSortDirToggle();
   });
 })(globalThis);
