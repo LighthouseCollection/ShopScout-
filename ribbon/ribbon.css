@@ -140,10 +140,13 @@
   font-family: var(--rbn-font);
 }
 
-/* Universal label clamp — even without data-group-size, prevent
-   button labels from rendering more than 2 lines. Fixes the
-   overflow-below-chrome regression where 2-line labels like
-   "Possible Duplicates" pushed past the button box. */
+/* Universal label clamp — clamp to 2 lines and, most importantly,
+   NEVER break inside a word. Office Word's ribbon lets a button be
+   as wide as its longest word (or clips it cleanly with ellipsis)
+   — it never renders half-words like "Possib\nDuplic".
+   word-break: keep-all + overflow-wrap: normal keep whole words on
+   a line; if the word can't fit, text-overflow: ellipsis on the
+   last visible line trims it cleanly. */
 .rb-office-ribbon .rb-btn-lg {
   overflow: hidden;
 }
@@ -153,6 +156,10 @@
   -webkit-box-orient: vertical;
   max-height: 2.4em;
   overflow: hidden;
+  text-overflow: ellipsis;
+  word-break: keep-all;
+  overflow-wrap: normal;
+  hyphens: none;
 }
 
 /* ==============================================================
@@ -964,7 +971,14 @@
 /* ==============================================================
    19c. Review & Rules group — 2×2 grid with each button rendered
    as icon-left + text-right, not the vertical stack default.
+   The group needs enough width for each cell to fit its longest
+   label word ("Duplicates", "Normalize") plus the 20px icon +
+   gap. Without this floor the grid squeezed each label down to
+   ~34px and chopped both words to 6 chars (Possib / Duplic).
    ============================================================== */
+.rb-office-ribbon .rb-group[data-group-id="review"]:not([data-group-size="popup"]) {
+  min-width: 240px;
+}
 .rb-office-ribbon .rb-group[data-group-id="review"] > .rb-group-content {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -1013,12 +1027,20 @@
 /* ==============================================================
    19. Organize group — stacked Sort By / Group By with integrated
    direction toggle button on the Sort By dropdown.
+   Floor the whole group at a width that keeps the stack (190px)
+   + Filters button (~64px) + Reset button (~64px) + gaps from
+   colliding into each other. Without this the labels of the
+   Sort/Group stack overlapped the Filters button icon.
    ============================================================== */
+.rb-office-ribbon .rb-group[data-group-id="organize"]:not([data-group-size="popup"]) {
+  min-width: 340px;
+}
 .rb-office-ribbon .rb-organize-stack {
   display: inline-flex;
   flex-direction: column;
   gap: 4px;
   min-width: 190px;
+  flex: 0 0 auto;
 }
 
 .rb-office-ribbon .rb-organize-row {
