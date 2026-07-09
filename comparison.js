@@ -81,16 +81,6 @@ function syncSelectionButtons(products) {
     deleteBtn.disabled = !selectedCount;
     deleteBtn.textContent = selectedCount ? `Delete Selected Products (${selectedCount})` : 'Delete Selected Products';
   }
-  /* Smart-default Rescan main button: label reflects what it will do
-     when clicked. Any rows checked -> Rescan Selected (N); otherwise
-     Rescan All. Behavior is wired in the click handler by reading
-     selectedProductIds at click time, so this label is purely a hint. */
-  const rescanSmartLabel = document.getElementById('rescanSmartLabel');
-  if (rescanSmartLabel) {
-    rescanSmartLabel.textContent = selectedCount
-      ? `Rescan Selected (${selectedCount})`
-      : 'Rescan All';
-  }
 }
 
 
@@ -339,15 +329,6 @@ function bindEvents() {
   document.getElementById('openBtn')?.addEventListener('click', doOpen);
   document.getElementById('rescanBtn')?.addEventListener('click', rescanList);
   document.getElementById('rescanSelectedBtn')?.addEventListener('click', rescanSelectedProducts);
-  /* Smart-default Rescan main button — routes to Selected or All at
-     click time based on how many rows have their checkbox ticked.
-     Explicit choice remains available via the split-button chevron
-     menu (rescanBtn / rescanSelectedBtn above). */
-  document.getElementById('rescanSmartBtn')?.addEventListener('click', () => {
-    const selectedCount = selectedProductIds.size;
-    if (selectedCount > 0) rescanSelectedProducts();
-    else rescanList();
-  });
   document.getElementById('deleteSelectedBtn')?.addEventListener('click', deleteSelectedProducts);
   document.getElementById('manualAiBtn')?.addEventListener('click', openManualAiModal);
   document.getElementById('aiAnalysisPageBtn').addEventListener('click', openLatestAiResults);

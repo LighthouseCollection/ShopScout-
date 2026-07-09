@@ -117,24 +117,19 @@
             <span class="rb-icon-lg"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/><path d="M12 13v6"/><path d="M9 16h6"/></svg></span>
             <span class="rb-btn-lg-label">Add Product</span>
           </button>
-          <!-- Rescan Products — split button. Main click = smart default
-               (any rows checked -> Rescan Selected; else Rescan All).
-               Chevron ▼ opens explicit choice menu. -->
-          <div class="rb-split">
-            <button class="rb-btn-lg rb-split-main" id="rescanSmartBtn" type="button" title="Rescan checked rows if any are selected; otherwise rescan every product in this list">
+          <!-- Rescan Products — single-button dropdown, styled to
+               match Delete Item(s). Click the whole button to open
+               the menu; pick "Rescan All" or "Rescan Selected". -->
+          <details class="toolbar-menu">
+            <summary class="rb-btn-lg split-down" data-menu="true" title="Rescan products">
               <span class="rb-icon-lg"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 0 1 15-6.7L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-15 6.7L3 16"/><path d="M3 21v-5h5"/></svg></span>
-              <span class="rb-btn-lg-label" id="rescanSmartLabel">Rescan Products</span>
-            </button>
-            <details class="toolbar-menu rb-split-chev-wrap">
-              <summary class="rb-split-chev" data-menu="true" title="Choose rescan scope" aria-label="Rescan options">
-                <span aria-hidden="true">▾</span>
-              </summary>
-              <div class="toolbar-menu-panel">
-                <button class="menu-item" id="rescanBtn" type="button" title="Re-scrape every product in this list from its URL">Rescan All</button>
-                <button class="menu-item" id="rescanSelectedBtn" type="button" title="Re-scrape only the rows with a checked selection box" disabled>Rescan Selected</button>
-              </div>
-            </details>
-          </div>
+              <span class="rb-btn-lg-label">Rescan Products</span>
+            </summary>
+            <div class="toolbar-menu-panel">
+              <button class="menu-item" id="rescanBtn" type="button" title="Re-scrape every product in this list from its URL">Rescan All</button>
+              <button class="menu-item" id="rescanSelectedBtn" type="button" title="Re-scrape only the rows with a checked selection box" disabled>Rescan Selected</button>
+            </div>
+          </details>
           <details class="toolbar-menu">
             <summary class="rb-btn-lg split-down" data-menu="true" title="Delete products">
               <span class="rb-icon-lg"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></span>
