@@ -234,6 +234,23 @@
       button.classList.toggle('active', viewState.mode === 'matrix');
       button.setAttribute('aria-pressed', viewState.mode === 'matrix' ? 'true' : 'false');
     });
+    /* Restore the persisted width mode + reflect it in the toolbar. */
+    let widthMode = 'fit';
+    try {
+      widthMode = root.localStorage?.getItem('shopscout_grid_width_mode') === 'full' ? 'full' : 'fit';
+    } catch {}
+    const shell = root.document?.querySelector('.ss-grid-shell');
+    if (shell && shell.getAttribute('data-shell-width') !== widthMode) {
+      shell.setAttribute('data-shell-width', widthMode);
+    }
+    root.document?.querySelectorAll('[data-ss-grid-command="width-fit"]').forEach(btn => {
+      btn.classList.toggle('active', widthMode === 'fit');
+      btn.setAttribute('aria-pressed', widthMode === 'fit' ? 'true' : 'false');
+    });
+    root.document?.querySelectorAll('[data-ss-grid-command="width-full"]').forEach(btn => {
+      btn.classList.toggle('active', widthMode === 'full');
+      btn.setAttribute('aria-pressed', widthMode === 'full' ? 'true' : 'false');
+    });
   }
 
   function updateModeButtons() {
@@ -343,6 +360,19 @@
       render();
     } else if (command === 'clear-group') {
       ensureStore().dispatch({ group: null });
+      render();
+    } else if (command === 'width-fit' || command === 'width-full') {
+      /* Persist to localStorage — shell width is a personal preference,
+         not per-list state. Read on next mount + applied via CSS data
+         attribute on the shell. */
+      const mode = command === 'width-full' ? 'full' : 'fit';
+      try { root.localStorage?.setItem('shopscout_grid_width_mode', mode); } catch {}
+      const shell = root.document?.querySelector('.ss-grid-shell');
+      if (shell) shell.setAttribute('data-shell-width', mode);
+      /* Re-run overflow/width calculation for the new mode. */
+      root.document?.querySelectorAll('[data-ss-grid-command="width-fit"],[data-ss-grid-command="width-full"]').forEach(btn => {
+        btn.classList.toggle('rb-btn-lg--active', btn.dataset.ssGridCommand === `width-${mode}`);
+      });
       render();
     }
   }

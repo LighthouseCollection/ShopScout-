@@ -684,10 +684,19 @@
     const canvasWidth = canvas.scrollWidth || canvas.offsetWidth || 0;
     const doc = shell.ownerDocument || root.document;
     const viewportInner = (doc?.documentElement?.clientWidth || root.innerWidth || 1400) - SHELL_HORIZONTAL_MARGIN;
-    /* +12px absorbs SlickGrid's subpixel rounding + the host's 4px
-       padding-right buffer without triggering a scrollbar. */
-    const contentTarget = canvasWidth + 12;
-    const targetWidth = Math.min(contentTarget, SHELL_MAX_WIDTH, viewportInner);
+    /* 'full' mode: stretch to viewport - gutter. Skips the max-width
+       cap and content-hugging behavior. 'fit' (default) sizes to
+       content + chrome, capped at SHELL_MAX_WIDTH. */
+    const mode = shell.getAttribute('data-shell-width') === 'full' ? 'full' : 'fit';
+    let targetWidth;
+    if (mode === 'full') {
+      targetWidth = viewportInner;
+    } else {
+      /* +12px absorbs SlickGrid's subpixel rounding + the host's 4px
+         padding-right buffer without triggering a scrollbar. */
+      const contentTarget = canvasWidth + 12;
+      targetWidth = Math.min(contentTarget, SHELL_MAX_WIDTH, viewportInner);
+    }
     shell.style.width = targetWidth + 'px';
     shell.style.overflowX = canvasWidth > shell.clientWidth + 2 ? 'auto' : 'hidden';
   }
