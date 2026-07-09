@@ -217,14 +217,16 @@
     return renderPlain;
   }
 
+  /* Structural minimums only. Everything else lets autoSize decide:
+     column = max(header, widest cell content) + 24px (12px each side
+     from the .ag-cell CSS padding). Setting an artificial floor here
+     just inflates narrow columns past their content — the user rule
+     is 12px each side, period. */
   function columnMinWidth(column) {
     if (column.type === 'selection') return 40;
     if (column.type === 'image') return 108;
-    if ((column.field || column.id) === 'title') return 200;
-    if (column.type === 'rating') return 140;
-    if (column.type === 'brand' || column.type === 'source') return 110;
-    if (column.type === 'price') return 90;
-    return 80;
+    if ((column.field || column.id) === 'title') return 160;
+    return 40;
   }
 
   const PINNED_LEFT_COLUMN_IDS = new Set(['select', 'thumb', 'title']);
