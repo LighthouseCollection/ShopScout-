@@ -205,6 +205,143 @@
 
 
 /* ===============================================================
+   TRANCHE B (commit 4) — FiveOrSixButtons / SixButtons /
+   SixButtons-TwoColumns / SevenButtons
+   =============================================================== */
+
+
+/* ===============================================================
+   FiveOrSixButtons — 5 or 6 button-family, Large + Middle + Small
+   Middle mode: 3-row grid, column-flow so 5 buttons -> 3+2 and
+   6 buttons -> 3+3 automatically.
+   =============================================================== */
+.rb-office-ribbon .rb-group[data-size-definition="FiveOrSixButtons"][data-group-size="large"] > .rb-group-content {
+  display: flex;
+  flex-direction: row;
+  gap: 2px;
+}
+
+.rb-office-ribbon .rb-group[data-size-definition="FiveOrSixButtons"][data-group-size="middle"] > .rb-group-content {
+  display: grid;
+  grid-template-rows: repeat(3, var(--rbn-btn-middle-h));
+  grid-auto-flow: column;
+  grid-auto-columns: max-content;
+  gap: 1px 6px;
+}
+
+.rb-office-ribbon .rb-group[data-size-definition="FiveOrSixButtons"][data-group-size="small"] > .rb-group-content {
+  display: flex;
+  flex-direction: row;
+  gap: 1px;
+}
+
+
+/* ===============================================================
+   SixButtons — 6 button-family, Large + Middle + Small
+   Middle mode: explicit 3-row × 2-column grid (3+3 layout).
+   =============================================================== */
+.rb-office-ribbon .rb-group[data-size-definition="SixButtons"][data-group-size="large"] > .rb-group-content {
+  display: flex;
+  flex-direction: row;
+  gap: 2px;
+}
+
+.rb-office-ribbon .rb-group[data-size-definition="SixButtons"][data-group-size="middle"] > .rb-group-content {
+  display: grid;
+  grid-template-rows: repeat(3, var(--rbn-btn-middle-h));
+  grid-template-columns: repeat(2, max-content);
+  grid-auto-flow: column;
+  gap: 1px 6px;
+}
+
+.rb-office-ribbon .rb-group[data-size-definition="SixButtons"][data-group-size="small"] > .rb-group-content {
+  display: flex;
+  flex-direction: row;
+  gap: 1px;
+}
+
+
+/* ===============================================================
+   SixButtons-TwoColumns — explicit 2-column layout at every mode.
+   Distinguishes itself from SixButtons by keeping 2 columns even
+   in Large mode instead of collapsing to a single row.
+   =============================================================== */
+.rb-office-ribbon .rb-group[data-size-definition="SixButtons-TwoColumns"][data-group-size="large"] > .rb-group-content {
+  display: grid;
+  grid-template-columns: repeat(2, auto);
+  grid-template-rows: repeat(3, var(--rbn-btn-middle-h));
+  grid-auto-flow: column;
+  gap: 1px 4px;
+  align-content: start;
+}
+
+/* In Large mode, individual buttons stay at Middle-button dimensions
+   because the 6-button 2-column grid at 68px each would blow the
+   ribbon body height. Fluent handles this by rendering as Middle
+   even when the container is at Size="Large". */
+.rb-office-ribbon .rb-group[data-size-definition="SixButtons-TwoColumns"][data-group-size="large"] > .rb-group-content > * {
+  flex-direction: row;
+  align-items: center;
+  height: var(--rbn-btn-middle-h);
+  padding: 2px 6px;
+  gap: 6px;
+  text-align: left;
+}
+.rb-office-ribbon .rb-group[data-size-definition="SixButtons-TwoColumns"][data-group-size="large"] > .rb-group-content > * .rb-icon-lg {
+  width: var(--rbn-icon-small-96);
+  height: var(--rbn-icon-small-96);
+  margin: 0;
+}
+.rb-office-ribbon .rb-group[data-size-definition="SixButtons-TwoColumns"][data-group-size="large"] > .rb-group-content > * .rb-btn-lg-label {
+  -webkit-line-clamp: 1;
+  max-height: none;
+  white-space: nowrap;
+  text-align: left;
+}
+
+.rb-office-ribbon .rb-group[data-size-definition="SixButtons-TwoColumns"][data-group-size="middle"] > .rb-group-content {
+  display: grid;
+  grid-template-columns: repeat(2, max-content);
+  grid-template-rows: repeat(3, var(--rbn-btn-middle-h));
+  grid-auto-flow: column;
+  gap: 1px 6px;
+}
+
+.rb-office-ribbon .rb-group[data-size-definition="SixButtons-TwoColumns"][data-group-size="small"] > .rb-group-content {
+  display: grid;
+  grid-template-columns: repeat(2, auto);
+  grid-template-rows: repeat(3, var(--rbn-btn-small-h));
+  grid-auto-flow: column;
+  gap: 1px;
+}
+
+
+/* ===============================================================
+   SevenButtons — 7 button-family, Large + Middle + Small
+   Middle mode: 3-row column flow packs into 3+3+1 (three columns).
+   =============================================================== */
+.rb-office-ribbon .rb-group[data-size-definition="SevenButtons"][data-group-size="large"] > .rb-group-content {
+  display: flex;
+  flex-direction: row;
+  gap: 2px;
+}
+
+.rb-office-ribbon .rb-group[data-size-definition="SevenButtons"][data-group-size="middle"] > .rb-group-content {
+  display: grid;
+  grid-template-rows: repeat(3, var(--rbn-btn-middle-h));
+  grid-auto-flow: column;
+  grid-auto-columns: max-content;
+  gap: 1px 6px;
+}
+
+.rb-office-ribbon .rb-group[data-size-definition="SevenButtons"][data-group-size="small"] > .rb-group-content {
+  display: flex;
+  flex-direction: row;
+  gap: 1px;
+}
+
+
+/* ===============================================================
    Validation error marker
    When ShopScoutRibbon.templates.validate returns false and the
    caller wants a visual flag, adding data-template-invalid="true"

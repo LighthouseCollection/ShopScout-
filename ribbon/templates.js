@@ -13,7 +13,7 @@
    because Chrome extensions don't stop the world; the group
    simply renders whatever the default CSS gives it.
 
-   Tranche A landed this commit (7 templates):
+   Tranche A landed in commit 3 (7 templates):
      - OneButton
      - TwoButtons
      - ThreeButtons
@@ -22,9 +22,12 @@
      - FourButtons
      - FiveButtons
 
-   Remaining 16 templates land in commits 4-7:
-     Commit 4: FiveOrSixButtons, SixButtons, SixButtons-TwoColumns,
-               SevenButtons
+   Tranche B landed this commit (4 templates):
+     - FiveOrSixButtons  (with trailingOptional)
+     - SixButtons
+     - SixButtons-TwoColumns
+     - SevenButtons
+
      Commit 5: EightButtons, EightButtons-LastThreeSmall,
                NineButtons, TenButtons, ElevenButtons
      Commit 6: ButtonGroups, ButtonGroupsAndInputs,
@@ -287,6 +290,70 @@
   register('FiveButtons', {
     supportedSizes: ['Large', 'Middle', 'Small'],
     slots: [
+      { family: 'button' },
+      { family: 'button' },
+      { family: 'button' },
+      { family: 'button' },
+      { family: 'button' }
+    ]
+  });
+
+  /* ==============================================================
+     Tranche B registrations (commit 4)
+     ============================================================== */
+
+  /* FiveOrSixButtons — 5 or 6 button-family, Large + Middle + Small.
+     The 6th slot is optional (trailingOptional). Middle mode packs
+     into 3-row columns; layout is 3+2 for 5 buttons or 3+3 for 6. */
+  register('FiveOrSixButtons', {
+    supportedSizes: ['Large', 'Middle', 'Small'],
+    slots: [
+      { family: 'button' },
+      { family: 'button' },
+      { family: 'button' },
+      { family: 'button' },
+      { family: 'button' },
+      { family: 'button' }
+    ],
+    trailingOptional: true
+  });
+
+  /* SixButtons — 6 button-family, Large + Middle + Small.
+     Middle mode: 3+3 grid (two columns of 3 Middle buttons). */
+  register('SixButtons', {
+    supportedSizes: ['Large', 'Middle', 'Small'],
+    slots: [
+      { family: 'button' },
+      { family: 'button' },
+      { family: 'button' },
+      { family: 'button' },
+      { family: 'button' },
+      { family: 'button' }
+    ]
+  });
+
+  /* SixButtons-TwoColumns — 6 button-family, Large + Middle + Small.
+     Explicit 2-column layout at every mode. Distinguishes itself
+     from SixButtons by NOT collapsing to a single row at Large. */
+  register('SixButtons-TwoColumns', {
+    supportedSizes: ['Large', 'Middle', 'Small'],
+    slots: [
+      { family: 'button' },
+      { family: 'button' },
+      { family: 'button' },
+      { family: 'button' },
+      { family: 'button' },
+      { family: 'button' }
+    ]
+  });
+
+  /* SevenButtons — 7 button-family, Large + Middle + Small.
+     Middle mode packs into 3-row columns (3+3+1 layout). */
+  register('SevenButtons', {
+    supportedSizes: ['Large', 'Middle', 'Small'],
+    slots: [
+      { family: 'button' },
+      { family: 'button' },
       { family: 'button' },
       { family: 'button' },
       { family: 'button' },

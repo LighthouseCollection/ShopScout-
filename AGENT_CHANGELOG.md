@@ -3539,3 +3539,40 @@ This file is the shared record for Claude and Codex. Append an entry for every m
   - **`.rb-stack` handling:** the New/Rename/Delete buttons in the merged Products tab's List group are wrapped in a `.rb-stack` container. Templates that host a stack need to either (a) treat the stack as a single "logical" slot, or (b) allow the stack's children as individual slots. Current validator treats `.rb-stack` as ancillary and doesn't traverse into it. This is fine for List because the group doesn't declare a template — but as we migrate the tab in commit 11, we may need `ButtonGroups` template semantics (commit 6) to properly express the stack.
   - **No CSS layout for `ThreeButtonsAndOneCheckBox` Middle mode** was added — the default column-stacked CSS (`data-group-size="middle"`) will handle it, but visual result may look odd if the CheckBox stretches full-width. If reviewers see a rendering issue, add `.rb-group[data-size-definition="ThreeButtonsAndOneCheckBox"][data-group-size="middle"] > .rb-group-content > :nth-child(4) { justify-content: flex-start; padding: 2px 6px; }`.
   - **Next commit (4/11):** Tranche B — `FiveOrSixButtons` (with `trailingOptional: true`), `SixButtons`, `SixButtons-TwoColumns`, `SevenButtons`. Same pattern as tranche A.
+
+## 2026-07-09 - Claude Office 365 ribbon commit 4: SizeDefinition templates tranche B
+
+- Agent: Claude
+- Branch: grid-rebuild-codex
+- Commit: This commit (4/11).
+- Status: Implemented. All 44 tests pass.
+- Summary:
+  - **4 new templates registered** in `ribbon/templates.js`:
+    * `FiveOrSixButtons` — 5-6 button-family, Large + Middle + Small. `trailingOptional: true` so 5 OR 6 controls both pass validation.
+    * `SixButtons` — 6 button-family, Large + Middle + Small. Middle mode: explicit 3×2 grid (3+3 layout).
+    * `SixButtons-TwoColumns` — 6 button-family, Large + Middle + Small. Explicit 2-column layout at every mode; even Large renders buttons at Middle-button dimensions (Fluent behavior: 6 Large buttons in 2 columns would blow the 100px content height, so the container downgrades individual buttons).
+    * `SevenButtons` — 7 button-family, Large + Middle + Small. Middle mode packs 3+3+1 across three columns.
+  - **CSS additions in `ribbon/templates.css`:** per-template layout overrides for each new template's supported sizes. Notable:
+    * `FiveOrSixButtons` Middle uses `grid-auto-flow: column` with 3 rows, so 5 buttons flow into 3+2 and 6 buttons into 3+3 without needing a JS branch.
+    * `SixButtons-TwoColumns` Large mode forces individual button chrome down to Middle dimensions (22px height, 16px icon, icon-left with left-aligned label) via a `> *` selector — matches Fluent's rendering where a 6-button container at Size="Large" still shows Middle-sized buttons because two rows of Large won't fit.
+    * `SevenButtons` Middle relies on the same column-flow trick as FiveOrSixButtons but with `max-content` auto-columns so the 7th button gets its own column.
+- Files touched:
+  - `ribbon/templates.js` — 4 new `register()` calls after FiveButtons.
+  - `ribbon/templates.css` — 4 new template sections before the validation-marker block.
+  - `AGENT_CHANGELOG.md` — this entry.
+- Validation run:
+  - `npm test` -> all 44 pass.
+  - `npm run build` -> Chrome / Edge / Firefox dists rebuilt.
+- Review / handoff:
+  - Reviewer: Codex.
+  - **What to check:**
+    1. `ShopScoutRibbon.templates.list()` should now return 11 templates: the original 7 + these 4.
+    2. `ShopScoutRibbon.templates.get('FiveOrSixButtons').trailingOptional` should be `true`.
+    3. `validate(el, 'FiveOrSixButtons')` with 5 controls should return `true`; with 6 controls should also return `true`; with 4 or 7 should return `false` with a "count mismatch: expected 5-6, got N" console error.
+    4. `SixButtons-TwoColumns` Large mode: attach the template to a 6-button group. Buttons should render as Middle-sized (22px, 16px icon, icon-left, left-aligned label) NOT as 68px Large. Compare against Fluent's rendering of the same template.
+    5. `SixButtons` vs `SixButtons-TwoColumns`: at Large, the former puts all 6 in a single row of Large buttons (may be very wide, which is Fluent's actual behavior — the group takes the space it needs); the latter constrains to 2 columns even at Large.
+    6. `SevenButtons` Middle: 7 buttons should flow into 3+3+1 columns.
+  - **Follow-ups or risks:**
+    * `SixButtons-TwoColumns` in Large mode currently overrides the button chrome via `> *` — if any wrapper (a `<details>` for a split-button) sits between the group content and the button, its child button won't be caught. Templates that host split-buttons directly in slots should probably wire the override to `.rb-btn-lg` explicitly rather than `> *`. Flag if issues arise.
+    * The `trailingOptional` support in the validator uses `template.slots.length - (trailingOptional ? 1 : 0)` for the min, so it can only handle ONE trailing-optional slot per template. If a future template needs multiple optional trailing slots, extend to a `minSlots` field.
+    * **Next commit (5/11):** Tranche C — `EightButtons`, `EightButtons-LastThreeSmall` (requires two `ControlGroup` sub-containers: first 5 then last 3), `NineButtons`, `TenButtons`, `ElevenButtons`. `EightButtons-LastThreeSmall` will need the ControlGroup primitive since Microsoft's docs specify it explicitly.
