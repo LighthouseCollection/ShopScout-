@@ -175,6 +175,23 @@
     return `<span class="ss-grid-price" title="${escAttr(text)}">${esc(rounded)}</span>`;
   }
 
+  /* Build a URL that jumps directly to the reviews section of the
+     product page. Amazon uses #customerReviews as its in-page anchor;
+     most other retailers (Walmart, Target, Best Buy, eBay, Etsy...)
+     use #reviews. Falls back to #reviews for unknown hosts — even
+     when the anchor doesn't exist the product page still loads,
+     which is strictly better than nothing. */
+  function reviewsUrlFor(rawUrl) {
+    const url = safeUrl(rawUrl);
+    if (!url) return '';
+    let host = '';
+    try { host = new URL(url).hostname.toLowerCase().replace(/^www\./, ''); }
+    catch { return url; }
+    const base = url.split('#')[0];
+    if (host.includes('amazon.')) return base + '#customerReviews';
+    return base + '#reviews';
+  }
+
   function renderRating(params) {
     const rating = textValue(params.value).trim();
     const reviews = textValue(params.data?.reviewCount).trim();
@@ -182,11 +199,16 @@
     const numeric = Number(String(rating).replace(/[^0-9.]/g, ''));
     const filled = Number.isFinite(numeric) ? Math.max(0, Math.min(5, Math.round(numeric))) : 0;
     const stars = '★'.repeat(filled) + '☆'.repeat(5 - filled);
-    const aria = rating ? ` aria-label="${escAttr(`${rating} out of 5`)}"` : '';
-    return `<span class="ss-grid-rating"${aria}>`
-      + `<span class="ss-grid-rating-main"><span class="ss-grid-stars" aria-hidden="true">${stars}</span> <span>${esc(rating || '-')}</span></span>`
-      + `${reviews ? `<span class="ss-grid-rating-count">${esc(reviews)} reviews</span>` : ''}`
-      + '</span>';
+    const url = reviewsUrlFor(params.data?.url);
+    const label = rating
+      ? `${rating} out of 5${reviews ? ` — see ${reviews} reviews` : ''}`
+      : (reviews ? `See ${reviews} reviews` : 'See reviews');
+    const inner = `<span class="ss-grid-rating-main"><span class="ss-grid-stars" aria-hidden="true">${stars}</span> <span>${esc(rating || '-')}</span></span>`
+      + `${reviews ? `<span class="ss-grid-rating-count">${esc(reviews)} reviews</span>` : ''}`;
+    if (url) {
+      return `<a class="ss-grid-rating ss-grid-rating-link" href="${escAttr(url)}" target="_blank" rel="noopener noreferrer" title="${escAttr(label)}" aria-label="${escAttr(label)}">${inner}</a>`;
+    }
+    return `<span class="ss-grid-rating" aria-label="${escAttr(label)}">${inner}</span>`;
   }
 
   function renderTitle(params) {

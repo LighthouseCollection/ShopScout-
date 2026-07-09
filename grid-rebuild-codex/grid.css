@@ -551,6 +551,22 @@ a.ss-grid-logo-token:visited {
   font-weight: 650;
   text-align: center;
 }
+/* Rating cell is an anchor when the product has a URL. Reset the
+   default link chrome (blue underline) — keeps the same visual as
+   the plain rating cell, only the cursor + hover hint change. */
+a.ss-grid-rating-link {
+  color: inherit;
+  text-decoration: none;
+  cursor: pointer;
+}
+a.ss-grid-rating-link:hover .ss-grid-rating-count,
+a.ss-grid-rating-link:focus-visible .ss-grid-rating-count {
+  color: var(--primary, #0b3d4f);
+  text-decoration: underline;
+}
+a.ss-grid-rating-link:hover .ss-grid-stars {
+  filter: brightness(0.92);
+}
 
 .ss-grid-rating-main {
   display: inline-flex;
