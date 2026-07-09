@@ -38,8 +38,8 @@ assert.ok(adapter, 'adapter namespace is registered');
 const gridCss = fs.readFileSync(path.join(root, 'grid-rebuild-codex/grid.css'), 'utf8');
 assert.match(gridCss, /\.ss-grid-host\s*\{[\s\S]*min-height:\s*0;/,
   'grid host CSS does not force a viewport-sized blank area before runtime sizing');
-assert.match(gridCss, /\.ss-grid-host\.ss-grid-is-matrix \.slick-header-column[\s\S]*min-height:\s*124px;/,
-  'comparison matrix header reserves enough height for thumbnail plus wrapped title');
+assert.match(gridCss, /\.ss-grid-host\.ss-grid-is-matrix \.slick-header-column[\s\S]*min-height:\s*172px;/,
+  'comparison matrix header reserves enough height for thumbnail + wrapped title + action buttons');
 
 const host = {
   children: [],

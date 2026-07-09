@@ -466,16 +466,28 @@
     }
   }
 
+  function matrixHeaderActions(productId) {
+    if (!productId) return '';
+    const pid = escAttr(productId);
+    return `<div class="ss-grid-action-bar ss-grid-matrix-actions" role="toolbar" aria-label="Product actions">
+      <button class="ss-grid-action-btn" type="button" data-matrix-action="open" data-matrix-product-id="${pid}" aria-label="Open product" title="Open"><span aria-hidden="true">&#8599;</span></button>
+      <button class="ss-grid-action-btn" type="button" data-matrix-action="rescan" data-matrix-product-id="${pid}" aria-label="Rescan product" title="Rescan"><span aria-hidden="true">&#8635;</span></button>
+      <button class="ss-grid-action-btn ss-grid-action-danger" type="button" data-matrix-action="delete" data-matrix-product-id="${pid}" aria-label="Delete product" title="Delete"><span aria-hidden="true">&times;</span></button>
+    </div>`;
+  }
+
   function headerNameForColumn(column) {
     const label = textValue(column?.name).trim();
     if (column?.type !== 'matrixCell') return column?.name || '';
     const thumb = safeUrl(column.image);
-    if (!thumb) return esc(label || 'Product');
+    const actions = matrixHeaderActions(column?.productId);
+    if (!thumb) return `<span class="ss-grid-product-head"><span class="ss-grid-product-head-title" title="${escAttr(label || 'Product')}">${esc(label || 'Product')}</span>${actions}</span>`;
     return `<span class="ss-grid-product-head">`
       + `<img class="ss-grid-header-thumb" src="${escAttr(thumb)}" alt="" aria-hidden="true" loading="lazy">`
       + `<span class="ss-grid-product-head-title-wrap">`
       + `<span class="ss-grid-product-head-title" title="${escAttr(label || 'Product')}">${esc(label || 'Product')}</span>`
       + `</span>`
+      + actions
       + `</span>`;
   }
 
@@ -679,7 +691,7 @@
     const isMatrix = projection?.mode === 'comparisonMatrix';
     const isNormalizationReview = projection?.mode === 'normalizationReview';
     const isUserRules = projection?.mode === 'userRules';
-    const headerHeight = isMatrix ? 132 : 42;
+    const headerHeight = isMatrix ? 180 : 42;
     const rowHeight = isNormalizationReview ? 64 : (isUserRules ? 60 : 110);
     const scrollbarBuffer = 18;
     const minHeight = rowCount ? headerHeight + rowHeight + scrollbarBuffer : 140;
@@ -717,7 +729,7 @@
       explicitInitialization: false,
       forceFitColumns: false,
       multiColumnSort: true,
-      rowHeight: projection?.mode === 'normalizationReview' ? 64 : (projection?.mode === 'userRules' ? 60 : 110),
+      rowHeight: projection?.mode === 'normalizationReview' ? 64 : (projection?.mode === 'userRules' ? 60 : (projection?.mode === 'comparisonMatrix' ? 44 : 110)),
       showCellSelection: false,
       enableTextSelectionOnCells: true
     };
@@ -748,6 +760,22 @@
       if (typeof opts.onColumnOrderChange === 'function') {
         opts.onColumnOrderChange(grid.getColumns().map(column => column.id));
       }
+    });
+
+    /* Matrix header actions (open / rescan / delete) live inside the
+       header cells; onClick fires on rows only, so we delegate at the
+       container level and translate to the same onAction contract. */
+    container.addEventListener('click', event => {
+      const btn = event.target?.closest?.('[data-matrix-action]');
+      if (!btn) return;
+      event.preventDefault();
+      event.stopImmediatePropagation();
+      if (typeof opts.onAction !== 'function') return;
+      const productId = btn.dataset.matrixProductId;
+      opts.onAction(btn.dataset.matrixAction, {
+        id: productId,
+        _shopScout: { productId }
+      });
     });
 
     grid.onColumnsResized.subscribe(() => {

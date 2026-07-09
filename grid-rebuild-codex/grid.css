@@ -199,6 +199,9 @@
   line-height: 1.35;
   text-align: left;
   overflow-wrap: anywhere;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--ink, #0f1419);
 }
 
 /* Thumbnail column stacks the product image with the row actions
@@ -319,8 +322,8 @@ a.ss-grid-logo-token:visited {
   overflow: hidden;
   overflow-wrap: anywhere;
   font-family: var(--font-sans, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif);
-  font-size: 12px;
-  font-weight: 600;
+  font-size: 14px;
+  font-weight: 700;
   letter-spacing: 0;
   text-transform: none;
   line-height: 1.3;
@@ -330,13 +333,28 @@ a.ss-grid-logo-token:visited {
   text-align: center;
 }
 
+/* Matrix header action buttons — same 3-icon strip as the products
+   grid's under-thumbnail action bar. Centered so it sits directly
+   below the product name. */
+.ss-grid-matrix-actions {
+  justify-content: center;
+  gap: 4px;
+  margin-top: 6px;
+  width: 100%;
+}
+.ss-grid-matrix-actions .ss-grid-action-btn {
+  width: 30px;
+  height: 30px;
+  font-size: 16px;
+}
+
 .ss-grid-host.ss-grid-is-matrix .slick-header-column {
-  min-height: 124px;
+  min-height: 172px;
   line-height: 1.2;
 }
 
 .ss-grid-host.ss-grid-is-matrix .slick-header-column.ui-state-default {
-  height: 124px;
+  height: 172px;
 }
 
 .ss-grid-rating {
