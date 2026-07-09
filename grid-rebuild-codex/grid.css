@@ -424,12 +424,16 @@ a.ss-grid-logo-token:visited {
   font-weight: 650;
   text-align: center;
 }
-/* Rating cell is an anchor when the product has a URL. Reset the
-   default link chrome (blue underline) — keeps the same visual as
-   the plain rating cell, only the cursor + hover hint change. */
+/* Rating cell is an anchor when the product has a URL. Reset every
+   piece of link chrome the global `a` rule in theme.css imposes —
+   text-decoration AND the border-bottom + padding-bottom faux
+   underline — so the cell looks identical whether it's an anchor
+   or a plain span. Only the cursor + hover hint distinguish them. */
 a.ss-grid-rating-link {
   color: inherit;
   text-decoration: none;
+  border-bottom: 0;
+  padding-bottom: 0;
   cursor: pointer;
 }
 a.ss-grid-rating-link:hover .ss-grid-rating-count,
