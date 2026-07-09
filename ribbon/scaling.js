@@ -243,7 +243,23 @@
       shellEl.setAttribute('data-ribbon-overflow', 'hidden');
       return;
     }
-    /* Reset to ideal sizes then walk the scales */
+    /* Reset every declared group to its natural state (no
+       data-group-size attribute). This lets us test whether the
+       pane already fits at the ambient comparison.css layout
+       before we start applying Fluent-strict sizing. */
+    resetAllGroups(paneEl, policy);
+    if (paneFits(paneEl)) {
+      /* Wide viewport — pane fits naturally. Don't apply any
+         size attributes; existing HTML renders at its native
+         dimensions. This is the wide-viewport happy path. */
+      shellEl.removeAttribute('data-ribbon-overflow');
+      shellEl.dispatchEvent(new root.CustomEvent('ribbon:rescale', {
+        detail: { paneId, stepsApplied: 0, policy: clonePolicy(policy) }
+      }));
+      return;
+    }
+    /* Doesn't fit natively — apply ideal sizes then walk the
+       scales. Only now do the Fluent-strict layouts kick in. */
     applyIdealSizes(paneEl, policy);
     const stepsApplied = walkScales(paneEl, policy);
     /* If we still overflow after exhausting every Scale, mark it */
@@ -257,6 +273,18 @@
     shellEl.dispatchEvent(new root.CustomEvent('ribbon:rescale', {
       detail: { paneId, stepsApplied, policy: clonePolicy(policy) }
     }));
+  }
+
+  /* Remove data-group-size from every group referenced by the
+     policy so we can test the natural fit. */
+  function resetAllGroups(paneEl, policy) {
+    const ids = new Set();
+    for (const { groupId } of policy.idealSizes) ids.add(groupId);
+    for (const { groupId } of policy.scales) ids.add(groupId);
+    for (const groupId of ids) {
+      const el = findGroup(paneEl, groupId);
+      if (el) el.removeAttribute('data-group-size');
+    }
   }
 
   /* --- Popup collapse click handler ---------------------------- */

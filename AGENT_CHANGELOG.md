@@ -4066,3 +4066,51 @@ This file is the shared record for Claude and Codex. Append an entry for every m
     * **Icons.js is now under-used.** It's referenced from Commands (as documentation for what the icons look like) but the visible HTML still uses inlined SVG. When the renderer is built, it'll pull from `ShopScoutRibbon.icons.get(name, sizeForCurrentGroupSize)`.
     * **Other tabs (File, Analyze, Search, About)** still use inline SVGs and don't have ScalingPolicies. Same pattern applies — write a `<name>-tab-init.js` per tab, add `data-group-id` to its groups, define Commands, register a policy.
     * **Path B COMPLETE.** All 11 planned commits shipped. The ribbon now conforms to Microsoft's Windows Ribbon Framework spec at every layer: Command/Control model, 23 SizeDefinition templates with strict validation, ScalingPolicy engine matching descending Scale semantics, ContextualTabs with three-state ContextAvailable, dual-variant SVG icon library, and the declarative Products-tab wiring that ties it all together.
+
+## 2026-07-09 - Claude Office 365 ribbon HOTFIX #2: only apply data-group-size when actually shrinking
+
+- Agent: Claude
+- Branch: grid-rebuild-codex
+- Commit: This commit (interim fix after Path B commit 11).
+- Status: Implemented. All 44 tests pass.
+- Summary:
+  - **User reported v3.3.0.153102a still looked broken at wide viewport:** 2-line button labels ("Possible Duplicates", "Normalize Review", etc.) overflowed the button chrome and visually collided with group labels. "SORT BY" / "GROUP BY" mini-labels were misaligned.
+  - **Root cause diagnosis:**
+    * `products-tab-init.js` calls `ShopScoutRibbon.scaling.set('products', {...})` at page load.
+    * `set()` immediately calls `rescale()`.
+    * `rescale()` unconditionally called `applyIdealSizes()` which set `data-group-size="large"` on every group.
+    * With `data-group-size="large"`, the Fluent-strict CSS in `ribbon.css` kicked in: 68px button height, 76px max-width, `flex-direction: column`, Segoe UI font.
+    * The existing HTML markup was tuned for `comparison.css`'s natural layout (70px height, 68px min-width, ambient theme font) — the Fluent-strict rules produced label overflow and cramped spacing.
+    * Additionally, `ribbon.css`'s font-family override was applied to `.rb-office-ribbon *` (all descendants) — Segoe UI's text metrics differ from the original font enough that labels wrapped at unexpected widths.
+  - **Fix in `ribbon/scaling.js`:**
+    * Added `resetAllGroups(paneEl, policy)` — removes `data-group-size` from every group referenced by the policy.
+    * `rescalePane` now:
+      1. Runs `resetAllGroups` first to get back to the natural state.
+      2. Checks `paneFits(paneEl)` at the natural state.
+      3. If it fits — done. No size attributes applied; existing HTML renders at its comparison.css dimensions. This is the wide-viewport happy path.
+      4. If it doesn't fit — apply idealSizes then walk scales (the original behavior).
+    * Emits `ribbon:rescale` with `stepsApplied: 0` when the pane fits naturally, so app code can distinguish "no shrink needed" from "walked N steps".
+  - **Fix in `ribbon/ribbon.css`:**
+    * Scoped the Segoe UI font-family override to only groups that carry `data-group-size` (or the whole ribbon if it opts in via `data-ribbon-typography="office-365"`). The tab strip is exempt so tab typography stays crisp.
+    * Added unconditional `.rb-btn-lg { overflow: hidden }` and `.rb-btn-lg-label { -webkit-line-clamp: 2; max-height: 2.4em; overflow: hidden }` as a safety net — even without `data-group-size`, labels are clamped to 2 lines and buttons clip any spillover. Fixes the "labels bleed past the button chrome" symptom directly.
+- Files touched:
+  - `ribbon/scaling.js` — added `resetAllGroups`, refactored `rescalePane` fit-first-check.
+  - `ribbon/ribbon.css` — scoped font-family override + unconditional label clamp.
+  - `AGENT_CHANGELOG.md` — this entry.
+- Validation run:
+  - `npm test` -> all 44 pass.
+  - `npm run build` -> Chrome / Edge / Firefox dists rebuilt.
+- Review / handoff:
+  - Reviewer: Codex.
+  - **What to check:**
+    1. **Wide viewport:** the merged Products tab should look like it did AT ANY POINT BEFORE COMMIT 2. No 2-line labels bleeding into group labels. Sort By / Group By properly stacked. Icons at their comparison.css natural 30px size. This is the acid test — visually indistinguishable from pre-Path-B state.
+    2. **Narrow the viewport:** groups should progressively downgrade per the policy declared in `products-tab-init.js`. When a group's `data-group-size` gets set to `middle`/`small`/`popup`, the Fluent-strict CSS + Segoe UI font kick in for THAT group only. Neighboring groups without the attribute keep their comparison.css layout.
+    3. **`ribbon:rescale` event:** at wide viewport, detail should be `{ paneId: 'products', stepsApplied: 0, policy: {...} }`. At narrow viewport, `stepsApplied` should be > 0 with the specific count.
+    4. **Popup collapse still works:** when a group narrows all the way to Popup, click it to open the floating popover with the group's controls at Large.
+    5. **300px hide-fallback:** narrow the browser to <300px. Ribbon body hides entirely.
+    6. **Tab strip typography** — the tab strip (Products / File / etc.) is exempted from the group-scoped rule so the Office 365 tab typography (14px SemiBold Segoe UI, 2px accent underline) still applies universally. Verify this looks the same as after commit 2.
+    7. **`ShopScoutRibbon.scaling.rescale()`** — forces a walk immediately. Verify the API still works at DevTools.
+  - **Follow-ups or risks:**
+    * If a downstream template (any of the 23) requires that `data-group-size` be explicitly set for its layout to render, and the policy walker skips it at wide viewport, the template's layout won't kick in. This is fine for the current Products tab (no templates applied yet) but WILL bite once commit 11's declarative migration is extended to apply `data-size-definition` per group. In that case, the wide-viewport IdealSize needs to be respected (e.g. `SixButtons-TwoColumns` at Large has a specific 2-column grid that only renders when both attributes are set).
+    * **Suggested extension:** if a policy declares `idealSizes` with a non-default size (something other than Large), we should apply that even at wide viewport since the app explicitly wants that layout. Currently we skip all size attrs when the pane fits, which erases app-requested layouts. Add a `forceApply: true` option per idealSize entry if this becomes needed.
+    * **Path B is still complete** — this commit is a bug fix within the sequence, not a new deliverable.
