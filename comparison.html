@@ -93,7 +93,7 @@
            ============================================================ -->
 
       <!-- 1. List -->
-      <div class="rb-group" aria-label="Lists">
+      <div class="rb-group" data-group-id="list" aria-label="Lists">
         <div class="rb-group-content">
           <div class="rb-stack">
             <label class="rb-mini-label" for="listSelect">Product list</label>
@@ -111,7 +111,7 @@
       <div class="rb-divider" aria-hidden="true"></div>
 
       <!-- 2. Product Actions -->
-      <div class="rb-group" aria-label="Product actions">
+      <div class="rb-group" data-group-id="actions" aria-label="Product actions">
         <div class="rb-group-content">
           <button class="rb-btn-lg" id="addUrlToggle" title="Add a product by URL">
             <span class="rb-icon-lg"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/><path d="M12 13v6"/><path d="M9 16h6"/></svg></span>
@@ -152,7 +152,7 @@
       <div class="rb-divider" aria-hidden="true"></div>
 
       <!-- 3. Review & Rules -->
-      <div class="rb-group" aria-label="Review and rules">
+      <div class="rb-group" data-group-id="review" aria-label="Review and rules">
         <div class="rb-group-content">
           <button class="rb-btn-lg" type="button" data-command="duplicate-review" title="Review possible duplicate products">
             <span class="rb-icon-lg"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="8" height="8" rx="1.5"/><rect x="13" y="12" width="8" height="8" rx="1.5"/><path d="M11 8h3a4 4 0 0 1 4 4"/><path d="M13 16h-3a4 4 0 0 1-4-4"/></svg></span>
@@ -177,7 +177,7 @@
       <div class="rb-divider" aria-hidden="true"></div>
 
       <!-- 4. View -->
-      <div class="rb-group" aria-label="View">
+      <div class="rb-group" data-group-id="view" aria-label="View">
         <div class="rb-group-content">
           <button class="rb-btn-lg" type="button" data-ss-grid-command="mode-rows" title="Show products as rows">
             <span class="rb-icon-lg"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="4" rx="1"/><rect x="3" y="10" width="18" height="4" rx="1"/><rect x="3" y="16" width="18" height="4" rx="1"/></svg></span>
@@ -198,7 +198,7 @@
       <div class="rb-divider" aria-hidden="true"></div>
 
       <!-- 5. Organize (Sort -> Filter -> Group -> Reset) -->
-      <div class="rb-group" aria-label="Organize">
+      <div class="rb-group" data-group-id="organize" aria-label="Organize">
         <div class="rb-group-content">
           <div class="rb-stack">
             <label class="rb-mini-label" for="gridSortField">Sort by</label>
@@ -811,6 +811,11 @@
      registered here; commit 11's HTML migration references icons
      via ShopScoutRibbon.icons.get() instead of inlined SVG blocks. -->
 <script src="ribbon/icons.js"></script>
+<!-- Merged Products tab declarative init. Registers Commands for
+     every action and a ScalingPolicy so the ribbon adaptively
+     shrinks its groups (Large -> Middle -> Small -> Popup) as the
+     viewport narrows. Must load AFTER all ribbon/*.js above. -->
+<script src="ribbon/products-tab-init.js"></script>
 
 <script src="ai-providers.js"></script>
 <script src="settings.js"></script>
