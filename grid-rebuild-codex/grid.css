@@ -7,13 +7,14 @@
    iframe feel. */
 #productGrid.ss-grid-shell {
   position: relative;
-  /* Centered on the page with a 20px gutter on each side. slickGrid
-     adapter's updateShellOverflow sets the actual width to
-     min(canvas + chrome, 1400px, viewport - 40px) after every render,
-     so small tables shrink and center themselves rather than stretch
-     across an ultra-wide monitor. */
+  /* Centered on the page with a 20px gutter on each side. Actual
+     width is set by JS (updateShellOverflow in slickGridAdapter.js) —
+     it computes a viewport-scaled cap so the card grows to fit content
+     up to the browser width, whether 1280px or 3280px. The CSS
+     max-width here is JUST a safety net to prevent horizontal page
+     overflow on very narrow screens if JS hasn't run yet. */
   margin: 12px auto 32px;
-  max-width: min(1400px, calc(100% - 40px));
+  max-width: calc(100% - 40px);
   padding: 0;
   border: 1px solid var(--rule, #d1d5db);
   border-radius: 8px;
