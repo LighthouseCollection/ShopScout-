@@ -212,6 +212,17 @@
   border-bottom-color: var(--accent, #ecd496);
 }
 
+/* Kill the ambient overline. comparison.css line 962 draws
+   `.ribbon-tab.active::after` as an absolute-positioned 2px accent
+   bar at `top: 0` — that's the "overline" symptom. Override the
+   pseudo-element to render nothing. */
+.rb-office-ribbon .ribbon-tab.active::after,
+.rb-office-ribbon .ribbon-tab::after {
+  content: none !important;
+  display: none !important;
+  background: transparent !important;
+}
+
 .rb-office-ribbon .ribbon-tab:focus-visible {
   outline: 2px solid var(--rbn-focus-outline);
   outline-offset: -2px;
