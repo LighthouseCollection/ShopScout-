@@ -760,7 +760,7 @@
     const isNormalizationReview = projection?.mode === 'normalizationReview';
     const isUserRules = projection?.mode === 'userRules';
     const headerHeight = isMatrix ? 180 : 42;
-    const rowHeight = isNormalizationReview ? 64 : (isUserRules ? 60 : 110);
+    const rowHeight = isNormalizationReview ? 64 : (isUserRules ? 60 : (isMatrix ? 44 : 110));
     const minHeight = rowCount ? headerHeight + rowHeight : 140;
     /* No scrollbar buffer — updateShellOverflow only enables the
        horizontal scrollbar when the canvas genuinely exceeds the shell,
