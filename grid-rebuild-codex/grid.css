@@ -138,7 +138,12 @@
 .ss-grid-host .slick-cell {
   display: flex;
   align-items: center;
-  justify-content: flex-start;
+  /* Everything centers by default — pill values sit in the middle of
+     their cell with equal padding on both sides. The Name column
+     overrides to flex-start below because product titles read left-
+     to-right and always look wrong centered. */
+  justify-content: center;
+  text-align: center;
   /* Soft row + column separators — visible enough to guide the eye
      across the row and between columns, quiet enough to stay out of
      the way. Same #eaeef2 rule for both directions. */
@@ -171,6 +176,18 @@
 }
 .ss-grid-host .slick-cell.ss-grid-cell-title {
   justify-content: flex-start;
+  text-align: left;
+}
+/* Column headers follow the same rule as cells: everything centers
+   except the Name column, which keeps its label left-aligned to match
+   the product title alignment underneath. */
+.ss-grid-host .slick-header-column .slick-column-name {
+  width: 100%;
+  text-align: center;
+}
+.ss-grid-host .slick-header-column[id*="title"] .slick-column-name,
+.ss-grid-host .slick-header-column[id*="Name"] .slick-column-name {
+  text-align: left;
 }
 
 .ss-grid-host .ss-grid-cell-actions {

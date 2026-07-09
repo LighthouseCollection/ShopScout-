@@ -45,9 +45,11 @@ assert.ok(!gridCss.includes('#e5e7eb'),
   'grid border fallbacks use #d1d5db instead of #e5e7eb');
 assert.ok(/\.ss-grid-host \.slick-cell[\s\S]{0,180}align-items:\s*center/.test(gridCss),
   'grid cells vertically center their contents');
-assert.ok(/\.ss-grid-host \.slick-cell[\s\S]{0,260}justify-content:\s*flex-start/.test(gridCss),
-  'grid cells left-align content by default (fixed-shape cells override to center)');
-assert.ok(/\.ss-grid-host \.slick-cell[\s\S]{0,520}user-select:\s*text/.test(gridCss),
+assert.ok(/\.ss-grid-host \.slick-cell[\s\S]{0,320}justify-content:\s*center/.test(gridCss),
+  'grid cells center content by default; only the Name (title) column overrides to flex-start');
+assert.ok(/\.ss-grid-cell-title[\s\S]{0,120}justify-content:\s*flex-start/.test(gridCss),
+  'Name column stays left-aligned even though everything else centers');
+assert.ok(/\.ss-grid-host \.slick-cell[\s\S]{0,900}user-select:\s*text/.test(gridCss),
   'grid cells allow normal browser text selection for copy/paste');
 assert.ok(/\.ss-grid-host \.slick-cell\.ss-grid-cell-title[\s\S]{0,180}justify-content:\s*flex-start/.test(gridCss),
   'product-name cells keep the title wrapper left aligned');
