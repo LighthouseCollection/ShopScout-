@@ -1033,7 +1033,7 @@
    Sort/Group stack overlapped the Filters button icon.
    ============================================================== */
 .rb-office-ribbon .rb-group[data-group-id="organize"]:not([data-group-size="popup"]) {
-  min-width: 340px;
+  min-width: 300px;
 }
 .rb-office-ribbon .rb-organize-stack {
   display: inline-flex;
@@ -1129,6 +1129,49 @@
   min-width: 0;
   width: 100%;
   max-width: none;
+}
+
+/* Filters + Reset stacked as compact icon-left buttons in a column,
+   sitting next to the Sort/Group stack. Overrides the default
+   vertical-column rb-btn-lg layout inside this container only. */
+.rb-office-ribbon .rb-organize-tools {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 4px;
+  min-width: 96px;
+}
+.rb-office-ribbon .rb-organize-tools .rb-btn-lg,
+.rb-office-ribbon .rb-organize-tools > .toolbar-menu > .rb-btn-lg {
+  flex-direction: row;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 6px;
+  height: auto;
+  min-height: 24px;
+  min-width: 0;
+  max-width: none;
+  padding: 3px 8px;
+  text-align: left;
+}
+.rb-office-ribbon .rb-organize-tools .rb-icon-lg {
+  width: 16px;
+  height: 16px;
+  margin: 0;
+  flex: 0 0 16px;
+}
+.rb-office-ribbon .rb-organize-tools .rb-btn-lg-label {
+  display: inline-block;
+  max-height: none;
+  -webkit-line-clamp: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-size: 11px;
+  line-height: 1.2;
+}
+.rb-office-ribbon .rb-organize-tools > .toolbar-menu {
+  display: block;
 }
 
 /* ==============================================================
