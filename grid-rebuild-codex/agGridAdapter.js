@@ -305,16 +305,22 @@
     shell.style.overflowX = canvasWidth > shell.clientWidth + 2 ? 'auto' : 'hidden';
   }
 
-  function autoSizeEverything(api) {
+  function autoSizeEverything(api, container) {
     if (!api) return;
     try {
       if (typeof api.autoSizeAllColumns === 'function') {
         api.autoSizeAllColumns(false);
-        return;
-      }
-      if (typeof api.autoSizeColumns === 'function' && typeof api.getColumnState === 'function') {
+      } else if (typeof api.autoSizeColumns === 'function' && typeof api.getColumnState === 'function') {
         const ids = api.getColumnState().map(c => c.colId).filter(Boolean);
         api.autoSizeColumns(ids, false);
+      }
+      /* Full mode: after content-fit, expand columns to fill remaining
+         shell width so the last column pins to the right edge instead
+         of leaving whitespace between it and the card border. */
+      const shell = container?.closest?.('.ss-grid-shell');
+      const mode = shell?.getAttribute?.('data-shell-width') === 'full' ? 'full' : 'fit';
+      if (mode === 'full' && typeof api.sizeColumnsToFit === 'function') {
+        setTimeout(() => { try { api.sizeColumnsToFit(); } catch {} }, 0);
       }
     } catch (err) {
       console.warn('AG Grid auto-size failed', err);
@@ -373,20 +379,20 @@
       },
       onGridReady(evt) {
         setTimeout(() => {
-          autoSizeEverything(evt.api);
+          autoSizeEverything(evt.api, container);
           fitShellToContent(container);
         }, 0);
       },
       onFirstDataRendered(evt) {
         setTimeout(() => {
-          autoSizeEverything(evt.api);
+          autoSizeEverything(evt.api, container);
           fitShellToContent(container);
         }, 0);
       },
       onColumnResized() { fitShellToContent(container); },
       onColumnVisible() {
         setTimeout(() => {
-          autoSizeEverything(gridApi);
+          autoSizeEverything(gridApi, container);
           fitShellToContent(container);
         }, 0);
       },
