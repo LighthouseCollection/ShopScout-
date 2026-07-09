@@ -323,17 +323,28 @@
   }
 
   function pillColorKey(field, value) {
+    /* Semantic overrides — value-driven, universal across columns. */
     const val = String(value || '').trim().toLowerCase();
     if (val && POSITIVE_STATUS.has(val)) return 'green';
     if (val && NEGATIVE_STATUS.has(val)) return 'red';
     if (val && WARNING_STATUS.has(val)) return 'amber';
+    /* Otherwise, no semantic key — caller falls back to
+       pillFieldStyle(field) for a unique per-column HSL. Old
+       behavior returned one of 7 palette buckets keyed by field
+       hash which meant many columns collided on the same color. */
+    return '';
+  }
+
+  /* Return a unique background/foreground/border color per FIELD so
+     no two columns share a pill color. Uses the golden-angle hue
+     rotation (137°) already in stableColor — different fields land
+     on distinct hues. notes/description/title/name intentionally
+     get null so those long-text columns stay uncolored. */
+  function pillFieldStyle(field) {
     const key = normalizeKey(field);
-    if (!key) return '';
-    if (IDENTIFIER_FIELDS.has(key)) return 'blue';
-    if (TAXONOMY_FIELDS.has(key)) return 'purple';
-    if (NUMERIC_LIKE_FIELDS.has(key)) return 'teal';
-    if (key === 'notes' || key === 'description' || key === 'title') return '';
-    return PILL_COLOR_KEYS[hashString(key) % PILL_COLOR_KEYS.length];
+    if (!key) return null;
+    if (key === 'notes' || key === 'description' || key === 'title' || key === 'name') return null;
+    return stableColor(key);
   }
 
   /* ---- Multi-value split (one-pill-per-part) ------------------- */
@@ -398,7 +409,7 @@
 
   Object.assign(NS, {
     prettify, parseNumeric, stableColor, splitToPills,
-    pillColorKey, PILL_COLOR_KEYS,
+    pillColorKey, pillFieldStyle, PILL_COLOR_KEYS,
     computeRanks, polarityForField,
     /* exposed for parity with the old internals if needed */
     normalizeTime, normalizeMetric, normalizeDimensions,

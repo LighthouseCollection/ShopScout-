@@ -110,10 +110,23 @@
     const splitParts = typeof splitter === 'function' ? splitter(text) : null;
     const parts = Array.isArray(splitParts) && splitParts.length ? splitParts : [text];
     const keyFn = root.ShopScoutValues?.pillColorKey;
+    const styleFn = root.ShopScoutValues?.pillFieldStyle;
+    /* Compute a per-FIELD inline color once (all parts of a
+       multi-value cell share the same column color). Semantic
+       overrides (green for "in stock", red for "no", amber for
+       "limited") still win at the per-value level below. */
+    const fieldStyle = typeof styleFn === 'function' ? styleFn(field) : null;
+    const styleAttr = fieldStyle
+      ? ` style="background:${fieldStyle.bg};color:${fieldStyle.fg};border-color:${fieldStyle.border}"`
+      : '';
     return `<span class="ss-grid-pill-list">${parts.map(part => {
       const colorKey = typeof keyFn === 'function' ? keyFn(field, part) : '';
-      const attr = colorKey ? ` data-pill-color="${escAttr(colorKey)}"` : '';
-      return `<span class="ss-grid-value-pill"${attr}>${pillPartHtml(part)}</span>`;
+      if (colorKey) {
+        /* Semantic override on a specific value — use the fixed
+           palette hook so users still recognize red/green/amber. */
+        return `<span class="ss-grid-value-pill" data-pill-color="${escAttr(colorKey)}">${pillPartHtml(part)}</span>`;
+      }
+      return `<span class="ss-grid-value-pill"${styleAttr}>${pillPartHtml(part)}</span>`;
     }).join('')}</span>`;
   }
 
