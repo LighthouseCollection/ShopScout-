@@ -177,19 +177,33 @@
   padding-left: 10px;
 }
 
-/* Compare matrix — taller header (thumb + wrapped title + actions)
-   already set via headerHeight: 180 in gridOptions. Center align the
-   product-column header content top-to-bottom via CSS since the
-   default AG Grid header uses baseline alignment. */
+/* Compare matrix — taller header (thumb + wrapped title + actions).
+   Content is vertically centered inside the cell so top and bottom
+   padding stay symmetric — the previous align-items: flex-start
+   pushed content to the top and left dead space below. */
 .ss-grid-host.ag-theme-shopscout.ss-grid-is-matrix .ag-header-cell {
   align-items: stretch;
-  padding-top: 8px;
-  padding-bottom: 8px;
+  padding-top: 6px;
+  padding-bottom: 6px;
 }
 .ss-grid-host.ag-theme-shopscout.ss-grid-is-matrix .ag-header-cell .ag-header-cell-comp-wrapper,
 .ss-grid-host.ag-theme-shopscout.ss-grid-is-matrix .ag-header-cell .ag-header-cell-label {
   height: 100%;
-  align-items: flex-start;
+  align-items: center;                  /* vertical center */
+  justify-content: center;              /* extra safety */
+}
+/* Product head itself: force horizontal center + no stray gap under
+   the action bar. */
+.ss-grid-host.ag-theme-shopscout.ss-grid-is-matrix .ss-grid-product-head {
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  padding: 0;
+  margin: 0;
+}
+.ss-grid-host.ag-theme-shopscout.ss-grid-is-matrix .ss-grid-matrix-actions {
+  margin-top: 4px;
+  margin-bottom: 0;
 }
 .ss-grid-host.ag-theme-shopscout .ag-pinned-left-cols-container .ag-row {
   background: #f4f6f9;
