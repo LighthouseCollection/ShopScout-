@@ -43,12 +43,7 @@
 #productGrid.ss-grid-shell {
   scrollbar-width: thin;
 }
-/* SlickGrid rounds column widths to whole pixels; the sum can end up
-   1-2px wider than the container it measured, which then trips
-   overflow-x on a grid that visually fits. A tiny padding-right on the
-   viewport gives that rounding room to breathe. */
 .ss-grid-host {
-  padding-right: 4px;
   box-sizing: border-box;
 }
 

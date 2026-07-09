@@ -699,7 +699,9 @@
        +12px absorbs SlickGrid's subpixel rounding + the host's 4px
        padding-right buffer without triggering a scrollbar. */
     const mode = shell.getAttribute('data-shell-width') === 'full' ? 'full' : 'fit';
-    const contentTarget = canvasWidth + 12;
+    /* +2px is just enough to absorb SlickGrid's subpixel column-width
+   rounding without leaving visible empty space on the right. */
+const contentTarget = canvasWidth + 2;
     const shellMaxWidth = computeShellMaxWidth(viewportInner);
     let targetWidth;
     if (mode === 'full') {
