@@ -319,13 +319,27 @@
 /* Attribute-name column in the compare matrix (the left column labeled
    "Buying Factor" that lists Brand / Price / Rating / etc.). Left-aligned,
    bold, and shaded so it reads as a row-header column instead of a
-   regular data cell. */
+   regular data cell. !important to defeat the higher-specificity flex
+   defaults inherited from .ss-grid-host .slick-cell. */
 .ss-grid-host .slick-cell.ss-grid-cell-attribute {
-  justify-content: flex-start;
-  text-align: left;
-  background: #f4f6f9;
+  justify-content: flex-start !important;
+  text-align: left !important;
+  background: #f4f6f9 !important;
   color: var(--ink, #0f1419);
   font-weight: 700;
+  padding-left: 16px !important;
+}
+/* Shade the "Buying Factor" header cell too so the whole first column
+   reads as a row-header column top to bottom. Match on the column id
+   set in buildComparisonMatrixProjection: 'attribute'. */
+.ss-grid-host.ss-grid-is-matrix .slick-header-column#slickgrid_attribute,
+.ss-grid-host.ss-grid-is-matrix .slick-header-column[id$="_attribute"],
+.ss-grid-host.ss-grid-is-matrix .slick-header-column[id="attribute"] {
+  background: #f4f6f9 !important;
+}
+.ss-grid-host.ss-grid-is-matrix .slick-header-column[id$="_attribute"] .slick-column-name,
+.ss-grid-host.ss-grid-is-matrix .slick-header-column[id="attribute"] .slick-column-name {
+  text-align: left !important;
   padding-left: 16px;
 }
 /* Column headers follow the same rule as cells: everything centers

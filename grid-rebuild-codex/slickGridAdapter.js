@@ -813,7 +813,12 @@
       multiColumnSort: true,
       rowHeight: projection?.mode === 'normalizationReview' ? 64 : (projection?.mode === 'userRules' ? 60 : (projection?.mode === 'comparisonMatrix' ? 44 : 110)),
       showCellSelection: false,
-      enableTextSelectionOnCells: true
+      enableTextSelectionOnCells: true,
+      /* We build HTML for column headers (matrix product columns embed a
+         thumbnail via <img>) and for cell formatters. Without this flag
+         SlickGrid v6 uses .textContent on both, which is what caused
+         the missing product images in Compare view. */
+      enableHtmlRendering: true
     };
     const grid = new Slick.Grid(container, dataView, columns, gridOptions);
     if (container?.classList) container.classList.toggle('ss-grid-is-matrix', projection?.mode === 'comparisonMatrix');
