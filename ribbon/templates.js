@@ -22,14 +22,20 @@
      - FourButtons
      - FiveButtons
 
-   Tranche B landed this commit (4 templates):
+   Tranche B landed in commit 4 (4 templates):
      - FiveOrSixButtons  (with trailingOptional)
      - SixButtons
      - SixButtons-TwoColumns
      - SevenButtons
 
-     Commit 5: EightButtons, EightButtons-LastThreeSmall,
-               NineButtons, TenButtons, ElevenButtons
+   Tranche C landed this commit (5 templates + ControlGroup):
+     - EightButtons
+     - EightButtons-LastThreeSmall  (uses ControlGroup [5,3])
+     - NineButtons
+     - TenButtons
+     - ElevenButtons
+
+   Remaining 7 templates land in commits 6-7:
      Commit 6: ButtonGroups, ButtonGroupsAndInputs,
                BigButtonsAndSmallButtonsOrInputs
      Commit 7: OneFontControl, OneInRibbonGallery,
@@ -105,7 +111,13 @@
       largeBigSlot: typeof spec.largeBigSlot === 'number' ? spec.largeBigSlot : null,
       /* Whether to allow one trailing optional slot (used by
          FiveOrSixButtons). */
-      trailingOptional: !!spec.trailingOptional
+      trailingOptional: !!spec.trailingOptional,
+      /* Some templates require the controls to be partitioned into
+         explicit ControlGroup sub-containers (e.g.
+         EightButtons-LastThreeSmall wants [5, 3]). When set, the
+         validator expects that many .rb-control-group children of
+         .rb-group-content, with exactly those child counts. */
+      controlGroups: Array.isArray(spec.controlGroups) ? spec.controlGroups.slice() : null
     };
     TEMPLATES.set(name, template);
     return template;
@@ -137,21 +149,42 @@
       console.error(`[Ribbon.templates] "${templateName}" — group is missing .rb-group-content`);
       return false;
     }
-    const controls = Array.from(contentEl.children).filter(el => {
-      /* Skip decorative elements (labels, mini-labels, stack
-         wrappers). Only count actual controls — anything carrying
-         a data-control-type attribute OR one of the recognized
-         primitive classes. */
-      if (el.hasAttribute('data-control-type')) return true;
-      if (el.classList.contains('rb-btn-lg')
-       || el.classList.contains('rb-btn-sm')
-       || el.classList.contains('rb-select')
-       || el.classList.contains('rb-split')
-       || el.classList.contains('rb-button-group')
-       || el.classList.contains('rb-ribbon-box')
-       || el.tagName === 'DETAILS') return true;
-      return false;
-    });
+
+    /* If the template requires ControlGroup partitioning, validate
+       that first, then flatten to a single control list. Microsoft's
+       schema uses `<ControlGroup>` in the SizeDefinition for
+       templates like EightButtons-LastThreeSmall. */
+    if (template.controlGroups) {
+      const cgEls = Array.from(contentEl.children).filter(el =>
+        el.classList.contains('rb-control-group')
+      );
+      const expected = template.controlGroups;
+      if (cgEls.length !== expected.length) {
+        console.error(
+          `[Ribbon.templates] "${templateName}" — expected ${expected.length} `
+          + `<ControlGroup> children (.rb-control-group), got ${cgEls.length}`
+        );
+        return false;
+      }
+      for (let g = 0; g < expected.length; g += 1) {
+        const cgChildren = Array.from(cgEls[g].children).filter(el =>
+          isCountableControl(el)
+        );
+        if (cgChildren.length !== expected[g]) {
+          console.error(
+            `[Ribbon.templates] "${templateName}" — ControlGroup ${g} `
+            + `expected ${expected[g]} controls, got ${cgChildren.length}`
+          );
+          return false;
+        }
+      }
+    }
+
+    const controls = Array.from(contentEl.querySelectorAll(
+      template.controlGroups
+        ? ':scope > .rb-control-group > *'
+        : ':scope > *'
+    )).filter(isCountableControl);
 
     const min = template.slots.length - (template.trailingOptional ? 1 : 0);
     const max = template.slots.length;
@@ -180,6 +213,25 @@
       }
     }
     return true;
+  }
+
+  /* Countable control filter — an element is a "control" slot if it
+     carries data-control-type, one of the recognized primitive
+     classes, or is a <details> (our SplitButton pattern). Excludes
+     labels, mini-labels, decorative wrappers, and .rb-control-group
+     containers (those partition their children). */
+  function isCountableControl(el) {
+    if (el.hasAttribute('data-decorative')) return false;
+    if (el.classList.contains('rb-control-group')) return false;
+    if (el.hasAttribute('data-control-type')) return true;
+    if (el.classList.contains('rb-btn-lg')
+     || el.classList.contains('rb-btn-sm')
+     || el.classList.contains('rb-select')
+     || el.classList.contains('rb-split')
+     || el.classList.contains('rb-button-group')
+     || el.classList.contains('rb-ribbon-box')
+     || el.tagName === 'DETAILS') return true;
+    return false;
   }
 
   /* Best-effort inference for legacy markup without an explicit
@@ -360,6 +412,49 @@
       { family: 'button' },
       { family: 'button' }
     ]
+  });
+
+  /* ==============================================================
+     Tranche C registrations (commit 5)
+     ============================================================== */
+
+  /* EightButtons — 8 button-family, Large + Middle + Small.
+     Middle mode packs into 3-row columns (3+3+2 layout). */
+  register('EightButtons', {
+    supportedSizes: ['Large', 'Middle', 'Small'],
+    slots: Array(8).fill({ family: 'button' })
+  });
+
+  /* EightButtons-LastThreeSmall — 8 button-family, Large + Middle +
+     Small. Per Microsoft's docs this template REQUIRES two
+     <ControlGroup> children with exactly 5 then 3 controls each.
+     In Large mode: first 5 render as Middle buttons stacked in 3-row
+     columns; last 3 render as Small (icon-only) in a single column. */
+  register('EightButtons-LastThreeSmall', {
+    supportedSizes: ['Large', 'Middle', 'Small'],
+    slots: Array(8).fill({ family: 'button' }),
+    controlGroups: [5, 3]
+  });
+
+  /* NineButtons — 9 button-family, Large + Middle + Small.
+     Middle mode packs into 3-row columns (3+3+3 layout). */
+  register('NineButtons', {
+    supportedSizes: ['Large', 'Middle', 'Small'],
+    slots: Array(9).fill({ family: 'button' })
+  });
+
+  /* TenButtons — 10 button-family, Large + Middle + Small.
+     Middle mode packs into 3-row columns (3+3+3+1 layout). */
+  register('TenButtons', {
+    supportedSizes: ['Large', 'Middle', 'Small'],
+    slots: Array(10).fill({ family: 'button' })
+  });
+
+  /* ElevenButtons — 11 button-family, Large + Middle + Small.
+     Middle mode packs into 3-row columns (3+3+3+2 layout). */
+  register('ElevenButtons', {
+    supportedSizes: ['Large', 'Middle', 'Small'],
+    slots: Array(11).fill({ family: 'button' })
   });
 
   /* --- Public API ------------------------------------------ */

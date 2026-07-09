@@ -342,6 +342,188 @@
 
 
 /* ===============================================================
+   TRANCHE C (commit 5) — EightButtons / EightButtons-LastThreeSmall /
+   NineButtons / TenButtons / ElevenButtons
+
+   All Middle-mode layouts use grid-auto-flow: column with 3 rows
+   at var(--rbn-btn-middle-h) each so buttons flow into 3-row
+   columns automatically. 8 buttons -> 3+3+2, 9 -> 3+3+3,
+   10 -> 3+3+3+1, 11 -> 3+3+3+2.
+   =============================================================== */
+
+
+/* ===============================================================
+   ControlGroup primitive
+   Used by templates that require explicit control partitioning
+   (currently only EightButtons-LastThreeSmall). Renders as a
+   flex/grid container transparent to the outer group layout.
+   =============================================================== */
+.rb-office-ribbon .rb-control-group {
+  display: contents;                          /* pass through to parent grid by default */
+}
+
+/* When a template's CSS explicitly targets .rb-control-group, the
+   `display: contents` default is overridden. See
+   EightButtons-LastThreeSmall below. */
+
+
+/* ===============================================================
+   EightButtons — 8 button-family, Large + Middle + Small
+   =============================================================== */
+.rb-office-ribbon .rb-group[data-size-definition="EightButtons"][data-group-size="large"] > .rb-group-content {
+  display: flex;
+  flex-direction: row;
+  gap: 2px;
+}
+
+.rb-office-ribbon .rb-group[data-size-definition="EightButtons"][data-group-size="middle"] > .rb-group-content {
+  display: grid;
+  grid-template-rows: repeat(3, var(--rbn-btn-middle-h));
+  grid-auto-flow: column;
+  grid-auto-columns: max-content;
+  gap: 1px 6px;
+}
+
+.rb-office-ribbon .rb-group[data-size-definition="EightButtons"][data-group-size="small"] > .rb-group-content {
+  display: flex;
+  flex-direction: row;
+  gap: 1px;
+}
+
+
+/* ===============================================================
+   EightButtons-LastThreeSmall — 8 button-family in [5, 3] partition.
+   In Large mode: first ControlGroup (5 buttons) renders as Middle
+   stacked in 3-row columns; second ControlGroup (3 buttons) renders
+   as Small icon-only in a vertical strip.
+   Middle mode: same partition but both groups render Middle.
+   Small mode: both groups render Small icons in a single row.
+   =============================================================== */
+.rb-office-ribbon .rb-group[data-size-definition="EightButtons-LastThreeSmall"] > .rb-group-content {
+  display: flex;
+  flex-direction: row;
+  gap: 6px;
+  align-items: stretch;
+}
+
+/* Both ControlGroups get their own grid — override display: contents */
+.rb-office-ribbon .rb-group[data-size-definition="EightButtons-LastThreeSmall"] > .rb-group-content > .rb-control-group {
+  display: grid;
+  grid-template-rows: repeat(3, var(--rbn-btn-middle-h));
+  grid-auto-flow: column;
+  grid-auto-columns: max-content;
+  gap: 1px 6px;
+}
+
+/* Large: first CG (5 buttons) as Middle, second CG (3 buttons) as Small */
+.rb-office-ribbon .rb-group[data-size-definition="EightButtons-LastThreeSmall"][data-group-size="large"] > .rb-group-content > .rb-control-group:nth-child(2) {
+  grid-template-rows: repeat(3, var(--rbn-btn-small-h));
+  grid-auto-columns: var(--rbn-btn-small-w);
+}
+.rb-office-ribbon .rb-group[data-size-definition="EightButtons-LastThreeSmall"][data-group-size="large"] > .rb-group-content > .rb-control-group:nth-child(2) > * {
+  width: var(--rbn-btn-small-w);
+  height: var(--rbn-btn-small-h);
+  padding: 0;
+  gap: 0;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+}
+.rb-office-ribbon .rb-group[data-size-definition="EightButtons-LastThreeSmall"][data-group-size="large"] > .rb-group-content > .rb-control-group:nth-child(2) > * .rb-icon-lg {
+  width: var(--rbn-icon-small-96);
+  height: var(--rbn-icon-small-96);
+  margin: 0;
+}
+.rb-office-ribbon .rb-group[data-size-definition="EightButtons-LastThreeSmall"][data-group-size="large"] > .rb-group-content > .rb-control-group:nth-child(2) > * .rb-btn-lg-label {
+  display: none;
+}
+
+/* Middle: both CGs render Middle (default via .rb-control-group grid) */
+
+/* Small: both CGs render Small icons in a single row */
+.rb-office-ribbon .rb-group[data-size-definition="EightButtons-LastThreeSmall"][data-group-size="small"] > .rb-group-content > .rb-control-group {
+  display: flex;
+  flex-direction: row;
+  gap: 1px;
+}
+
+
+/* ===============================================================
+   NineButtons — 9 button-family, Large + Middle + Small
+   Middle: 3+3+3 grid via column-flow.
+   =============================================================== */
+.rb-office-ribbon .rb-group[data-size-definition="NineButtons"][data-group-size="large"] > .rb-group-content {
+  display: flex;
+  flex-direction: row;
+  gap: 2px;
+}
+
+.rb-office-ribbon .rb-group[data-size-definition="NineButtons"][data-group-size="middle"] > .rb-group-content {
+  display: grid;
+  grid-template-rows: repeat(3, var(--rbn-btn-middle-h));
+  grid-auto-flow: column;
+  grid-auto-columns: max-content;
+  gap: 1px 6px;
+}
+
+.rb-office-ribbon .rb-group[data-size-definition="NineButtons"][data-group-size="small"] > .rb-group-content {
+  display: flex;
+  flex-direction: row;
+  gap: 1px;
+}
+
+
+/* ===============================================================
+   TenButtons — 10 button-family, Large + Middle + Small
+   Middle: 3+3+3+1 grid.
+   =============================================================== */
+.rb-office-ribbon .rb-group[data-size-definition="TenButtons"][data-group-size="large"] > .rb-group-content {
+  display: flex;
+  flex-direction: row;
+  gap: 2px;
+}
+
+.rb-office-ribbon .rb-group[data-size-definition="TenButtons"][data-group-size="middle"] > .rb-group-content {
+  display: grid;
+  grid-template-rows: repeat(3, var(--rbn-btn-middle-h));
+  grid-auto-flow: column;
+  grid-auto-columns: max-content;
+  gap: 1px 6px;
+}
+
+.rb-office-ribbon .rb-group[data-size-definition="TenButtons"][data-group-size="small"] > .rb-group-content {
+  display: flex;
+  flex-direction: row;
+  gap: 1px;
+}
+
+
+/* ===============================================================
+   ElevenButtons — 11 button-family, Large + Middle + Small
+   Middle: 3+3+3+2 grid.
+   =============================================================== */
+.rb-office-ribbon .rb-group[data-size-definition="ElevenButtons"][data-group-size="large"] > .rb-group-content {
+  display: flex;
+  flex-direction: row;
+  gap: 2px;
+}
+
+.rb-office-ribbon .rb-group[data-size-definition="ElevenButtons"][data-group-size="middle"] > .rb-group-content {
+  display: grid;
+  grid-template-rows: repeat(3, var(--rbn-btn-middle-h));
+  grid-auto-flow: column;
+  grid-auto-columns: max-content;
+  gap: 1px 6px;
+}
+
+.rb-office-ribbon .rb-group[data-size-definition="ElevenButtons"][data-group-size="small"] > .rb-group-content {
+  display: flex;
+  flex-direction: row;
+  gap: 1px;
+}
+
+
+/* ===============================================================
    Validation error marker
    When ShopScoutRibbon.templates.validate returns false and the
    caller wants a visual flag, adding data-template-invalid="true"

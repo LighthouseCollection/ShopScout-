@@ -3602,3 +3602,42 @@ This file is the shared record for Claude and Codex. Append an entry for every m
   - Reviewer: Claude.
 - Follow-ups or risks:
   - `ribbon/templates.js` still has unrelated uncommitted changes from prior work and was intentionally not staged by Codex.
+
+## 2026-07-09 - Claude Office 365 ribbon commit 5: SizeDefinition templates tranche C + ControlGroup primitive
+
+- Agent: Claude
+- Branch: grid-rebuild-codex
+- Commit: This commit (5/11).
+- Status: Implemented. All 44 tests pass.
+- Summary:
+  - **5 new templates registered:** `EightButtons`, `EightButtons-LastThreeSmall`, `NineButtons`, `TenButtons`, `ElevenButtons`. All support Large + Middle + Small sizes with 3-row column-flow layouts at Middle (3+3+2 / 3+3+3 / 3+3+3+1 / 3+3+3+2 respectively).
+  - **ControlGroup primitive added.** Microsoft's `EightButtons-LastThreeSmall` template requires the 8 buttons to be partitioned into two `<ControlGroup>` sub-elements — the first with 5 buttons, the second with 3. New CSS class `.rb-control-group` renders as `display: contents` by default (transparent to the parent grid layout), but templates that need explicit rendering can override.
+  - **Validator extended** with `controlGroups` spec property. When set to `[5, 3]` (as in `EightButtons-LastThreeSmall`), the validator:
+    1. Finds `.rb-control-group` children of `.rb-group-content`, checking exact count (2 expected).
+    2. Validates that each ControlGroup has exactly the expected number of controls.
+    3. Then flattens across the ControlGroups for slot-family validation using `:scope > .rb-control-group > *`.
+  - **Countable-control filter extracted** into `isCountableControl(el)` helper. Recognizes elements with `data-control-type`, or one of the primitive classes (`.rb-btn-lg`, `.rb-btn-sm`, `.rb-select`, `.rb-split`, `.rb-button-group`, `.rb-ribbon-box`), or `<details>` tags. Excludes elements with `data-decorative` and `.rb-control-group` containers (those partition their children, not act as slots themselves).
+  - **`EightButtons-LastThreeSmall` visual behavior** matches Microsoft's docs verbatim:
+    * Large mode: first ControlGroup (5 buttons) renders as Middle in a 3-row grid; second ControlGroup (3 buttons) renders as Small icon-only in a vertical strip.
+    * Middle mode: both ControlGroups render as Middle in 3-row grids.
+    * Small mode: both ControlGroups render as Small icons in a single row.
+- Files touched:
+  - `ribbon/templates.js` — extracted `isCountableControl`, added `controlGroups` support in validator, 5 new `register()` calls.
+  - `ribbon/templates.css` — `.rb-control-group` primitive + 5 new template sections.
+  - `AGENT_CHANGELOG.md` — this entry.
+- Validation run:
+  - `npm test` -> all 44 pass.
+  - `npm run build` -> Chrome / Edge / Firefox dists rebuilt.
+- Review / handoff:
+  - Reviewer: Codex.
+  - **What to check:**
+    1. `ShopScoutRibbon.templates.list()` should now return 16 templates.
+    2. `ShopScoutRibbon.templates.get('EightButtons-LastThreeSmall').controlGroups` should be `[5, 3]`.
+    3. `EightButtons-LastThreeSmall` validation happy path: a group with two `.rb-control-group` children containing 5 and 3 buttons respectively should pass. Fewer or more than 2 ControlGroups should fail with a specific "expected 2 ControlGroup children" error.
+    4. Wrong per-ControlGroup counts (e.g. 4 and 4 instead of 5 and 3) should fail with "ControlGroup 0 expected 5 controls, got 4".
+    5. `NineButtons` / `TenButtons` / `ElevenButtons` at Middle mode should flow into 3-row columns matching the expected 3+3+3 / 3+3+3+1 / 3+3+3+2 layout. Grid auto-flow handles this; verify visually.
+    6. `.rb-control-group` used outside a template that explicitly overrides its display should be transparent (`display: contents`) — parent grid layout should pass through.
+  - **Notable follow-ups:**
+    * `EightButtons-LastThreeSmall` CSS uses `nth-child(2)` to target the second ControlGroup. If the HTML structure ever adds a wrapper between `.rb-group-content` and the ControlGroups, the selector will break.
+    * The 5+3 partition assumes ControlGroups appear in the DOM in the order they were declared. Microsoft's schema doesn't require this but it's the sensible default. If future templates need per-ControlGroup slot family constraints, extend the spec to `controlGroups: [{ count: 5, family: 'button' }, ...]`.
+    * **Next commit (6/11):** Tranche D mixed templates — `ButtonGroups`, `ButtonGroupsAndInputs`, `BigButtonsAndSmallButtonsOrInputs`. These accept mixed control families (buttons + inputs). May need multi-family slot syntax like `{ family: ['button', 'input'] }`.
