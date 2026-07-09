@@ -3775,3 +3775,91 @@ This file is the shared record for Claude and Codex. Append an entry for every m
     * `.rb-font-control-effects > button` uses Times New Roman for the B/I/U glyph — this is the classic Office rendering. If we ever theme this differently we may want SVG icons instead.
     * **All 23 templates are now registered.** The next visible-behavior work is commit 8 (ScalingPolicy engine) — the piece that walks the `<Scale>` list and applies each group's size mode as the ribbon body narrows. Every template already handles Middle/Small/Popup layouts; commit 8 just wires the ResizeObserver logic that decides WHEN to apply them.
     * **Next commit (8/11):** ScalingPolicy engine — declarative `<Scale>` list per Tab, walker that finds the first fitting layout, Popup collapse rendering, 300px minimum-width fallback.
+
+## 2026-07-09 - Claude Office 365 ribbon commit 8: ScalingPolicy engine + Popup collapse renderer
+
+- Agent: Claude
+- Branch: grid-rebuild-codex
+- Commit: This commit (8/11).
+- Status: Implemented. All 44 tests pass.
+- Summary:
+  - **New file `ribbon/scaling.js` (~330 lines)** — declarative ScalingPolicy engine matching Microsoft's Windows Ribbon Framework `<Tab.ScalingPolicy>` semantics verbatim.
+  - **Public API:**
+    * `ShopScoutRibbon.scaling.set(paneId, { idealSizes, scales })` — register a policy for a ribbon pane. `idealSizes` is the target group sizes when there's plenty of room; `scales` is the descending-priority list of downgrade steps the walker applies as the viewport narrows.
+    * `ShopScoutRibbon.scaling.get(paneId)` — read a policy snapshot.
+    * `ShopScoutRibbon.scaling.remove(paneId)` — un-register a policy.
+    * `ShopScoutRibbon.scaling.all()` — snapshot of every registered policy.
+    * `ShopScoutRibbon.scaling.rescale(paneId?)` — force a walk immediately (no paneId → rescale the currently-active pane in every shell).
+    * `ShopScoutRibbon.scaling.enable()` / `.disable()` — toggle the auto-walker.
+    * `ShopScoutRibbon.scaling.closePopover()` — programmatically close any open Popup-collapse popover.
+    * Constants: `MIN_VISIBLE_WIDTH = 300` (Microsoft spec + Fluent.Ribbon `Ribbon.cs:60`), `VALID_SIZES = ['Large','Middle','Small','Popup']`.
+  - **Group lookup:** groups must carry `data-group-id="..."` so the walker can find them via a scoped CSS attribute selector inside the active pane. `CSS.escape()` is used when available, with a fallback for older engines.
+  - **Walker semantics** — matches Microsoft's docs exactly:
+    1. On every ribbon-shell resize, `rescale()` runs on the active pane.
+    2. First, `applyIdealSizes()` resets every declared group to its ideal size (Large by default).
+    3. If the pane's `scrollWidth > body.clientWidth`, the walker iterates the `scales` array in declared order.
+    4. For each Scale entry, applies the target size to the group and re-checks fit. Stops the moment the pane fits.
+    5. If every Scale is exhausted and the pane still overflows, sets `data-ribbon-overflow="true"` on the shell (CSS turns on horizontal scroll fallback + ⋯ hint).
+    6. If the shell width is below `MIN_VISIBLE_WIDTH` (300px), sets `data-ribbon-overflow="hidden"` — CSS hides the ribbon body entirely per Microsoft's spec ("The ribbon is hidden when all potential control layouts have been exhausted").
+  - **ResizeObserver** watches every `.ribbon-shell.rb-office-ribbon` in the DOM. Rescales the active pane whenever the shell's width changes. Only bound once per shell (`data-rbn-scaling-bound="1"` marker).
+  - **Popup collapse renderer:**
+    * When a group has `data-group-size="popup"` its content is replaced by a single collapsed button (existing CSS from commit 2).
+    * Clicking the collapsed button opens a floating portalled popover that clones the group element, re-applies `data-group-size="large"` on the clone, and positions it below the source button.
+    * Popover styling in `ribbon.css` inherits `.rb-office-ribbon` so the Large-mode CSS + template layout renders correctly inside.
+    * Closes on outside click, Escape key, or `ShopScoutRibbon.scaling.closePopover()`.
+    * `document.body`-portalled so the popover's positioning isn't constrained by the ribbon shell's overflow.
+  - **Custom event emission:** `ribbon:rescale` `CustomEvent` fires on the shell after every walk. Detail: `{ paneId, stepsApplied, policy }`. App code can listen if it needs to react to size changes (e.g. updating a `data-collapsed-label` per collapsed group).
+  - **CSS additions in `ribbon.css`:**
+    * `[data-ribbon-overflow="hidden"] .ribbon-body { display: none }` — hard hide when below 300px.
+    * `[data-ribbon-overflow="true"] .ribbon-body { overflow-x: auto }` — softer overflow with ⋯ hint via `::after`.
+    * `.rb-group-popup` — floating popover class inherits `.rb-office-ribbon` typography while overriding the shell's `min-width: 300px` floor (`min-width: 0` on the popup itself).
+- Files touched:
+  - `ribbon/scaling.js` (new, ~330 lines)
+  - `ribbon/ribbon.css` — 2 overflow-state rules + `.rb-group-popup` styling.
+  - `comparison.html` — one new `<script src="ribbon/scaling.js">` tag after `templates.js`.
+  - `AGENT_CHANGELOG.md` — this entry.
+- Validation run:
+  - `npm test` -> all 44 pass.
+  - `npm run build` -> Chrome / Edge / Firefox dists rebuilt.
+- Review / handoff:
+  - Reviewer: Codex.
+  - **What to check:**
+    1. **API surface:** `ShopScoutRibbon.scaling.version` -> `'1.0.0-commit-8'`. `ShopScoutRibbon.scaling.VALID_SIZES` -> `['Large','Middle','Small','Popup']`.
+    2. **Set a policy for the merged Products tab.** In DevTools:
+       ```js
+       // First, tag the groups (this is what commit 11 will do at page load):
+       document.querySelectorAll('.ribbon-pane[data-pane="products"] .rb-group').forEach((g, i) => {
+         g.dataset.groupId = ['list','actions','review','view','organize'][i];
+       });
+       ShopScoutRibbon.scaling.set('products', {
+         idealSizes: [
+           { groupId: 'list',     size: 'Large' },
+           { groupId: 'actions',  size: 'Large' },
+           { groupId: 'review',   size: 'Large' },
+           { groupId: 'view',     size: 'Large' },
+           { groupId: 'organize', size: 'Large' }
+         ],
+         scales: [
+           { groupId: 'organize', size: 'Middle' },
+           { groupId: 'review',   size: 'Middle' },
+           { groupId: 'view',     size: 'Middle' },
+           { groupId: 'organize', size: 'Small'  },
+           { groupId: 'review',   size: 'Small'  },
+           { groupId: 'view',     size: 'Small'  },
+           { groupId: 'organize', size: 'Popup'  },
+           { groupId: 'review',   size: 'Popup'  }
+         ]
+       });
+       ```
+       Then resize the browser window from wide to narrow — groups should progressively downgrade in the declared order.
+    3. **Popup collapse:** with the above policy, narrow the window until one of the groups shows as a single collapsed button. Click it — a popover should appear below, showing the group's controls at Large.
+    4. **Escape closes the popover.** Also outside-click closes.
+    5. **300px hide-fallback:** narrow the window to <300px. The ribbon body should disappear entirely (the tab strip stays). Widen back — ribbon body returns.
+    6. **`ribbon:rescale` events:** `document.querySelector('.ribbon-shell').addEventListener('ribbon:rescale', e => console.log(e.detail))` — should log a snapshot after each resize.
+    7. **No visible change without a policy:** groups without a registered policy in `ShopScoutRibbon.scaling.all()` still render at whatever the HTML declares (no `data-group-size` unless the app sets one). This is deliberate — the engine is opt-in per pane.
+    8. **Edge case:** widen the window very wide, then narrow slowly. Verify that when the pane fits at an intermediate step, the walker stops there and doesn't over-shrink groups.
+  - **Notable follow-ups:**
+    * The popup clone is a `.cloneNode(true)` — event listeners on individual buttons don't survive. The document-level delegates in `comparison.js` (for `[data-command]`, `[data-ss-grid-command]`, `[data-normalization-action]`, etc.) DO fire correctly since they use event delegation on `document`. If we ever add ribbon controls with direct button-level listeners, they'll need to be re-bound after popup open.
+    * The overflow ⋯ hint via `::after` sits inside `.ribbon-body`. If the body already has content that hits the right edge, the ⋯ can overlap — flag if it looks bad in practice.
+    * The `data-ribbon-overflow="true"` state adds `overflow-x: auto` which can cause a horizontal scrollbar to appear in the ribbon body. Alternative: use `data-ribbon-overflow="hidden"` for both mid-tier overflow AND below-300px, and always hide rather than scroll. Discuss with user if the ⋯+scroll look is undesirable.
+    * **Next commit (9/11):** `Ribbon.ContextualTabs` + `TabGroup.ContextAvailable` infrastructure. Three-state API (`NotAvailable` / `Available` / `Active`), accent-color band above active contextual tabs, showTabGroup/hideTabGroup public methods.

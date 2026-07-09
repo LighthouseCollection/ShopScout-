@@ -820,10 +820,53 @@
 }
 
 /* ==============================================================
-   16. Ribbon minimum width safety net
-   [Fluent:Ribbon.cs:60] MinimalVisibleWidth = 300
-   Below this we could hide the ribbon; for now we just clamp.
+   16. Ribbon minimum width safety net + ScalingPolicy overflow states
    ============================================================== */
 .rb-office-ribbon {
   min-width: var(--rbn-min-w);
+}
+
+/* Last-resort behavior when every Scale entry is exhausted and the
+   pane still doesn't fit. Matches Microsoft's spec:
+   "The ribbon is hidden when all potential control layouts have
+   been exhausted." */
+.rb-office-ribbon[data-ribbon-overflow="hidden"] .ribbon-body {
+  display: none;
+}
+
+/* One step milder — overflow still present but ribbon body kept
+   visible with a scroll hint. Turns on a horizontal-scroll fallback
+   so the user can still reach controls. */
+.rb-office-ribbon[data-ribbon-overflow="true"] .ribbon-body {
+  overflow-x: auto;
+}
+.rb-office-ribbon[data-ribbon-overflow="true"] .ribbon-body::after {
+  content: "⋯";
+  position: absolute;
+  right: 6px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--ink-3, #5a6470);
+  font-size: 12px;
+  pointer-events: none;
+}
+
+/* ==============================================================
+   17. Group popup — rendered when clicking a data-group-size="popup"
+   group's collapsed button. Portalled into <body> by scaling.js,
+   inherits .rb-office-ribbon styling so the cloned Large-mode
+   layout renders correctly.
+   ============================================================== */
+.rb-office-ribbon.rb-group-popup {
+  min-width: 0;                             /* override the 300px shell floor */
+}
+
+.rb-office-ribbon.rb-group-popup > .rb-group {
+  position: static;                         /* popup is its own container */
+  padding: 6px 6px 4px;
+  min-height: 0;
+}
+
+.rb-office-ribbon.rb-group-popup > .rb-group > .rb-group-label {
+  margin-top: 4px;
 }

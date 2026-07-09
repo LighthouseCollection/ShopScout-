@@ -795,10 +795,12 @@
 <script src="ribbon/ribbon.js"></script>
 <!-- SizeDefinition template registry. Loaded AFTER ribbon.js so the
      ShopScoutRibbon.isButtonFamily helpers are available for slot
-     family checks. Tranche A: OneButton, TwoButtons, ThreeButtons,
-     ThreeButtons-OneBigAndTwoSmall, ThreeButtonsAndOneCheckBox,
-     FourButtons, FiveButtons. -->
+     family checks. All 23 templates registered across tranches A-E. -->
 <script src="ribbon/templates.js"></script>
+<!-- ScalingPolicy engine. Loaded AFTER templates.js so a policy set
+     during page init can reference groups by data-group-id and
+     apply Large/Middle/Small/Popup sizes as the ribbon body narrows. -->
+<script src="ribbon/scaling.js"></script>
 
 <script src="ai-providers.js"></script>
 <script src="settings.js"></script>
