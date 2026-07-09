@@ -3342,3 +3342,53 @@ This file is the shared record for Claude and Codex. Append an entry for every m
   - **`applyWidthMode` still runs** on first mount and applies the localStorage `shopscout_grid_width_mode` preference to the shell's `data-shell-width` attribute. There is no UI to change this anymore (Fit/Full toggle was removed in commit 1), so the value is effectively locked to whatever was in localStorage. If we want a true zero-config default, delete the `applyWidthMode` call and the corresponding localStorage read; a one-line cleanup for a future commit.
   - **AG Grid Community bundle is ~1.9 MB unminified.** SlickGrid was ~500 KB minified, so the extension is technically larger post-migration — but the AG Grid feature-set (pinned columns, headerComponent, applyColumnState, autoSizeAllColumns, domLayout autoHeight) is worth the trade. Not something to change here.
   - **This closes tasks #132, #133, #134** in the internal task list. All three migration phases are complete and SlickGrid is gone.
+
+## 2026-07-08 - Claude Office 365 ribbon module — commit 1: skeleton + typography
+
+- Agent: Claude
+- Branch: grid-rebuild-codex
+- Commit: This commit (1/5 of the Office-conformed ribbon Path B sequence).
+- Status: Implemented; user acceptance-tested visually. Automated tests not re-run for this commit — visual/typography-only change on top of already-passing state.
+- Summary:
+  - Started the Path B Office-conformed ribbon effort. User picked six deliverables from the Office spec:
+    1. Tab strip with the exact Office 365 sizing/spacing/font
+    2. Groups with the mandatory bottom-anchored group label
+    3. Large / medium / small button layout rules (Office's adaptive shrink heuristic)
+    4. Split buttons that behave like Office (main click + arrow)
+    5. Overflow / collapse behavior for narrow viewports
+    6. Contextual tabs (appear only when an item is selected)
+    (Backstage view and Alt-key access explicitly dropped by user.)
+  - This commit (1/5) lands the module skeleton + item 1 (Office 365 tab strip typography, sizing, group label look). Items 2-6 come in commits 2-5.
+  - **New files:**
+    * `ribbon/ribbon.css` — Office 365 typography + spacing overrides scoped to `.rb-office-ribbon`. Uses the Segoe UI Variable font stack (`"Segoe UI Variable Display" -> "Segoe UI Variable" -> "Segoe UI" -> system-ui`), 34px tab strip, 14px SemiBold tab labels, 2px accent underline for the active tab (Office 365 look, not Office 2016 top border), 11px group labels bottom-anchored, 1px 9%-opacity vertical rule between groups (via `border-right` on `.rb-group`), 72px total ribbon body height (targets the compact/Simplified ribbon variant).
+    * `ribbon/ribbon.js` — module skeleton. Registers `globalThis.ShopScoutRibbon` with `apply()` that adds the `.rb-office-ribbon` class to every `.ribbon-shell` in the DOM (idempotent — only touches shells that don't already have the class). Runs on DOMContentLoaded. `version: '1.0.0-commit-1'` tag exposed on the namespace so later commits can be feature-detected.
+  - **HTML wiring:**
+    * `<link rel="stylesheet" href="ribbon/ribbon.css">` added to `comparison.html` immediately after `comparison.css` so the Office overrides win in the cascade.
+    * `<script src="ribbon/ribbon.js"></script>` added after the other UI scripts (`ui/promptDialog.js`) so `ShopScoutRibbon.apply()` runs before `comparison.js` initializes.
+  - **Build script:** `scripts/build-extension.ps1` `$runtimeDirs` now includes `'ribbon'` so the dist bundles include the new folder. Verified `dist/chrome/ribbon/` contains both files.
+  - No HTML markup changes — every existing `.ribbon-shell`, `.ribbon-tab`, `.rb-group`, `.rb-btn-lg`, `.rb-btn-sm`, `.rb-group-label`, `.rb-divider`, `.rb-select` class survives untouched. The JS opt-in adds the extra `.rb-office-ribbon` class at runtime; every rule in `ribbon.css` is scoped under that class, so nothing overrides until JS runs.
+  - `.rb-divider` elements become `display: none` under `.rb-office-ribbon` — the group's own `border-right` gives us the vertical separator, so the explicit divider element is redundant. Kept in HTML so we don't have to touch markup this commit; removed from the DOM tree via CSS.
+- Files touched:
+  - `ribbon/ribbon.css` (new)
+  - `ribbon/ribbon.js` (new)
+  - `comparison.html` — one `<link>` + one `<script>` added.
+  - `scripts/build-extension.ps1` — added `'ribbon'` to `$runtimeDirs`.
+  - `AGENT_CHANGELOG.md` — this entry.
+- Validation run:
+  - `npm run build` -> Chrome / Edge / Firefox dists rebuilt; `dist/chrome/ribbon/` verified to contain `ribbon.css` + `ribbon.js`.
+  - Automated tests NOT re-run this commit (pure visual/typography change; last known-good is the 44/44 pass at commit `0302378`).
+- Review / handoff:
+  - Reviewer: Codex.
+  - **What to check:**
+    1. **Tab strip visual:** load the dashboard and eyeball the tab strip against a screenshot of an Office 365 desktop ribbon (Word / Excel). The tabs should read as ~14px SemiBold Segoe UI, with a 2px accent-color underline on the active tab, not the earlier heavier styling.
+    2. **Font fallback:** On non-Windows systems where "Segoe UI Variable Display" and "Segoe UI Variable" don't exist, the stack falls through to "Segoe UI" (older Windows) then `-apple-system` / `BlinkMacSystemFont` / `system-ui`. Verify macOS looks correct — expected to render in SF Pro Text via `-apple-system`, still weight 600, still 14px.
+    3. **Group label:** the mandatory bottom-anchored "List / Product Actions / Review & Rules / View / Organize" labels on the merged Products tab should read as 11px Regular, muted color, single line, ellipsized if overflowing. Height locked at 18px so groups stay aligned.
+    4. **Vertical rule between groups:** the earlier `.rb-divider` elements (thin lines in the DOM) are now hidden via CSS. The separation comes from `border-right: 1px solid rgba(15,23,42,0.08)` on every `.rb-group` except the last. Verify no double-line visual artifact.
+    5. **Button hover:** hovering a Large button should show a soft neutral tint (~6% ink overlay) with a subtle 1px border. No hard shadows. Focus-visible should show a 2px accent outline offset inward by 1px.
+    6. **No unintended regressions on other pages:** the popup, settings, and about pages also use `.ribbon-shell`. Since `.rb-office-ribbon` is added by JS to every ribbon-shell in the DOM, those pages would also pick up the new look. Verify each one still renders coherently. If any look broken, we can scope `apply()` in ribbon.js to only shells inside `comparison.html`.
+    7. **Build output:** `dist/{chrome,edge,firefox}/ribbon/ribbon.css` and `ribbon.js` should both exist post-build. If either missing, `scripts/build-extension.ps1` `$runtimeDirs` didn't pick up the new folder.
+- Follow-ups or risks:
+  - **HTML markup untouched.** This commit is CSS-only visual polish. Later commits will add `data-btn-size="large|medium|small"` attributes to buttons (commit 2) and rebuild the split-button structure (commit 3). Those DO touch HTML.
+  - **`.rb-divider` cleanup deferred.** Right now those `<div class="rb-divider">` elements are hidden by CSS but still exist in the DOM. Codex may want to strip them in a later cleanup pass — they're semantic dead weight now.
+  - **Non-dashboard ribbons.** If the popup or settings ribbon looks broken under the Office rules, tell me and I'll scope `apply()` to only run inside `#dashboardShell` or similar.
+  - **Next commit (2/5):** Large / Medium / Small button sizes with Office's adaptive shrink heuristic. Adds a JS observer that measures the ribbon body width and downgrades buttons L -> M -> S as the viewport narrows, starting from the rightmost group with the largest buttons. This is where things get interesting.

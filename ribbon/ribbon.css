@@ -1,0 +1,472 @@
+/* =============================================================
+   ShopScout — Office 365-conformed ribbon (Path B, commit 1)
+
+   Loaded AFTER comparison.css so these rules override the earlier
+   custom ribbon styles. Existing HTML classes (.ribbon-shell,
+   .ribbon-tabs, .ribbon-tab, .rb-group, .rb-btn-lg, .rb-btn-sm,
+   .rb-group-label, .rb-divider) are kept — no HTML rewrite needed
+   for this commit.
+
+   This commit lands ONLY the Office 365 typography + tab strip +
+   group label + group divider look. Adaptive button sizing (L/M/S
+   shrink heuristic), split-button primitive, overflow collapse,
+   and contextual tabs land in commits 2-5.
+
+   Office 365 reference values (Microsoft 365 desktop ribbon):
+     Font stack   : "Segoe UI Variable Display" -> "Segoe UI" -> system-ui
+     Tab strip    : 32px tall, tabs 14px SemiBold with 12px x-padding
+     Ribbon body  : 92px classic / 68px compact — we target the
+                    Simplified/compact look, ~68-72px total
+     Group label  : 12px Regular, secondary ink, bottom-anchored
+     Group border : 1px vertical rule between groups, ~9% opacity
+     Active tab   : 2px accent underline hugging the tab bottom
+     Focus ring   : 2px accent outline w/ 2px transparent offset
+
+   The `.rb-office-ribbon` class on .ribbon-shell in HTML is the
+   opt-in flag. Only ShopScout's product-dashboard ribbon carries
+   it — other pages that reuse ribbon-shell (settings, popup) keep
+   the old look until we're ready to switch them over too.
+   ============================================================= */
+
+/* Segoe font stack — Windows 11 variable, Windows 10 static,
+   macOS/Linux fall through to system-ui. The `-Display` variant
+   is used for the tab strip (larger headings); body inherits the
+   standard axis. */
+.rb-office-ribbon,
+.rb-office-ribbon * {
+  font-family:
+    "Segoe UI Variable Display",
+    "Segoe UI Variable",
+    "Segoe UI",
+    -apple-system,
+    BlinkMacSystemFont,
+    "system-ui",
+    sans-serif;
+}
+
+/* --- Tab strip ------------------------------------------------- */
+/* Office 365 tab strip: 32px tall (measured from the sim ribbon
+   in Word/Excel 365). Tab labels are 14px SemiBold. Selected tab
+   sits on a lighter surface (not a border-top like Office 2016).
+   We keep the dark topbar background from the ShopScout theme,
+   but adopt Office spacing/typography exactly. */
+.rb-office-ribbon .ribbon-tabs {
+  min-height: 34px;
+  padding: 0 8px;
+  gap: 0;
+  align-items: stretch;
+}
+
+.rb-office-ribbon .ribbon-tab-list {
+  display: flex;
+  align-items: stretch;
+  gap: 0;
+}
+
+.rb-office-ribbon .ribbon-tab {
+  height: 34px;
+  padding: 0 12px;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  background: transparent;
+  color: var(--menu-fg, rgba(255, 255, 255, 0.82));
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 0;
+  line-height: 1;
+  cursor: pointer;
+  transition: color 90ms ease, background 90ms ease, border-color 120ms ease;
+}
+
+.rb-office-ribbon .ribbon-tab:hover {
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--menu-fg-bright, #fff);
+}
+
+.rb-office-ribbon .ribbon-tab.active {
+  color: var(--menu-fg-bright, #fff);
+  border-bottom-color: var(--accent, #ecd496);
+  background: transparent;
+}
+
+.rb-office-ribbon .ribbon-tab:focus-visible {
+  outline: 2px solid var(--accent, #ecd496);
+  outline-offset: -2px;
+  border-radius: 2px;
+}
+
+/* Brand keeps its typography but the divider matches Office's
+   subtle rgba() separator instead of a hard rule. */
+.rb-office-ribbon .ribbon-brand {
+  padding: 0 12px 0 0;
+  border-right: 1px solid rgba(255, 255, 255, 0.12);
+  align-self: center;
+  font-family:
+    "Segoe UI Variable Display",
+    "Segoe UI",
+    -apple-system,
+    sans-serif;
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: 0;
+}
+
+.rb-office-ribbon .ribbon-brand .build-tag {
+  font-family:
+    "Cascadia Code",
+    "Consolas",
+    "SF Mono",
+    "Menlo",
+    monospace;
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  opacity: 0.6;
+}
+
+.rb-office-ribbon .ribbon-actions {
+  padding-left: 8px;
+  border-left: 1px solid rgba(255, 255, 255, 0.12);
+  align-self: center;
+}
+
+/* --- Ribbon body ---------------------------------------------- */
+/* Office ribbon body targets 68px (Simplified). We give it 72px
+   to account for the group label bar. Background is the lightest
+   possible surface so the buttons pop; matches Office 365 light
+   theme (#fafbfc). */
+.rb-office-ribbon .ribbon-body {
+  min-height: 72px;
+  padding: 4px 8px 0;
+  background: var(--paper-1, #fafbfc);
+  border-bottom: 1px solid var(--rule, #e5e7eb);
+}
+
+.rb-office-ribbon .ribbon-pane {
+  gap: 0;
+  align-items: stretch;
+  justify-content: flex-start;
+  padding: 0;
+}
+
+/* --- Group ---------------------------------------------------- */
+/* Every group: content on top, bottom-anchored label. Office
+   uses a 1px vertical rule between groups at ~9% opacity. We
+   drop .rb-divider from the layout since the group's own right
+   border gives us the separator for free.
+
+   Group inner padding: Office uses ~4px top + label bar of ~20px
+   on the bottom. Total group height ~68px matches the ribbon
+   body height. */
+.rb-office-ribbon .rb-group {
+  display: flex;
+  flex-direction: column;
+  min-height: 68px;
+  padding: 0 6px;
+  margin: 0;
+  border-right: 1px solid rgba(15, 23, 42, 0.08);
+  background: transparent;
+}
+
+/* Last group has no right divider — Office trims it too. */
+.rb-office-ribbon .rb-group:last-child {
+  border-right: 0;
+}
+
+/* Divider elements between groups become no-ops — the group's
+   own border-right handles the visual separation. Preserved so
+   existing HTML doesn't need edits. */
+.rb-office-ribbon .rb-divider {
+  display: none;
+}
+
+.rb-office-ribbon .rb-group-content {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  gap: 2px;
+  padding: 3px 0 4px;
+}
+
+.rb-office-ribbon .rb-group-label {
+  height: 18px;
+  padding: 0;
+  color: var(--ink-3, #5a6470);
+  font-size: 11px;
+  font-weight: 400;
+  line-height: 18px;
+  letter-spacing: 0;
+  text-align: center;
+  text-transform: none;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* --- Large buttons -------------------------------------------- */
+/* Office 365 large button: 68-72px tall, ~48-60px wide, 32px
+   icon on top, 11px label wrapping to 2 lines below. Selected/
+   hover state is a subtle tint, not a border. */
+.rb-office-ribbon .rb-btn-lg {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  min-width: 48px;
+  max-width: 76px;
+  height: 46px;
+  padding: 4px 6px 3px;
+  border: 1px solid transparent;
+  border-radius: 3px;
+  background: transparent;
+  color: var(--ink, #0f1419);
+  font-size: 11px;
+  font-weight: 400;
+  line-height: 1.15;
+  letter-spacing: 0;
+  text-align: center;
+  cursor: pointer;
+  transition: background 90ms ease, border-color 90ms ease;
+}
+
+.rb-office-ribbon .rb-btn-lg:hover,
+.rb-office-ribbon .toolbar-menu[open] > .rb-btn-lg {
+  background: rgba(15, 23, 42, 0.06);
+  border-color: rgba(15, 23, 42, 0.08);
+}
+
+.rb-office-ribbon .rb-btn-lg:active {
+  background: rgba(15, 23, 42, 0.1);
+}
+
+.rb-office-ribbon .rb-btn-lg:focus-visible {
+  outline: 2px solid var(--accent, #ecd496);
+  outline-offset: -1px;
+}
+
+.rb-office-ribbon .rb-btn-lg[disabled],
+.rb-office-ribbon .rb-btn-lg[aria-disabled="true"] {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.rb-office-ribbon .rb-icon-lg {
+  width: 20px;
+  height: 20px;
+  margin-bottom: 2px;
+  color: currentColor;
+  flex: 0 0 auto;
+}
+
+.rb-office-ribbon .rb-btn-lg-label {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  max-height: 2.3em;
+  overflow: hidden;
+  font-size: 11px;
+  font-weight: 400;
+  line-height: 1.15;
+  letter-spacing: 0;
+  color: inherit;
+}
+
+/* --- Small buttons -------------------------------------------- */
+/* Office 365 small button: 22px tall, icon + label side-by-side.
+   Used for stacked list-management buttons (New / Rename / Delete). */
+.rb-office-ribbon .rb-btn-sm {
+  display: inline-flex;
+  align-items: center;
+  min-height: 20px;
+  padding: 2px 6px;
+  border: 1px solid transparent;
+  border-radius: 3px;
+  background: transparent;
+  color: var(--ink, #0f1419);
+  font-size: 12px;
+  font-weight: 400;
+  gap: 6px;
+  cursor: pointer;
+  transition: background 90ms ease, border-color 90ms ease;
+}
+
+.rb-office-ribbon .rb-btn-sm:hover {
+  background: rgba(15, 23, 42, 0.06);
+  border-color: rgba(15, 23, 42, 0.08);
+}
+
+.rb-office-ribbon .rb-btn-sm:focus-visible {
+  outline: 2px solid var(--accent, #ecd496);
+  outline-offset: -1px;
+}
+
+.rb-office-ribbon .rb-btn-sm-icon {
+  width: 14px;
+  height: 14px;
+  opacity: 0.8;
+  flex: 0 0 auto;
+}
+
+.rb-office-ribbon .rb-btn-sm-label {
+  font-size: 12px;
+  font-weight: 400;
+  color: inherit;
+}
+
+/* --- Stack (vertical column of small buttons) ------------------ */
+/* Office stacks up to 3 small buttons in a column inside a group.
+   Common pattern for New/Rename/Delete list controls. */
+.rb-office-ribbon .rb-stack {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: stretch;
+  justify-content: center;
+  gap: 1px;
+}
+
+.rb-office-ribbon .rb-mini-label {
+  font-size: 10px;
+  font-weight: 400;
+  color: var(--ink-3, #5a6470);
+  line-height: 12px;
+  margin-bottom: 2px;
+  text-transform: none;
+  letter-spacing: 0;
+}
+
+/* --- Select / dropdown control -------------------------------- */
+.rb-office-ribbon .rb-select {
+  min-width: 140px;
+  max-width: 220px;
+  height: 22px;
+  padding: 0 22px 0 6px;
+  border: 1px solid var(--rule, #d1d5db);
+  border-radius: 2px;
+  background: #fff;
+  color: var(--ink, #0f1419);
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 22px;
+  appearance: none;
+  -webkit-appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 10 10'%3E%3Cpath fill='%235a6470' d='M2 4l3 3 3-3z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 6px center;
+  cursor: pointer;
+}
+
+.rb-office-ribbon .rb-select:hover {
+  border-color: var(--ink-3, #5a6470);
+}
+
+.rb-office-ribbon .rb-select:focus-visible {
+  outline: 2px solid var(--accent, #ecd496);
+  outline-offset: -1px;
+  border-color: var(--accent, #ecd496);
+}
+
+/* --- Split-button placeholder --------------------------------- */
+/* Full split-button primitive comes in commit 3. For commit 1 we
+   just tighten the current .rb-split so it doesn't visually clash
+   with the tighter Office button sizing. */
+.rb-office-ribbon .rb-split {
+  display: inline-flex;
+  align-items: stretch;
+  border: 1px solid transparent;
+  border-radius: 3px;
+  transition: border-color 90ms ease, background 90ms ease;
+}
+
+.rb-office-ribbon .rb-split:hover {
+  background: rgba(15, 23, 42, 0.04);
+  border-color: rgba(15, 23, 42, 0.08);
+}
+
+.rb-office-ribbon .rb-split-main {
+  border: 0;
+  border-radius: 2px 0 0 2px;
+  height: auto;
+  padding-right: 4px;
+}
+
+.rb-office-ribbon .rb-split-chev {
+  display: inline-flex;
+  align-items: flex-end;
+  justify-content: center;
+  min-width: 14px;
+  padding: 0 4px 4px;
+  border: 0;
+  border-left: 1px solid rgba(15, 23, 42, 0.08);
+  border-radius: 0 2px 2px 0;
+  background: transparent;
+  color: var(--ink-3, #5a6470);
+  font-size: 9px;
+  cursor: pointer;
+  list-style: none;
+}
+
+.rb-office-ribbon .rb-split-chev::-webkit-details-marker {
+  display: none;
+}
+
+.rb-office-ribbon .rb-split-chev:hover,
+.rb-office-ribbon .rb-split-chev-wrap[open] > .rb-split-chev {
+  background: rgba(15, 23, 42, 0.08);
+}
+
+/* --- Menu panels (toolbar-menu popovers) ---------------------- */
+/* Office menu panel: 2px border-radius, thin drop shadow, ~14px
+   height per item. Left border-accent on hover instead of full
+   background flood. */
+.rb-office-ribbon .toolbar-menu-panel {
+  min-width: 200px;
+  padding: 4px;
+  border: 1px solid var(--rule, #d1d5db);
+  border-radius: 3px;
+  background: #fff;
+  box-shadow: 0 6px 18px rgba(15, 23, 42, 0.14);
+}
+
+.rb-office-ribbon .menu-item {
+  min-height: 26px;
+  padding: 4px 10px;
+  border: 0;
+  border-radius: 2px;
+  background: transparent;
+  color: var(--ink, #0f1419);
+  font-size: 12px;
+  font-weight: 400;
+  text-align: left;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.rb-office-ribbon .menu-item:hover {
+  background: rgba(15, 23, 42, 0.06);
+}
+
+.rb-office-ribbon .menu-item:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.rb-office-ribbon .menu-item--danger {
+  color: var(--danger, #b91c1c);
+}
+
+.rb-office-ribbon .menu-item--danger:hover {
+  background: color-mix(in srgb, var(--danger, #b91c1c) 8%, transparent);
+}
+
+.rb-office-ribbon .menu-divider {
+  height: 1px;
+  margin: 4px 6px;
+  background: rgba(15, 23, 42, 0.08);
+}
+
+/* --- Structure hints for later commits ----------------------- */
+/* Buttons will opt in to an explicit size via [data-btn-size]
+   in commit 2. Until then, size defaults come from the classes
+   above (.rb-btn-lg vs .rb-btn-sm). */

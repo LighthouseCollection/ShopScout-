@@ -10,6 +10,10 @@
   <link rel="stylesheet" href="ui/ui-core.css">
   <link rel="stylesheet" href="vendor/ag-grid/ag-grid.min.css">
   <link rel="stylesheet" href="comparison.css">
+  <!-- Office 365-conformed ribbon overrides. Loaded AFTER comparison.css
+       so the Office typography/sizing/label rules win over the earlier
+       custom ribbon look. See ribbon/ribbon.css for the full commit-log. -->
+  <link rel="stylesheet" href="ribbon/ribbon.css">
   <link rel="stylesheet" href="grid-rebuild-codex/grid.css">
 
 </head>
@@ -784,6 +788,10 @@
 <script src="ui/progressOverlay.js"></script>
 <script src="ui/confirmDialog.js"></script>
 <script src="ui/promptDialog.js"></script>
+<!-- Office 365-conformed ribbon behaviors. Opts every .ribbon-shell
+     into the .rb-office-ribbon class so the Office typography +
+     sizing rules from ribbon/ribbon.css take effect. -->
+<script src="ribbon/ribbon.js"></script>
 
 <script src="ai-providers.js"></script>
 <script src="settings.js"></script>
