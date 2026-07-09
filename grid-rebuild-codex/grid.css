@@ -7,7 +7,13 @@
    iframe feel. */
 #productGrid.ss-grid-shell {
   position: relative;
-  margin: 12px 20px 32px;
+  /* Centered on the page with a 20px gutter on each side. slickGrid
+     adapter's updateShellOverflow sets the actual width to
+     min(canvas + chrome, 1400px, viewport - 40px) after every render,
+     so small tables shrink and center themselves rather than stretch
+     across an ultra-wide monitor. */
+  margin: 12px auto 32px;
+  max-width: min(1400px, calc(100% - 40px));
   padding: 0;
   border: 1px solid var(--rule, #d1d5db);
   border-radius: 8px;

@@ -667,6 +667,13 @@
      especially) reserve a scrollbar gutter for `overflow-x: auto` even
      when content fits, so a spurious scrollbar shows on a grid that
      visually needs none. */
+  /* Dynamic shell width — content-sized, centered, capped at 1400px.
+     Matches the standard Notion/GitHub/Airtable pattern: small tables
+     don't stretch across ultra-wide monitors, big tables grow up to a
+     comfortable reading width then scroll horizontally beyond that. */
+  const SHELL_MAX_WIDTH = 1400;
+  const SHELL_HORIZONTAL_MARGIN = 40; /* 20px each side */
+
   function updateShellOverflow(container) {
     const host = container;
     const shell = host?.closest?.('.ss-grid-shell');
@@ -674,9 +681,15 @@
     const canvas = host?.querySelector?.('.grid-canvas')
       || host?.querySelector?.('.slick-header-columns');
     if (!canvas) return;
-    const shellInner = shell.clientWidth;
     const canvasWidth = canvas.scrollWidth || canvas.offsetWidth || 0;
-    shell.style.overflowX = canvasWidth > shellInner + 2 ? 'auto' : 'hidden';
+    const doc = shell.ownerDocument || root.document;
+    const viewportInner = (doc?.documentElement?.clientWidth || root.innerWidth || 1400) - SHELL_HORIZONTAL_MARGIN;
+    /* +12px absorbs SlickGrid's subpixel rounding + the host's 4px
+       padding-right buffer without triggering a scrollbar. */
+    const contentTarget = canvasWidth + 12;
+    const targetWidth = Math.min(contentTarget, SHELL_MAX_WIDTH, viewportInner);
+    shell.style.width = targetWidth + 'px';
+    shell.style.overflowX = canvasWidth > shell.clientWidth + 2 ? 'auto' : 'hidden';
   }
 
   function applyProjection(dataView, grid, projection) {
