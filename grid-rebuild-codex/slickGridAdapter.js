@@ -662,6 +662,23 @@
     container.replaceChildren(message);
   }
 
+  /* Only enable horizontal scroll on the shell when SlickGrid's canvas
+     is genuinely wider than the shell. Otherwise browsers (Chrome
+     especially) reserve a scrollbar gutter for `overflow-x: auto` even
+     when content fits, so a spurious scrollbar shows on a grid that
+     visually needs none. */
+  function updateShellOverflow(container) {
+    const host = container;
+    const shell = host?.closest?.('.ss-grid-shell');
+    if (!shell) return;
+    const canvas = host?.querySelector?.('.grid-canvas')
+      || host?.querySelector?.('.slick-header-columns');
+    if (!canvas) return;
+    const shellInner = shell.clientWidth;
+    const canvasWidth = canvas.scrollWidth || canvas.offsetWidth || 0;
+    shell.style.overflowX = canvasWidth > shellInner + 2 ? 'auto' : 'hidden';
+  }
+
   function applyProjection(dataView, grid, projection) {
     grid.getContainerNode?.()?.classList?.toggle?.('ss-grid-is-matrix', projection?.mode === 'comparisonMatrix');
     applyHostHeight(grid.getContainerNode?.(), projection);
@@ -676,6 +693,8 @@
     applySortIndicator(grid, projection);
     grid.resizeCanvas();
     grid.render();
+    /* Defer so the DOM measurement reflects final canvas width. */
+    Promise.resolve().then(() => updateShellOverflow(grid.getContainerNode?.()));
   }
 
   /* Grid host is sized to exactly the content it needs to render — full

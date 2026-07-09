@@ -19,7 +19,11 @@
      avoided so a scrollbar only appears when there is genuine
      overflow — not reserved space that shows a stray scrollbar even
      when the grid fits. */
-  overflow-x: auto;
+  /* Default hidden; slickGridAdapter.updateShellOverflow flips to
+     'auto' after render when the canvas is genuinely wider than the
+     shell. Prevents Chrome from reserving a scrollbar gutter (and
+     showing a stray bar) when the grid actually fits. */
+  overflow-x: hidden;
   overflow-y: visible;
   scrollbar-gutter: auto;
 }
