@@ -15,9 +15,30 @@
   /* Horizontal scroll is contained INSIDE the card so the page (and
      therefore the ribbon at the top) doesn't scroll sideways when the
      grid is wider than the viewport. Vertical stays visible so long
-     lists still scroll the whole browser. */
+     lists still scroll the whole browser. Scroll-gutter: stable
+     avoided so a scrollbar only appears when there is genuine
+     overflow — not reserved space that shows a stray scrollbar even
+     when the grid fits. */
   overflow-x: auto;
   overflow-y: visible;
+  scrollbar-gutter: auto;
+}
+/* Scrollbar exists but stays thin + only when needed. Prevents the
+   1-2px measurement rounding SlickGrid produces from bumping the
+   canvas past the shell's content box and triggering a spurious bar. */
+#productGrid.ss-grid-shell::-webkit-scrollbar { height: 8px; width: 0; }
+#productGrid.ss-grid-shell::-webkit-scrollbar-thumb { background: color-mix(in srgb, var(--rule, #d1d5db) 90%, transparent); border-radius: 4px; }
+#productGrid.ss-grid-shell::-webkit-scrollbar-track { background: transparent; }
+#productGrid.ss-grid-shell {
+  scrollbar-width: thin;
+}
+/* SlickGrid rounds column widths to whole pixels; the sum can end up
+   1-2px wider than the container it measured, which then trips
+   overflow-x on a grid that visually fits. A tiny padding-right on the
+   viewport gives that rounding room to breathe. */
+.ss-grid-host {
+  padding-right: 4px;
+  box-sizing: border-box;
 }
 
 .ss-grid-status {
