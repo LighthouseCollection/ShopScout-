@@ -680,10 +680,21 @@
   }
 
   function measureCanvasWidth(host) {
-    /* Sum of visible column widths (from the header cells) — SlickGrid's
-       .grid-canvas.scrollWidth includes a trailing drag-resize spacer
-       that inflates the number by 100+ px. Header cells reliably match
-       the actual column pixel widths without the spacer. */
+    /* AG Grid path — sum the header cells so the shell hugs the actual
+       column widths (AG Grid's center-cols-container may include a
+       trailing filler pane). */
+    const agHeaderCells = host?.querySelectorAll?.('.ag-header-cell');
+    if (agHeaderCells && agHeaderCells.length) {
+      let sum = 0;
+      for (const cell of agHeaderCells) sum += cell.offsetWidth || 0;
+      if (sum > 0) return sum;
+    }
+    const agCenter = host?.querySelector?.('.ag-center-cols-container');
+    if (agCenter) return agCenter.offsetWidth || agCenter.scrollWidth || 0;
+
+    /* SlickGrid path — sum of visible column widths from the header
+       cells. .grid-canvas.scrollWidth includes a trailing drag-resize
+       spacer that inflates the number by 100+ px. */
     const headerCells = host?.querySelectorAll?.('.slick-header-columns > .slick-header-column');
     if (headerCells && headerCells.length) {
       let sum = 0;

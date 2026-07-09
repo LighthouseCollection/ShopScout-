@@ -255,6 +255,34 @@
      width is honored — a column whose header is wider than its values
      grows to the header width. Old API name (autoSizeColumns) is used
      as a fallback in case the runtime is a slightly older bundle. */
+  /* Match the shell's outer width to the actual canvas width so the
+     grid doesn't leave a whitespace band to the right of the last
+     column. Mirrors the SlickGrid adapter's updateShellOverflow. */
+  function fitShellToContent(host) {
+    if (!host) return;
+    const shell = host.closest?.('.ss-grid-shell');
+    if (!shell) return;
+    const headerCells = host.querySelectorAll?.('.ag-header-cell');
+    let canvasWidth = 0;
+    if (headerCells && headerCells.length) {
+      for (const cell of headerCells) canvasWidth += cell.offsetWidth || 0;
+    }
+    if (!canvasWidth) {
+      const container = host.querySelector?.('.ag-center-cols-container');
+      canvasWidth = container?.offsetWidth || container?.scrollWidth || 0;
+    }
+    if (!canvasWidth) return;
+    const doc = shell.ownerDocument || root.document;
+    const viewportInner = (doc?.documentElement?.clientWidth || root.innerWidth || 1400) - 40;
+    const mode = shell.getAttribute('data-shell-width') === 'full' ? 'full' : 'fit';
+    /* Content-hug for tight tables; full viewport when the user
+       explicitly picks Full. +2 absorbs subpixel rounding. */
+    const cap = mode === 'full' ? viewportInner : Math.max(800, Math.round(viewportInner * 0.85));
+    const target = Math.min(canvasWidth + 2, cap, viewportInner);
+    shell.style.width = target + 'px';
+    shell.style.overflowX = canvasWidth > shell.clientWidth + 2 ? 'auto' : 'hidden';
+  }
+
   function autoSizeEverything(api) {
     if (!api) return;
     try {
@@ -322,15 +350,23 @@
         flex: 0
       },
       onGridReady(evt) {
-        /* Size each column to fit MAX(header, widest cell content).
-           skipHeader=false so the header text is included in the
-           measurement — a column whose header is wider than its
-           values grows to the header width. Runs after the initial
-           render so measurements are accurate. */
-        setTimeout(() => autoSizeEverything(evt.api), 0);
+        setTimeout(() => {
+          autoSizeEverything(evt.api);
+          fitShellToContent(container);
+        }, 0);
       },
       onFirstDataRendered(evt) {
-        setTimeout(() => autoSizeEverything(evt.api), 0);
+        setTimeout(() => {
+          autoSizeEverything(evt.api);
+          fitShellToContent(container);
+        }, 0);
+      },
+      onColumnResized() { fitShellToContent(container); },
+      onColumnVisible() {
+        setTimeout(() => {
+          autoSizeEverything(gridApi);
+          fitShellToContent(container);
+        }, 0);
       },
       onSortChanged(evt) {
         if (typeof opts.onSortChange !== 'function') return;
