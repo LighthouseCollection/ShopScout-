@@ -116,11 +116,14 @@ assert.ok(/\.vertical-picker-grid[\s\S]{0,220}grid-template-columns:\s*repeat\(a
 assertNotIncludes('data-command="cancel-run"', 'Cancel Scan is removed from the ribbon (per UX cleanup)');
 assertNotIncludes('data-command="keyboard-shortcuts"', 'Keyboard Shortcuts button is removed from the About group');
 
-assertIncludes('<div class="rb-group-label">Auto AI</div>', 'Analyze tab includes Auto AI group');
-assertIncludes('id="integratedAiProviderMenu"', 'Auto AI provider menu is dynamic');
-assertIncludes('id="integratedAiSideProviders"', 'Auto AI side provider stack is dynamic');
-assertIncludes('<div class="rb-group-label">Manual AI</div>', 'Analyze tab includes Manual AI group');
-assertIncludes('id="manualAiBtn"', 'Manual AI is a big direct action');
+/* Auto AI + Manual AI merged into a single "AI" group per user
+   preference — both controls still exist inside the same group. */
+assertIncludes('<div class="rb-group-label">AI</div>', 'Analyze tab includes merged AI group label');
+assertNotIncludes('<div class="rb-group-label">Auto AI</div>', 'Auto AI is no longer a standalone group');
+assertNotIncludes('<div class="rb-group-label">Manual AI</div>', 'Manual AI is no longer a standalone group');
+assertIncludes('id="integratedAiProviderMenu"', 'AI group still contains provider menu');
+assertIncludes('id="integratedAiSideProviders"', 'AI group still contains side provider stack');
+assertIncludes('id="manualAiBtn"', 'AI group still contains Manual AI action button');
 assertNotIncludes('<div class="rb-group-label">Select what to compare and analyze</div>', 'Analyze tab does not duplicate the AI modal checklist in the ribbon');
 assertIncludes('<div class="rb-group-label">AI Results</div>', 'Analyze tab keeps AI Results group');
 assertIncludes('<div class="rb-group-label">Settings</div>', 'Analyze tab includes Settings group');

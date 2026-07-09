@@ -258,7 +258,10 @@
         <div class="rb-group-label">Lists</div>
       </div>
       <div class="rb-divider" aria-hidden="true"></div>
-      <div class="rb-group" aria-label="Auto AI">
+      <!-- AI — merged group holding both Auto AI (split-button with
+           provider menu) and Manual AI (single button). Shares one
+           group label "AI" at the bottom. -->
+      <div class="rb-group" data-group-id="ai" aria-label="AI">
         <div class="rb-group-content">
           <details class="toolbar-menu">
             <summary class="rb-btn-lg split-down" id="aiIntegratedTrigger" data-menu="true" title="Run integrated AI analysis">
@@ -270,18 +273,12 @@
             </div>
           </details>
           <div class="rb-stack" id="integratedAiSideProviders"></div>
-        </div>
-        <div class="rb-group-label">Auto AI</div>
-      </div>
-
-      <div class="rb-group" aria-label="Manual AI">
-        <div class="rb-group-content">
           <button class="rb-btn-lg" id="manualAiBtn" data-command="manual-ai" title="Open manual AI prompt window">
             <span class="rb-icon-lg"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg></span>
             <span class="rb-btn-lg-label">Manual AI</span>
           </button>
         </div>
-        <div class="rb-group-label">Manual AI</div>
+        <div class="rb-group-label">AI</div>
       </div>
 
       <div class="rb-divider" aria-hidden="true"></div>
