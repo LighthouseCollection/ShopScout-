@@ -152,6 +152,38 @@
   overflow: hidden;
 }
 
+/* Pinned-left row-label cells (Select / Thumb / Name) match the
+   header background so the frozen columns read as a distinct band
+   that separates identifiers from spec data. Add a clear right rule
+   so the frozen edge is obvious. */
+.ss-grid-host.ag-theme-shopscout .ag-cell.ss-grid-cell-select,
+.ss-grid-host.ag-theme-shopscout .ag-cell.ss-grid-cell-thumb,
+.ss-grid-host.ag-theme-shopscout .ag-cell.ss-grid-cell-title {
+  background: #f4f6f9;
+}
+.ss-grid-host.ag-theme-shopscout .ag-pinned-left-cols-container .ag-row {
+  background: #f4f6f9;
+}
+.ss-grid-host.ag-theme-shopscout .ag-pinned-left-cols-container .ag-row-hover,
+.ss-grid-host.ag-theme-shopscout .ag-pinned-left-header {
+  background: #f4f6f9;
+}
+.ss-grid-host.ag-theme-shopscout .ag-pinned-left-cols-container {
+  border-right: 1px solid #d1d5db;
+}
+
+/* Name column left-aligned (both header and cell). The Name column
+   uses type: 'text' so the cellClass-anchored selector below is what
+   catches it — matches the SlickGrid behavior. */
+.ss-grid-host.ag-theme-shopscout .ag-cell.ss-grid-cell-title {
+  justify-content: flex-start !important;
+  text-align: left;
+  font-weight: 700;
+}
+.ss-grid-host.ag-theme-shopscout .ag-header-cell[col-id="title"] .ag-header-cell-label {
+  justify-content: flex-start;
+}
+
 .ss-grid-status {
   position: absolute;
   width: 1px;

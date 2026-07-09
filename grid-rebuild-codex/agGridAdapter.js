@@ -227,9 +227,21 @@
     return 80;
   }
 
+  const PINNED_LEFT_COLUMN_IDS = new Set(['select', 'thumb', 'title']);
+
+  function cellClassForColumn(column) {
+    const parts = ['ss-grid-cell', `ss-grid-cell-${column.type || 'text'}`];
+    /* Anchor the row-labels styling to the column id so specific rules
+       ('.ss-grid-cell-title' for left-alignment) fire regardless of the
+       column type. */
+    if (column.id) parts.push(`ss-grid-cell-${column.id}`);
+    return parts.join(' ');
+  }
+
   function toAgColumns(columns) {
     return (columns || []).map(column => {
       const field = column.field || column.id;
+      const isPinnedLeft = PINNED_LEFT_COLUMN_IDS.has(column.id);
       const colDef = {
         colId: column.id,
         field,
@@ -238,12 +250,14 @@
         cellRendererParams: { ssType: column.type || 'text' },
         sortable: !['selection','image','actions'].includes(column.type),
         resizable: true,
-        suppressMovable: column.type === 'selection' || column.type === 'image',
+        suppressMovable: column.type === 'selection' || column.type === 'image' || isPinnedLeft,
         minWidth: columnMinWidth(column),
         hide: !!column.defaultHidden,
         editable: !!column.editable,
-        cellClass: `ss-grid-cell ss-grid-cell-${column.type || 'text'}`,
-        headerClass: 'ss-grid-header'
+        cellClass: cellClassForColumn(column),
+        headerClass: 'ss-grid-header',
+        pinned: isPinnedLeft ? 'left' : undefined,
+        lockPinned: isPinnedLeft || undefined
       };
       if (column.width) colDef.width = column.width;
       return colDef;
