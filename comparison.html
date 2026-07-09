@@ -801,6 +801,11 @@
      during page init can reference groups by data-group-id and
      apply Large/Middle/Small/Popup sizes as the ribbon body narrows. -->
 <script src="ribbon/scaling.js"></script>
+<!-- Contextual tabs (Ribbon.ContextualTabs / TabGroup). Registers
+     defineTabGroup/setState API for context-sensitive tab groups
+     that appear only when NoAvailable/Available/Active state
+     matches. Loaded last since it depends on the tab-strip DOM. -->
+<script src="ribbon/contextualTabs.js"></script>
 
 <script src="ai-providers.js"></script>
 <script src="settings.js"></script>

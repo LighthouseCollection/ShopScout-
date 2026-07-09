@@ -870,3 +870,60 @@
 .rb-office-ribbon.rb-group-popup > .rb-group > .rb-group-label {
   margin-top: 4px;
 }
+
+/* ==============================================================
+   18. Contextual tabs — Ribbon.ContextualTabs / TabGroup
+   ============================================================== */
+
+/* Reserve extra top space on the shell when contextual tabs are
+   Active — the band sits above the tab strip. */
+.rb-office-ribbon[data-has-contextual-tabs="true"] {
+  padding-top: var(--rbn-contextual-band-h, 20px);
+  position: relative;
+}
+
+/* Colored band above the tab strip showing the tab group's label.
+   Positioned absolutely so it doesn't disrupt the tab-list flex. */
+.rb-office-ribbon .rb-contextual-tab-band {
+  position: absolute;
+  top: 0;
+  right: 0;
+  left: auto;
+  height: var(--rbn-contextual-band-h, 20px);
+  min-width: 120px;
+  padding: 0 14px;
+  background: var(--rbn-contextual-color, var(--accent, #ecd496));
+  color: #fff;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-top-left-radius: 3px;
+  border-top-right-radius: 3px;
+  z-index: 2;
+  pointer-events: none;
+}
+
+.rb-office-ribbon .rb-contextual-tab-band-label {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  text-transform: none;
+  white-space: nowrap;
+}
+
+/* Contextual tab buttons — sit inside the regular tab list but with
+   a tinted underline instead of the accent one, and a subtle top
+   border to visually connect them to the band. */
+.rb-office-ribbon .ribbon-tab[data-contextual-group-id] {
+  position: relative;
+  border-top: 2px solid var(--rbn-contextual-color, var(--accent, #ecd496));
+  padding-top: calc(var(--rbn-tab-pad-t) - 2px);
+}
+
+.rb-office-ribbon .ribbon-tab[data-contextual-group-id].active {
+  border-bottom-color: var(--rbn-contextual-color, var(--accent, #ecd496));
+}
+
+.rb-office-ribbon .ribbon-tab[data-contextual-group-id]:hover {
+  background: color-mix(in srgb, var(--rbn-contextual-color, var(--accent, #ecd496)) 12%, transparent);
+}

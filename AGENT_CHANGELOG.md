@@ -3863,3 +3863,75 @@ This file is the shared record for Claude and Codex. Append an entry for every m
     * The overflow ⋯ hint via `::after` sits inside `.ribbon-body`. If the body already has content that hits the right edge, the ⋯ can overlap — flag if it looks bad in practice.
     * The `data-ribbon-overflow="true"` state adds `overflow-x: auto` which can cause a horizontal scrollbar to appear in the ribbon body. Alternative: use `data-ribbon-overflow="hidden"` for both mid-tier overflow AND below-300px, and always hide rather than scroll. Discuss with user if the ⋯+scroll look is undesirable.
     * **Next commit (9/11):** `Ribbon.ContextualTabs` + `TabGroup.ContextAvailable` infrastructure. Three-state API (`NotAvailable` / `Available` / `Active`), accent-color band above active contextual tabs, showTabGroup/hideTabGroup public methods.
+
+## 2026-07-09 - Claude Office 365 ribbon commit 9: Contextual tabs + TabGroup.ContextAvailable infrastructure
+
+- Agent: Claude
+- Branch: grid-rebuild-codex
+- Commit: This commit (9/11).
+- Status: Implemented. All 44 tests pass.
+- Summary:
+  - **New file `ribbon/contextualTabs.js` (~250 lines)** — declarative `Ribbon.ContextualTabs` / `TabGroup` API matching Microsoft's Windows Ribbon Framework verbatim.
+  - **Three-state `ContextAvailable` enum** — `NotAvailable`, `Available`, `Active`. Only `Active` renders tabs + band. `Available` and `NotAvailable` are visually identical in this port but the states exist to distinguish "known-but-inactive context" from "context not present at all" (Microsoft's spec draws the same distinction).
+  - **Public API:**
+    * `ShopScoutRibbon.contextualTabs.defineTabGroup({ id, label, contextualColor, tabs: [{id, label, paneId?}, ...] })` — register a tab group.
+    * `ShopScoutRibbon.contextualTabs.setState(groupId, 'NotAvailable' | 'Available' | 'Active')` — change state; validates against the enum.
+    * `ShopScoutRibbon.contextualTabs.getState(groupId)` — read current state.
+    * `ShopScoutRibbon.contextualTabs.showTabGroup(groupId)` — sugar for `setState(..., 'Active')`.
+    * `ShopScoutRibbon.contextualTabs.hideTabGroup(groupId)` — sugar for `setState(..., 'NotAvailable')`.
+    * `ShopScoutRibbon.contextualTabs.remove(groupId)` — un-register.
+    * `ShopScoutRibbon.contextualTabs.all()` — snapshot of every registered group with its state.
+    * `ShopScoutRibbon.contextualTabs.getActiveGroups()` — array of Active groups (used by app code that wants to react to context changes).
+  - **DOM reconciliation:**
+    * Runs on every state change and every `defineTabGroup` call. Idempotent — removes stale contextual elements before rendering.
+    * For each Active group, appends `<button class="ribbon-tab" data-contextual-group-id="..." data-contextual-color="..."></button>` tabs to the tab list, inserted before `.ribbon-spacer` / `.ribbon-actions` (Office convention: contextual tabs sit at the right edge of the tab strip).
+    * Renders a `<div class="rb-contextual-tab-band">` above the tab strip. The band is portal-inserted as the shell's first child and positioned absolutely so it doesn't disrupt the tab-list flex layout.
+    * Sets `--rbn-contextual-color` CSS variable on both the tabs and the band from the group's `contextualColor` prop. Microsoft's spec doesn't publish a color palette; apps supply any CSS color (`#e91e63`, `var(--custom)`, `oklch(...)`, etc.).
+    * Marks the shell with `data-has-contextual-tabs="true"` when any group is Active; used by CSS to reserve top padding for the band.
+  - **Events:**
+    * `ribbon:contextualtabgroup:show` — fires on the shell when a group transitions to `Active`. Detail: `{ groupId, tabs }`.
+    * `ribbon:contextualtabgroup:hide` — fires on the shell when a group transitions away from `Active`. Detail: `{ groupId }`.
+    * App code can use these to spawn / tear down the corresponding `.ribbon-pane[data-pane="..."]` DOM (pane-content management is intentionally NOT the responsibility of the ContextualTabs module).
+  - **CSS additions in `ribbon.css`:**
+    * `.rb-office-ribbon[data-has-contextual-tabs="true"] { padding-top: var(--rbn-contextual-band-h, 20px) }` — reserves space for the band.
+    * `.rb-contextual-tab-band` — 20px absolutely-positioned strip at the top-right of the shell with the group's contextual color as background and white bold label.
+    * `.ribbon-tab[data-contextual-group-id]` — regular tab chrome with a 2px colored top border (visually connecting to the band) and the same contextual color used for the active-state bottom underline.
+    * Hover state uses `color-mix(in srgb, <color> 12%, transparent)` so the tab tints correctly regardless of the specific color.
+- Files touched:
+  - `ribbon/contextualTabs.js` (new)
+  - `ribbon/ribbon.css` — 5 new selectors for the contextual band + tab.
+  - `comparison.html` — one new `<script>` tag after `scaling.js`.
+  - `AGENT_CHANGELOG.md` — this entry.
+- Validation run:
+  - `npm test` -> all 44 pass.
+  - `npm run build` -> Chrome / Edge / Firefox dists rebuilt.
+- Review / handoff:
+  - Reviewer: Codex.
+  - **What to check:**
+    1. **API surface:** `ShopScoutRibbon.contextualTabs.version` -> `'1.0.0-commit-9'`. `ShopScoutRibbon.contextualTabs.VALID_STATES` -> `['NotAvailable','Available','Active']`.
+    2. **Register a group + activate:** in DevTools:
+       ```js
+       ShopScoutRibbon.contextualTabs.defineTabGroup({
+         id: 'productTools',
+         label: 'Product Tools',
+         contextualColor: '#e91e63',    // pink like Office Picture Tools
+         tabs: [
+           { id: 'productFormat',  label: 'Format' },
+           { id: 'productLayout',  label: 'Layout' }
+         ]
+       });
+       ShopScoutRibbon.contextualTabs.showTabGroup('productTools');
+       ```
+       A pink band labeled "Product Tools" should appear at the top-right of the shell, with two "Format" and "Layout" tabs appearing to the right of the existing tabs. Their top border and active-underline should be the same pink.
+    3. **Hide it:** `ShopScoutRibbon.contextualTabs.hideTabGroup('productTools')` — band and tabs disappear; shell resumes normal top padding.
+    4. **State enum enforcement:** `ShopScoutRibbon.contextualTabs.setState('productTools', 'Bogus')` should `console.warn` a specific enum-validation message and NOT change state.
+    5. **Multiple groups:** register a second group with a different color; activate both. Two bands should stack at the top-right (Office convention), each labeling its own tabs.
+    6. **Events:** `document.querySelector('.ribbon-shell').addEventListener('ribbon:contextualtabgroup:show', e => console.log(e.detail))`. Trigger show/hide via the API — events fire correctly.
+    7. **No app-code pane management:** if you click one of the newly-rendered contextual tabs, nothing happens — that's expected. Pane rendering is app-code responsibility (comparison.js's existing tab-switch logic handles panes via `data-tab`). The tabs carry `data-tab="paneId"` if `paneId` was supplied at define time.
+    8. **`getActiveGroups()`:** returns the currently-Active groups as objects, useful for app code that wants to inspect context on its own schedule (rather than subscribing to events).
+  - **Notable follow-ups:**
+    * The band's `min-width: 120px` is a floor; if a group's label is longer, the band grows naturally. Office 365 desktop has a similar behavior. Verify long labels look reasonable.
+    * The band is positioned at `right: 0` — if we add multiple simultaneous contextual groups they stack right-to-left. If a future design needs left-to-right stacking, tweak the CSS in `ribbon.css` section 18.
+    * Group definitions with duplicate `id` overwrite the earlier one (Map semantics). Not currently warned about; add a duplicate-id warning if this becomes a footgun.
+    * The `defineTabGroup` reconciles the DOM synchronously. If registration happens during page init before DOMContentLoaded, the `apply()` on DOMReady will re-reconcile. Safe but slightly wasteful; could optimize with an idle callback.
+    * **Next commit (10/11):** SVG icon library. Author small-detail (16/20/24) and high-detail (32/40/48/64) variants for every ribbon action our merged Products tab uses.
