@@ -35,15 +35,19 @@
      - TenButtons
      - ElevenButtons
 
-   Tranche D landed this commit (3 mixed-family templates):
+   Tranche D landed in commit 6 (3 mixed-family templates):
      - ButtonGroups                       (variable button-family)
      - ButtonGroupsAndInputs              (2 inputs + up to 29 buttons)
      - BigButtonsAndSmallButtonsOrInputs  (big button + small buttons/inputs)
 
-   Remaining 4 templates land in commit 7:
-     Commit 7: OneFontControl, OneInRibbonGallery,
-               InRibbonGalleryAndBigButton,
-               InRibbonGalleryAndButtons-GalleryScalesFirst
+   Tranche E landed this commit (4 specialized templates):
+     - OneFontControl                                    (Fluent FontControl composite)
+     - OneInRibbonGallery                                (single inline gallery)
+     - InRibbonGalleryAndBigButton                       (gallery + big button)
+     - InRibbonGalleryAndButtons-GalleryScalesFirst      (gallery + buttons;
+                                                          gallery collapses first)
+
+   REGISTRY COMPLETE: 23/23 Microsoft SizeDefinition templates.
 
    Slot family constraints:
      'button'      — any button-family control (Button,
@@ -533,6 +537,50 @@
     ],
     flexibleSlots: { min: 0, max: 8, family: ['button', 'input'] },
     largeBigSlot: 0
+  });
+
+  /* ==============================================================
+     Tranche E registrations (commit 7) — specialized templates
+     ============================================================== */
+
+  /* OneFontControl — 1 FontControl composite, Large + Middle.
+     Per Microsoft's docs, FontControl "cannot appear inside a
+     custom template" — OneFontControl is the ONLY slot for it. */
+  register('OneFontControl', {
+    supportedSizes: ['Large', 'Middle'],
+    slots: [{ family: 'fontcontrol' }]
+  });
+
+  /* OneInRibbonGallery — 1 gallery, Large + Small. Middle drops
+     to Popup automatically. */
+  register('OneInRibbonGallery', {
+    supportedSizes: ['Large', 'Small'],
+    slots: [{ family: 'gallery' }]
+  });
+
+  /* InRibbonGalleryAndBigButton — 1 gallery + 1 button, Large + Small.
+     Gallery takes the horizontal space; button sits at Large size
+     alongside. */
+  register('InRibbonGalleryAndBigButton', {
+    supportedSizes: ['Large', 'Small'],
+    slots: [
+      { family: 'gallery' },
+      { family: 'button' }
+    ],
+    largeBigSlot: 1
+  });
+
+  /* InRibbonGalleryAndButtons-GalleryScalesFirst — 1 gallery
+     followed by variable button-family controls. Per Microsoft's
+     docs: "The gallery collapses to Popup representation in Medium
+     and Small group sizes." Our CSS handles this via
+     data-group-size scoped rules. */
+  register('InRibbonGalleryAndButtons-GalleryScalesFirst', {
+    supportedSizes: ['Large', 'Middle', 'Small'],
+    slots: [
+      { family: 'gallery' }
+    ],
+    flexibleSlots: { min: 0, max: 6, family: 'button' }
   });
 
   /* --- Public API ------------------------------------------ */

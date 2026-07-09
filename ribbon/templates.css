@@ -639,6 +639,263 @@
 
 
 /* ===============================================================
+   TRANCHE E (commit 7) — specialized templates
+   OneFontControl / OneInRibbonGallery / InRibbonGalleryAndBigButton /
+   InRibbonGalleryAndButtons-GalleryScalesFirst
+
+   Introduces Gallery + FontControl primitives.
+   =============================================================== */
+
+
+/* ===============================================================
+   InRibbonGallery primitive
+   Horizontal scrolling row of items with prev/next arrows and a
+   "more" launcher that opens a full popup gallery. Used inline in
+   Word / Excel Style galleries.
+   =============================================================== */
+.rb-office-ribbon .rb-in-ribbon-gallery {
+  display: inline-flex;
+  align-items: stretch;
+  gap: 0;
+  height: var(--rbn-btn-large-h);           /* Matches Large button height */
+  padding: 2px 0;
+  border: 1px solid var(--rbn-group-sep-color);
+  border-radius: 3px;
+  background: #fff;
+  overflow: hidden;
+}
+
+.rb-office-ribbon .rb-in-ribbon-gallery-track {
+  display: inline-flex;
+  align-items: stretch;
+  overflow: hidden;
+  flex: 1;
+  min-width: 120px;
+}
+
+.rb-office-ribbon .rb-in-ribbon-gallery-item {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 44px;
+  padding: 2px 6px;
+  border: 1px solid transparent;
+  border-radius: 2px;
+  background: transparent;
+  cursor: pointer;
+  font-size: 11px;
+}
+
+.rb-office-ribbon .rb-in-ribbon-gallery-item:hover {
+  background: var(--rbn-hover-bg);
+  border-color: var(--rbn-hover-border);
+}
+
+.rb-office-ribbon .rb-in-ribbon-gallery-nav {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: stretch;
+  justify-content: space-between;
+  border-left: 1px solid var(--rbn-group-sep-color);
+  background: var(--paper-2, #f4f6f9);
+}
+
+.rb-office-ribbon .rb-in-ribbon-gallery-nav > button {
+  width: 16px;
+  height: 20px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--ink-3, #5a6470);
+  cursor: pointer;
+  font-size: 10px;
+  line-height: 1;
+}
+
+.rb-office-ribbon .rb-in-ribbon-gallery-nav > button:hover {
+  background: var(--rbn-hover-bg);
+  color: var(--ink, #0f1419);
+}
+
+
+/* ===============================================================
+   FontControl primitive
+   Composite of: font-family combo + font-size spinner + bold /
+   italic / underline toggle buttons. Only appears inside the
+   OneFontControl template per Microsoft's schema.
+   =============================================================== */
+.rb-office-ribbon .rb-font-control {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 0;
+}
+
+.rb-office-ribbon .rb-font-control-family {
+  min-width: 140px;
+  height: var(--rbn-btn-middle-h);
+}
+
+.rb-office-ribbon .rb-font-control-size {
+  min-width: 48px;
+  height: var(--rbn-btn-middle-h);
+}
+
+.rb-office-ribbon .rb-font-control-effects {
+  display: inline-flex;
+  align-items: stretch;
+  gap: 0;
+  border: 1px solid var(--rbn-group-sep-color);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.rb-office-ribbon .rb-font-control-effects > button {
+  width: 22px;
+  height: var(--rbn-btn-middle-h);
+  padding: 0;
+  border: 0;
+  border-right: 1px solid var(--rbn-group-sep-color);
+  background: transparent;
+  color: var(--ink, #0f1419);
+  cursor: pointer;
+  font-family: "Times New Roman", serif;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.rb-office-ribbon .rb-font-control-effects > button:last-child {
+  border-right: 0;
+}
+
+.rb-office-ribbon .rb-font-control-effects > button:hover {
+  background: var(--rbn-hover-bg);
+}
+
+.rb-office-ribbon .rb-font-control-effects > button[aria-pressed="true"] {
+  background: var(--rbn-pressed-bg);
+}
+
+
+/* ===============================================================
+   OneFontControl — 1 FontControl only, Large + Middle
+   =============================================================== */
+.rb-office-ribbon .rb-group[data-size-definition="OneFontControl"] > .rb-group-content {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 4px;
+}
+
+
+/* ===============================================================
+   OneInRibbonGallery — 1 gallery, Large + Small
+   Small mode: gallery renders as a single "gallery" dropdown button
+   (Popup representation per Microsoft).
+   =============================================================== */
+.rb-office-ribbon .rb-group[data-size-definition="OneInRibbonGallery"][data-group-size="large"] > .rb-group-content {
+  display: flex;
+  align-items: stretch;
+  min-width: 220px;
+}
+
+.rb-office-ribbon .rb-group[data-size-definition="OneInRibbonGallery"][data-group-size="large"] > .rb-group-content > .rb-in-ribbon-gallery {
+  flex: 1;
+}
+
+/* Small mode collapses the gallery to a dropdown button */
+.rb-office-ribbon .rb-group[data-size-definition="OneInRibbonGallery"][data-group-size="small"] > .rb-group-content > .rb-in-ribbon-gallery {
+  width: var(--rbn-btn-small-w);
+  min-width: var(--rbn-btn-small-w);
+  height: var(--rbn-btn-small-h);
+  padding: 0;
+}
+
+.rb-office-ribbon .rb-group[data-size-definition="OneInRibbonGallery"][data-group-size="small"] > .rb-group-content > .rb-in-ribbon-gallery > .rb-in-ribbon-gallery-track,
+.rb-office-ribbon .rb-group[data-size-definition="OneInRibbonGallery"][data-group-size="small"] > .rb-group-content > .rb-in-ribbon-gallery > .rb-in-ribbon-gallery-nav {
+  display: none;
+}
+
+
+/* ===============================================================
+   InRibbonGalleryAndBigButton — 1 gallery + 1 big button
+   Large + Small. Large mode: gallery takes remaining space, button
+   at Large size on the right.
+   =============================================================== */
+.rb-office-ribbon .rb-group[data-size-definition="InRibbonGalleryAndBigButton"][data-group-size="large"] > .rb-group-content {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  column-gap: 4px;
+  align-items: stretch;
+  min-width: 260px;
+}
+
+.rb-office-ribbon .rb-group[data-size-definition="InRibbonGalleryAndBigButton"][data-group-size="large"] > .rb-group-content > .rb-in-ribbon-gallery {
+  grid-column: 1;
+}
+
+.rb-office-ribbon .rb-group[data-size-definition="InRibbonGalleryAndBigButton"][data-group-size="large"] > .rb-group-content > :nth-child(2) {
+  grid-column: 2;
+  height: var(--rbn-btn-large-h);
+  min-width: var(--rbn-btn-large-min-w);
+  max-width: var(--rbn-btn-large-max-w);
+  padding: var(--rbn-btn-large-pad);
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  text-align: center;
+}
+
+.rb-office-ribbon .rb-group[data-size-definition="InRibbonGalleryAndBigButton"][data-group-size="small"] > .rb-group-content {
+  display: flex;
+  gap: 1px;
+}
+
+
+/* ===============================================================
+   InRibbonGalleryAndButtons-GalleryScalesFirst — 1 gallery + N buttons
+   Large + Middle + Small. Per Microsoft: "The gallery collapses to
+   Popup representation in Medium and Small group sizes."
+   =============================================================== */
+.rb-office-ribbon .rb-group[data-size-definition="InRibbonGalleryAndButtons-GalleryScalesFirst"][data-group-size="large"] > .rb-group-content {
+  display: flex;
+  align-items: stretch;
+  gap: 4px;
+  min-width: 260px;
+}
+
+.rb-office-ribbon .rb-group[data-size-definition="InRibbonGalleryAndButtons-GalleryScalesFirst"][data-group-size="large"] > .rb-group-content > .rb-in-ribbon-gallery {
+  flex: 1;
+  min-width: 120px;
+}
+
+/* Middle + Small: gallery collapses to a dropdown button, buttons
+   stack in a 3-row grid alongside. */
+.rb-office-ribbon .rb-group[data-size-definition="InRibbonGalleryAndButtons-GalleryScalesFirst"][data-group-size="middle"] > .rb-group-content,
+.rb-office-ribbon .rb-group[data-size-definition="InRibbonGalleryAndButtons-GalleryScalesFirst"][data-group-size="small"] > .rb-group-content {
+  display: flex;
+  align-items: stretch;
+  gap: 4px;
+}
+
+.rb-office-ribbon .rb-group[data-size-definition="InRibbonGalleryAndButtons-GalleryScalesFirst"][data-group-size="middle"] > .rb-group-content > .rb-in-ribbon-gallery,
+.rb-office-ribbon .rb-group[data-size-definition="InRibbonGalleryAndButtons-GalleryScalesFirst"][data-group-size="small"] > .rb-group-content > .rb-in-ribbon-gallery {
+  /* Collapse to a single dropdown button */
+  width: var(--rbn-btn-small-w);
+  min-width: var(--rbn-btn-small-w);
+  height: var(--rbn-btn-small-h);
+  padding: 0;
+}
+
+.rb-office-ribbon .rb-group[data-size-definition="InRibbonGalleryAndButtons-GalleryScalesFirst"][data-group-size="middle"] > .rb-group-content > .rb-in-ribbon-gallery > .rb-in-ribbon-gallery-track,
+.rb-office-ribbon .rb-group[data-size-definition="InRibbonGalleryAndButtons-GalleryScalesFirst"][data-group-size="middle"] > .rb-group-content > .rb-in-ribbon-gallery > .rb-in-ribbon-gallery-nav,
+.rb-office-ribbon .rb-group[data-size-definition="InRibbonGalleryAndButtons-GalleryScalesFirst"][data-group-size="small"] > .rb-group-content > .rb-in-ribbon-gallery > .rb-in-ribbon-gallery-track,
+.rb-office-ribbon .rb-group[data-size-definition="InRibbonGalleryAndButtons-GalleryScalesFirst"][data-group-size="small"] > .rb-group-content > .rb-in-ribbon-gallery > .rb-in-ribbon-gallery-nav {
+  display: none;
+}
+
+
+/* ===============================================================
    Validation error marker
    When ShopScoutRibbon.templates.validate returns false and the
    caller wants a visual flag, adding data-template-invalid="true"

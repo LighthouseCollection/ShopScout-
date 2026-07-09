@@ -3732,3 +3732,46 @@ This file is the shared record for Claude and Codex. Append an entry for every m
   - **Notable follow-ups:**
     * When commit 11 migrates the merged Products tab HTML to the declarative API, we'll add `data-group-size` to every group and the Fluent-strict layouts will kick in properly. That's when the ribbon will genuinely take on the Office 365 look everywhere — not before.
     * **Next commit (7/11):** Tranche E specialized templates. Continues the template registry work; no visual regression risk on existing HTML.
+
+## 2026-07-09 - Claude Office 365 ribbon commit 7: SizeDefinition templates tranche E + Gallery/FontControl primitives — REGISTRY COMPLETE (23/23)
+
+- Agent: Claude
+- Branch: grid-rebuild-codex
+- Commit: This commit (7/11).
+- Status: Implemented. All 44 tests pass.
+- Summary:
+  - **4 final templates registered — brings the registry to Microsoft's complete 23-template set:**
+    * `OneFontControl` (Large + Middle) — the special FontControl composite. Microsoft's docs explicitly say FontControl "cannot appear inside a custom template" — this template is the only permitted slot for it.
+    * `OneInRibbonGallery` (Large + Small) — a single inline gallery. Middle mode is intentionally unsupported by Microsoft's spec (gallery either fits inline at Large or collapses to a dropdown at Small).
+    * `InRibbonGalleryAndBigButton` (Large + Small) — gallery + one big button. `largeBigSlot: 1` marks slot 1 as the prominent one.
+    * `InRibbonGalleryAndButtons-GalleryScalesFirst` (Large + Middle + Small) — gallery + up to 6 button-family controls. Per Microsoft: *"The gallery collapses to Popup representation in Medium and Small group sizes"* — our CSS enforces this by shrinking `.rb-in-ribbon-gallery` to a 22×22 dropdown button at those sizes.
+  - **New CSS primitives in templates.css:**
+    * `.rb-in-ribbon-gallery` — horizontal scrolling item strip with prev/next arrows and a "more" launcher. Height matches Large button (68px) so it aligns visually inside a Large group.
+    * `.rb-in-ribbon-gallery-track` — the scrolling area with items.
+    * `.rb-in-ribbon-gallery-item` — individual gallery item (44px min-width, hover state).
+    * `.rb-in-ribbon-gallery-nav` — vertical column of prev/next arrows on the right.
+    * `.rb-font-control` — composite container for font-family + font-size + effect buttons.
+    * `.rb-font-control-family` — 140px+ combo for font family.
+    * `.rb-font-control-size` — 48px+ spinner for font size.
+    * `.rb-font-control-effects` — bordered cluster of bold/italic/underline toggle buttons (22×22 each), with the classic serif "B/I/U" glyph rendering.
+- Files touched:
+  - `ribbon/templates.js` — 4 new `register()` calls; header comment updated to reflect REGISTRY COMPLETE.
+  - `ribbon/templates.css` — Gallery + FontControl primitives + 4 template sections.
+  - `AGENT_CHANGELOG.md` — this entry.
+- Validation run:
+  - `npm test` -> all 44 pass.
+  - `npm run build` -> Chrome / Edge / Firefox dists rebuilt.
+- Review / handoff:
+  - Reviewer: Codex.
+  - **What to check:**
+    1. **Registry count:** `ShopScoutRibbon.templates.list().length` should now return **23**. That's every SizeDefinition template Microsoft's Windows Ribbon Framework publishes.
+    2. **FontControl exclusivity:** `ShopScoutRibbon.templates.get('OneFontControl').slots[0]` should be `{ family: 'fontcontrol' }`. No other template's slot list contains the `'fontcontrol'` family — verify by iterating over `ShopScoutRibbon.templates.all()`.
+    3. **Gallery slot family:** `slotAccepts({ family: 'gallery' }, 'InRibbonGallery')` should return `true`; also for `'DropDownGallery'` and `'SplitButtonGallery'`; false for `'Button'`.
+    4. **Visual: OneInRibbonGallery** at Large — build a mock group with `<div class="rb-in-ribbon-gallery"><div class="rb-in-ribbon-gallery-track"><span class="rb-in-ribbon-gallery-item">Item 1</span>...</div><div class="rb-in-ribbon-gallery-nav"><button>▲</button><button>▼</button></div></div>` and set `data-size-definition="OneInRibbonGallery" data-group-size="large"`. Should render as a 68px-tall horizontal strip with items on the left and up/down nav arrows on the right.
+    5. **Visual: InRibbonGalleryAndButtons-GalleryScalesFirst** — set to `data-group-size="middle"` or `"small"`; the gallery should shrink to a 22×22 dropdown button (Microsoft's Popup representation) while the trailing buttons layout in a 3-row grid alongside.
+    6. **Visual: FontControl composite** — build a mock with `<div class="rb-font-control"><select class="rb-font-control-family"><option>Segoe UI</option></select><input class="rb-font-control-size" value="12"><div class="rb-font-control-effects"><button>B</button><button>I</button><button>U</button></div></div>` in a `data-size-definition="OneFontControl"` group. Should render as a horizontal row: family combo → size spinner → bordered B/I/U cluster.
+  - **Notable follow-ups:**
+    * `.rb-in-ribbon-gallery` currently has no keyboard navigation. Arrow keys should scroll the item track; Escape should close any popup. Wire in commit 8 (ScalingPolicy engine) or a dedicated a11y follow-up.
+    * `.rb-font-control-effects > button` uses Times New Roman for the B/I/U glyph — this is the classic Office rendering. If we ever theme this differently we may want SVG icons instead.
+    * **All 23 templates are now registered.** The next visible-behavior work is commit 8 (ScalingPolicy engine) — the piece that walks the `<Scale>` list and applies each group's size mode as the ribbon body narrows. Every template already handles Middle/Small/Popup layouts; commit 8 just wires the ResizeObserver logic that decides WHEN to apply them.
+    * **Next commit (8/11):** ScalingPolicy engine — declarative `<Scale>` list per Tab, walker that finds the first fitting layout, Popup collapse rendering, 300px minimum-width fallback.
