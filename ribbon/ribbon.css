@@ -175,9 +175,8 @@
    padding), no visible separators. Fluent.Ribbon adds them but that
    pattern looks dated in the modern Office 365 light-strip look. */
 
-/* Office 365 tab — symmetric vertical spacing, box-sizing: border-box
-   so the declared height is what you see. Text vertically centered
-   via flex; 2px accent underline sits flush at the bottom. */
+/* Clean tab — no active-state underline, no background box.
+   Active state is indicated purely by text color + weight brightening. */
 .rb-office-ribbon .ribbon-tab {
   display: inline-flex;
   align-items: center;
@@ -185,31 +184,26 @@
   box-sizing: border-box;
   height: 34px;
   padding: 0 14px;
-  border: 0;
-  border-bottom: 2px solid transparent;
-  margin-bottom: 0;
-  background: transparent !important;    /* override any ambient box */
-  color: var(--menu-fg, rgba(255, 255, 255, 0.75));
+  border: 0 !important;                        /* kill any ambient underline/overline */
+  margin: 0;
+  background: transparent !important;          /* kill any ambient box */
+  color: var(--menu-fg, rgba(255, 255, 255, 0.72));
   font-size: 14px;
-  font-weight: 600;
+  font-weight: 500;
   letter-spacing: 0;
   line-height: 1;
   cursor: pointer;
   user-select: none;
-  transition: color 90ms ease, border-color 120ms ease;
+  transition: color 90ms ease;
 }
 
-/* Hover: NO background box — just brighten the text. Matches Office
-   365 modern behavior (no boxy hover on the ribbon tab strip). */
 .rb-office-ribbon .ribbon-tab:hover {
   color: var(--menu-fg-bright, #fff);
 }
 
-/* Active: 2px accent underline flush at bottom, brighter text, no
-   background box. */
 .rb-office-ribbon .ribbon-tab.active {
   color: var(--menu-fg-bright, #fff);
-  border-bottom-color: var(--rbn-focus-outline);
+  font-weight: 700;
 }
 
 .rb-office-ribbon .ribbon-tab:focus-visible {
@@ -441,12 +435,18 @@
   text-align: left;
 }
 
-/* Middle-mode groups stack their content vertically (3 rows of Middle
-   buttons is the classic Office pattern for FiveButtons/SixButtons/etc.) */
-.rb-office-ribbon .rb-group[data-group-size="middle"] .rb-group-content {
-  flex-direction: column;
-  align-items: stretch;
-  gap: 1px;
+/* Middle-mode content — 3-row grid with column-flow so a many-item
+   group (e.g. Organize with 8 controls) flows into 3+3+2 columns
+   instead of stretching to 8 vertical rows. This matches the Fluent
+   RibbonGroupBox behavior of packing Middle-sized controls into
+   3-row columns. */
+.rb-office-ribbon .rb-group[data-group-size="middle"] > .rb-group-content {
+  display: grid;
+  grid-template-rows: repeat(3, var(--rbn-btn-middle-h));
+  grid-auto-flow: column;
+  grid-auto-columns: max-content;
+  gap: 1px 6px;
+  align-items: center;
 }
 
 /* --- Small group: 22×22 icon-only buttons -------------------- */
