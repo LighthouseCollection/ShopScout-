@@ -82,7 +82,7 @@
   font-weight: 600;
   letter-spacing: 0.03em;
   text-transform: none;
-  padding: 10px 12px;
+  padding: 10px 6px;
   border-right: 1px solid #eaeef2;
 }
 
@@ -100,7 +100,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 8px 12px;
+  padding: 8px 6px;
   border-right: 1px solid #eaeef2;
   color: var(--ink, #0f1419);
   line-height: 1.4;

@@ -250,6 +250,27 @@
     });
   }
 
+  /* Auto-size every column to fit MAX(header text, widest cell content).
+     v33 API is autoSizeAllColumns(skipHeader); pass false so header
+     width is honored — a column whose header is wider than its values
+     grows to the header width. Old API name (autoSizeColumns) is used
+     as a fallback in case the runtime is a slightly older bundle. */
+  function autoSizeEverything(api) {
+    if (!api) return;
+    try {
+      if (typeof api.autoSizeAllColumns === 'function') {
+        api.autoSizeAllColumns(false);
+        return;
+      }
+      if (typeof api.autoSizeColumns === 'function' && typeof api.getColumnState === 'function') {
+        const ids = api.getColumnState().map(c => c.colId).filter(Boolean);
+        api.autoSizeColumns(ids, false);
+      }
+    } catch (err) {
+      console.warn('AG Grid auto-size failed', err);
+    }
+  }
+
   /* --- Main factory --------------------------------------------- */
   function create(container, projection, options) {
     const ag = root.agGrid;
@@ -301,18 +322,15 @@
         flex: 0
       },
       onGridReady(evt) {
-        /* Size each column to its rendered content. Runs after the
-           initial render so measurements are accurate. */
-        setTimeout(() => {
-          const allIds = evt.api.getColumnState().map(c => c.colId);
-          evt.api.autoSizeColumns(allIds, false);
-        }, 0);
+        /* Size each column to fit MAX(header, widest cell content).
+           skipHeader=false so the header text is included in the
+           measurement — a column whose header is wider than its
+           values grows to the header width. Runs after the initial
+           render so measurements are accurate. */
+        setTimeout(() => autoSizeEverything(evt.api), 0);
       },
       onFirstDataRendered(evt) {
-        setTimeout(() => {
-          const allIds = evt.api.getColumnState().map(c => c.colId);
-          evt.api.autoSizeColumns(allIds, false);
-        }, 0);
+        setTimeout(() => autoSizeEverything(evt.api), 0);
       },
       onSortChanged(evt) {
         if (typeof opts.onSortChange !== 'function') return;
