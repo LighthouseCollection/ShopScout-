@@ -3935,3 +3935,63 @@ This file is the shared record for Claude and Codex. Append an entry for every m
     * Group definitions with duplicate `id` overwrite the earlier one (Map semantics). Not currently warned about; add a duplicate-id warning if this becomes a footgun.
     * The `defineTabGroup` reconciles the DOM synchronously. If registration happens during page init before DOMContentLoaded, the `apply()` on DOMReady will re-reconcile. Safe but slightly wasteful; could optimize with an idle callback.
     * **Next commit (10/11):** SVG icon library. Author small-detail (16/20/24) and high-detail (32/40/48/64) variants for every ribbon action our merged Products tab uses.
+
+## 2026-07-09 - Claude Office 365 ribbon commit 10: SVG icon library with size variants
+
+- Agent: Claude
+- Branch: grid-rebuild-codex
+- Commit: This commit (10/11).
+- Status: Implemented. All 44 tests pass.
+- Summary:
+  - **New file `ribbon/icons.js` (~340 lines)** — SVG icon registry with two authored variants per icon:
+    * `sm` — 16×16 viewBox, simplified paths, thicker stroke for small-context legibility. Serves the Windows Ribbon Framework "small" image slot at all four DPI targets (16/20/24/32 rendered pixels).
+    * `lg` — 24×24 viewBox, richer detail, standard 1.6px stroke. Serves the "large" image slot at all four DPI targets (32/40/48/64 rendered pixels).
+  - **Two variants total, not eight.** Because SVG is resolution-independent, a single sm-variant SVG covers all four small DPI targets and a single lg-variant covers all four large targets. The differentiation is between "small-context simplification" and "large-context detail" — not per-DPI.
+  - **18 icons registered** covering every ribbon action in the merged Products tab (commit 1 HTML):
+    * List group: `new-list`, `rename`, `delete-list`
+    * Product Actions: `add-product`, `rescan`, `delete-item`
+    * Review & Rules: `duplicates`, `normalize-review`, `vertical-packs`, `user-rules`
+    * View: `mode-rows`, `mode-matrix`, `columns`
+    * Organize: `sort-asc`, `sort-desc`, `filter`, `group-by`, `reset`
+  - **All strokes use `currentColor`** so icons inherit the theme's text color (works in light, dark, and high-contrast).
+  - **Public API:**
+    * `ShopScoutRibbon.icons.get(name, size)` — returns SVG string. `size` is `'sm'` | `'lg'` (or `'small'` | anything else = lg default).
+    * `ShopScoutRibbon.icons.getElement(name, size)` — returns a live `SVGElement` DOM node.
+    * `ShopScoutRibbon.icons.register(name, { sm, lg })` — add a custom icon at runtime. Validates that both variants are present.
+    * `ShopScoutRibbon.icons.has(name)` — presence check.
+    * `ShopScoutRibbon.icons.list()` — array of registered names.
+    * `ShopScoutRibbon.icons.all()` — snapshot of the whole registry.
+    * `ShopScoutRibbon.icons.version` — `'1.0.0-commit-10'`.
+  - **Design signature** — Fluent-style outlined icons with rounded stroke joints (`stroke-linecap="round" stroke-linejoin="round"`). Matches the visual language of modern Office 365 desktop app icons.
+- Files touched:
+  - `ribbon/icons.js` (new)
+  - `comparison.html` — one new `<script>` tag after `contextualTabs.js`.
+  - `AGENT_CHANGELOG.md` — this entry.
+- Validation run:
+  - `npm test` -> all 44 pass.
+  - `npm run build` -> Chrome / Edge / Firefox dists rebuilt.
+- Review / handoff:
+  - Reviewer: Codex.
+  - **What to check:**
+    1. **API surface:** `ShopScoutRibbon.icons.version` -> `'1.0.0-commit-10'`. `ShopScoutRibbon.icons.list().length` -> `18`.
+    2. **Registry contents:** `ShopScoutRibbon.icons.list()` should return `['new-list', 'rename', 'delete-list', 'add-product', 'rescan', 'delete-item', 'duplicates', 'normalize-review', 'vertical-packs', 'user-rules', 'mode-rows', 'mode-matrix', 'columns', 'sort-asc', 'sort-desc', 'filter', 'group-by', 'reset']`.
+    3. **Visual sanity check** — in DevTools console:
+       ```js
+       ['rescan', 'add-product', 'delete-item', 'duplicates', 'vertical-packs'].forEach(name => {
+         document.body.insertAdjacentHTML('afterbegin',
+           `<div style="display:inline-block; padding:8px; border:1px solid #ccc; margin:4px; color:#0b3d4f">`
+           + `<div style="font-size:11px; margin-bottom:4px">${name}</div>`
+           + `<div style="width:32px; height:32px">${ShopScoutRibbon.icons.get(name, 'lg')}</div>`
+           + `<div style="width:16px; height:16px">${ShopScoutRibbon.icons.get(name, 'sm')}</div>`
+           + `</div>`);
+       });
+       ```
+       Each icon should render at both sizes with the theme color.
+    4. **Unknown icon fallback:** `ShopScoutRibbon.icons.get('bogus')` should `console.warn` and return an empty string (not throw).
+    5. **Custom registration:** `ShopScoutRibbon.icons.register('test', { sm: '<svg viewBox="0 0 16 16"><circle cx="8" cy="8" r="4" fill="currentColor"/></svg>', lg: '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="6" fill="currentColor"/></svg>' })` — should register and appear in `list()`. Passing incomplete spec (missing `sm` or `lg`) should `console.warn` and return null.
+    6. **`getElement` returns a live SVG node** — verify with `ShopScoutRibbon.icons.getElement('rescan', 'lg').tagName === 'svg'`.
+  - **Notable follow-ups:**
+    * **Additional icons for other tabs.** The 18 icons here cover the Products tab. File / Analyze / Search / About tabs still use inlined SVG. When we migrate those tabs to the declarative API, register their icons here too (`open`, `import-list`, `export`, `save-as`, etc.).
+    * **The Fluent design system publishes ~1500 icons.** If we ever want a broader library, we could bundle the [Fluent UI System Icons](https://github.com/microsoft/fluentui-system-icons) SVG set. Not needed for the Products tab.
+    * **Icon a11y** — SVGs carry `aria-hidden="true"` so screen readers skip them. Button labels carry the semantic meaning. If any icon ever needs to be the sole affordance (icon-only button with no visible label), the button should carry `aria-label="Action name"`.
+    * **Next commit (11/11):** Migrate the merged Products tab HTML to the declarative Command / Control API. Replace inlined `<svg>` blocks with `${ShopScoutRibbon.icons.get(name, 'lg')}`, apply `data-size-definition` per group, register a ScalingPolicy so the ribbon adapts to viewport width, and delete the corresponding static HTML. This is the commit that makes the full Office 365 ribbon behavior actually visible in ShopScout.

@@ -806,6 +806,11 @@
      that appear only when NoAvailable/Available/Active state
      matches. Loaded last since it depends on the tab-strip DOM. -->
 <script src="ribbon/contextualTabs.js"></script>
+<!-- SVG icon library. Two variants per icon (sm=16 viewBox / lg=24
+     viewBox). Every ribbon action in the merged Products tab is
+     registered here; commit 11's HTML migration references icons
+     via ShopScoutRibbon.icons.get() instead of inlined SVG blocks. -->
+<script src="ribbon/icons.js"></script>
 
 <script src="ai-providers.js"></script>
 <script src="settings.js"></script>
