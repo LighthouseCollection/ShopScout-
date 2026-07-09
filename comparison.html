@@ -14,6 +14,7 @@
        so the Office typography/sizing/label rules win over the earlier
        custom ribbon look. See ribbon/ribbon.css for the full commit-log. -->
   <link rel="stylesheet" href="ribbon/ribbon.css">
+  <link rel="stylesheet" href="ribbon/templates.css">
   <link rel="stylesheet" href="grid-rebuild-codex/grid.css">
 
 </head>
@@ -792,6 +793,12 @@
      into the .rb-office-ribbon class so the Office typography +
      sizing rules from ribbon/ribbon.css take effect. -->
 <script src="ribbon/ribbon.js"></script>
+<!-- SizeDefinition template registry. Loaded AFTER ribbon.js so the
+     ShopScoutRibbon.isButtonFamily helpers are available for slot
+     family checks. Tranche A: OneButton, TwoButtons, ThreeButtons,
+     ThreeButtons-OneBigAndTwoSmall, ThreeButtonsAndOneCheckBox,
+     FourButtons, FiveButtons. -->
+<script src="ribbon/templates.js"></script>
 
 <script src="ai-providers.js"></script>
 <script src="settings.js"></script>

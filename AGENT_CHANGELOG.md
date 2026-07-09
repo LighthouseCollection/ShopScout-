@@ -3470,3 +3470,72 @@ This file is the shared record for Claude and Codex. Append an entry for every m
   - **CSS cascade:** the new `.rb-office-ribbon` rules load AFTER `comparison.css`, and every rule is scoped under `.rb-office-ribbon`. If comparison.css has a more-specific selector that overrides one of our custom-property-driven values, we'll see it — flag any regression.
   - **Testing:** consider adding a lightweight `tests/ribbon.test.js` that exercises `defineCommand`/`control`/`setMode`/`familyOf` — the framework is public API surface, deserves coverage.
   - **Next commit (3/11):** SizeDefinition templates tranche A — `OneButton`, `TwoButtons`, `ThreeButtons`, `ThreeButtons-OneBigAndTwoSmall`, `ThreeButtonsAndOneCheckBox`, `FourButtons`, `FiveButtons`. Each template validates control count/order/family per Microsoft's strict contract (validation error terminates compilation in the Win32 framework; we'll `console.error` loudly and refuse to render). Each has Large/Middle/Small GroupSizeDefinitions expressed as CSS layout modes triggered by `data-size-definition="TwoButtons"` etc. on `.rb-group`.
+
+## 2026-07-09 - Claude Office 365 ribbon commit 3: SizeDefinition templates tranche A
+
+- Agent: Claude
+- Branch: grid-rebuild-codex
+- Commit: This commit (3/11).
+- Status: Implemented. All 44 tests pass. Visual acceptance pending.
+- Summary:
+  - **New file: `ribbon/templates.js` (~220 lines)** — SizeDefinition template registry with strict validation. Registers the 7 tranche A templates:
+    * `OneButton` (Large only) — 1 button-family control
+    * `TwoButtons` (Large + Middle) — 2 button-family
+    * `ThreeButtons` (Large + Middle) — 3 button-family
+    * `ThreeButtons-OneBigAndTwoSmall` (Large + Middle + Small) — 3 button-family; in Large mode slot 0 renders at Large button size on the left, slots 1-2 stack as Middle to the right (via `largeBigSlot: 0` hint + CSS grid layout)
+    * `ThreeButtonsAndOneCheckBox` (Large + Middle) — 3 buttons + 1 `CheckBox` at the end (standalone family per Microsoft's schema)
+    * `FourButtons` (Large + Middle + Small) — 4 button-family
+    * `FiveButtons` (Large + Middle + Small) — 5 button-family; Middle mode packs into 3-row columns (3+2 layout)
+  - **Public API:**
+    * `ShopScoutRibbon.templates.register(name, spec)` — custom template registration (open to app code)
+    * `ShopScoutRibbon.templates.get(name)` — read a template spec
+    * `ShopScoutRibbon.templates.list()` — array of all registered names
+    * `ShopScoutRibbon.templates.validate(groupEl, name)` — strict count/order/family check; returns `boolean` and `console.error`s the specific mismatch on failure
+    * `ShopScoutRibbon.templates.apply(groupEl, name, {size})` — sets `data-size-definition` + `data-group-size` attributes and runs validation
+    * `ShopScoutRibbon.templates.slotAccepts(slot, controlType)` — internal helper exposed for tests
+    * `ShopScoutRibbon.templates.all()` — snapshot dump of the whole registry
+  - **Slot family constraints** map to Microsoft's spec:
+    * `family: 'button'` — any Button/ToggleButton/DropDownButton/SplitButton/DropDownGallery/SplitButtonGallery/DropDownColorPicker
+    * `family: 'input'` — ComboBox/Spinner/EditBox
+    * `family: 'gallery'` — the three gallery types
+    * `family: 'CheckBox'` — literally a CheckBox
+    * `family: 'fontcontrol'` — the special FontControl composite (Win32 spec forbids it inside custom templates; we honor the constraint by refusing to slot it anywhere except OneFontControl)
+    * `type: 'ExactName'` — exact type match
+  - **Auto-validation on DOMContentLoaded:** every `.rb-group[data-size-definition]` in the DOM is validated at load. Unknown template names are skipped silently (they might be app-registered custom templates that haven't loaded yet). Known template names with mismatched controls produce a `console.error` naming the specific slot and the family mismatch.
+  - **New file: `ribbon/templates.css` (~180 lines)** — per-template CSS layouts. Selector pattern is `.rb-office-ribbon .rb-group[data-size-definition="NAME"][data-group-size="MODE"]`. Only templates where the default `data-group-size` CSS is wrong get an override; simpler templates fall through to the default.
+    * `OneButton`: centers the single button
+    * `TwoButtons`/`ThreeButtons`: row in Large, column in Middle (uses default flex)
+    * `ThreeButtons-OneBigAndTwoSmall` Large: CSS grid with slot 0 spanning 2 rows in column 1 at Large-button size; slots 1-2 in column 2 at Middle-button size (icon-left, single-line label, left-aligned) — matches Fluent's rendering exactly
+    * `ThreeButtonsAndOneCheckBox`: 3-column grid with CheckBox spanning all 3 columns in row 2
+    * `FourButtons` Middle: 4×22 vertical stack (fits within content-h 100)
+    * `FiveButtons` Middle: 3-row grid, `grid-auto-flow: column`, so 5 buttons flow into 3+2 columns
+  - **Validation error visual marker:** adding `data-template-invalid="true"` to a group draws a red dashed 2px outline and appends a ⚠ to the group label. This is opt-in — callers who care about validation UI can set the attribute after `validate()` returns false. Auto-validation on DOMContentLoaded logs to console but does not set the marker (avoiding UI noise for the common "template not applied yet" case).
+  - **HTML wiring** — `comparison.html` loads `templates.css` after `ribbon.css` and `templates.js` after `ribbon.js`. Load order matters: `templates.js` uses `ShopScoutRibbon.isButtonFamily` / `.isInputFamily` from commit 2's `ribbon.js`, so `ribbon.js` must load first.
+  - **No HTML markup changes on existing groups** — no `.rb-group` in the merged Products tab yet declares `data-size-definition`. Auto-validation runs but finds no matches, so no logging. Migration to declarative templates lands in commit 11.
+- Files touched:
+  - `ribbon/templates.js` (new, ~220 lines)
+  - `ribbon/templates.css` (new, ~180 lines)
+  - `comparison.html` — 2 new tag additions (link + script)
+  - `AGENT_CHANGELOG.md` — this entry.
+- Validation run:
+  - `npm test` -> **all 44 test files pass** (no regressions).
+  - `npm run build` -> Chrome / Edge / Firefox dists rebuilt.
+- Review / handoff:
+  - Reviewer: Codex.
+  - **What to check:**
+    1. **Registry contents:** in DevTools console, run `ShopScoutRibbon.templates.list()`. Should return `['OneButton', 'TwoButtons', 'ThreeButtons', 'ThreeButtons-OneBigAndTwoSmall', 'ThreeButtonsAndOneCheckBox', 'FourButtons', 'FiveButtons']`.
+    2. **Template inspection:** `ShopScoutRibbon.templates.get('ThreeButtons-OneBigAndTwoSmall')` should return the spec with `largeBigSlot: 0` and 3 button-family slots.
+    3. **Validation happy path:** Manual test — create a mock group `<div class="rb-group" data-size-definition="TwoButtons"><div class="rb-group-content"><button class="rb-btn-lg" data-control-type="Button"></button><button class="rb-btn-lg" data-control-type="Button"></button></div><div class="rb-group-label">Test</div></div>`, then call `ShopScoutRibbon.templates.validate(el, 'TwoButtons')` — should return `true`.
+    4. **Validation failure path:** Same group but with 3 buttons — should return `false` and `console.error` the count mismatch.
+    5. **Slot family failure:** Add a `<select>` (input family) as slot 0 to a `TwoButtons` — should `console.error("slot 0 expected button-family, got 'ComboBox'")`.
+    6. **CheckBox slot:** `ThreeButtonsAndOneCheckBox` should accept a `CheckBox` in slot 3; refuse a plain button; refuse a ComboBox.
+    7. **Auto-validation:** the merged Products tab has no `data-size-definition` on any group yet — DOMContentLoaded should log nothing to console. Verify by opening the console and reloading the page. Once templates are applied in commit 11, any mismatch will surface here.
+    8. **CSS layout — ThreeButtons-OneBigAndTwoSmall Large mode:** add the attribute temporarily to any 3-button group. Slot 0 should render as a full 68px Large button on the left with a 32px icon; slots 1-2 should stack as compact 22px Middle rows to the right with 16px icons and left-aligned single-line labels.
+    9. **CSS layout — FiveButtons Middle mode:** with 5 buttons and `data-size-definition="FiveButtons" data-group-size="middle"`, buttons should flow into 3+2 columns.
+    10. **Template registration for custom templates:** app code should be able to call `ShopScoutRibbon.templates.register('MyCustom', {supportedSizes:['Large'], slots:[{family:'button'}]})`. Verify it appears in `list()` afterwards.
+- Follow-ups or risks:
+  - **inferControlType is best-effort.** For legacy HTML that doesn't set `data-control-type`, the validator infers based on class names (`.rb-btn-lg` -> `Button`, `.rb-split` or `<details>` -> `SplitButton`, `.rb-select` -> `ComboBox`, etc.). Best practice going forward: always set `data-control-type` on controls the app expects to be validated.
+  - **DecorativeElement handling:** the validator filters out labels, mini-labels, and stack wrappers automatically. If a group has decorative elements that ALSO carry data-control-type or one of the button classes, they'll be counted. Add `data-decorative="true"` on any wrapper we want to explicitly exclude.
+  - **`.rb-stack` handling:** the New/Rename/Delete buttons in the merged Products tab's List group are wrapped in a `.rb-stack` container. Templates that host a stack need to either (a) treat the stack as a single "logical" slot, or (b) allow the stack's children as individual slots. Current validator treats `.rb-stack` as ancillary and doesn't traverse into it. This is fine for List because the group doesn't declare a template — but as we migrate the tab in commit 11, we may need `ButtonGroups` template semantics (commit 6) to properly express the stack.
+  - **No CSS layout for `ThreeButtonsAndOneCheckBox` Middle mode** was added — the default column-stacked CSS (`data-group-size="middle"`) will handle it, but visual result may look odd if the CheckBox stretches full-width. If reviewers see a rendering issue, add `.rb-group[data-size-definition="ThreeButtonsAndOneCheckBox"][data-group-size="middle"] > .rb-group-content > :nth-child(4) { justify-content: flex-start; padding: 2px 6px; }`.
+  - **Next commit (4/11):** Tranche B — `FiveOrSixButtons` (with `trailingOptional: true`), `SixButtons`, `SixButtons-TwoColumns`, `SevenButtons`. Same pattern as tranche A.

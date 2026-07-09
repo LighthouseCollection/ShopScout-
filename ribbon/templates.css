@@ -1,0 +1,220 @@
+/* =============================================================
+   ShopScout — SizeDefinition template layouts (tranche A)
+
+   Per-template CSS overrides. The default `data-group-size` CSS
+   in ribbon.css handles the common case; this file adds template-
+   specific layouts where the default is wrong.
+
+   Every layout below is derived from Fluent.Ribbon's rendering of
+   the equivalent template (Fluent uses `RibbonGroupBox.State`
+   Large/Middle/Small with the same button height constants).
+
+   Selector pattern:
+     .rb-office-ribbon .rb-group[data-size-definition="NAME"][data-group-size="MODE"] {...}
+   ============================================================= */
+
+
+/* ===============================================================
+   OneButton — 1 button-family, Large only
+   Centers the single button horizontally in the group.
+   =============================================================== */
+.rb-office-ribbon .rb-group[data-size-definition="OneButton"] > .rb-group-content {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+
+/* ===============================================================
+   TwoButtons — 2 button-family, Large + Middle
+   Large: side-by-side.  Middle: stacked column of 2.
+   =============================================================== */
+.rb-office-ribbon .rb-group[data-size-definition="TwoButtons"][data-group-size="large"] > .rb-group-content {
+  display: flex;
+  flex-direction: row;
+  align-items: stretch;
+  gap: 2px;
+}
+
+.rb-office-ribbon .rb-group[data-size-definition="TwoButtons"][data-group-size="middle"] > .rb-group-content {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 1px;
+}
+
+
+/* ===============================================================
+   ThreeButtons — 3 button-family, Large + Middle
+   =============================================================== */
+.rb-office-ribbon .rb-group[data-size-definition="ThreeButtons"][data-group-size="large"] > .rb-group-content {
+  display: flex;
+  flex-direction: row;
+  gap: 2px;
+}
+
+.rb-office-ribbon .rb-group[data-size-definition="ThreeButtons"][data-group-size="middle"] > .rb-group-content {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+
+/* ===============================================================
+   ThreeButtons-OneBigAndTwoSmall — Large + Middle + Small
+   Large mode: first slot renders at Large button size on the left,
+   remaining two stack as Middle to the right (2 rows).
+   Uses grid so slot 0 spans both rows.
+   =============================================================== */
+.rb-office-ribbon .rb-group[data-size-definition="ThreeButtons-OneBigAndTwoSmall"][data-group-size="large"] > .rb-group-content {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  grid-template-rows: repeat(2, var(--rbn-btn-middle-h));
+  column-gap: 4px;
+  row-gap: 1px;
+  align-content: start;
+}
+
+/* Slot 0 renders as Large (matches Fluent slot-0-stays-prominent rule) */
+.rb-office-ribbon .rb-group[data-size-definition="ThreeButtons-OneBigAndTwoSmall"][data-group-size="large"] > .rb-group-content > :first-child {
+  grid-row: 1 / span 2;
+  grid-column: 1;
+  height: var(--rbn-btn-large-h);
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  min-width: var(--rbn-btn-large-min-w);
+  max-width: var(--rbn-btn-large-max-w);
+  padding: var(--rbn-btn-large-pad);
+  text-align: center;
+}
+
+/* Slots 1-2 render as Middle (compact horizontal icon-label rows) */
+.rb-office-ribbon .rb-group[data-size-definition="ThreeButtons-OneBigAndTwoSmall"][data-group-size="large"] > .rb-group-content > :nth-child(2),
+.rb-office-ribbon .rb-group[data-size-definition="ThreeButtons-OneBigAndTwoSmall"][data-group-size="large"] > .rb-group-content > :nth-child(3) {
+  grid-column: 2;
+  flex-direction: row;
+  align-items: center;
+  height: var(--rbn-btn-middle-h);
+  padding: 2px 6px;
+  gap: 6px;
+  text-align: left;
+}
+
+/* Slot 0 icon at 32px in Large mode */
+.rb-office-ribbon .rb-group[data-size-definition="ThreeButtons-OneBigAndTwoSmall"][data-group-size="large"] > .rb-group-content > :first-child .rb-icon-lg {
+  width: var(--rbn-icon-large-96);
+  height: var(--rbn-icon-large-96);
+  margin-bottom: 2px;
+}
+
+/* Slots 1-2 icons at 16px */
+.rb-office-ribbon .rb-group[data-size-definition="ThreeButtons-OneBigAndTwoSmall"][data-group-size="large"] > .rb-group-content > :nth-child(2) .rb-icon-lg,
+.rb-office-ribbon .rb-group[data-size-definition="ThreeButtons-OneBigAndTwoSmall"][data-group-size="large"] > .rb-group-content > :nth-child(3) .rb-icon-lg {
+  width: var(--rbn-icon-small-96);
+  height: var(--rbn-icon-small-96);
+  margin: 0;
+}
+
+/* Slot 0 label stays 2-line; slots 1-2 labels stay single-line left-aligned */
+.rb-office-ribbon .rb-group[data-size-definition="ThreeButtons-OneBigAndTwoSmall"][data-group-size="large"] > .rb-group-content > :nth-child(2) .rb-btn-lg-label,
+.rb-office-ribbon .rb-group[data-size-definition="ThreeButtons-OneBigAndTwoSmall"][data-group-size="large"] > .rb-group-content > :nth-child(3) .rb-btn-lg-label {
+  -webkit-line-clamp: 1;
+  max-height: none;
+  white-space: nowrap;
+  text-align: left;
+}
+
+
+/* ===============================================================
+   ThreeButtonsAndOneCheckBox — 3 buttons + CheckBox, Large + Middle
+   Large: buttons row + checkbox below.
+   Middle: all four stacked in a column.
+   =============================================================== */
+.rb-office-ribbon .rb-group[data-size-definition="ThreeButtonsAndOneCheckBox"][data-group-size="large"] > .rb-group-content {
+  display: grid;
+  grid-template-rows: 1fr auto;
+  grid-template-columns: repeat(3, auto);
+  column-gap: 2px;
+  row-gap: 3px;
+}
+
+.rb-office-ribbon .rb-group[data-size-definition="ThreeButtonsAndOneCheckBox"][data-group-size="large"] > .rb-group-content > :nth-child(4) {
+  grid-column: 1 / span 3;
+  justify-self: start;
+  padding: 2px 4px;
+}
+
+.rb-office-ribbon .rb-group[data-size-definition="ThreeButtonsAndOneCheckBox"][data-group-size="middle"] > .rb-group-content {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+
+/* ===============================================================
+   FourButtons — 4 button-family, Large + Middle + Small
+   Large: 4 across.  Middle: 4 stacked (fits 100px content-h).
+   Small: 4 icon-only in a row.
+   =============================================================== */
+.rb-office-ribbon .rb-group[data-size-definition="FourButtons"][data-group-size="large"] > .rb-group-content {
+  display: flex;
+  flex-direction: row;
+  gap: 2px;
+}
+
+.rb-office-ribbon .rb-group[data-size-definition="FourButtons"][data-group-size="middle"] > .rb-group-content {
+  /* 4 × 22 = 88px, fits within content-h 100 with room for label bar */
+  display: grid;
+  grid-template-rows: repeat(4, var(--rbn-btn-middle-h));
+  grid-auto-flow: column;
+  gap: 1px 4px;
+}
+
+.rb-office-ribbon .rb-group[data-size-definition="FourButtons"][data-group-size="small"] > .rb-group-content {
+  display: flex;
+  flex-direction: row;
+  gap: 1px;
+}
+
+
+/* ===============================================================
+   FiveButtons — 5 button-family, Large + Middle + Small
+   Middle mode packs into 3-row columns (3 + 2 layout).
+   =============================================================== */
+.rb-office-ribbon .rb-group[data-size-definition="FiveButtons"][data-group-size="large"] > .rb-group-content {
+  display: flex;
+  flex-direction: row;
+  gap: 2px;
+}
+
+.rb-office-ribbon .rb-group[data-size-definition="FiveButtons"][data-group-size="middle"] > .rb-group-content {
+  /* 3 rows × 22 = 66 fits above label bar; 2 columns hosts 3+2 */
+  display: grid;
+  grid-template-rows: repeat(3, var(--rbn-btn-middle-h));
+  grid-auto-flow: column;
+  grid-auto-columns: max-content;
+  gap: 1px 6px;
+}
+
+.rb-office-ribbon .rb-group[data-size-definition="FiveButtons"][data-group-size="small"] > .rb-group-content {
+  display: flex;
+  flex-direction: row;
+  gap: 1px;
+}
+
+
+/* ===============================================================
+   Validation error marker
+   When ShopScoutRibbon.templates.validate returns false and the
+   caller wants a visual flag, adding data-template-invalid="true"
+   to the group draws a red dashed outline.
+   =============================================================== */
+.rb-office-ribbon .rb-group[data-template-invalid="true"] {
+  outline: 2px dashed var(--danger, #b91c1c);
+  outline-offset: -2px;
+}
+.rb-office-ribbon .rb-group[data-template-invalid="true"] > .rb-group-label::after {
+  content: " ⚠";
+  color: var(--danger, #b91c1c);
+}
