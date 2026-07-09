@@ -505,6 +505,15 @@
          thumb + title + action bar render as DOM (not HTML string). */
       if (isMatrixCell) {
         colDef.headerComponent = makeMatrixHeaderComponent(column);
+        /* AG Grid's field-based value getter treats dots as nested-
+           path separators — and, more subtly, may reject or drop
+           fields with characters that aren't identifier-safe. Matrix
+           columns use ids like `product:abc123` (colon-separated),
+           which is exactly the shape that returned undefined and
+           produced "Missing" everywhere. Read straight off the row
+           by column id to bypass any field-parsing quirks. */
+        const rowKey = field;
+        colDef.valueGetter = params => params.data ? params.data[rowKey] : undefined;
       }
       if (column.width) colDef.width = column.width;
       return colDef;
