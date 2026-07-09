@@ -169,7 +169,10 @@
     return `<span class="ss-grid-logo-token ss-grid-source-logo" title="${escAttr(info.label)}">${esc(info.label)}</span>`;
   }
 
-  function roundedPriceText(value) {
+  /* Format a parsed dollar amount as "$19.99" (or "$1,299.00" for
+     larger values). Preserves cents — no more $5 bucketing that
+     turned $19.99 into $20 and $9.99 into $10 on the grid. */
+  function formatPriceText(value) {
     const text = textValue(value).trim();
     if (!text) return '';
     if (/[–—-]\s*\$?\d/.test(text) || /\b(to|from|more options)\b/i.test(text)) return '';
@@ -177,15 +180,14 @@
     if (!match) return '';
     const amount = Number(match[1].replace(/,/g, ''));
     if (!Number.isFinite(amount)) return '';
-    const rounded = Math.round(amount / 5) * 5;
-    return `$${rounded.toLocaleString('en-US', { maximumFractionDigits: 0 })}`;
+    return `$${amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
   }
   function renderPrice(params) {
     const text = textValue(params.value).trim();
     if (!text) return '<span class="ss-grid-empty">-</span>';
-    const rounded = roundedPriceText(text);
-    if (!rounded) return `<span class="ss-grid-price">${esc(text)}</span>`;
-    return `<span class="ss-grid-price" title="${escAttr(text)}">${esc(rounded)}</span>`;
+    const formatted = formatPriceText(text);
+    if (!formatted) return `<span class="ss-grid-price">${esc(text)}</span>`;
+    return `<span class="ss-grid-price">${esc(formatted)}</span>`;
   }
 
   /* Build a URL that jumps directly to the reviews section of the
