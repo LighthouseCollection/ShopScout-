@@ -1655,16 +1655,19 @@ function userRulesProjection(rules) {
 
 function mountUserRulesGrid(rules) {
   const host = document.getElementById('userRulesGrid');
-  const adapter = globalThis.ShopScoutSlickGridAdapter;
   if (!host) return null;
+  /* Prefer AG Grid (Phase 4 migration). Falls back to SlickGrid if
+     something goes wrong during the transition window — Codex can
+     drop this fallback in the final SlickGrid removal commit. */
+  const adapter = globalThis.ShopScoutAgGridAdapter || globalThis.ShopScoutSlickGridAdapter;
   if (!adapter || typeof adapter.create !== 'function') {
     const message = document.createElement('div');
     message.className = 'ss-grid-empty';
-    message.textContent = 'SlickGrid runtime is not available.';
+    message.textContent = 'Grid engine runtime is not available.';
     host.replaceChildren(message);
     return null;
   }
-  host.classList.add('ss-grid-host', 'slick-default-theme', 'user-rules-grid');
+  host.classList.add('ss-grid-host', 'ag-theme-shopscout', 'user-rules-grid');
   return adapter.create(host, userRulesProjection(rules), {});
 }
 

@@ -341,6 +341,35 @@
     </div>`;
   }
 
+  /* ---- User Rules renderers ------------------------------------
+     Ported from slickGridAdapter.js htmlForUserRule* — same markup
+     so the existing user-rules CSS applies unchanged. */
+  function renderUserRuleCode(params) {
+    const item = params.data || {};
+    const ruleKey = textValue(params.value || item.reviewKey || item.rawField || item.raw || '-').trim() || '-';
+    return `<code>${esc(ruleKey)}</code>`;
+  }
+
+  function userRuleActionAttrs(item) {
+    return `data-review-key="${escAttr(item?.reviewKey || '')}" `
+      + `data-raw-field="${escAttr(item?.rawField || '')}" `
+      + `data-field="${escAttr(item?.field || '')}" `
+      + `data-raw-value="${escAttr(item?.raw || '')}" `
+      + `data-normalized-value="${escAttr(item?.normalized || '')}"`;
+  }
+
+  function renderUserRuleActions(params) {
+    const item = params.data || {};
+    const attrs = userRuleActionAttrs(item);
+    /* Ignored review items can be un-ignored (delete) but not edited —
+     they have no active mapping to change. */
+    const canEdit = item.type !== 'Ignored review item';
+    return `<div class="normalization-review-actions ss-grid-review-actions">
+      ${canEdit ? `<button class="dashboard-secondary-action dashboard-secondary-action--small" type="button" data-user-rule-action="edit" ${attrs}>Edit</button>` : ''}
+      <button class="dashboard-secondary-action dashboard-secondary-action--small" type="button" data-user-rule-action="delete" ${attrs}>Delete</button>
+    </div>`;
+  }
+
   /* AG Grid custom header component for matrix product columns.
      Renders the same thumb + wrapped title + action bar SlickGrid
      used, but as real DOM (not the HTML-string hack). AG Grid picks
@@ -403,6 +432,8 @@
     if (column.type === 'normalizationReason') return renderNormalizationReason;
     if (column.type === 'normalizationRule') return renderNormalizationRule;
     if (column.type === 'normalizationActions') return renderNormalizationActions;
+    if (column.type === 'userRuleCode') return renderUserRuleCode;
+    if (column.type === 'userRuleActions') return renderUserRuleActions;
     if ((column.field || column.id) === 'title') return renderTitle;
     return renderPlain;
   }

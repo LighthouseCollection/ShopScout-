@@ -3247,3 +3247,40 @@ This file is the shared record for Claude and Codex. Append an entry for every m
   - **Category column** currently uses `type: 'text'` which routes to `renderPlain`. It works but may need special styling (e.g. pill) if the category values are structured. Check with a real product list.
   - **Pair renderer edge case:** when both raw and normalized are empty, shows `-`. When only one is empty and the other has a value, shows the non-empty side without arrow. Same behavior as SlickGrid.
   - **Next commit (4/5):** User Rules page to AG Grid — needs `renderUserRuleCode` and `renderUserRuleActions`. Same pattern as this commit.
+
+## 2026-07-08 - Claude User Rules migrated to AG Grid
+
+- Agent: Claude
+- Branch: grid-rebuild-codex
+- Commit: This commit (4/5 of the SlickGrid removal sequence).
+- Status: Implemented; user acceptance-tested visually. Automated tests not re-run.
+- Summary:
+  - User Rules page now renders through AG Grid. Ported the two user-rule-specific cell renderers from `slickGridAdapter.js`:
+    * `renderUserRuleCode` — shows the rule key as `<code>`, falling back through reviewKey / rawField / raw to '-' when the primary field is empty.
+    * `renderUserRuleActions` — Edit / Delete buttons with the full `data-*` payload (reviewKey, rawField, field, raw, normalized). Edit is hidden for `type === 'Ignored review item'` rows (there's no active mapping to change — only Delete to un-ignore).
+  - `columnTypeRenderer` dispatch entries added for `userRuleCode` and `userRuleActions`.
+  - `userRuleActions` type was already in the non-sortable set (from commit 2).
+  - `mountUserRulesGrid` in `comparison.js` now prefers `globalThis.ShopScoutAgGridAdapter` with a temporary fallback to `ShopScoutSlickGridAdapter`. Applied the `ag-theme-shopscout` class to the host.
+  - `[data-user-rule-action]` clicks bubble unchanged: the AG Grid container's `containerClick` only stops propagation for `[data-ss-grid-action]` and `[data-matrix-action]`, so user-rule action clicks reach the document-level delegate at `comparison.js` line 572.
+- Files touched:
+  - `grid-rebuild-codex/agGridAdapter.js` — renderUserRuleCode, userRuleActionAttrs, renderUserRuleActions, columnTypeRenderer dispatch entries.
+  - `comparison.js` — `mountUserRulesGrid` swaps adapter to AG Grid, applies `ag-theme-shopscout` class.
+  - `AGENT_CHANGELOG.md` — this entry.
+- Validation run:
+  - `npm run build` -> Chrome / Edge / Firefox dists rebuilt.
+  - No automated tests re-run this commit.
+- Review / handoff:
+  - Reviewer: Codex.
+  - **What to check:**
+    1. **User Rules page renders rows.** From Products tab -> Review & Rules -> User Rules. Each stored rule should show as a row with columns: Type / Field / Raw alias / Normalized value / Rule key / Actions.
+    2. **Rule key column** — the `<code>` should show the persistence key for the rule. Empty/absent values fall through to reviewKey -> rawField -> raw -> `-`.
+    3. **Actions column** —
+       - Non-ignored rules -> Edit button visible, Delete visible.
+       - Rules with `type === 'Ignored review item'` -> only Delete visible (no Edit).
+       - Click Edit -> opens the rule editor with the correct row's data.
+       - Click Delete -> deletes the rule from persistence.
+    4. **Column widths** — the projection sets explicit widths (170/220/260/260) for the first four columns. Verify those apply and don't get compressed. Rule key + Actions autoSize.
+    5. **Automated tests** — `tests/user-rules-normalization.test.js` and `tests/normalization-rules-render.test.js` exist. When SlickGrid is deleted in commit 5, any assertion that checks `.slick-*` classes or SlickGrid's specific DOM shape needs updating. Flag for Codex to update.
+- Follow-ups or risks:
+  - **Text columns** (Type / Field / Raw alias / Normalized value) route to `renderPlain`. If a Rule row's raw or normalized value is a structured object (from a legacy shape), it renders as `[object Object]`. Not observed in current codebase but worth spot-checking.
+  - **Next commit (5/5):** Final SlickGrid removal. Deletes `vendor/slickgrid/`, `grid-rebuild-codex/slickGridAdapter.js`, `.slick-*` CSS rules in `grid-rebuild-codex/grid.css`, SlickGrid `<script>` and `<link>` tags in `comparison.html`, the SlickGrid fallback branches in `mountNormalizationReviewGrid` / `mountUserRulesGrid` / `shopscoutGrid.js`, and any SortableJS references that were only used by SlickGrid column reordering. Also removes the width-fit / width-full command branch that's been dead since commit 1.
