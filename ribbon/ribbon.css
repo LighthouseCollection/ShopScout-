@@ -214,7 +214,6 @@
    3. Ribbon body — Classic (default) and Simplified
    ============================================================== */
 .rb-office-ribbon .ribbon-body {
-  min-height: var(--rbn-body-h);            /* 103px Classic */
   padding: 4px 8px 0;
   background: var(--rbn-body-bg);
   border-bottom: 1px solid var(--rule, #e5e7eb);
@@ -243,26 +242,36 @@
 /* ==============================================================
    4. Group + vertical separator
    ============================================================== */
+/* Base group — only structural (positioning for DialogLauncher, flex
+   column so the label bar sits below the content). No forced sizing
+   so existing HTML preserves its natural dimensions from comparison.css. */
 .rb-office-ribbon .rb-group {
   position: relative;                       /* for absolute DialogLauncher */
   display: flex;
   flex-direction: column;
-  min-height: calc(var(--rbn-content-h) - var(--rbn-group-label-h));
-  padding: var(--rbn-group-pad-t) var(--rbn-group-pad-r) var(--rbn-group-pad-b) var(--rbn-group-pad-l);
   margin: 0;
   background: transparent;
 }
 
+/* Strict Fluent padding + min-height ONLY when a group opts in via
+   data-group-size. */
+.rb-office-ribbon .rb-group[data-group-size] {
+  min-height: calc(var(--rbn-content-h) - var(--rbn-group-label-h));
+  padding: var(--rbn-group-pad-t) var(--rbn-group-pad-r) var(--rbn-group-pad-b) var(--rbn-group-pad-l);
+}
+
 /* Simplified group padding [Fluent:RibbonGroupBox.xaml:37] Padding="2 0" */
-.rb-office-ribbon[data-ribbon-mode="simplified"] .rb-group {
+.rb-office-ribbon[data-ribbon-mode="simplified"] .rb-group[data-group-size] {
   min-height: var(--rbn-simple-h);
   padding: var(--rbn-group-simple-pad-v) var(--rbn-group-simple-pad-h);
 }
 
-/* Vertical separator between groups — inset 5px from top, 10px
-   from bottom, 55px tall total. Uses ::before pseudo-element so
-   the existing HTML .rb-divider stays inert. */
-.rb-office-ribbon .rb-group + .rb-group::before {
+/* Vertical separator between groups. Only rendered when both the
+   current group AND the previous group have opted into the size
+   system via data-group-size — this avoids inserting stray dividers
+   between existing HTML groups that already handle their own
+   separators via .rb-divider. */
+.rb-office-ribbon .rb-group[data-group-size] + .rb-group[data-group-size]::before {
   content: "";
   position: absolute;
   left: calc(-1 * var(--rbn-group-sep-mh));
@@ -273,14 +282,11 @@
   pointer-events: none;
 }
 
-/* Simplified mode uses a full-height separator (2px per Fluent) */
-.rb-office-ribbon[data-ribbon-mode="simplified"] .rb-group + .rb-group::before {
-  top: 4px;                                 /* [Fluent:RibbonGroupBox.xaml:265-266] Margin="0 4" */
-  height: calc(100% - 8px);
-}
-
-/* Existing .rb-divider elements become inert */
-.rb-office-ribbon .rb-divider {
+/* Existing .rb-divider elements — leave alone unless the ribbon
+   opts into size-definition mode via any group having
+   data-group-size. Existing HTML that still uses .rb-divider
+   for its group boundaries keeps working. */
+.rb-office-ribbon .rb-group[data-group-size] ~ .rb-divider {
   display: none;
 }
 
@@ -298,7 +304,10 @@
   margin-left: var(--rbn-gs-large);
 }
 
-.rb-office-ribbon .rb-group-content {
+/* Group content + label layout — opt-in via data-group-size on the
+   parent .rb-group so existing HTML preserves its comparison.css
+   layout. */
+.rb-office-ribbon .rb-group[data-group-size] > .rb-group-content {
   display: flex;
   flex: 1;
   align-items: stretch;
@@ -306,7 +315,7 @@
   padding: 0;
 }
 
-.rb-office-ribbon .rb-group-label {
+.rb-office-ribbon .rb-group[data-group-size] > .rb-group-label {
   height: var(--rbn-group-label-h);
   padding: 0;
   color: var(--ink-3, #5a6470);
@@ -323,11 +332,17 @@
 
 /* ==============================================================
    5. Group sizes — Large / Middle / Small / Popup
+
+   IMPORTANT: Every rule under this section is scoped to a specific
+   [data-group-size="..."] attribute. Groups without the attribute
+   fall through to the ambient .rb-btn-lg styles from comparison.css
+   — this keeps existing static HTML rendering unchanged until it
+   opts into the declarative size-definition system. (This is what
+   let the merged Products tab keep working after commit 2.)
    ============================================================== */
 
-/* --- Large group: default. Full-size buttons with 32px icons  -- */
-.rb-office-ribbon .rb-group[data-group-size="large"] .rb-btn-lg,
-.rb-office-ribbon .rb-group:not([data-group-size]) .rb-btn-lg {
+/* --- Large group: full-size buttons with 32px icons  --------- */
+.rb-office-ribbon .rb-group[data-group-size="large"] .rb-btn-lg {
   display: inline-flex;
   flex-direction: column;
   align-items: center;
@@ -348,8 +363,7 @@
   transition: background 90ms ease, border-color 90ms ease;
 }
 
-.rb-office-ribbon .rb-group[data-group-size="large"] .rb-icon-lg,
-.rb-office-ribbon .rb-group:not([data-group-size]) .rb-icon-lg {
+.rb-office-ribbon .rb-group[data-group-size="large"] .rb-icon-lg {
   width: var(--rbn-icon-large-96);          /* 32px */
   height: var(--rbn-icon-large-96);
   margin-bottom: 2px;                       /* [Fluent:Button.xaml:66] icon slot margin */
@@ -357,7 +371,7 @@
   color: currentColor;
 }
 
-.rb-office-ribbon .rb-btn-lg-label {
+.rb-office-ribbon .rb-group[data-group-size] .rb-btn-lg-label {
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
@@ -498,9 +512,10 @@
 }
 
 /* ==============================================================
-   7. Small buttons (.rb-btn-sm) — used in stacks like New/Rename/Delete
+   7. Small buttons (.rb-btn-sm) — layout only inside opted-in groups.
+   Hover/focus polish stays global (safe cosmetic effects).
    ============================================================== */
-.rb-office-ribbon .rb-btn-sm {
+.rb-office-ribbon .rb-group[data-group-size] .rb-btn-sm {
   display: inline-flex;
   align-items: center;
   min-height: 20px;
@@ -526,23 +541,23 @@
   outline-offset: -1px;
 }
 
-.rb-office-ribbon .rb-btn-sm-icon {
+.rb-office-ribbon .rb-group[data-group-size] .rb-btn-sm-icon {
   width: 14px;
   height: 14px;
   opacity: 0.8;
   flex: 0 0 auto;
 }
 
-.rb-office-ribbon .rb-btn-sm-label {
+.rb-office-ribbon .rb-group[data-group-size] .rb-btn-sm-label {
   font-size: 12px;
   font-weight: 400;
   color: inherit;
 }
 
 /* ==============================================================
-   8. Stack (vertical column of buttons)
+   8. Stack (vertical column of buttons) — opt-in
    ============================================================== */
-.rb-office-ribbon .rb-stack {
+.rb-office-ribbon .rb-group[data-group-size] .rb-stack {
   display: inline-flex;
   flex-direction: column;
   align-items: stretch;
@@ -550,7 +565,7 @@
   gap: 1px;
 }
 
-.rb-office-ribbon .rb-mini-label {
+.rb-office-ribbon .rb-group[data-group-size] .rb-mini-label {
   font-size: 10px;
   font-weight: 400;
   color: var(--ink-3, #5a6470);
@@ -559,9 +574,9 @@
 }
 
 /* ==============================================================
-   9. Select / dropdown control
+   9. Select / dropdown control — opt-in
    ============================================================== */
-.rb-office-ribbon .rb-select {
+.rb-office-ribbon .rb-group[data-group-size] .rb-select {
   min-width: 140px;
   max-width: 220px;
   height: 22px;                             /* Matches Fluent Middle button height */

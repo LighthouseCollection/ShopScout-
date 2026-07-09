@@ -3682,3 +3682,53 @@ This file is the shared record for Claude and Codex. Append an entry for every m
     * `ButtonGroupsAndInputs` layout hasn't been tested with real ComboBox/EditBox children yet since ShopScout doesn't currently have any groups using this template. When commit 11 migrates the merged Products tab, we may discover the input dimensions in a 2-row grid need adjustment.
     * The `flexibleSlots` implementation currently supports only ONE flex-slot spec per template (applied to all trailing controls). If a future template needs varying flex specs (e.g. "trailing 3 buttons then trailing 2 inputs"), extend to a `flexibleSlots: [{...}, {...}]` array.
     * **Next commit (7/11):** Tranche E specialized templates — `OneFontControl`, `OneInRibbonGallery`, `InRibbonGalleryAndBigButton`, `InRibbonGalleryAndButtons-GalleryScalesFirst`. These need Gallery + FontControl primitives that don't exist yet.
+
+## 2026-07-09 - Claude Office 365 ribbon HOTFIX: scope all layout rules to data-group-size
+
+- Agent: Claude
+- Branch: grid-rebuild-codex
+- Commit: This commit (interim fix between commits 6 and 7 in the Path B sequence).
+- Status: Implemented. All 44 tests pass.
+- Summary:
+  - **User reported the merged Products tab looked broken:** Rescan Products label missing, buttons crammed, vertical dividers misaligned, general "this looks like crap" state at build `v3.3.0.ba2105a` (post-commit-5).
+  - **Root cause:** Commit 2's `ribbon.css` applied strict Fluent.Ribbon pixel-perfect sizing (`.rb-btn-lg { height: 68px; max-width: 76px; }`, `.rb-group { min-height: 82px; padding: 4,2,4,2 }`, `.rb-group-content { flex; align-items: stretch }`, etc.) to EVERY existing group whether or not it had opted into the size-definition system. Rules were scoped under `.rb-office-ribbon` (opt-in via JS class), but Fluent's dimensions were then applied unconditionally to the existing static HTML in the merged Products tab.
+    * `max-width: 76px` on Large buttons truncated "Rescan Products" label into invisibility (13 chars × 11px font ≈ 90px needed).
+    * `min-height: 82px` on every group + rigid content padding stretched groups vertically and pushed labels off.
+    * `::before` vertical separators between EVERY adjacent group inserted stray lines that clashed with the existing `.rb-divider` elements.
+  - **Fix:** Scoped every layout-affecting rule to `[data-group-size]`. Now:
+    * Groups WITHOUT `data-group-size` render using the ambient `comparison.css` styles that shipped before commit 2. Existing HTML looks like it did in commit 1's era — Segoe UI typography and Office 365 tab strip typography apply, but button/group sizing is unchanged.
+    * Groups WITH `data-group-size="large|middle|small|popup"` get the Fluent-strict layout. Templates in `templates.css` continue to work identically (they always required both attributes).
+  - **Specifically scoped:**
+    * `.rb-group` padding + min-height -> now requires `[data-group-size]`.
+    * `.rb-group-content` flex layout -> now requires `[data-group-size]` on parent.
+    * `.rb-group-label` height + font -> now requires `[data-group-size]` on parent.
+    * `.rb-btn-lg` sizing + icon dimensions + label clamp -> now requires `[data-group-size="large"]` on parent group (or one of the other size values through cascade).
+    * `.rb-btn-sm`, `.rb-stack`, `.rb-mini-label` layout -> now require `[data-group-size]` on parent group.
+    * `.rb-select` sizing -> now requires `[data-group-size]` on parent group.
+    * Vertical `::before` separator between adjacent groups -> now requires BOTH groups to have `[data-group-size]` (won't insert stray dividers when only one group is opted in).
+    * `.rb-divider` element hidden -> only inside opted-in size-system groups; existing HTML that still uses `<div class="rb-divider">` keeps its dividers.
+    * `.ribbon-body` `min-height` -> removed the unconditional 103px; body sizes to content again. Tab strip typography (`ribbon-tab`, etc.) unchanged since those are structural chrome.
+  - **What still applies globally** (safe cosmetic / typography):
+    * Segoe UI font stack on all descendants.
+    * Tab strip 34px height + 14px SemiBold label + 2px accent underline.
+    * `.rb-btn-lg`/`.rb-btn-sm` hover / active / focus / disabled polish (colors only, no sizing).
+    * `.rb-select` hover / focus polish.
+    * The framework `defineCommand` / `control` / `setMode` / etc. APIs are unaffected.
+    * All 19 registered SizeDefinition templates (7 tranche A + 4 B + 5 C + 3 D) work identically when applied. Only the "not applied yet" default rendering changed.
+- Files touched:
+  - `ribbon/ribbon.css` — scoped 8 CSS blocks to `[data-group-size]`.
+  - `AGENT_CHANGELOG.md` — this entry.
+- Validation run:
+  - `npm test` -> all 44 pass.
+  - `npm run build` -> Chrome / Edge / Firefox dists rebuilt.
+- Review / handoff:
+  - Reviewer: Codex.
+  - **What to check:**
+    1. **Merged Products tab visual:** should now look nearly identical to what it did just before commit 2 landed. Rescan Products label should be back. Buttons should not be crammed to 76px. Vertical rules between groups should be gone (the `.rb-divider` elements are no longer force-hidden, so they should reappear if they were there before). If those `.rb-divider` elements weren't in the merged tab's HTML at all, the tab will look slightly more visually "grouped" without inter-group dividers — acceptable.
+    2. **`ShopScoutRibbon.templates.apply(el, 'FourButtons', {size: 'Large'})`** should still work on any group that opts in. Verify by manually applying a template in DevTools: pick a `.rb-group`, set both attributes, and observe that the Fluent-strict Large layout kicks in for that specific group.
+    3. **Auto-Simplified switch** at 900px still works — `[data-ribbon-mode="simplified"]` still triggers the ribbon body variant.
+    4. **Double-click active tab** still collapses/expands the ribbon body.
+    5. **`ShopScoutRibbon.state`** should return the current mode/spacing/collapsed snapshot unchanged.
+  - **Notable follow-ups:**
+    * When commit 11 migrates the merged Products tab HTML to the declarative API, we'll add `data-group-size` to every group and the Fluent-strict layouts will kick in properly. That's when the ribbon will genuinely take on the Office 365 look everywhere — not before.
+    * **Next commit (7/11):** Tranche E specialized templates. Continues the template registry work; no visual regression risk on existing HTML.
