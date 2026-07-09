@@ -12,7 +12,12 @@
   border: 1px solid var(--rule, #d1d5db);
   border-radius: 8px;
   background: var(--card, #fff);
-  overflow: visible;
+  /* Horizontal scroll is contained INSIDE the card so the page (and
+     therefore the ribbon at the top) doesn't scroll sideways when the
+     grid is wider than the viewport. Vertical stays visible so long
+     lists still scroll the whole browser. */
+  overflow-x: auto;
+  overflow-y: visible;
 }
 
 .ss-grid-status {
