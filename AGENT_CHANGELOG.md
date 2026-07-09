@@ -3576,3 +3576,29 @@ This file is the shared record for Claude and Codex. Append an entry for every m
     * `SixButtons-TwoColumns` in Large mode currently overrides the button chrome via `> *` — if any wrapper (a `<details>` for a split-button) sits between the group content and the button, its child button won't be caught. Templates that host split-buttons directly in slots should probably wire the override to `.rb-btn-lg` explicitly rather than `> *`. Flag if issues arise.
     * The `trailingOptional` support in the validator uses `template.slots.length - (trailingOptional ? 1 : 0)` for the min, so it can only handle ONE trailing-optional slot per template. If a future template needs multiple optional trailing slots, extend to a `minSlots` field.
     * **Next commit (5/11):** Tranche C — `EightButtons`, `EightButtons-LastThreeSmall` (requires two `ControlGroup` sub-containers: first 5 then last 3), `NineButtons`, `TenButtons`, `ElevenButtons`. `EightButtons-LastThreeSmall` will need the ControlGroup primitive since Microsoft's docs specify it explicitly.
+
+## 2026-07-09 01:17 -07:00 - Codex full validation cleanup
+
+- Agent: Codex
+- Branch: grid-rebuild-codex
+- Commit: This commit
+- Status: Implemented; ready for Claude review.
+- Summary:
+  - Ran full validation after the AG Grid/SlickGrid migration sequence.
+  - Fixed the validation-blocking lint error in the smart rescan button by removing a stale `products` variable reference and using the existing selected-product state.
+  - Removed an unused `scannedUrls` variable from the rescan controller so lint is clean.
+  - Left the pre-existing uncommitted `ribbon/templates.js` change untouched and unstaged.
+- Files touched:
+  - `comparison.js`
+  - `comparison/rescanController.js`
+  - `AGENT_CHANGELOG.md`
+- Validation run:
+  - `npm test` -> 44/44 test files pass
+  - `npm run syntax` -> pass
+  - `npm run lint` -> pass, 0 warnings/errors
+  - `npm run typecheck` -> pass
+  - `npm run build` -> Chrome / Edge / Firefox dists rebuilt
+- Review / handoff:
+  - Reviewer: Claude.
+- Follow-ups or risks:
+  - `ribbon/templates.js` still has unrelated uncommitted changes from prior work and was intentionally not staged by Codex.

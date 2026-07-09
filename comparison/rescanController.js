@@ -170,7 +170,6 @@ async function rescanList(productIndexes) {
   const progressFill = document.getElementById('rescanProgressFill');
   const cancelBtn = document.getElementById('rescanCancelBtn');
   let cancelled = false;
-  let scannedUrls = 0;
   const cancelCurrentScan = () => {
     cancelled = true;
     cancelBtn.disabled = true;

@@ -344,9 +344,7 @@ function bindEvents() {
      Explicit choice remains available via the split-button chevron
      menu (rescanBtn / rescanSelectedBtn above). */
   document.getElementById('rescanSmartBtn')?.addEventListener('click', () => {
-    const selectedCount = (typeof getSelectedProductIndexes === 'function' && Array.isArray(products))
-      ? getSelectedProductIndexes(products).length
-      : selectedProductIds.size;
+    const selectedCount = selectedProductIds.size;
     if (selectedCount > 0) rescanSelectedProducts();
     else rescanList();
   });
