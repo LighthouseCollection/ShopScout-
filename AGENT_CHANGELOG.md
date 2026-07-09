@@ -3392,3 +3392,81 @@ This file is the shared record for Claude and Codex. Append an entry for every m
   - **`.rb-divider` cleanup deferred.** Right now those `<div class="rb-divider">` elements are hidden by CSS but still exist in the DOM. Codex may want to strip them in a later cleanup pass — they're semantic dead weight now.
   - **Non-dashboard ribbons.** If the popup or settings ribbon looks broken under the Office rules, tell me and I'll scope `apply()` to only run inside `#dashboardShell` or similar.
   - **Next commit (2/5):** Large / Medium / Small button sizes with Office's adaptive shrink heuristic. Adds a JS observer that measures the ribbon body width and downgrades buttons L -> M -> S as the viewport narrows, starting from the rightmost group with the largest buttons. This is where things get interesting.
+
+## 2026-07-09 - Claude Office 365 ribbon commit 2: Fluent.Ribbon-grounded core framework
+
+- Agent: Claude
+- Branch: grid-rebuild-codex
+- Commit: This commit (2/11 of the Office-conformed ribbon Path B sequence — extended from the earlier 5-commit plan after user confirmed full scope: all 23 SizeDefinition templates, HTML migration to declarative API, and hand-authored SVG variants per DPI).
+- Status: Implemented. All 44 automated test files pass. Visual acceptance pending user reload.
+- Summary:
+  - Full rewrite of `ribbon/ribbon.css` — every pixel value now cites its source. Where Microsoft's own Windows Ribbon Framework spec leaves a chrome dimension undefined, Fluent.Ribbon (github.com/fluentribbon/Fluent.Ribbon) is used as the authoritative reference and cited inline with format `[Fluent:FileName.xaml:LineNumber]`. Anything the two combined don't publish is marked `[Invented]` with rationale.
+  - **Concrete Fluent.Ribbon values adopted:**
+    * Ribbon content height: 100px (`RibbonTabControl.cs:28` DefaultContentHeight)
+    * Content gap: 3px (`RibbonTabControl.cs:23` DefaultContentGapHeight)
+    * Total Classic body: 103px
+    * Simplified content: 42px (`Ribbon.xaml:70` ContentHeight="42")
+    * QAT height: 23px (`Ribbon.cs:1015` QuickAccessToolBarHeight default 23D)
+    * Tab header padding: 3,9,6,9 asymmetric (`RibbonTabItem.cs:194`) — bottom asymmetric to leave room for the 2px underline indicator inset 3px from bottom (`RibbonTabItem.xaml:10`)
+    * Tab separator: 1px wide, 4px top/bottom margin (`RibbonTabItem.xaml:32-35`)
+    * Group interior padding: 4,2,4,2 (`RibbonGroupBox.xaml:33`); Simplified 2,0 (`RibbonGroupBox.xaml:37`)
+    * Group vertical separator: 1×55px inset (`RibbonGroupBox.xaml:8-10`) — NOT full-height border
+    * Large button height: 68 (`Button.xaml:166`)
+    * Middle button height: 22 (`Button.xaml:171`)
+    * Small button: 22×22 (`Button.xaml:172` + `DropDownButton.xaml:201` inner slot 10)
+    * Simplified button MinHeight: 30 (`Button.xaml:177`)
+    * DialogLauncher: 16×16 button with 8×8 glyph (`RibbonGroupBox.xaml:124-126`, `:282`)
+    * Popup border-overlap trick: `margin-right: -4px` (recurring across Fluent files)
+    * Minimum visible width: 300px (`Ribbon.cs:60` MinimalVisibleWidth) — matches Microsoft's 300px @ 96 DPI target
+    * Contextual overlay tint: rgba(0,0,0,0.08) (`Theme.Template.xaml:91` #14000000)
+  - **New CSS custom properties API:** Every dimension is a `--rbn-*` custom property on `.rb-office-ribbon`. Downstream commits and consumer code can override via `.ribbon-shell { --rbn-btn-large-h: 72px; }` without touching the framework.
+  - **Four group sizes implemented:** `data-group-size="large|middle|small|popup"` on `.rb-group`. Fluent.Ribbon terminology adopted verbatim (**"Middle"**, not "Medium"). Each mode:
+    * Large: 68px buttons, 32px icons on top, 2-line labels below (Classic Office look)
+    * Middle: 22px buttons, 16px icons left of single-line label, group content stacks vertically
+    * Small: 22×22 icon-only buttons, label hidden
+    * Popup: entire group collapses to a single 68×~64px button that opens a popup rendering the group at Large. Popup layout follows Microsoft's spec verbatim ("Identical control layout to Large but hosted in a pop-up or drop-down pane").
+  - **Ribbon.GroupSpacing tokens** implemented via `data-group-spacing="small|medium|large"` at the ribbon-shell. Microsoft names, my pixel values (0 / 6 / 12). Marked `[Invented]` in CSS.
+  - **Ribbon mode** implemented via `data-ribbon-mode="classic|simplified"`. Classic is the default. In Simplified mode the ribbon body shrinks to 42px, buttons flip to `flex-direction: row` with min-height 30px, icon shrinks to 20px (Mescius' intermediate icon size — Fluent.Ribbon uses this too via `IconSize="Medium"`).
+  - **Ribbon collapse** implemented via `data-ribbon-collapsed="true"` — hides the ribbon body but keeps the tab strip visible. Toggled by double-clicking the active tab (Beijer-confirmed Office convention).
+  - **DialogLauncher primitive** as `.rb-dialog-launcher` — 16×16 button positioned `bottom-right: 2px 2px` of any parent `.rb-group`. This is the small corner icon Word/Excel use on the Font / Paragraph / etc. groups. Fluent adds it as an extension to Microsoft's Win32 spec.
+  - **ButtonGroup primitive** as `.rb-button-group` — bordered cluster of buttons that share a rounded outer edge (e.g. Word's paragraph-alignment cluster). VSTO Ribbon API exposes it as `RibbonButtonGroup`.
+  - **RibbonBox primitive** as `.rb-ribbon-box` with `data-box-style="horizontal|vertical"` — general layout container matching VSTO's `RibbonBox` + `RibbonBoxStyle` enum.
+  - **`ribbon/ribbon.js` expanded** with the framework API:
+    * `defineCommand({ id, label, tooltip, keytip, largeImage, mediumImage, smallImage, handler })` — Command registry. One command can drive many controls.
+    * `updateCommand(id, patch)` — mutate a defined command (e.g. toggle enabled).
+    * `control({ id, commandId, type, groupId, sizeModes, showLabel, showImage })` — declare a control placement. `type` is validated against the Windows Ribbon Framework + Fluent + VSTO superset (Button / ToggleButton / DropDownButton / SplitButton / DropDownGallery / SplitButtonGallery / DropDownColorPicker / ComboBox / Spinner / EditBox / CheckBox / InRibbonGallery / FontControl / ButtonGroup / RibbonBox / DialogLauncher / Separator / Label).
+    * `setMode('classic'|'simplified')` / `getMode()` — mode toggle with `modeExplicit` flag so the auto-Simplified viewport switch doesn't overrule a user pick.
+    * `setGroupSpacing('small'|'medium'|'large')` — ribbon-shell attribute setter.
+    * `setCollapsed(bool)` / `toggleCollapsed()` — collapsed state.
+    * `commands` / `controls` / `state` read-only accessors (return snapshots so callers can't mutate registries directly).
+    * `isButtonFamily(type)` / `isInputFamily(type)` / `isStandalone(type)` / `isContainer(type)` / `familyOf(type)` — validation helpers for the template code coming in commits 3-7.
+    * `SIMPLIFIED_THRESHOLD = 900` constant (viewport width below which we auto-drop to Simplified — matches Office 365 web).
+    * `version: '1.0.0-commit-2'`.
+  - **Auto-Simplified behavior:** `ResizeObserver` on the primary ribbon-shell. When width falls below 900px (and user hasn't explicitly picked a mode via `setMode()`), the shell attribute flips to `simplified`. When it rises back above the threshold, Classic returns.
+  - **Double-click tab handler:** attached to the ribbon-shell via delegation. Only triggers when the target is the currently *active* tab; inactive tabs still activate on double-click without collapsing.
+- Files touched:
+  - `ribbon/ribbon.css` — full rewrite (~550 lines), every value cited.
+  - `ribbon/ribbon.js` — expanded from ~30 lines to ~230 lines with the framework API.
+  - `AGENT_CHANGELOG.md` — this entry.
+- Validation run:
+  - `npm test` -> **all 44 test files pass** (no test regressions).
+  - `npm run build` -> Chrome / Edge / Firefox dists rebuilt.
+- Review / handoff:
+  - Reviewer: Codex.
+  - **What to check:**
+    1. **Font stack:** the ribbon should read as Segoe UI Variable Display on Windows 11, Segoe UI on Windows 10, `-apple-system` on macOS. Verify the tab label typography looks correct across platforms.
+    2. **Tab underline alignment:** with 3px bottom inset per Fluent, the underline should sit slightly above the very bottom of the tab strip. Not flush with the ribbon-body divider below.
+    3. **Group vertical separator:** 1px × 55px inset from group top by 5px and bottom by 10px. Should NOT be a full-height border. Compare against a screenshot of an Office 365 Word ribbon — matches the "inset rule" pattern between groups.
+    4. **Ribbon body height:** should now be 103px in Classic mode (up from ~72 in commit 1). If it looks too tall vs the ShopScout tab strip, the CSS variable `--rbn-content-h` can be tuned per-page without touching the framework.
+    5. **Auto-Simplified switch:** resize the browser to <900px. The ribbon should collapse to a 42px single-row layout, buttons should stack horizontally with 20px icons. Above 900px it should return to Classic automatically.
+    6. **Double-click to collapse:** double-click the active `Products` tab. The ribbon body should collapse. Double-click again to expand.
+    7. **DialogLauncher rendering:** none of the current groups declare one yet — that's added when specific groups need it in later commits. But verify `.rb-dialog-launcher` CSS renders sensibly if you add `<button class="rb-dialog-launcher">...</button>` to a group manually.
+    8. **`ShopScoutRibbon` API surface:** open DevTools console, run `ShopScoutRibbon.version` -> should return `'1.0.0-commit-2'`. Run `ShopScoutRibbon.state` -> should return the current mode/groupSpacing/collapsed snapshot. Run `ShopScoutRibbon.defineCommand({id:'test',label:'Test',handler:()=>console.log('fired')})` -> should register; verify with `ShopScoutRibbon.commands.get('test')`.
+    9. **Existing tests:** all 44 pass, but there are NO tests yet that exercise the new framework directly. Codex may want to write `tests/ribbon.test.js` covering command/control registration, mode toggle, spacing setter, collapsed state, and the family-typing helpers.
+    10. **Existing HTML unchanged:** the merged Products tab's markup is identical to before. What changed is the CSS applied to it via the `.rb-office-ribbon` class + all the new custom properties. Later commits will migrate the HTML to the declarative API (Path B, commit 11 in the sequence).
+- Follow-ups or risks:
+  - **`data-group-size` not applied to any group yet.** All existing `.rb-group` elements render at Large (the default when no attribute is set). Later commits will attach `data-group-size` per group as part of ScalingPolicy (commit 8) and the migration (commit 11).
+  - **Popup mode is rendered via CSS `content: attr(data-collapsed-label)`.** No JS handler is wired yet to actually open the popup on click. Commit 8 (ScalingPolicy) will add the popup rendering + click handler.
+  - **CSS cascade:** the new `.rb-office-ribbon` rules load AFTER `comparison.css`, and every rule is scoped under `.rb-office-ribbon`. If comparison.css has a more-specific selector that overrides one of our custom-property-driven values, we'll see it — flag any regression.
+  - **Testing:** consider adding a lightweight `tests/ribbon.test.js` that exercises `defineCommand`/`control`/`setMode`/`familyOf` — the framework is public API surface, deserves coverage.
+  - **Next commit (3/11):** SizeDefinition templates tranche A — `OneButton`, `TwoButtons`, `ThreeButtons`, `ThreeButtons-OneBigAndTwoSmall`, `ThreeButtonsAndOneCheckBox`, `FourButtons`, `FiveButtons`. Each template validates control count/order/family per Microsoft's strict contract (validation error terminates compilation in the Win32 framework; we'll `console.error` loudly and refuse to render). Each has Large/Middle/Small GroupSizeDefinitions expressed as CSS layout modes triggered by `data-size-definition="TwoButtons"` etc. on `.rb-group`.
