@@ -840,7 +840,20 @@
         state.adapter = null;
         return;
       }
-      const adapterFactory = root.ShopScoutAgGridAdapter;
+      /* Products grid → AG Grid (Phase 1 migrated).
+         comparisonMatrix / normalizationReview / userRules → SlickGrid
+         until their AG Grid renderers are wired (Phase 2 + 3).
+         SlickGrid has htmlForMatrixCell that unwraps the displayCell
+         { value, raw, corrected, ... } object shape produced by
+         buildComparisonMatrixProjection; AG Grid's renderPlain would
+         see the object and render nothing useful. */
+      const mode = projection?.mode;
+      const useSlickGrid = mode === 'comparisonMatrix'
+        || mode === 'normalizationReview'
+        || mode === 'userRules';
+      const adapterFactory = useSlickGrid
+        ? root.ShopScoutSlickGridAdapter
+        : root.ShopScoutAgGridAdapter;
       if (!adapterFactory || typeof adapterFactory.create !== 'function') {
         setHostMessage(host, 'Grid engine failed to load.');
         setStatus('Grid engine unavailable');
