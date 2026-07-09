@@ -180,6 +180,19 @@
   justify-content: flex-start;
   text-align: left;
 }
+
+/* Attribute-name column in the compare matrix (the left column labeled
+   "Buying Factor" that lists Brand / Price / Rating / etc.). Left-aligned,
+   bold, and shaded so it reads as a row-header column instead of a
+   regular data cell. */
+.ss-grid-host .slick-cell.ss-grid-cell-attribute {
+  justify-content: flex-start;
+  text-align: left;
+  background: #f4f6f9;
+  color: var(--ink, #0f1419);
+  font-weight: 700;
+  padding-left: 16px;
+}
 /* Column headers follow the same rule as cells: everything centers
    except the Name column, which keeps its label left-aligned to match
    the product title alignment underneath. */
