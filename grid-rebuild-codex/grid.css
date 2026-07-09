@@ -136,6 +136,22 @@
   overflow: visible !important;
 }
 
+/* Kill AG Grid's own outer border + straight corners. The shell
+   (#productGrid.ss-grid-shell) draws the visible border and rounded
+   8px radius; AG Grid's inner .ag-root-wrapper + .ag-root would draw
+   a second border inside, creating a doubled edge at the corners and
+   flat (unrounded) corners fighting the shell's radius. */
+.ss-grid-host.ag-theme-shopscout,
+.ss-grid-host.ag-theme-shopscout .ag-root-wrapper,
+.ss-grid-host.ag-theme-shopscout .ag-root {
+  border: 0 !important;
+  border-radius: inherit;
+  background: transparent;
+}
+.ss-grid-host.ag-theme-shopscout .ag-root-wrapper {
+  overflow: hidden;
+}
+
 .ss-grid-status {
   position: absolute;
   width: 1px;
