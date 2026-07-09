@@ -175,8 +175,9 @@
    padding), no visible separators. Fluent.Ribbon adds them but that
    pattern looks dated in the modern Office 365 light-strip look. */
 
-/* Clean tab — no active-state underline, no background box.
-   Active state is indicated purely by text color + weight brightening. */
+/* Office 365 tab — clean, with the 2px accent underline flush at
+   the BOTTOM of the tab strip. Explicitly kill any ambient
+   top/left/right borders so nothing looks like an overline. */
 .rb-office-ribbon .ribbon-tab {
   display: inline-flex;
   align-items: center;
@@ -184,9 +185,12 @@
   box-sizing: border-box;
   height: 34px;
   padding: 0 14px;
-  border: 0 !important;                        /* kill any ambient underline/overline */
+  border-top: 0 !important;
+  border-left: 0 !important;
+  border-right: 0 !important;
+  border-bottom: 2px solid transparent;
   margin: 0;
-  background: transparent !important;          /* kill any ambient box */
+  background: transparent !important;
   color: var(--menu-fg, rgba(255, 255, 255, 0.72));
   font-size: 14px;
   font-weight: 500;
@@ -194,16 +198,18 @@
   line-height: 1;
   cursor: pointer;
   user-select: none;
-  transition: color 90ms ease;
+  transition: color 90ms ease, border-color 120ms ease;
 }
 
 .rb-office-ribbon .ribbon-tab:hover {
   color: var(--menu-fg-bright, #fff);
 }
 
+/* Active tab — 2px accent underline at the very bottom, bright text. */
 .rb-office-ribbon .ribbon-tab.active {
   color: var(--menu-fg-bright, #fff);
   font-weight: 700;
+  border-bottom-color: var(--accent, #ecd496);
 }
 
 .rb-office-ribbon .ribbon-tab:focus-visible {
