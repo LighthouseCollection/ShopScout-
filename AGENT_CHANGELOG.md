@@ -3058,3 +3058,54 @@ This file is the shared record for Claude and Codex. Append an entry for every m
   - Reviewer: Claude.
 - Follow-ups or risks:
   - Remaining settings polish should now be fixed in the shared settings shell/CSS rather than standalone-only markup.
+
+## 2026-07-08 - Claude AG Grid migration (Phase 1: products grid) + follow-up polish
+
+- Agent: Claude
+- Branch: grid-rebuild-codex
+- Commit: 8c05cb8 -> 4d06703 (16 commits)
+- Status: Implemented; user acceptance-tested each commit in the live extension. Automated tests not re-run (visual/interactive layout work).
+- Summary:
+  - Vendored AG Grid Community 33+ (~1.9 MB) at `vendor/ag-grid/ag-grid-community.min.js` + `vendor/ag-grid/ag-grid.min.css`. MIT-licensed, self-hosted, no CDN.
+  - Added new adapter `grid-rebuild-codex/agGridAdapter.js` (~505 lines) with the same public contract as `slickGridAdapter.js` (`create/update/updateRow/deleteRow/destroy`). All the SlickGrid formatters were ported to AG Grid `cellRenderer` functions: `renderSelection`, `renderImage`, `renderBrand`, `renderSource`, `renderPrice`, `renderRating`, `renderTitle`, `renderPlain`.
+  - Introduced `PINNED_LEFT_COLUMN_IDS = {select, thumb, title}` so the first three columns are pinned via AG Grid `pinned: 'left'`. Matching CSS shades the pinned band (`.ss-grid-cell-select`, `.ss-grid-cell-thumb`, `.ss-grid-cell-title` all get `#f4f6f9`) and left-aligns the Name column both in cells and header.
+  - Rewrote sizing rule to user spec:
+    * Every column has `padding: 8px 12px` on cells and `10px 12px` on headers so each column = `max(header, widest cell) + 24px`.
+    * Stripped inflated per-column `minWidth` floors (brand/source 110, rating 140, price 90, default 80). Only structural minimums remain (`selection 40`, `image 108`, `title 160`, else 40) so autoSize decides.
+    * `autoSizeEverything` runs `autoSizeAllColumns(false)`, then `distributeLeftover` measures `shell.clientWidth - sum(header cell widths)` and adds `floor(leftover / N)` px to every visible column via `applyColumnState`. Equal-px distribution — the last column pins to the right edge without whitespace, and no column eats a disproportionate share.
+    * Replaced AG Grid's `sizeColumnsToFit` (proportional-to-flex) with the equal-px rule. `defaultColDef.flex = 0` so nothing else flexes.
+  - Killed AG Grid's own inner chrome: `.ag-root-wrapper` and `.ag-root` get `border: 0 !important; border-radius: inherit; background: transparent`. `.ag-body-viewport` / `.ag-body-horizontal-scroll` / `.ag-body-vertical-scroll` get `overflow: visible !important` so `domLayout: 'autoHeight'` grows the grid to fit rows and the browser handles page scroll (no scroll-inside-scroll).
+  - Shell layout is now fluid: `#productGrid.ss-grid-shell` is `width: 100%; max-width: 100%; margin: 0 0 32px` — fills the `.dashboard-page--grid` parent so its left/right edges align exactly with the title band's `border-bottom` above it. JS `fitShellToContent` no longer sets `shell.style.width`; it only toggles `overflow-x: auto` when columns exceed shell.
+  - Rating cell is now a clickable link: `renderRating` builds `<a target="_blank" rel="noopener noreferrer" href="<product-url>#customerReviews">` for Amazon and `#reviews` for every other host. Clicking opens the product page anchored to reviews in a new tab. Visual chrome unchanged (color inherit, cursor pointer, hover underlines the review count).
+  - Uniform page shell for every dashboard route (`.dashboard-page-head` with `padding: 18px 20px`, `border-bottom: 1px solid var(--rule-soft)`, no background) so Products, Vertical Packs, User Rules, Normalization Review, About, etc. all share the same Ribbon -> Title -> Contents rhythm.
+  - Full-width mode is now the localStorage default (`shopscout_grid_width_mode` falls back to `'full'` when unset).
+  - Matrix / normalization review / user rules kept routing through SlickGrid (`shopscoutGrid.js` picks adapter by `projection.mode`) because those projections produce `displayCell` objects that only SlickGrid's `htmlForMatrixCell` / normalization-specific formatters can unwrap. The Products Table View Compare tab regressed to blank cells briefly when everything routed through AG Grid; that was fixed by adding the mode-based routing.
+  - Fixed matrix Compare view (still on SlickGrid) — enabled `enableHtmlRendering: true` in SlickGrid gridOptions so product-column headers actually render the `<img>` thumb + title + actions bar; added `!important` on `.ss-grid-cell-attribute` so the "Buying Factor" column stays left-aligned, bold, shaded (`#f4f6f9`); shaded the header cell of that column so the whole first column reads as one row-header band top to bottom.
+- Files touched (major):
+  - `vendor/ag-grid/ag-grid-community.min.js` (new)
+  - `vendor/ag-grid/ag-grid.min.css` (new)
+  - `vendor/ag-grid/ag-theme-quartz.min.css` (new)
+  - `grid-rebuild-codex/agGridAdapter.js` (new)
+  - `grid-rebuild-codex/shopscoutGrid.js` (adapter routing by projection mode)
+  - `grid-rebuild-codex/grid.css` (AG Grid theme + shell layout + attribute-column fixes)
+  - `grid-rebuild-codex/slickGridAdapter.js` (`enableHtmlRendering: true`)
+  - `comparison.html` (new AG Grid script/CSS tags + uniform page shell markup + title band)
+  - `comparison.css` (dashboard-page--grid variant + head band styling)
+  - `comparison.js` (`updateProductsPageTitle` reads active list name + product count)
+- Validation run:
+  - User acceptance testing after each commit in Chrome; each build tag verified visually against the ShopScout header (v3.3.0.<sha>).
+  - `npm run build` -> pass for every commit (Chrome / Edge / Firefox dists).
+  - Automated tests not re-run this session — recommend Codex runs `npm test` and `npm run typecheck` before merging.
+- Review / handoff:
+  - Reviewer: Codex.
+  - Things to check when reviewing this cluster:
+    1. `agGridAdapter.js` `distributeLeftover` — confirm `applyColumnState({state})` shape is correct for the vendored AG Grid v33 build and that leftover math doesn't over-shoot (`leftover <= cols.length` early-return should prevent 1px oscillation).
+    2. `renderRating` reviews-URL: verify `safeUrl` accepts non-Amazon https URLs, that `#customerReviews` really is Amazon's live anchor, and that the anchor tag click path isn't swallowed by AG Grid's `enableCellTextSelection: true` behavior.
+    3. `shell.clientWidth` measurement in `fitShellToContent` happens synchronously inside `onFirstDataRendered` / `onGridReady`. On very narrow viewports (mobile) the shell might be sub-800px and `distributeLeftover` returns immediately (leftover <= 0). Confirm the mobile fallback is acceptable.
+    4. `shopscoutGrid.js` adapter routing: `mode === 'comparisonMatrix' || mode === 'normalizationReview' || mode === 'userRules'` picks SlickGrid; anything else picks AG Grid. Confirm no other projection modes exist that would fall through.
+    5. Products grid `updateProductsPageTitle` in `comparison.js` runs before each `renderAll` — verify it gracefully handles the "no active list" case (should show a neutral label, not throw).
+- Follow-ups or risks:
+  - **Big follow-up: complete SlickGrid removal.** Matrix, normalization review, and user rules views still run on SlickGrid. Next commit sequence (already scoped with the user) migrates all three to AG Grid, then deletes `vendor/slickgrid/`, `grid-rebuild-codex/slickGridAdapter.js`, all `.slick-*` CSS rules in `grid-rebuild-codex/grid.css`, the SlickGrid `<script>`/`<link>` tags in `comparison.html`, and any build-script exclusions. Each commit will land its own changelog entry telling Codex exactly what to verify.
+  - **Ribbon consolidation follow-up:** The "Products" tab and "Products Table View" tab merge into one "Products" tab with 5 groups (List, Product Actions, Review & Rules, View, Organize). Fit/Full width toggle is removed (full is now the CSS default). Rescan Products becomes a split button with smart default (checked rows -> Rescan Selected; none -> Rescan All). Reset becomes a single dropdown (Clear Filters / Clear Sort / Clear Grouping / Reset Columns / Reset Everything). This will land in its own commit before the SlickGrid migration.
+  - **Automated tests were not re-run this session.** Codex should run `npm test`, `npm run syntax`, `npm run lint`, `npm run typecheck` before merging to catch anything the visual acceptance loop missed.
+  - **AG Grid v33 API drift risk:** `applyColumnState({state})`, `setGridOption('columnDefs', ...)`, `setGridOption('rowData', ...)` are all used. If Codex upgrades AG Grid the deprecated-in-v33 signatures may need updating.
