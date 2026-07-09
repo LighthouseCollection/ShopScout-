@@ -1,12 +1,17 @@
 /* Codex Phase 2 grid shell. Scoped to #productGrid / ss-grid-* only.
-   No border, margin, or overflow clip — the grid flows into the page
-   like any other content so the browser handles page scrolling. */
+   Matches the normalization-review-grid-wrap / user-rules-grid-wrap
+   card so all three tables (product grid, normalization review, user
+   rules) look identical: same 1px rule border, same 8px radius, same
+   surface background, same margin off the page edges. Overflow stays
+   visible so the browser handles page scroll — no scroll-inside-scroll
+   iframe feel. */
 #productGrid.ss-grid-shell {
   position: relative;
-  margin: 0;
+  margin: 12px 20px 32px;
   padding: 0;
-  border: 0;
-  background: transparent;
+  border: 1px solid var(--rule, #d1d5db);
+  border-radius: 8px;
+  background: var(--card, #fff);
   overflow: visible;
 }
 
