@@ -1131,24 +1131,48 @@
   max-width: none;
 }
 
-/* Filters + Reset stacked as compact icon-left buttons in a column,
-   sitting next to the Sort/Group stack. Overrides the default
-   vertical-column rb-btn-lg layout inside this container only. */
-.rb-office-ribbon .rb-organize-tools {
-  display: flex;
-  flex-direction: column;
+/* Organize group: 2-column grid so Filters + Reset share row
+   heights with the Sort By / Group By stack. Column 1 is the
+   stack, column 2 is the Filters+Reset tools. Both columns get
+   the SAME two rows (1fr 1fr), so the buttons on the right sit
+   at exactly the same y-positions as the Sort/Group rows on the
+   left. Resizes cleanly because the rows grow/shrink together. */
+.rb-office-ribbon .rb-group[data-group-id="organize"] > .rb-group-content {
+  display: grid;
+  grid-template-columns: minmax(190px, 1fr) minmax(96px, auto);
+  grid-template-rows: 1fr 1fr;
+  gap: 4px 8px;
   align-items: stretch;
+}
+.rb-office-ribbon .rb-group[data-group-id="organize"] > .rb-group-content > .rb-organize-stack {
+  grid-column: 1;
+  grid-row: 1 / span 2;
+}
+.rb-office-ribbon .rb-organize-tools {
+  grid-column: 2;
+  grid-row: 1 / span 2;
+  display: grid;
+  grid-template-rows: 1fr 1fr;                 /* mirror the parent's 2-row grid */
   gap: 4px;
   min-width: 96px;
+  align-self: stretch;
 }
+.rb-office-ribbon .rb-organize-tools > .toolbar-menu {
+  display: flex;                               /* let the details flex-fill its row */
+}
+/* Compact icon-left rendering for Filters + Reset. Each button
+   fills its full grid row so it lines up with a Sort/Group row
+   in column 1. */
 .rb-office-ribbon .rb-organize-tools .rb-btn-lg,
 .rb-office-ribbon .rb-organize-tools > .toolbar-menu > .rb-btn-lg {
+  display: flex;
   flex-direction: row;
   align-items: center;
   justify-content: flex-start;
   gap: 6px;
-  height: auto;
-  min-height: 24px;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
   min-width: 0;
   max-width: none;
   padding: 3px 8px;
@@ -1169,9 +1193,6 @@
   text-overflow: ellipsis;
   font-size: 11px;
   line-height: 1.2;
-}
-.rb-office-ribbon .rb-organize-tools > .toolbar-menu {
-  display: block;
 }
 
 /* ==============================================================
