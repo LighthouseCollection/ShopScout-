@@ -999,6 +999,8 @@ function restoreProductListChrome() {
   document.getElementById('filterBar').style.display = '';
   document.querySelector('.controls').style.display = '';
   document.body.classList.remove('is-info-page', 'is-wide-info-page');
+  const productsShell = document.getElementById('productsPageShell');
+  if (productsShell) productsShell.hidden = false;
   const productGrid = document.getElementById('productGrid');
   if (productGrid) productGrid.hidden = false;
   renderAll();
@@ -1013,6 +1015,13 @@ function prepareMainContentPage() {
   document.getElementById('filterBar').style.display = 'none';
   document.querySelector('.controls').style.display = 'none';
   document.body.classList.add('is-info-page');
+  /* Hide the WHOLE product-list page shell — not just #productGrid.
+     Otherwise the "My Products / 38 products in this list." title
+     band bleeds through under every info page (Save As, About,
+     Help, Suggest, Report) making it look like the info page's
+     title is at the bottom. */
+  const productsShell = document.getElementById('productsPageShell');
+  if (productsShell) productsShell.hidden = true;
   const productGrid = document.getElementById('productGrid');
   if (productGrid) productGrid.hidden = true;
   const content = document.getElementById('content');
