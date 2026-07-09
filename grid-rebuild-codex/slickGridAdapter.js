@@ -699,20 +699,16 @@
        +12px absorbs SlickGrid's subpixel rounding + the host's 4px
        padding-right buffer without triggering a scrollbar. */
     const mode = shell.getAttribute('data-shell-width') === 'full' ? 'full' : 'fit';
-    /* +2px is just enough to absorb SlickGrid's subpixel column-width
-   rounding without leaving visible empty space on the right. */
-const contentTarget = canvasWidth + 2;
+    /* +2px absorbs SlickGrid's subpixel column-width rounding without
+       leaving visible empty space on the right. */
+    const contentTarget = canvasWidth + 2;
     const shellMaxWidth = computeShellMaxWidth(viewportInner);
-    let targetWidth;
-    if (mode === 'full') {
-      targetWidth = viewportInner;
-    } else if (contentTarget > shellMaxWidth) {
-      /* Content wider than the viewport-scaled cap — go full width so
-         users don't have to hunt for the toggle. */
-      targetWidth = viewportInner;
-    } else {
-      targetWidth = Math.min(contentTarget, viewportInner);
-    }
+    /* Both modes shrink to content when content is narrow. The modes
+       differ only in the growth cap when content is wide:
+         Fit  → cap at shellMaxWidth (~85% of viewport, comfortable read).
+         Full → cap at viewportInner (edge-to-edge when needed). */
+    const cap = mode === 'full' ? viewportInner : shellMaxWidth;
+    const targetWidth = Math.min(contentTarget, cap, viewportInner);
     shell.style.width = targetWidth + 'px';
     shell.style.overflowX = canvasWidth > shell.clientWidth + 2 ? 'auto' : 'hidden';
   }
