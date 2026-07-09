@@ -679,14 +679,28 @@
     return Math.max(SHELL_MIN_MAX_WIDTH, Math.round(viewportInner * SHELL_MAX_WIDTH_RATIO));
   }
 
+  function measureCanvasWidth(host) {
+    /* Sum of visible column widths (from the header cells) — SlickGrid's
+       .grid-canvas.scrollWidth includes a trailing drag-resize spacer
+       that inflates the number by 100+ px. Header cells reliably match
+       the actual column pixel widths without the spacer. */
+    const headerCells = host?.querySelectorAll?.('.slick-header-columns > .slick-header-column');
+    if (headerCells && headerCells.length) {
+      let sum = 0;
+      for (const cell of headerCells) sum += cell.offsetWidth || 0;
+      if (sum > 0) return sum;
+    }
+    const canvas = host?.querySelector?.('.grid-canvas');
+    if (canvas) return canvas.offsetWidth || canvas.scrollWidth || 0;
+    return host?.querySelector?.('.slick-header-columns')?.offsetWidth || 0;
+  }
+
   function updateShellOverflow(container) {
     const host = container;
     const shell = host?.closest?.('.ss-grid-shell');
     if (!shell) return;
-    const canvas = host?.querySelector?.('.grid-canvas')
-      || host?.querySelector?.('.slick-header-columns');
-    if (!canvas) return;
-    const canvasWidth = canvas.scrollWidth || canvas.offsetWidth || 0;
+    const canvasWidth = measureCanvasWidth(host);
+    if (!canvasWidth) return;
     const doc = shell.ownerDocument || root.document;
     const viewportInner = (doc?.documentElement?.clientWidth || root.innerWidth || 1400) - SHELL_HORIZONTAL_MARGIN;
     /* Auto behavior:
@@ -747,10 +761,13 @@
     const isUserRules = projection?.mode === 'userRules';
     const headerHeight = isMatrix ? 180 : 42;
     const rowHeight = isNormalizationReview ? 64 : (isUserRules ? 60 : 110);
-    const scrollbarBuffer = 18;
-    const minHeight = rowCount ? headerHeight + rowHeight + scrollbarBuffer : 140;
+    const minHeight = rowCount ? headerHeight + rowHeight : 140;
+    /* No scrollbar buffer — updateShellOverflow only enables the
+       horizontal scrollbar when the canvas genuinely exceeds the shell,
+       so reserving space for a phantom scrollbar just left dead white
+       space below the last row. */
     const contentHeight = rowCount
-      ? headerHeight + (rowCount * rowHeight) + scrollbarBuffer
+      ? headerHeight + (rowCount * rowHeight)
       : minHeight;
     container.style.height = `${contentHeight}px`;
     container.style.minHeight = '0';
