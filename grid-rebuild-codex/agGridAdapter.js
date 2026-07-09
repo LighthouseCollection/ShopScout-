@@ -285,23 +285,13 @@
       const container = host.querySelector?.('.ag-center-cols-container');
       canvasWidth = container?.offsetWidth || container?.scrollWidth || 0;
     }
+    /* Shell width is now driven by CSS (100% of dashboard-page--grid
+       parent) so it always aligns with the title band's underline
+       above it. Here we only manage overflow-x: turn scroll on if
+       the columns are wider than the shell, otherwise off. */
+    shell.style.width = '';
+    shell.style.maxWidth = '';
     if (!canvasWidth) return;
-    const doc = shell.ownerDocument || root.document;
-    const viewportInner = (doc?.documentElement?.clientWidth || root.innerWidth || 1400) - 40;
-    const mode = shell.getAttribute('data-shell-width') === 'full' ? 'full' : 'fit';
-    /* Full mode: always stretch to viewport. Content narrower than
-       viewport still fills the page — the last column pins to the
-       right edge (see .ss-grid-host.ag-theme-shopscout .ag-header
-       flex CSS). Fit mode: hug the actual canvas width so tight
-       tables don't waste horizontal space. */
-    let target;
-    if (mode === 'full') {
-      target = viewportInner;
-    } else {
-      const cap = Math.max(800, Math.round(viewportInner * 0.85));
-      target = Math.min(canvasWidth + 2, cap, viewportInner);
-    }
-    shell.style.width = target + 'px';
     shell.style.overflowX = canvasWidth > shell.clientWidth + 2 ? 'auto' : 'hidden';
   }
 

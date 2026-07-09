@@ -7,14 +7,12 @@
    iframe feel. */
 #productGrid.ss-grid-shell {
   position: relative;
-  /* Centered on the page with a 20px gutter on each side. Actual
-     width is set by JS (updateShellOverflow in slickGridAdapter.js) —
-     it computes a viewport-scaled cap so the card grows to fit content
-     up to the browser width, whether 1280px or 3280px. The CSS
-     max-width here is JUST a safety net to prevent horizontal page
-     overflow on very narrow screens if JS hasn't run yet. */
-  margin: 12px auto 32px;
-  max-width: calc(100% - 40px);
+  /* Shell fills the .dashboard-page--grid parent so its left/right
+     edges align with the title band above it (which also spans 100%
+     of the parent). No auto-centering, no extra 40px shrink. */
+  margin: 0 0 32px;
+  width: 100%;
+  max-width: 100%;
   padding: 0;
   border: 1px solid var(--rule, #d1d5db);
   border-radius: 8px;
@@ -83,7 +81,7 @@
   letter-spacing: 0.03em;
   text-transform: none;
   padding: 10px 6px;
-  border-right: 1px solid #eaeef2;
+  border-right: 1px solid var(--rule);
 }
 
 .ss-grid-host.ag-theme-shopscout .ag-header-cell .ag-header-cell-label {
