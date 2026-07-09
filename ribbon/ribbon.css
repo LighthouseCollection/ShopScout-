@@ -921,6 +921,45 @@
 }
 
 /* ==============================================================
+   19a. Group label centering — comparison.css uses `align-self: end`
+   which aligns the label to the right edge of the group in a flex
+   column layout. Center it horizontally instead so it sits under
+   the group's visual center.
+   ============================================================== */
+.rb-office-ribbon .rb-group > .rb-group-label {
+  align-self: center;
+  text-align: center;
+}
+
+/* ==============================================================
+   19b. List group buttons — icon-only variant. Hides the text
+   labels (New list, Rename, Delete) so the buttons render as
+   compact 22×22 icon-only affordances. Scoped to the List group
+   only so other .rb-btn-sm usages elsewhere are unaffected.
+   ============================================================== */
+.rb-office-ribbon .rb-group[data-group-id="list"] .rb-btn-sm {
+  gap: 0;
+  padding: 4px 6px;
+  min-width: 26px;
+  justify-content: center;
+}
+
+.rb-office-ribbon .rb-group[data-group-id="list"] .rb-btn-sm .rb-btn-sm-label {
+  display: none;
+}
+
+.rb-office-ribbon .rb-group[data-group-id="list"] .rb-btn-sm .rb-btn-sm-icon {
+  width: 16px;
+  height: 16px;
+  opacity: 1;
+}
+
+.rb-office-ribbon .rb-group[data-group-id="list"] .rb-btn-sm .rb-btn-sm-icon svg {
+  width: 100%;
+  height: 100%;
+}
+
+/* ==============================================================
    19. Organize group — stacked Sort By / Group By with integrated
    direction toggle button on the Sort By dropdown.
    ============================================================== */
