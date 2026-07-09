@@ -37,23 +37,19 @@ assert.ok(gridCss.includes('.ss-grid-header-thumb') && gridCss.includes('width: 
   'compare headers reserve a 100px-wide thumbnail area');
 assert.ok(!gridCss.includes('#eaeaea'),
   'grid overrides do not use the darker #eaeaea alternating row color');
-/* Zebra rows deliberately removed as part of the rich-grid polish —
-   uniform white rows read better for product data tables. */
-assert.ok(/\.ss-grid-host \.slick-row\.odd,[\s\S]{0,120}background:\s*var\(--surface/.test(gridCss),
-  'grid rows use a uniform white surface — no darker alternating row');
 assert.ok(!gridCss.includes('#e5e7eb'),
   'grid border fallbacks use #d1d5db instead of #e5e7eb');
-assert.ok(/\.ss-grid-host \.slick-cell[\s\S]{0,180}align-items:\s*center/.test(gridCss),
+assert.ok(/\.ag-cell[\s\S]{0,220}align-items:\s*center/.test(gridCss),
   'grid cells vertically center their contents');
-assert.ok(/\.ss-grid-host \.slick-cell[\s\S]{0,320}justify-content:\s*center/.test(gridCss),
+assert.ok(/\.ag-cell[\s\S]{0,320}justify-content:\s*center/.test(gridCss),
   'grid cells center content by default; only the Name (title) column overrides to flex-start');
 assert.ok(/\.ss-grid-cell-title[\s\S]{0,120}justify-content:\s*flex-start/.test(gridCss),
   'Name column stays left-aligned even though everything else centers');
-assert.ok(/\.ss-grid-host \.slick-cell[\s\S]{0,900}user-select:\s*text/.test(gridCss),
+assert.ok(/\.ag-cell[\s\S]{0,900}user-select:\s*text/.test(gridCss),
   'grid cells allow normal browser text selection for copy/paste');
-assert.ok(/\.ss-grid-host \.slick-cell\.ss-grid-cell-title[\s\S]{0,180}justify-content:\s*flex-start/.test(gridCss),
+assert.ok(/\.ag-cell\.ss-grid-cell-title[\s\S]{0,180}justify-content:\s*flex-start/.test(gridCss),
   'product-name cells keep the title wrapper left aligned');
-assert.ok(/\.ss-grid-host \.slick-cell\.ss-grid-cell-title[\s\S]{0,220}text-align:\s*left/.test(gridCss),
+assert.ok(/\.ag-cell\.ss-grid-cell-title[\s\S]{0,220}text-align:\s*left/.test(gridCss),
   'product-name cells keep product names left aligned');
 assert.ok(/\.ss-grid-logo-token[\s\S]{0,320}text-decoration:\s*none/.test(gridCss),
   'source and brand logo tokens suppress link underlines');
@@ -69,8 +65,6 @@ assert.ok(/\.ss-grid-column-group[\s\S]{0,220}break-inside:\s*avoid/.test(gridCs
   'columns modal keeps each alphabet group intact inside a masonry column');
 assert.ok(/\.ss-grid-column-letter[\s\S]{0,180}letter-spacing:\s*0\.08em/.test(gridCss),
   'columns modal has alphabet letter headers for grouped fields');
-assert.ok(/\.ss-grid \.slick-row\.slick-group \.slick-cell[\s\S]{0,180}padding:\s*14px 12px 6px/.test(gridCss),
-  'native grouping rows keep top spacing while reducing bottom padding');
 assert.ok(/\.ss-grid-group-title[\s\S]{0,160}font-weight:\s*700/.test(gridCss),
   'native grouping titles are bold');
 assert.ok(gridCss.includes('.ss-grid-group-label'),
@@ -82,36 +76,23 @@ for (const logoName of ['amazon.svg', 'logitech.svg', 'microsoft.svg', 'newegg.s
   assert.ok(!fs.existsSync(path.join(root, 'logos', logoName)), `${logoName} is removed from the local logo cache`);
 }
 
-const cssIndex = indexOfRequired('vendor/slickgrid/slick.grid.css', 'SlickGrid core CSS');
-const themeIndex = indexOfRequired('vendor/slickgrid/slick-default-theme.css', 'SlickGrid default theme CSS');
 const codexCssIndex = indexOfRequired('grid-rebuild-codex/grid.css', 'Codex grid CSS');
-assert.ok(cssIndex < codexCssIndex, 'Codex grid CSS loads after SlickGrid CSS');
-assert.ok(themeIndex < codexCssIndex, 'Codex grid CSS can override the SlickGrid theme');
+const agGridCssIndex = indexOfRequired('vendor/ag-grid/ag-grid.min.css', 'AG Grid core CSS');
+assert.ok(agGridCssIndex < codexCssIndex, 'Codex grid CSS loads after AG Grid CSS so shopscout theme overrides win');
 
-const vendorOrder = [
-  'vendor/slickgrid/slick.core.js',
-  'vendor/slickgrid/slick.interactions.js',
-  'vendor/slickgrid/slick.dataview.js',
-  'vendor/slickgrid/slick.editors.js',
-  'vendor/slickgrid/slick.grid.js',
-  'vendor/slickgrid/plugins/slick.rowselectionmodel.js'
-].map((src, idx) => indexOfRequired(`src="${src}"`, `SlickGrid vendor script ${idx + 1}`));
-
-for (let i = 1; i < vendorOrder.length; i += 1) {
-  assert.ok(vendorOrder[i - 1] < vendorOrder[i], 'SlickGrid vendor scripts load in dependency order');
-}
+const agGridScriptIndex = indexOfRequired('src="vendor/ag-grid/ag-grid-community.min.js"', 'AG Grid vendor bundle');
 
 const stateIndex = indexOfRequired('src="grid-rebuild-codex/state.js"', 'Codex grid state');
 const projectionIndex = indexOfRequired('src="grid-rebuild-codex/projections.js"', 'Codex grid projections');
-const adapterIndex = indexOfRequired('src="grid-rebuild-codex/slickGridAdapter.js"', 'Codex SlickGrid adapter');
+const adapterIndex = indexOfRequired('src="grid-rebuild-codex/agGridAdapter.js"', 'Codex AG Grid adapter');
 const gridIndex = indexOfRequired('src="grid-rebuild-codex/shopscoutGrid.js"', 'Codex grid orchestrator');
 const comparisonIndex = indexOfRequired('src="comparison.js"', 'comparison.js');
 
-assert.ok(vendorOrder[vendorOrder.length - 1] < adapterIndex,
-  'Codex SlickGrid adapter loads after SlickGrid vendor scripts');
+assert.ok(agGridScriptIndex < adapterIndex,
+  'Codex AG Grid adapter loads after the AG Grid vendor bundle');
 assert.ok(stateIndex < gridIndex, 'state store loads before the grid orchestrator');
 assert.ok(projectionIndex < gridIndex, 'projection helpers load before the grid orchestrator');
-assert.ok(adapterIndex < gridIndex, 'SlickGrid adapter loads before the grid orchestrator');
+assert.ok(adapterIndex < gridIndex, 'AG Grid adapter loads before the grid orchestrator');
 assert.ok(gridIndex < comparisonIndex, 'ShopScoutGrid is registered before comparison.js init runs');
 
 assert.ok(buildScript.includes("'grid-rebuild-codex'"),

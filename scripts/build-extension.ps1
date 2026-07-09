@@ -44,8 +44,8 @@ $runtimeFiles = @(
 
 # Directories copied recursively into each dist (state/data/ui layers + vendor libs + icons + layered extraction pipeline).
 $runtimeDirs = @('state', 'data', 'normalization', 'shared', 'ui', 'security', 'vendor', 'icons', 'logos', 'content', 'comparison', 'grid-rebuild-codex')
-# Skip legacy SlickGrid — we now use AG Grid, but vendor/slickgrid still ships until
-# the review + matrix grids are ported. Leaving both vendored is fine (~2 MB extra).
+# SlickGrid removed in Phase 5 cleanup — every grid (products, compare
+# matrix, normalization review, user rules) renders through AG Grid now.
 
 $targets = @(
   @{ Name = 'chrome';  Manifest = 'manifest.json' },

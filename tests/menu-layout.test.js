@@ -4,7 +4,7 @@ const path = require('path');
 
 const html = fs.readFileSync(path.join(__dirname, '..', 'comparison.html'), 'utf8');
 const js = fs.readFileSync(path.join(__dirname, '..', 'comparison.js'), 'utf8');
-const gridAdapterJs = fs.readFileSync(path.join(__dirname, '..', 'grid-rebuild-codex', 'slickGridAdapter.js'), 'utf8');
+const gridAdapterJs = fs.readFileSync(path.join(__dirname, '..', 'grid-rebuild-codex', 'agGridAdapter.js'), 'utf8');
 const css = fs.readFileSync(path.join(__dirname, '..', 'comparison.css'), 'utf8');
 const feedbackJs = fs.readFileSync(path.join(__dirname, '..', 'comparison-feedback.js'), 'utf8');
 const settingsJs = fs.readFileSync(path.join(__dirname, '..', 'settings.js'), 'utf8');
@@ -25,12 +25,11 @@ assertIncludes('class="ribbon-pane active" data-pane="products"', 'Products ribb
 assertIncludes('data-tab="file">File</button>', 'File tab exists');
 assertIncludes('data-tab="products">Products</button>', 'Products tab exists');
 assertIncludes('data-tab="analyze">Analyze</button>', 'Analyze tab exists');
-assertIncludes('data-tab="view">Products Table View</button>', 'Products Table View tab exists');
+assertNotIncludes('data-tab="view">', 'Products Table View tab is folded into the merged Products tab');
 assertNotIncludes('data-tab="view">View</button>', 'old View tab label is replaced');
 assert.ok(
-  html.indexOf('data-tab="products"') < html.indexOf('data-tab="view"')
-    && html.indexOf('data-tab="view"') < html.indexOf('data-tab="analyze"'),
-  'Products Table View tab appears immediately after Products and before Analyze'
+  html.indexOf('data-tab="products"') < html.indexOf('data-tab="analyze"'),
+  'Products tab appears before Analyze'
 );
 assertIncludes('data-tab="search">Search</button>', 'Search tab exists');
 assertIncludes('data-tab="about">About</button>', 'About tab replaces Help');
@@ -80,9 +79,9 @@ assertIncludes('id="listSelect"',     'List selector exists');
 assertIncludes('id="newListBtn"',     'New-list action exists');
 assertIncludes('id="renameListBtn"',  'Rename-list action exists');
 assertIncludes('id="deleteListBtn"',  'Delete-list action exists');
-assertIncludes('<div class="rb-group-label">Products</div>', 'Products tab includes Products group');
+assertIncludes('<div class="rb-group-label">Product Actions</div>', 'Products tab includes Product Actions group');
 assertIncludes('id="addUrlToggle"', 'Products tab exposes Add Product');
-assertIncludes('Delete Product(s)', 'Products tab exposes Delete Product(s)');
+assertIncludes('Delete Item(s)', 'Products tab exposes Delete Item(s) (formerly Delete Product(s))');
 assertIncludes('Rescan Products', 'Products tab exposes Rescan Products');
 assertIncludes('data-command="duplicate-review"', 'Products tab exposes possible-duplicate review');
 assertIncludes('data-command="normalization-review"', 'Products tab exposes normalization review');
@@ -128,22 +127,23 @@ assertIncludes('<div class="rb-group-label">Settings</div>', 'Analyze tab includ
 assertNotIncludes('data-stage-option="finalRecommendation"', 'Analyze ribbon no longer owns stage option checkboxes');
 assertNotIncludes('data-stage-option="secondOpinion"', 'Second opinion stage selection stays inside the AI modal only');
 
-/* Task 11 Phase 2 restores View ribbon grid controls for the new
-   SlickGrid-backed product grid. These controls must use the
-   data-ss-grid-* command surface, not the retired Tabulator ids. */
-assertIncludes('class="ribbon-pane" data-pane="view"',  'View ribbon pane still exists');
-assertIncludes('data-list-mirror="view"',               'View pane keeps the Active-list mirror');
-assertIncludes('<div class="rb-group-label">Layout</div>',     'View pane exposes the new Layout group');
-assertIncludes('<div class="rb-group-label">Sort</div>',       'View pane exposes the new Sort group');
-assertIncludes('<div class="rb-group-label">Filter</div>',     'View pane exposes the new Filter group');
-assertIncludes('<div class="rb-group-label">Columns</div>',    'View pane exposes the new Columns group');
-assertIncludes('<div class="rb-group-label">Grouping</div>',   'View pane exposes the new Grouping group');
-assertIncludes('data-ss-grid-command="mode-rows"',             'New products-as-rows command exists');
-assertIncludes('data-ss-grid-command="mode-matrix"',           'New compare command exists');
-assertIncludes('data-ss-grid-sort-field',                      'New sort field picker exists');
-assertIncludes('data-ss-grid-command="open-filters"',          'New filter command exists');
-assertIncludes('data-ss-grid-command="open-columns"',          'New columns command exists');
-assertIncludes('data-ss-grid-group-field',                     'New grouping field picker exists');
+/* Products Table View tab was merged into Products in the Phase 5
+   cleanup — every grid control now lives in the single Products tab
+   under the View + Organize groups. */
+assertNotIncludes('class="ribbon-pane" data-pane="view"', 'old View ribbon pane is gone');
+assertNotIncludes('data-list-mirror="view"',              'old View list-mirror is gone');
+assertIncludes('<div class="rb-group-label">View</div>',      'merged Products tab exposes View group');
+assertIncludes('<div class="rb-group-label">Organize</div>',  'merged Products tab exposes Organize group');
+assertIncludes('<div class="rb-group-label">Review &amp; Rules</div>', 'merged Products tab exposes Review & Rules group');
+assertIncludes('data-ss-grid-command="mode-rows"',             'products-as-rows command exists');
+assertIncludes('data-ss-grid-command="mode-matrix"',           'compare command exists');
+assertIncludes('data-ss-grid-sort-field',                      'sort field picker exists');
+assertIncludes('data-ss-grid-command="open-filters"',          'filter command exists');
+assertIncludes('data-ss-grid-command="open-columns"',          'columns command exists');
+assertIncludes('data-ss-grid-group-field',                     'grouping field picker exists');
+assertIncludes('data-ss-grid-command="reset-all"',             'Reset dropdown includes reset-all wipes-everything action');
+assertNotIncludes('data-ss-grid-command="width-fit"',          'width-fit toggle removed (full is CSS default)');
+assertNotIncludes('data-ss-grid-command="width-full"',         'width-full toggle removed (full is CSS default)');
 assertNotIncludes('<div class="rb-group-label">Table</div>',   'Old Table group removed');
 assertNotIncludes('<div class="rb-group-label">Saved views</div>', 'Old Saved views group removed');
 assertNotIncludes('data-db-mode="grid"',                       'Old Grid mode toggle removed');

@@ -9,9 +9,6 @@
   <link rel="stylesheet" href="theme.css">
   <link rel="stylesheet" href="ui/ui-core.css">
   <link rel="stylesheet" href="vendor/ag-grid/ag-grid.min.css">
-  <link rel="stylesheet" href="vendor/slickgrid/slick.grid.css">
-  <link rel="stylesheet" href="vendor/slickgrid/slick-default-theme.css">
-  <link rel="stylesheet" href="vendor/slickgrid/slick-icons.css">
   <link rel="stylesheet" href="comparison.css">
   <link rel="stylesheet" href="grid-rebuild-codex/grid.css">
 
@@ -762,22 +759,18 @@
 <script src="shared/projections/specProjection.js"></script>
 <script src="shared/edits/ratingWriter.js"></script>
 
-<!-- SlickGrid browser runtime for the Codex Phase 2 grid. -->
+<!-- Grid runtime — AG Grid Community (vendored, MIT). SlickGrid was
+     ripped out in the Phase 5 cleanup; the products grid, compare
+     matrix, normalization review, and user rules all render through
+     grid-rebuild-codex/agGridAdapter.js now. -->
 <script src="vendor/ag-grid/ag-grid-community.min.js"></script>
-<script src="vendor/slickgrid/slick.core.js"></script>
-<script src="vendor/slickgrid/slick.interactions.js"></script>
-<script src="vendor/slickgrid/slick.dataview.js"></script>
-<script src="vendor/slickgrid/slick.editors.js"></script>
-<script src="vendor/slickgrid/slick.grid.js"></script>
-<script src="vendor/slickgrid/plugins/slick.rowselectionmodel.js"></script>
 
-<!-- Codex Phase 2 grid layer. Loads before comparison.js so renderAll()
+<!-- Codex grid layer. Loads before comparison.js so renderAll()
      can delegate to globalThis.ShopScoutGrid during init. -->
 <script src="grid-rebuild-codex/state.js"></script>
 <script src="grid-rebuild-codex/projections.js"></script>
 <script src="grid-rebuild-codex/editing.js"></script>
 <script src="grid-rebuild-codex/agGridAdapter.js"></script>
-<script src="grid-rebuild-codex/slickGridAdapter.js"></script>
 <script src="grid-rebuild-codex/shopscoutGrid.js"></script>
 
   <!-- UI core — safe HTML, modals, toasts, confirm/prompt. Must load

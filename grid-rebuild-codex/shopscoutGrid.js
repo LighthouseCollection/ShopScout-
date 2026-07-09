@@ -379,19 +379,6 @@
         pinnedColumns: []
       });
       render();
-    } else if (command === 'width-fit' || command === 'width-full') {
-      /* Persist to localStorage — shell width is a personal preference,
-         not per-list state. Read on next mount + applied via CSS data
-         attribute on the shell. */
-      const mode = command === 'width-full' ? 'full' : 'fit';
-      try { root.localStorage?.setItem('shopscout_grid_width_mode', mode); } catch {}
-      const shell = root.document?.querySelector('.ss-grid-shell');
-      if (shell) shell.setAttribute('data-shell-width', mode);
-      /* Re-run overflow/width calculation for the new mode. */
-      root.document?.querySelectorAll('[data-ss-grid-command="width-fit"],[data-ss-grid-command="width-full"]').forEach(btn => {
-        btn.classList.toggle('rb-btn-lg--active', btn.dataset.ssGridCommand === `width-${mode}`);
-      });
-      render();
     }
   }
 
@@ -855,17 +842,9 @@
         state.adapter = null;
         return;
       }
-      /* Products grid + comparisonMatrix → AG Grid (Phase 1 + 2 done).
-         normalizationReview / userRules → SlickGrid until their
-         renderers are wired (Phase 3). AG Grid's renderMatrixCell
-         now unwraps the displayCell {value, raw, corrected, ...}
-         objects that comparison matrix rows produce. */
-      const mode = projection?.mode;
-      const useSlickGrid = mode === 'normalizationReview'
-        || mode === 'userRules';
-      const adapterFactory = useSlickGrid
-        ? root.ShopScoutSlickGridAdapter
-        : root.ShopScoutAgGridAdapter;
+      /* Every projection mode renders through AG Grid now. SlickGrid
+         was fully removed in the Phase 5 cleanup. */
+      const adapterFactory = root.ShopScoutAgGridAdapter;
       if (!adapterFactory || typeof adapterFactory.create !== 'function') {
         setHostMessage(host, 'Grid engine failed to load.');
         setStatus('Grid engine unavailable');

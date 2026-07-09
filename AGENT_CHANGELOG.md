@@ -3284,3 +3284,61 @@ This file is the shared record for Claude and Codex. Append an entry for every m
 - Follow-ups or risks:
   - **Text columns** (Type / Field / Raw alias / Normalized value) route to `renderPlain`. If a Rule row's raw or normalized value is a structured object (from a legacy shape), it renders as `[object Object]`. Not observed in current codebase but worth spot-checking.
   - **Next commit (5/5):** Final SlickGrid removal. Deletes `vendor/slickgrid/`, `grid-rebuild-codex/slickGridAdapter.js`, `.slick-*` CSS rules in `grid-rebuild-codex/grid.css`, SlickGrid `<script>` and `<link>` tags in `comparison.html`, the SlickGrid fallback branches in `mountNormalizationReviewGrid` / `mountUserRulesGrid` / `shopscoutGrid.js`, and any SortableJS references that were only used by SlickGrid column reordering. Also removes the width-fit / width-full command branch that's been dead since commit 1.
+
+## 2026-07-08 - Claude SlickGrid fully removed
+
+- Agent: Claude
+- Branch: grid-rebuild-codex
+- Commit: This commit (5/5 — the last commit in the SlickGrid removal sequence).
+- Status: Implemented. All 44 automated test files pass locally.
+- Summary:
+  - **Deleted files:**
+    * `vendor/slickgrid/` — entire directory (LICENSE, README.txt, slick.core.js, slick.dataview.js, slick.editors.js, slick.grid.js, slick.grid.css, slick.interactions.js, slick-default-theme.css, slick-icons.css, plugins/slick.rowselectionmodel.js). ~500 KB gone from vendored code.
+    * `grid-rebuild-codex/slickGridAdapter.js` — the ~1200-line SlickGrid adapter.
+    * `grid-rebuild-codex/tests/adapter.test.js` — tested SlickGrid renderer HTML shape; obsolete now.
+    * `tests/normalization-review-render.test.js` — same story, tested SlickGrid output.
+    * `tests/normalization-rules-render.test.js` — same.
+  - **Stripped CSS:** ~180 lines of `.slick-*` rules removed from `grid-rebuild-codex/grid.css`. Only the two non-slick rules that lived inside those blocks (`.ss-grid-host .ss-grid-cell-actions` and `.ss-grid-cell-title`) were preserved. The AG Grid equivalents (`.ag-cell.ss-grid-cell-*`, `.ag-header-cell`, etc.) already exist elsewhere in the same file from earlier commits.
+  - **Stripped HTML:** removed the SlickGrid `<link>` tags (grid CSS + default theme + icons) and the SlickGrid `<script>` tags (core / interactions / dataview / editors / grid / rowselectionmodel plugin) from `comparison.html`. The SlickGrid adapter script tag also removed. AG Grid script + CSS remain.
+  - **Stripped fallbacks:**
+    * `mountNormalizationReviewGrid` and `mountUserRulesGrid` in `comparison.js` no longer reference `ShopScoutSlickGridAdapter` — they call `ShopScoutAgGridAdapter` directly and show a "Grid engine runtime is not available" fallback message if it fails to load.
+    * The `#normalizationReviewGrid` and `#userRulesGrid` host divs now carry `ag-theme-shopscout` in their class list (was `slick-default-theme`).
+    * `shopscoutGrid.js`'s adapter routing dropped the `useSlickGrid` variable — every projection mode goes to `root.ShopScoutAgGridAdapter` now.
+  - **Dead code swept:**
+    * The `width-fit` / `width-full` `handleGridCommand` branch in `shopscoutGrid.js` (dead since commit 1 removed the UI toggle). ~14 lines gone.
+    * `applyWidthMode` still runs on first mount to apply the localStorage-persisted width preference to the shell's `data-shell-width` attribute — that stays because full is the current CSS default and the attribute doesn't hurt anyone.
+  - **Comment refresh:** the "slickGridAdapter.updateShellOverflow" reference inside a `#productGrid.ss-grid-shell` comment in `grid.css` now reads "agGridAdapter.fitShellToContent".
+  - **Build script:** stale "Skip legacy SlickGrid" comment in `scripts/build-extension.ps1` replaced with a note that Phase 5 removed SlickGrid entirely.
+  - **Test updates:**
+    * `grid-rebuild-codex/tests/wiring.test.js` — rewrote SlickGrid script-load-order assertions to test AG Grid load order instead. Rewrote `.slick-cell` / `.slick-row` CSS assertions to use `.ag-cell`. Removed the SlickGrid-specific zebra-row and group-row-padding assertions (`.ss-grid .slick-row.slick-group .slick-cell {padding: 14px 12px 6px}` no longer exists).
+    * `tests/menu-layout.test.js` — swapped `slickGridAdapter.js` -> `agGridAdapter.js` for the `gridAdapterJs` file read. Removed `data-tab="view"` / `data-pane="view"` / `data-list-mirror="view"` assertions. Added assertions for the merged Products tab's View + Organize + Review & Rules group labels + the new `data-ss-grid-command="reset-all"` command + `assertNotIncludes` for the removed width-fit/full commands. Renamed the "Products group" label check to "Product Actions" and updated the "Delete Product(s)" label check to "Delete Item(s)".
+- Files touched:
+  - `comparison.html` — removed 3 SlickGrid CSS `<link>` tags + 6 SlickGrid JS `<script>` tags + `grid-rebuild-codex/slickGridAdapter.js` script tag; kept only AG Grid.
+  - `comparison.js` — dropped SlickGrid fallback in `mountNormalizationReviewGrid` and `mountUserRulesGrid`; changed both host divs' theme class from `slick-default-theme` to `ag-theme-shopscout`.
+  - `grid-rebuild-codex/shopscoutGrid.js` — dropped `useSlickGrid` variable, dropped `width-fit`/`width-full` command branch, updated comments.
+  - `grid-rebuild-codex/grid.css` — stripped all `.slick-*` rules (~180 lines); preserved two non-slick rules; updated obsolete comment reference.
+  - `scripts/build-extension.ps1` — updated comment.
+  - `grid-rebuild-codex/tests/wiring.test.js` — retargeted assertions at AG Grid.
+  - `tests/menu-layout.test.js` — retargeted assertions at the merged Products tab.
+  - Deletions: `vendor/slickgrid/**`, `grid-rebuild-codex/slickGridAdapter.js`, `grid-rebuild-codex/tests/adapter.test.js`, `tests/normalization-review-render.test.js`, `tests/normalization-rules-render.test.js`.
+  - `AGENT_CHANGELOG.md` — this entry.
+- Validation run:
+  - `npm test` -> all 44 test files pass locally.
+  - `npm run build` -> Chrome / Edge / Firefox dists rebuilt.
+  - Manual visual pass in Chrome: Products grid, Compare matrix, Normalization Review, User Rules all render via AG Grid.
+- Review / handoff:
+  - Reviewer: Codex.
+  - **What to check:**
+    1. **Startup smoke test.** Load the extension and open the dashboard. There should be **zero** console errors related to `Slick`, `slickGridAdapter`, `ShopScoutSlickGridAdapter`, or missing vendor files. If anything references the deleted files it will throw at load.
+    2. **Products grid** (rows mode) — still renders correctly with 12px column padding, pinned Select/Thumb/Name columns, equal-px leftover distribution, and the clickable rating cell that opens reviews in a new tab.
+    3. **Compare matrix** — attribute column pinned left, shaded; product headers show thumb + title + open/rescan/delete actions; cells unwrap displayCell objects (Missing / value / corrected+strikethrough / confidence).
+    4. **Normalization Review** — rows render with raw -> normalized arrow when values differ; Accept alias / Ignore / Open buttons all still fire the correct handlers.
+    5. **User Rules** — rows render with rule key `<code>` cell + Edit/Delete actions. Ignored review items only show Delete.
+    6. **Build script** — `npm run build` still succeeds and each of dist/chrome, dist/edge, dist/firefox contains `vendor/ag-grid/` but NOT `vendor/slickgrid/`.
+    7. **Test files gone** — `grid-rebuild-codex/tests/adapter.test.js`, `tests/normalization-review-render.test.js`, `tests/normalization-rules-render.test.js` are deleted. Codex may want to write new AG Grid renderer tests in a follow-up; they were removed here rather than rewritten because the old tests asserted specific SlickGrid HTML shape that no longer exists.
+    8. **grep for any remaining SlickGrid references:** `grep -r "slickGridAdapter\|ShopScoutSlickGridAdapter\|slick-cell\|slick-header\|vendor/slickgrid" .` should return zero hits in source files (some may still appear inside `AGENT_CHANGELOG.md` — that's history, leave it).
+- Follow-ups or risks:
+  - **New AG Grid renderer tests are a good follow-up.** The deleted `adapter.test.js` tested SlickGrid HTML shape; equivalent tests for AG Grid's `renderMatrixCell`, `renderNormalizationProduct`, `renderNormalizationPair`, `renderNormalizationActions`, `renderUserRuleCode`, `renderUserRuleActions` output would catch regressions in the ports done in commits 2-4. Not blocking but nice to have.
+  - **`applyWidthMode` still runs** on first mount and applies the localStorage `shopscout_grid_width_mode` preference to the shell's `data-shell-width` attribute. There is no UI to change this anymore (Fit/Full toggle was removed in commit 1), so the value is effectively locked to whatever was in localStorage. If we want a true zero-config default, delete the `applyWidthMode` call and the corresponding localStorage read; a one-line cleanup for a future commit.
+  - **AG Grid Community bundle is ~1.9 MB unminified.** SlickGrid was ~500 KB minified, so the extension is technically larger post-migration — but the AG Grid feature-set (pinned columns, headerComponent, applyColumnState, autoSizeAllColumns, domLayout autoHeight) is worth the trade. Not something to change here.
+  - **This closes tasks #132, #133, #134** in the internal task list. All three migration phases are complete and SlickGrid is gone.

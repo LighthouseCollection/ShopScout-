@@ -24,7 +24,7 @@
      avoided so a scrollbar only appears when there is genuine
      overflow — not reserved space that shows a stray scrollbar even
      when the grid fits. */
-  /* Default hidden; slickGridAdapter.updateShellOverflow flips to
+  /* Default hidden; agGridAdapter.fitShellToContent flips to
      'auto' after render when the canvas is genuinely wider than the
      shell. Prevents Chrome from reserving a scrollbar gutter (and
      showing a stray bar) when the grid actually fits. */
@@ -228,164 +228,10 @@
   width: 100%;
 }
 
-/* Kill EVERY SlickGrid internal scrollbar. The host is sized to full
-   content height by applyHostHeight and the shell handles horizontal
-   overflow. SlickGrid v6 has multiple viewport/pane variants (frozen
-   columns, split panes) so we blanket-override anything scrollable
-   inside the host. */
-.ss-grid-host [class*="slick-viewport"],
-.ss-grid-host [class*="slick-pane"],
-.ss-grid-host .grid-canvas,
-.ss-grid-host .slick-top-panel-scroller,
-.ss-grid-host .slick-headerrow,
-.ss-grid-host .slick-header {
-  overflow: visible !important;
-  height: auto !important;
-  max-height: none !important;
-}
-
-/* Header: clean white surface with a subtle bottom rule, ink-2 text.
-   Slightly larger than the old 11px mono so column labels are readable
-   without needing to zoom. Small letter-spacing keeps them tidy. */
-.ss-grid-host .slick-header {
-  background: var(--surface, #fff);
-  border-bottom: 1px solid var(--rule, #d1d5db);
-}
-.ss-grid-host .slick-header-columns {
-  background: var(--surface, #fff);
-}
-.ss-grid-host .slick-header-column {
-  background: #f4f6f9;
-  color: var(--ink-2, #2a3441);
-  font-family: var(--font-body, "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif);
-  font-size: 12px;
-  font-weight: 600;
-  letter-spacing: 0.03em;
-  text-transform: none;
-  /* border-right: 1px solid var(--button-shade-active); */
-  padding-top: 10px;
-  padding-bottom: 10px;
-}
-
-.ss-grid-host .slick-header-column.slick-header-sortable,
-.ss-grid-host .slick-header-column[aria-sort] {
-  cursor: pointer;
-}
-
-.ss-grid-host .slick-header-column.slick-header-sortable:hover {
-  background: var(--paper-2, #eaedf1);
-}
-
-.ss-grid-host .slick-sort-indicator {
-  opacity: 0.55;
-  margin-left: 8px;
-  margin-right: 4px;
-}
-.ss-grid-host .slick-sort-indicator-asc,
-.ss-grid-host .slick-sort-indicator-desc {
-  opacity: 0.9;
-  color: var(--primary, #0b3d4f);
-}
-.ss-grid-host .slick-column-name {
-  padding-right: 8px;
-}
-
-/* Rows: white base, subtle hover, ultra-light bottom rule. No zebra —
-   product data grids read better with uniform row backgrounds. */
-.ss-grid-host .slick-row {
-  background: var(--surface, #fff);
-  transition: background 90ms ease;
-}
-.ss-grid-host .slick-row.odd,
-.ss-grid-host .slick-row.even {
-  background: var(--surface, #fff);
-}
-.ss-grid-host .slick-row:hover {
-  background: color-mix(in srgb, var(--primary, #0b3d4f) 5%, var(--surface, #fff));
-}
-
-.ss-grid-host .slick-cell {
-  display: flex;
-  align-items: center;
-  /* Everything centers by default — pill values sit in the middle of
-     their cell with equal padding on both sides. The Name column
-     overrides to flex-start below because product titles read left-
-     to-right and always look wrong centered. */
-  justify-content: center;
-  text-align: center;
-  /* Soft row + column separators — visible enough to guide the eye
-     across the row and between columns, quiet enough to stay out of
-     the way. Same #eaeef2 rule for both directions. */
-  border-right: 1px solid #eaeef2;
-  border-bottom: 1px solid #eaeef2;
-  color: var(--ink, #0f1419);
-  font-size: 13px;
-  line-height: 1.4;
-  white-space: normal;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  user-select: text;
-  padding: 8px 12px;
-}
-
-.ss-grid-host .slick-cell.active,
-.ss-grid-host .slick-cell.selected {
-  border-color: var(--rule-soft, #d1d5db) var(--rule-soft, #d1d5db) var(--rule, #d1d5db) transparent;
-  background: inherit;
-  box-shadow: none;
-  outline: 0;
-}
-
-/* Fixed-shape cells (checkbox, thumbnail+actions, image) center their
-   content — matches the visual metaphor of an icon/image column. */
-.ss-grid-host .slick-cell.ss-grid-cell-selection,
-.ss-grid-host .slick-cell.ss-grid-cell-image {
-  justify-content: center;
-  padding: 8px 4px;
-}
-.ss-grid-host .slick-cell.ss-grid-cell-title {
-  justify-content: flex-start;
-  text-align: left;
-}
-
-/* Attribute-name column in the compare matrix (the left column labeled
-   "Buying Factor" that lists Brand / Price / Rating / etc.). Left-aligned,
-   bold, and shaded so it reads as a row-header column instead of a
-   regular data cell. !important to defeat the higher-specificity flex
-   defaults inherited from .ss-grid-host .slick-cell. */
-.ss-grid-host .slick-cell.ss-grid-cell-attribute {
-  justify-content: flex-start !important;
-  text-align: left !important;
-  background: #f4f6f9 !important;
-  color: var(--ink, #0f1419);
-  font-weight: 700;
-  padding-left: 16px !important;
-}
-/* Shade the "Buying Factor" header cell too so the whole first column
-   reads as a row-header column top to bottom. Match on the column id
-   set in buildComparisonMatrixProjection: 'attribute'. */
-.ss-grid-host.ss-grid-is-matrix .slick-header-column#slickgrid_attribute,
-.ss-grid-host.ss-grid-is-matrix .slick-header-column[id$="_attribute"],
-.ss-grid-host.ss-grid-is-matrix .slick-header-column[id="attribute"] {
-  background: #f4f6f9 !important;
-}
-.ss-grid-host.ss-grid-is-matrix .slick-header-column[id$="_attribute"] .slick-column-name,
-.ss-grid-host.ss-grid-is-matrix .slick-header-column[id="attribute"] .slick-column-name {
-  text-align: left !important;
-  padding-left: 16px;
-}
-/* Column headers follow the same rule as cells: everything centers
-   except the Name column, which keeps its label left-aligned to match
-   the product title alignment underneath. */
-.ss-grid-host .slick-header-column .slick-column-name {
-  width: 100%;
-  text-align: center;
-}
-.ss-grid-host .slick-header-column[id*="title"] .slick-column-name,
-.ss-grid-host .slick-header-column[id*="Name"] .slick-column-name {
-  text-align: left;
-}
-
+/* Actions column — used by both the products grid (row-level actions)
+   and the compare matrix (product header actions). Right-aligned so
+   the buttons hug the cell's right edge. Overflow visible so tooltips
+   and hover-out effects don't get clipped. */
 .ss-grid-host .ss-grid-cell-actions {
   justify-content: flex-end;
   overflow: visible;
@@ -394,16 +240,6 @@
 
 .ss-grid-cell-title {
   font-weight: 600;
-}
-
-.ss-grid-host .slick-cell.ss-grid-cell-title {
-  align-items: center;
-  justify-content: flex-start;
-  text-align: left;
-  line-height: 1.35;
-  overflow: hidden;
-  overflow-wrap: anywhere;
-  text-overflow: clip;
 }
 
 .ss-grid-title-text {
@@ -563,15 +399,6 @@ a.ss-grid-logo-token:visited {
   width: 30px;
   height: 30px;
   font-size: 16px;
-}
-
-.ss-grid-host.ss-grid-is-matrix .slick-header-column {
-  min-height: 172px;
-  line-height: 1.2;
-}
-
-.ss-grid-host.ss-grid-is-matrix .slick-header-column.ui-state-default {
-  height: 172px;
 }
 
 .ss-grid-rating {
@@ -740,26 +567,6 @@ a.ss-grid-rating-link:hover .ss-grid-stars {
   color: var(--danger, #b91c1c);
 }
 
-.ss-grid .slick-row.slick-group,
-.ss-grid .slick-row.ss-grid-native-group {
-  background: #e8edf3;
-  border-top: 1px solid #c7d0da;
-  border-bottom: 1px solid #c7d0da;
-}
-
-.ss-grid .slick-row.slick-group .slick-cell {
-  display: flex;
-  align-items: flex-start;
-  padding: 14px 12px 6px;
-  color: var(--ink, #16202b);
-  font-weight: 650;
-}
-
-.ss-grid .slick-group-toggle {
-  flex: 0 0 auto;
-  margin-right: 8px;
-  color: var(--primary, #0b3d4f);
-}
 
 .ss-grid-group-title {
   font-weight: 700;

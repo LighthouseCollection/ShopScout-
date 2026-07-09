@@ -1373,10 +1373,7 @@ function normalizationReviewProjection(items) {
 function mountNormalizationReviewGrid(items) {
   const host = document.getElementById('normalizationReviewGrid');
   if (!host) return null;
-  /* Prefer AG Grid (Phase 3 migration). Falls back to SlickGrid if
-     something goes wrong during the transition window — Codex can
-     drop this fallback in the final SlickGrid removal commit. */
-  const adapter = globalThis.ShopScoutAgGridAdapter || globalThis.ShopScoutSlickGridAdapter;
+  const adapter = globalThis.ShopScoutAgGridAdapter;
   if (!adapter || typeof adapter.create !== 'function') {
     const message = document.createElement('div');
     message.className = 'ss-grid-empty';
@@ -1574,7 +1571,7 @@ async function openNormalizationReviewPage() {
           </div>
         </div>
         <div class="normalization-review-grid-wrap ss-grid-review-wrap">
-          <div id="normalizationReviewGrid" class="ss-grid-host slick-default-theme normalization-review-grid" aria-label="Normalization review grid"></div>
+          <div id="normalizationReviewGrid" class="ss-grid-host ag-theme-shopscout normalization-review-grid" aria-label="Normalization review grid"></div>
         </div>
       </div>`;
 
@@ -1656,10 +1653,7 @@ function userRulesProjection(rules) {
 function mountUserRulesGrid(rules) {
   const host = document.getElementById('userRulesGrid');
   if (!host) return null;
-  /* Prefer AG Grid (Phase 4 migration). Falls back to SlickGrid if
-     something goes wrong during the transition window — Codex can
-     drop this fallback in the final SlickGrid removal commit. */
-  const adapter = globalThis.ShopScoutAgGridAdapter || globalThis.ShopScoutSlickGridAdapter;
+  const adapter = globalThis.ShopScoutAgGridAdapter;
   if (!adapter || typeof adapter.create !== 'function') {
     const message = document.createElement('div');
     message.className = 'ss-grid-empty';
@@ -1699,7 +1693,7 @@ async function openNormalizationRulesPage() {
       </div>
       ${hasRules
         ? `<div class="user-rules-grid-wrap ss-grid-review-wrap">
-            <div id="userRulesGrid" class="ss-grid-host slick-default-theme user-rules-grid" aria-label="User normalization rules grid"></div>
+            <div id="userRulesGrid" class="ss-grid-host ag-theme-shopscout user-rules-grid" aria-label="User normalization rules grid"></div>
           </div>`
         : `<div class="dashboard-empty">
             <h3>No user rules yet</h3>
