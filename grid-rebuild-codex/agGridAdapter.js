@@ -275,10 +275,18 @@
     const doc = shell.ownerDocument || root.document;
     const viewportInner = (doc?.documentElement?.clientWidth || root.innerWidth || 1400) - 40;
     const mode = shell.getAttribute('data-shell-width') === 'full' ? 'full' : 'fit';
-    /* Content-hug for tight tables; full viewport when the user
-       explicitly picks Full. +2 absorbs subpixel rounding. */
-    const cap = mode === 'full' ? viewportInner : Math.max(800, Math.round(viewportInner * 0.85));
-    const target = Math.min(canvasWidth + 2, cap, viewportInner);
+    /* Full mode: always stretch to viewport. Content narrower than
+       viewport still fills the page — the last column pins to the
+       right edge (see .ss-grid-host.ag-theme-shopscout .ag-header
+       flex CSS). Fit mode: hug the actual canvas width so tight
+       tables don't waste horizontal space. */
+    let target;
+    if (mode === 'full') {
+      target = viewportInner;
+    } else {
+      const cap = Math.max(800, Math.round(viewportInner * 0.85));
+      target = Math.min(canvasWidth + 2, cap, viewportInner);
+    }
     shell.style.width = target + 'px';
     shell.style.overflowX = canvasWidth > shell.clientWidth + 2 ? 'auto' : 'hidden';
   }
