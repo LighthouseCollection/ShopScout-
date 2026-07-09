@@ -524,6 +524,121 @@
 
 
 /* ===============================================================
+   TRANCHE D (commit 6) — mixed-family templates
+   ButtonGroups / ButtonGroupsAndInputs / BigButtonsAndSmallButtonsOrInputs
+   =============================================================== */
+
+
+/* ===============================================================
+   ButtonGroups — variable button-family, Large + Middle + Small
+   Uses flex-wrap for Large, 3-row grid for Middle.
+   =============================================================== */
+.rb-office-ribbon .rb-group[data-size-definition="ButtonGroups"][data-group-size="large"] > .rb-group-content {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  gap: 2px;
+  align-items: stretch;
+}
+
+.rb-office-ribbon .rb-group[data-size-definition="ButtonGroups"][data-group-size="middle"] > .rb-group-content {
+  display: grid;
+  grid-template-rows: repeat(3, var(--rbn-btn-middle-h));
+  grid-auto-flow: column;
+  grid-auto-columns: max-content;
+  gap: 1px 6px;
+}
+
+.rb-office-ribbon .rb-group[data-size-definition="ButtonGroups"][data-group-size="small"] > .rb-group-content {
+  display: flex;
+  flex-direction: row;
+  gap: 1px;
+}
+
+
+/* ===============================================================
+   ButtonGroupsAndInputs — 2 inputs + up to 29 buttons
+   Large + Middle only. First 2 slots are input-family (typically
+   ComboBox / EditBox); rest are button-family.
+   =============================================================== */
+.rb-office-ribbon .rb-group[data-size-definition="ButtonGroupsAndInputs"][data-group-size="large"] > .rb-group-content {
+  display: grid;
+  grid-template-rows: repeat(2, auto);
+  grid-auto-flow: column;
+  grid-auto-columns: max-content;
+  column-gap: 4px;
+  row-gap: 2px;
+  align-content: start;
+}
+
+/* Slots 0-1 are inputs (typically single row each; each spans full
+   height of their column). Slots 2+ are buttons (flow into remaining
+   columns in the 2-row grid, so 6 buttons -> 3 columns). */
+.rb-office-ribbon .rb-group[data-size-definition="ButtonGroupsAndInputs"][data-group-size="large"] > .rb-group-content > :nth-child(1),
+.rb-office-ribbon .rb-group[data-size-definition="ButtonGroupsAndInputs"][data-group-size="large"] > .rb-group-content > :nth-child(2) {
+  grid-column: 1;
+  grid-row: auto;
+}
+
+.rb-office-ribbon .rb-group[data-size-definition="ButtonGroupsAndInputs"][data-group-size="middle"] > .rb-group-content {
+  display: grid;
+  grid-template-rows: repeat(3, var(--rbn-btn-middle-h));
+  grid-auto-flow: column;
+  grid-auto-columns: max-content;
+  gap: 1px 6px;
+}
+
+
+/* ===============================================================
+   BigButtonsAndSmallButtonsOrInputs — big button + mix
+   Slot 0 stays Large; rest render as Middle-sized mixed content.
+   Large + Middle only.
+   =============================================================== */
+.rb-office-ribbon .rb-group[data-size-definition="BigButtonsAndSmallButtonsOrInputs"][data-group-size="large"] > .rb-group-content {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  grid-template-rows: repeat(3, var(--rbn-btn-middle-h));
+  column-gap: 6px;
+  row-gap: 1px;
+  align-content: start;
+}
+
+/* Slot 0 renders at Large button size, spans all 3 rows */
+.rb-office-ribbon .rb-group[data-size-definition="BigButtonsAndSmallButtonsOrInputs"][data-group-size="large"] > .rb-group-content > :first-child {
+  grid-row: 1 / span 3;
+  grid-column: 1;
+  height: var(--rbn-btn-large-h);
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  min-width: var(--rbn-btn-large-min-w);
+  max-width: var(--rbn-btn-large-max-w);
+  padding: var(--rbn-btn-large-pad);
+  text-align: center;
+}
+
+.rb-office-ribbon .rb-group[data-size-definition="BigButtonsAndSmallButtonsOrInputs"][data-group-size="large"] > .rb-group-content > :first-child .rb-icon-lg {
+  width: var(--rbn-icon-large-96);
+  height: var(--rbn-icon-large-96);
+  margin-bottom: 2px;
+}
+
+/* Slots 1+ render in column 2 at Middle button size */
+.rb-office-ribbon .rb-group[data-size-definition="BigButtonsAndSmallButtonsOrInputs"][data-group-size="large"] > .rb-group-content > :not(:first-child) {
+  grid-column: 2;
+  height: var(--rbn-btn-middle-h);
+}
+
+.rb-office-ribbon .rb-group[data-size-definition="BigButtonsAndSmallButtonsOrInputs"][data-group-size="middle"] > .rb-group-content {
+  display: grid;
+  grid-template-rows: repeat(3, var(--rbn-btn-middle-h));
+  grid-auto-flow: column;
+  grid-auto-columns: max-content;
+  gap: 1px 6px;
+}
+
+
+/* ===============================================================
    Validation error marker
    When ShopScoutRibbon.templates.validate returns false and the
    caller wants a visual flag, adding data-template-invalid="true"

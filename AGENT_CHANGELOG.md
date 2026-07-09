@@ -3641,3 +3641,44 @@ This file is the shared record for Claude and Codex. Append an entry for every m
     * `EightButtons-LastThreeSmall` CSS uses `nth-child(2)` to target the second ControlGroup. If the HTML structure ever adds a wrapper between `.rb-group-content` and the ControlGroups, the selector will break.
     * The 5+3 partition assumes ControlGroups appear in the DOM in the order they were declared. Microsoft's schema doesn't require this but it's the sensible default. If future templates need per-ControlGroup slot family constraints, extend the spec to `controlGroups: [{ count: 5, family: 'button' }, ...]`.
     * **Next commit (6/11):** Tranche D mixed templates — `ButtonGroups`, `ButtonGroupsAndInputs`, `BigButtonsAndSmallButtonsOrInputs`. These accept mixed control families (buttons + inputs). May need multi-family slot syntax like `{ family: ['button', 'input'] }`.
+
+## 2026-07-09 - Claude Office 365 ribbon commit 6: SizeDefinition templates tranche D (mixed families) + flexibleSlots
+
+- Agent: Claude
+- Branch: grid-rebuild-codex
+- Commit: This commit (6/11).
+- Status: Implemented. All 44 tests pass.
+- Summary:
+  - **3 new mixed-family templates registered:**
+    * `ButtonGroups` (Large/Middle/Small) — 2 required + up to 30 optional button-family controls (Microsoft schema allows up to 32 total).
+    * `ButtonGroupsAndInputs` (Large/Middle) — 2 required input-family controls followed by up to 29 button-family controls.
+    * `BigButtonsAndSmallButtonsOrInputs` (Large/Middle) — 1 required big button-family control followed by up to 8 mixed button-family OR input-family controls (`family: ['button', 'input']`).
+  - **`slotAccepts` upgraded to support multi-family arrays.** A slot can now declare `family: 'button'` (single) or `family: ['button', 'input']` (either matches). Used by `BigButtonsAndSmallButtonsOrInputs` for the trailing mixed slots.
+  - **New `flexibleSlots` spec property.** Templates with variable trailing content declare `flexibleSlots: { min, max, family, type }`. The validator:
+    * Computes total control range as `fixedSlots + flexibleSlots.min` .. `fixedSlots + flexibleSlots.max`.
+    * For each control at index >= fixedSlots.length, uses the `flexibleSlots` spec as the slot template (family + type constraint applies).
+    * Reports failures as "flex-slot N expected ..." to distinguish from fixed-slot failures.
+  - **CSS layouts:**
+    * `ButtonGroups` — Large uses flex-row nowrap; Middle uses 3-row column-flow grid; Small is a single row of icons.
+    * `ButtonGroupsAndInputs` — Large uses a 2-row grid with the inputs in column 1 and buttons flowing into columns 2+; Middle uses the standard 3-row column-flow grid.
+    * `BigButtonsAndSmallButtonsOrInputs` — Large mirrors `ThreeButtons-OneBigAndTwoSmall`: slot 0 renders at Large button size in column 1 spanning 3 rows, remaining slots render at Middle size in column 2.
+- Files touched:
+  - `ribbon/templates.js` — extended `slotAccepts` for multi-family, added `flexibleSlots` support in `register()` + validator, 3 new template registrations.
+  - `ribbon/templates.css` — 3 new template sections.
+  - `AGENT_CHANGELOG.md` — this entry.
+- Validation run:
+  - `npm test` -> all 44 pass.
+  - `npm run build` -> Chrome / Edge / Firefox dists rebuilt.
+- Review / handoff:
+  - Reviewer: Codex.
+  - **What to check:**
+    1. `ShopScoutRibbon.templates.list()` should now return 19 templates.
+    2. `ShopScoutRibbon.templates.get('BigButtonsAndSmallButtonsOrInputs').flexibleSlots` should be `{ min: 0, max: 8, family: ['button', 'input'], type: null }`.
+    3. `ButtonGroups` validation happy path: 2 buttons (just fixed slots) should pass; 32 buttons should pass; 1 button should fail with "count mismatch: expected 2-32, got 1"; 33 buttons should fail with the same range.
+    4. `ButtonGroupsAndInputs` slot-0 must be input-family. A ComboBox in slot 0 should pass; a Button in slot 0 should fail with "slot 0 expected input-family, got 'Button'".
+    5. `BigButtonsAndSmallButtonsOrInputs` multi-family flex slots: a Button in flex-slot 0 should pass; a ComboBox in flex-slot 0 should also pass (both match the array); a CheckBox in flex-slot 0 should fail with the expected message.
+    6. Visual layout of `BigButtonsAndSmallButtonsOrInputs` at Large mode should mirror `ThreeButtons-OneBigAndTwoSmall` — big button on the left, smaller mixed controls stacked on the right.
+  - **Notable follow-ups:**
+    * `ButtonGroupsAndInputs` layout hasn't been tested with real ComboBox/EditBox children yet since ShopScout doesn't currently have any groups using this template. When commit 11 migrates the merged Products tab, we may discover the input dimensions in a 2-row grid need adjustment.
+    * The `flexibleSlots` implementation currently supports only ONE flex-slot spec per template (applied to all trailing controls). If a future template needs varying flex specs (e.g. "trailing 3 buttons then trailing 2 inputs"), extend to a `flexibleSlots: [{...}, {...}]` array.
+    * **Next commit (7/11):** Tranche E specialized templates — `OneFontControl`, `OneInRibbonGallery`, `InRibbonGalleryAndBigButton`, `InRibbonGalleryAndButtons-GalleryScalesFirst`. These need Gallery + FontControl primitives that don't exist yet.

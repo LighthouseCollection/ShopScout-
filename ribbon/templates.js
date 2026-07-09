@@ -28,16 +28,19 @@
      - SixButtons-TwoColumns
      - SevenButtons
 
-   Tranche C landed this commit (5 templates + ControlGroup):
+   Tranche C landed in commit 5 (5 templates + ControlGroup):
      - EightButtons
      - EightButtons-LastThreeSmall  (uses ControlGroup [5,3])
      - NineButtons
      - TenButtons
      - ElevenButtons
 
-   Remaining 7 templates land in commits 6-7:
-     Commit 6: ButtonGroups, ButtonGroupsAndInputs,
-               BigButtonsAndSmallButtonsOrInputs
+   Tranche D landed this commit (3 mixed-family templates):
+     - ButtonGroups                       (variable button-family)
+     - ButtonGroupsAndInputs              (2 inputs + up to 29 buttons)
+     - BigButtonsAndSmallButtonsOrInputs  (big button + small buttons/inputs)
+
+   Remaining 4 templates land in commit 7:
      Commit 7: OneFontControl, OneInRibbonGallery,
                InRibbonGalleryAndBigButton,
                InRibbonGalleryAndButtons-GalleryScalesFirst
@@ -61,19 +64,25 @@
   const TEMPLATES = new Map();
 
   /* Slot check — does the given control type satisfy the slot's
-     family/type constraint? */
+     family/type constraint? A slot may declare `family` as a single
+     string OR an array of strings (in which case any match passes,
+     used by tranche D templates that accept mixed families). */
   function slotAccepts(slot, controlType) {
     if (!slot) return false;
     if (slot.type && slot.type === controlType) return true;
-    if (slot.family === 'button') return NS.isButtonFamily?.(controlType) === true;
-    if (slot.family === 'input') return NS.isInputFamily?.(controlType) === true;
-    if (slot.family === 'gallery') {
-      return controlType === 'InRibbonGallery'
-        || controlType === 'DropDownGallery'
-        || controlType === 'SplitButtonGallery';
+    const families = Array.isArray(slot.family) ? slot.family : [slot.family];
+    for (const family of families) {
+      if (!family) continue;
+      if (family === 'button' && NS.isButtonFamily?.(controlType) === true) return true;
+      if (family === 'input' && NS.isInputFamily?.(controlType) === true) return true;
+      if (family === 'gallery') {
+        if (controlType === 'InRibbonGallery'
+         || controlType === 'DropDownGallery'
+         || controlType === 'SplitButtonGallery') return true;
+      }
+      if (family === 'CheckBox' && controlType === 'CheckBox') return true;
+      if (family === 'fontcontrol' && controlType === 'FontControl') return true;
     }
-    if (slot.family === 'CheckBox') return controlType === 'CheckBox';
-    if (slot.family === 'fontcontrol') return controlType === 'FontControl';
     return false;
   }
 
@@ -117,7 +126,21 @@
          EightButtons-LastThreeSmall wants [5, 3]). When set, the
          validator expects that many .rb-control-group children of
          .rb-group-content, with exactly those child counts. */
-      controlGroups: Array.isArray(spec.controlGroups) ? spec.controlGroups.slice() : null
+      controlGroups: Array.isArray(spec.controlGroups) ? spec.controlGroups.slice() : null,
+      /* Mixed templates (ButtonGroups, ButtonGroupsAndInputs) may
+         accept a variable number of controls trailing after fixed
+         leading slots. `flexibleSlots = { min, max, family }`
+         declares a suffix: after the fixed `slots` array, allow
+         between min and max additional controls that match the
+         given family (or family array). */
+      flexibleSlots: spec.flexibleSlots && typeof spec.flexibleSlots === 'object'
+        ? {
+            min: Math.max(0, spec.flexibleSlots.min | 0),
+            max: Math.max(spec.flexibleSlots.min | 0, spec.flexibleSlots.max | 0),
+            family: spec.flexibleSlots.family || null,
+            type: spec.flexibleSlots.type || null
+          }
+        : null
     };
     TEMPLATES.set(name, template);
     return template;
@@ -186,8 +209,10 @@
         : ':scope > *'
     )).filter(isCountableControl);
 
-    const min = template.slots.length - (template.trailingOptional ? 1 : 0);
-    const max = template.slots.length;
+    const fixedCount = template.slots.length;
+    const flex = template.flexibleSlots;
+    const min = fixedCount - (template.trailingOptional ? 1 : 0) + (flex?.min || 0);
+    const max = fixedCount + (flex ? flex.max : 0);
     if (controls.length < min || controls.length > max) {
       const range = min === max ? `${max}` : `${min}-${max}`;
       console.error(
@@ -200,13 +225,23 @@
 
     for (let i = 0; i < controls.length; i += 1) {
       const el = controls[i];
-      const slot = template.slots[i];
+      /* If we're past the fixed slots, use the flexibleSlots slot
+         template for the family/type constraint. */
+      const slot = i < fixedCount ? template.slots[i] : flex;
+      if (!slot) {
+        console.error(
+          `[Ribbon.templates] "${templateName}" — no slot spec available for control at index ${i}`,
+          el
+        );
+        return false;
+      }
       const controlType = el.getAttribute('data-control-type')
         || inferControlType(el);
       if (!slotAccepts(slot, controlType)) {
         console.error(
-          `[Ribbon.templates] "${templateName}" — slot ${i} expected ${slotLabel(slot)}, `
-          + `got "${controlType || 'unknown'}"`,
+          `[Ribbon.templates] "${templateName}" — `
+          + `${i < fixedCount ? `slot ${i}` : `flex-slot ${i - fixedCount}`} `
+          + `expected ${slotLabel(slot)}, got "${controlType || 'unknown'}"`,
           el
         );
         return false;
@@ -455,6 +490,49 @@
   register('ElevenButtons', {
     supportedSizes: ['Large', 'Middle', 'Small'],
     slots: Array(11).fill({ family: 'button' })
+  });
+
+  /* ==============================================================
+     Tranche D registrations (commit 6) — mixed-family templates
+     ============================================================== */
+
+  /* ButtonGroups — variable number of button-family controls
+     (Microsoft's schema allows up to 32), optionally partitioned
+     into required and optional ControlGroups. For simplicity we
+     enforce a 2-32 range of button-family controls; the app can
+     use .rb-control-group children to visually group them but the
+     validator doesn't require a specific partition. */
+  register('ButtonGroups', {
+    supportedSizes: ['Large', 'Middle', 'Small'],
+    slots: [
+      { family: 'button' },
+      { family: 'button' }
+    ],
+    flexibleSlots: { min: 0, max: 30, family: 'button' }
+  });
+
+  /* ButtonGroupsAndInputs — 2 input-family controls at the start,
+     followed by up to 29 button-family controls. Per Microsoft's
+     docs, Large + Middle only. */
+  register('ButtonGroupsAndInputs', {
+    supportedSizes: ['Large', 'Middle'],
+    slots: [
+      { family: 'input' },
+      { family: 'input' }
+    ],
+    flexibleSlots: { min: 0, max: 29, family: 'button' }
+  });
+
+  /* BigButtonsAndSmallButtonsOrInputs — a "big" button in slot 0
+     followed by a mix of small buttons OR inputs (each remaining
+     slot accepts either family). Large + Middle only. */
+  register('BigButtonsAndSmallButtonsOrInputs', {
+    supportedSizes: ['Large', 'Middle'],
+    slots: [
+      { family: 'button' }
+    ],
+    flexibleSlots: { min: 0, max: 8, family: ['button', 'input'] },
+    largeBigSlot: 0
   });
 
   /* --- Public API ------------------------------------------ */
