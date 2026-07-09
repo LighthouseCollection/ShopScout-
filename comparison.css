@@ -1058,6 +1058,34 @@
   .toolbar-menu[open] > .rb-btn-lg.primary { background: #a85614; border-color: #a85614; color: #fff; }
   .rb-btn-lg.split-down::after { content: "▾"; position: absolute; right: 8px; bottom: 2px; color: var(--ink-3); font-size: 9px; }
   .rb-btn-lg.primary.split-down::after { color: rgba(255,255,255,0.85); }
+  /* True split button — main action button + dedicated chevron dropdown.
+     Distinct from .split-down (which is a single button whose sole
+     click opens a menu). Here the main button DOES a smart action,
+     the chevron reveals explicit choices. Used by Rescan Products. */
+  .rb-split { display: inline-flex; align-items: stretch; }
+  .rb-split-main { border-top-right-radius: 0; border-bottom-right-radius: 0; }
+  .rb-split-chev-wrap { position: relative; display: inline-flex; align-items: stretch; }
+  .rb-split-chev {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 22px;
+    padding: 0 6px;
+    height: auto;
+    border: 1px solid transparent;
+    border-left: 1px solid var(--rule-soft);
+    border-top-right-radius: var(--radius-sm, 4px);
+    border-bottom-right-radius: var(--radius-sm, 4px);
+    background: transparent;
+    color: var(--ink-3);
+    font-size: 10px;
+    cursor: pointer;
+    list-style: none;
+  }
+  .rb-split-chev::-webkit-details-marker { display: none; }
+  .rb-split-chev:hover,
+  .rb-split-chev-wrap[open] > .rb-split-chev { background: var(--paper-2); border-color: var(--rule); color: var(--ink); }
+  .menu-divider { height: 1px; margin: 4px 0; background: var(--rule-soft); }
   .rb-icon-lg { width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; color: currentColor; font-size: 23px; line-height: 1; }
   .rb-icon-lg svg { width: 100%; height: 100%; }
   .rb-btn-lg-label { font-size: 11px; font-weight: 600; line-height: 1.2; letter-spacing: -0.005em; }

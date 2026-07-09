@@ -3109,3 +3109,46 @@ This file is the shared record for Claude and Codex. Append an entry for every m
   - **Ribbon consolidation follow-up:** The "Products" tab and "Products Table View" tab merge into one "Products" tab with 5 groups (List, Product Actions, Review & Rules, View, Organize). Fit/Full width toggle is removed (full is now the CSS default). Rescan Products becomes a split button with smart default (checked rows -> Rescan Selected; none -> Rescan All). Reset becomes a single dropdown (Clear Filters / Clear Sort / Clear Grouping / Reset Columns / Reset Everything). This will land in its own commit before the SlickGrid migration.
   - **Automated tests were not re-run this session.** Codex should run `npm test`, `npm run syntax`, `npm run lint`, `npm run typecheck` before merging to catch anything the visual acceptance loop missed.
   - **AG Grid v33 API drift risk:** `applyColumnState({state})`, `setGridOption('columnDefs', ...)`, `setGridOption('rowData', ...)` are all used. If Codex upgrades AG Grid the deprecated-in-v33 signatures may need updating.
+
+## 2026-07-08 - Claude ribbon consolidation (Products + Products Table View -> single Products tab)
+
+- Agent: Claude
+- Branch: grid-rebuild-codex
+- Commit: This commit (first in a 5-commit sequence that will finish the SlickGrid removal).
+- Status: Implemented; user acceptance-tested visually. Automated tests not re-run.
+- Summary:
+  - Deleted the `Products Table View` ribbon tab. Merged all its controls (Layout, Sort, Filter, Columns, Grouping, Width) into the `Products` tab so users no longer flip between two tabs to do table-shaping work.
+  - Merged tab has 5 logical groups L->R: **List** (list picker + inline New/Rename/Delete), **Product Actions** (Add Product, Rescan split, Delete Item(s) split), **Review & Rules** (Duplicates, Normalize Review, Vertical Packs, User Rules), **View** (Products/Compare mode + Columns), **Organize** (Sort by, Asc/Desc, Filters, Group by, Reset dropdown).
+  - Dropped the Fit / Full width toggle entirely — full-page width is now the CSS default (see `#productGrid.ss-grid-shell` in `grid-rebuild-codex/grid.css`) so the toggle no longer added value.
+  - Shortened the Product List `<select>` in the Lists group — removed the `rb-select--wide` modifier so it now uses the default `rb-select` width (170-240px min/max instead of 190-240px).
+  - New split-button pattern for Rescan Products: main button (`#rescanSmartBtn`) triggers a **smart default** — if any rows have their checkbox ticked it calls `rescanSelectedProducts()`, otherwise `rescanList()`. Label updates live from `syncSelectionButtons` — "Rescan Selected (N)" when count > 0, "Rescan All" otherwise. Chevron `▾` opens the explicit-choice menu (`#rescanBtn` Rescan All / `#rescanSelectedBtn` Rescan Selected) so users can still bypass the smart default.
+  - New Reset dropdown in Organize collects five actions: Clear Filters, Clear Sort, Clear Grouping, Reset Columns, and a new **Reset Everything** (danger-styled) that wipes filters/sort/group/columnVisibility/columnOrder/pinnedColumns in one dispatch. Wired via a new `reset-all` `data-ss-grid-command` handler in `grid-rebuild-codex/shopscoutGrid.js` that intentionally preserves search input, current mode (rows vs matrix), and active list selection — those are session state, not "settings".
+  - Renamed Delete Product(s) button label to "Delete Item(s)" to visually distinguish it from the list-scoped `Delete` button in the List group.
+  - Added new CSS component `.rb-split` / `.rb-split-main` / `.rb-split-chev-wrap` / `.rb-split-chev` in `comparison.css` for the true split-button pattern (main button + chevron that opens a `<details>` menu). Also added `.menu-divider` for the Reset menu.
+- Files touched:
+  - `comparison.html` — removed `data-tab="view"` tab button, removed `data-pane="view"` pane entirely, rewrote `data-pane="products"` with the 5-group layout.
+  - `comparison.js` — added `#rescanSmartBtn` click handler with selected-count routing; `syncSelectionButtons` now also updates `#rescanSmartLabel` to reflect what a click will do.
+  - `grid-rebuild-codex/shopscoutGrid.js` — added `command === 'reset-all'` branch in `handleGridCommand`.
+  - `comparison.css` — added `.rb-split`, `.rb-split-main`, `.rb-split-chev-wrap`, `.rb-split-chev`, `.menu-divider` rules.
+  - `AGENT_CHANGELOG.md` — this entry.
+- Validation run:
+  - `npm run build` -> Chrome / Edge / Firefox dists rebuilt (v3.3.0.e830063 tag on this file's HEAD).
+  - No automated tests re-run this commit — Codex should verify below.
+- Review / handoff:
+  - Reviewer: Codex.
+  - **What to check:**
+    1. **Tab count:** confirm the ribbon shows exactly 6 tabs (`File / Products / Analyze / Search / About` + branded ShopScout label). The `Products Table View` tab should be gone.
+    2. **Rescan smart default:**
+       - With **zero** rows selected, click the main Rescan Products button -> should call `rescanList()` (rescan all). Label reads "Rescan All".
+       - With **N > 0** rows checked, click the main button -> should call `rescanSelectedProducts()`. Label reads "Rescan Selected (N)".
+       - The `▾` chevron always opens the menu with explicit Rescan All / Rescan Selected buttons, and those still work independently (they call `rescanList()` / `rescanSelectedProducts()` directly).
+    3. **Reset Everything:** click `Reset` in the Organize group, then `Reset Everything`. Verify filters clear, sort clears, grouping clears, all columns become visible, column order resets, pinned columns unpin. Verify search input value, current mode (rows/matrix), and selected product list are **preserved**.
+    4. **Individual Reset menu items** (Clear Filters / Clear Sort / Clear Grouping / Reset Columns) — each should behave the same as they did in the old `data-pane="view"` pane; only the visual grouping changed.
+    5. **List group `<select>` width** — should render narrower than before (default `.rb-select` width). If it looks too tight for long list names, we can bump `min-width` in `.rb-select` (currently 170px).
+    6. **`data-list-mirror="view"`** was removed — confirm no leftover ribbon panes/JS reference this mirror id.
+    7. **Layout regression:** the merged Products pane is denser (5 groups instead of 2). At narrow window widths (~1280px), verify no group wraps or clips. If it does, the fix is either dropping the group labels below ~1400px viewport or making the Organize group's Reset button collapse to icon-only.
+    8. **Existing tests** — run `npm test`, `npm run typecheck`, `npm run lint`. Anything referencing `data-tab="view"` or the old width-fit/width-full commands is now dead.
+- Follow-ups or risks:
+  - **width-fit / width-full command branch** in `shopscoutGrid.js` is now unreachable from the UI but the code path still exists. Not harmful (dead code); will be swept in the final SlickGrid-removal commit.
+  - **Rescan Missing Data** was proposed in ChatGPT's grouping table but not implemented — user only asked for All + Selected. Add later if desired.
+  - **Next 4 commits in this sequence** will migrate matrix / normalization review / user rules to AG Grid and then delete SlickGrid. Ribbon layout is stable now; the remaining work is purely engine-swap.

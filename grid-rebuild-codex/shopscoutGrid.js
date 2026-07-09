@@ -364,6 +364,21 @@
     } else if (command === 'clear-group') {
       ensureStore().dispatch({ group: null });
       render();
+    } else if (command === 'reset-all') {
+      /* Reset Everything — the big red button. Wipes every user-facing
+         table configuration in one shot: filters, sort, grouping,
+         column visibility/order/pinning. Preserves search input,
+         current mode (rows vs matrix), and active list selection —
+         those are intentional session state, not "settings". */
+      ensureStore().dispatch({
+        filters: [],
+        sort: [],
+        group: null,
+        columnVisibility: {},
+        columnOrder: [],
+        pinnedColumns: []
+      });
+      render();
     } else if (command === 'width-fit' || command === 'width-full') {
       /* Persist to localStorage — shell width is a personal preference,
          not per-list state. Read on next mount + applied via CSS data

@@ -24,7 +24,6 @@
     <div class="ribbon-brand">ShopScout<span class="build-tag" data-build-tag>dev</span></div>
     <button class="ribbon-tab" type="button" data-tab="file">File</button>
     <button class="ribbon-tab active" type="button" data-tab="products">Products</button>
-    <button class="ribbon-tab" type="button" data-tab="view">Products Table View</button>
     <button class="ribbon-tab" type="button" data-tab="analyze">Analyze</button>
     <button class="ribbon-tab" type="button" data-tab="search">Search</button>
     <button class="ribbon-tab" type="button" data-tab="about">About</button>
@@ -79,13 +78,24 @@
     </div>
 
     <div class="ribbon-pane active" data-pane="products">
-      <!-- Canonical Lists group — owns #listSelect + New / Rename / Delete.
-           Every other pane (File, Analyze, View, Search, About) mirrors this dropdown. -->
+      <!-- ============================================================
+           Merged Products ribbon — replaces the old "Products" +
+           "Products Table View" tabs. Five logical groups, L->R:
+             1. List           (list picker + inline New/Rename/Delete)
+             2. Product Actions (Add, Rescan smart-split, Delete split)
+             3. Review & Rules  (Duplicates, Normalize, Verticals, Rules)
+             4. View            (Products / Compare / Columns)
+             5. Organize        (Sort, Filter, Group, Reset dropdown)
+           Fit/Full width toggle is removed — full-page is now the
+           CSS default. See #productGrid.ss-grid-shell in grid.css.
+           ============================================================ -->
+
+      <!-- 1. List -->
       <div class="rb-group" aria-label="Lists">
         <div class="rb-group-content">
           <div class="rb-stack">
             <label class="rb-mini-label" for="listSelect">Product list</label>
-            <select class="rb-select rb-select--wide" id="listSelect"></select>
+            <select class="rb-select" id="listSelect"></select>
           </div>
           <div class="rb-stack">
             <button class="rb-btn-sm" id="newListBtn" title="Create a new product list" aria-label="New list"><span class="rb-btn-sm-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></span><span class="rb-btn-sm-label">New&nbsp;list</span></button>
@@ -93,35 +103,55 @@
             <button class="rb-btn-sm" id="deleteListBtn" title="Delete the current list" aria-label="Delete list"><span class="rb-btn-sm-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg></span><span class="rb-btn-sm-label">Delete</span></button>
           </div>
         </div>
-        <div class="rb-group-label">Lists</div>
+        <div class="rb-group-label">List</div>
       </div>
+
       <div class="rb-divider" aria-hidden="true"></div>
-      <div class="rb-group" aria-label="Products">
+
+      <!-- 2. Product Actions -->
+      <div class="rb-group" aria-label="Product actions">
         <div class="rb-group-content">
-          <button class="rb-btn-lg" id="addUrlToggle" title="Add Product">
+          <button class="rb-btn-lg" id="addUrlToggle" title="Add a product by URL">
             <span class="rb-icon-lg"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/><path d="M12 13v6"/><path d="M9 16h6"/></svg></span>
             <span class="rb-btn-lg-label">Add Product</span>
           </button>
-          <details class="toolbar-menu">
-            <summary class="rb-btn-lg split-down" data-menu="true" title="Rescan products">
+          <!-- Rescan Products — split button. Main click = smart default
+               (any rows checked -> Rescan Selected; else Rescan All).
+               Chevron ▼ opens explicit choice menu. -->
+          <div class="rb-split">
+            <button class="rb-btn-lg rb-split-main" id="rescanSmartBtn" type="button" title="Rescan checked rows if any are selected; otherwise rescan every product in this list">
               <span class="rb-icon-lg"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 0 1 15-6.7L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-15 6.7L3 16"/><path d="M3 21v-5h5"/></svg></span>
-              <span class="rb-btn-lg-label">Rescan Products</span>
-            </summary>
-            <div class="toolbar-menu-panel">
-              <button class="menu-item" id="rescanBtn" title="Re-scrape all products from their URLs">Rescan All</button>
-              <button class="menu-item" id="rescanSelectedBtn" title="Re-scrape selected products" disabled>Rescan Selected</button>
-            </div>
-          </details>
+              <span class="rb-btn-lg-label" id="rescanSmartLabel">Rescan Products</span>
+            </button>
+            <details class="toolbar-menu rb-split-chev-wrap">
+              <summary class="rb-split-chev" data-menu="true" title="Choose rescan scope" aria-label="Rescan options">
+                <span aria-hidden="true">▾</span>
+              </summary>
+              <div class="toolbar-menu-panel">
+                <button class="menu-item" id="rescanBtn" type="button" title="Re-scrape every product in this list from its URL">Rescan All</button>
+                <button class="menu-item" id="rescanSelectedBtn" type="button" title="Re-scrape only the rows with a checked selection box" disabled>Rescan Selected</button>
+              </div>
+            </details>
+          </div>
           <details class="toolbar-menu">
             <summary class="rb-btn-lg split-down" data-menu="true" title="Delete products">
               <span class="rb-icon-lg"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></span>
-              <span class="rb-btn-lg-label">Delete Product(s)</span>
+              <span class="rb-btn-lg-label">Delete Item(s)</span>
             </summary>
             <div class="toolbar-menu-panel">
               <button class="menu-item menu-item--danger" id="deleteSelectedBtn" title="Delete selected products" disabled>Delete Selected</button>
               <button class="menu-item menu-item--danger" id="clearBtn" title="Delete all products but keep this list">Delete All</button>
             </div>
           </details>
+        </div>
+        <div class="rb-group-label">Product Actions</div>
+      </div>
+
+      <div class="rb-divider" aria-hidden="true"></div>
+
+      <!-- 3. Review & Rules -->
+      <div class="rb-group" aria-label="Review and rules">
+        <div class="rb-group-content">
           <button class="rb-btn-lg" type="button" data-command="duplicate-review" title="Review possible duplicate products">
             <span class="rb-icon-lg"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="8" height="8" rx="1.5"/><rect x="13" y="12" width="8" height="8" rx="1.5"/><path d="M11 8h3a4 4 0 0 1 4 4"/><path d="M13 16h-3a4 4 0 0 1-4-4"/></svg></span>
             <span class="rb-btn-lg-label">Possible<br>Duplicates</span>
@@ -139,7 +169,67 @@
             <span class="rb-btn-lg-label">User<br>Rules</span>
           </button>
         </div>
-        <div class="rb-group-label">Products</div>
+        <div class="rb-group-label">Review &amp; Rules</div>
+      </div>
+
+      <div class="rb-divider" aria-hidden="true"></div>
+
+      <!-- 4. View -->
+      <div class="rb-group" aria-label="View">
+        <div class="rb-group-content">
+          <button class="rb-btn-lg" type="button" data-ss-grid-command="mode-rows" title="Show products as rows">
+            <span class="rb-icon-lg"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="4" rx="1"/><rect x="3" y="10" width="18" height="4" rx="1"/><rect x="3" y="16" width="18" height="4" rx="1"/></svg></span>
+            <span class="rb-btn-lg-label">Products</span>
+          </button>
+          <button class="rb-btn-lg" type="button" data-ss-grid-command="mode-matrix" title="Compare products as columns">
+            <span class="rb-icon-lg"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="7" height="16" rx="1"/><rect x="14" y="4" width="7" height="16" rx="1"/><path d="M10 8h4M10 16h4"/></svg></span>
+            <span class="rb-btn-lg-label">Compare</span>
+          </button>
+          <button class="rb-btn-lg" type="button" data-ss-grid-command="open-columns" title="Show or hide columns">
+            <span class="rb-icon-lg"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="4" height="16"/><rect x="10" y="4" width="4" height="16"/><rect x="16" y="4" width="4" height="16"/></svg></span>
+            <span class="rb-btn-lg-label">Columns</span>
+          </button>
+        </div>
+        <div class="rb-group-label">View</div>
+      </div>
+
+      <div class="rb-divider" aria-hidden="true"></div>
+
+      <!-- 5. Organize (Sort -> Filter -> Group -> Reset) -->
+      <div class="rb-group" aria-label="Organize">
+        <div class="rb-group-content">
+          <div class="rb-stack">
+            <label class="rb-mini-label" for="gridSortField">Sort by</label>
+            <select class="rb-select" id="gridSortField" data-ss-grid-sort-field></select>
+          </div>
+          <div class="rb-stack">
+            <button class="rb-btn-sm" type="button" data-ss-grid-command="sort-asc" title="Sort ascending"><span class="rb-btn-sm-icon">↑</span><span class="rb-btn-sm-label">Asc</span></button>
+            <button class="rb-btn-sm" type="button" data-ss-grid-command="sort-desc" title="Sort descending"><span class="rb-btn-sm-icon">↓</span><span class="rb-btn-sm-label">Desc</span></button>
+          </div>
+          <button class="rb-btn-lg" type="button" data-ss-grid-command="open-filters" title="Add or edit filters">
+            <span class="rb-icon-lg"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 5h18"/><path d="M6 12h12"/><path d="M10 19h4"/></svg></span>
+            <span class="rb-btn-lg-label">Filters</span>
+          </button>
+          <div class="rb-stack">
+            <label class="rb-mini-label" for="gridGroupField">Group by</label>
+            <select class="rb-select" id="gridGroupField" data-ss-grid-group-field></select>
+          </div>
+          <details class="toolbar-menu">
+            <summary class="rb-btn-lg split-down" data-menu="true" title="Reset filters / sort / grouping / columns">
+              <span class="rb-icon-lg"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 3v6h6"/></svg></span>
+              <span class="rb-btn-lg-label">Reset</span>
+            </summary>
+            <div class="toolbar-menu-panel">
+              <button class="menu-item" type="button" data-ss-grid-command="clear-filters">Clear Filters</button>
+              <button class="menu-item" type="button" data-ss-grid-command="clear-sort">Clear Sort</button>
+              <button class="menu-item" type="button" data-ss-grid-command="clear-group">Clear Grouping</button>
+              <button class="menu-item" type="button" data-ss-grid-command="reset-columns">Reset Columns</button>
+              <div class="menu-divider" aria-hidden="true"></div>
+              <button class="menu-item menu-item--danger" type="button" data-ss-grid-command="reset-all">Reset Everything</button>
+            </div>
+          </details>
+        </div>
+        <div class="rb-group-label">Organize</div>
       </div>
     </div>
 
@@ -207,114 +297,6 @@
           </button>
         </div>
         <div class="rb-group-label">Settings</div>
-      </div>
-    </div>
-
-    <div class="ribbon-pane" data-pane="view">
-      <div class="rb-group rb-group--list-mirror" aria-label="Active list">
-        <div class="rb-group-content">
-          <div class="rb-stack">
-            <label class="rb-mini-label">Product list</label>
-            <select class="rb-select rb-select--wide" data-list-mirror="view"></select>
-          </div>
-        </div>
-        <div class="rb-group-label">Lists</div>
-      </div>
-      <div class="rb-divider" aria-hidden="true"></div>
-
-      <div class="rb-group" aria-label="Layout">
-        <div class="rb-group-content">
-          <button class="rb-btn-lg" type="button" data-ss-grid-command="mode-rows" title="Show products as rows">
-            <span class="rb-icon-lg"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="4" rx="1"/><rect x="3" y="10" width="18" height="4" rx="1"/><rect x="3" y="16" width="18" height="4" rx="1"/></svg></span>
-            <span class="rb-btn-lg-label">Products</span>
-          </button>
-          <button class="rb-btn-lg" type="button" data-ss-grid-command="mode-matrix" title="Compare products as columns">
-            <span class="rb-icon-lg"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="7" height="16" rx="1"/><rect x="14" y="4" width="7" height="16" rx="1"/><path d="M10 8h4M10 16h4"/></svg></span>
-            <span class="rb-btn-lg-label">Compare</span>
-          </button>
-        </div>
-        <div class="rb-group-label">Layout</div>
-      </div>
-
-      <div class="rb-divider" aria-hidden="true"></div>
-
-      <div class="rb-group" aria-label="Sort">
-        <div class="rb-group-content">
-          <div class="rb-stack">
-            <label class="rb-mini-label" for="gridSortField">Sort by</label>
-            <select class="rb-select" id="gridSortField" data-ss-grid-sort-field></select>
-          </div>
-          <div class="rb-stack">
-            <button class="rb-btn-sm" type="button" data-ss-grid-command="sort-asc"><span class="rb-btn-sm-icon">↑</span><span class="rb-btn-sm-label">Asc</span></button>
-            <button class="rb-btn-sm" type="button" data-ss-grid-command="sort-desc"><span class="rb-btn-sm-icon">↓</span><span class="rb-btn-sm-label">Desc</span></button>
-            <button class="rb-btn-sm" type="button" data-ss-grid-command="clear-sort"><span class="rb-btn-sm-icon">×</span><span class="rb-btn-sm-label">Reset</span></button>
-          </div>
-        </div>
-        <div class="rb-group-label">Sort</div>
-      </div>
-
-      <div class="rb-divider" aria-hidden="true"></div>
-
-      <div class="rb-group" aria-label="Filter">
-        <div class="rb-group-content">
-          <button class="rb-btn-lg" type="button" data-ss-grid-command="open-filters" title="Add or edit filters">
-            <span class="rb-icon-lg"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 5h18"/><path d="M6 12h12"/><path d="M10 19h4"/></svg></span>
-            <span class="rb-btn-lg-label">Filters</span>
-          </button>
-          <button class="rb-btn-lg" type="button" data-ss-grid-command="clear-filters" title="Clear active filters">
-            <span class="rb-icon-lg"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 5h18"/><path d="M8 12h8"/><path d="M10 19h4"/><path d="M18 6 6 18"/></svg></span>
-            <span class="rb-btn-lg-label">Clear</span>
-          </button>
-        </div>
-        <div class="rb-group-label">Filter</div>
-      </div>
-
-      <div class="rb-divider" aria-hidden="true"></div>
-
-      <div class="rb-group" aria-label="Columns">
-        <div class="rb-group-content">
-          <button class="rb-btn-lg" type="button" data-ss-grid-command="open-columns" title="Show or hide columns">
-            <span class="rb-icon-lg"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="4" height="16"/><rect x="10" y="4" width="4" height="16"/><rect x="16" y="4" width="4" height="16"/></svg></span>
-            <span class="rb-btn-lg-label">Columns</span>
-          </button>
-          <button class="rb-btn-lg" type="button" data-ss-grid-command="reset-columns" title="Reset visible columns">
-            <span class="rb-icon-lg"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 3v6h6"/></svg></span>
-            <span class="rb-btn-lg-label">Reset</span>
-          </button>
-        </div>
-        <div class="rb-group-label">Columns</div>
-      </div>
-
-      <div class="rb-divider" aria-hidden="true"></div>
-
-      <div class="rb-group" aria-label="Grouping">
-        <div class="rb-group-content">
-          <div class="rb-stack">
-            <label class="rb-mini-label" for="gridGroupField">Group by</label>
-            <select class="rb-select" id="gridGroupField" data-ss-grid-group-field></select>
-          </div>
-          <button class="rb-btn-lg" type="button" data-ss-grid-command="clear-group" title="Remove grouping">
-            <span class="rb-icon-lg"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h16"/><path d="M7 12h10"/><path d="M10 18h4"/><path d="M18 6 6 18"/></svg></span>
-            <span class="rb-btn-lg-label">Ungroup</span>
-          </button>
-        </div>
-        <div class="rb-group-label">Grouping</div>
-      </div>
-
-      <div class="rb-divider" aria-hidden="true"></div>
-
-      <div class="rb-group" aria-label="Table width">
-        <div class="rb-group-content">
-          <button class="rb-btn-lg" type="button" data-ss-grid-command="width-fit" title="Fit table width to content, centered on the page">
-            <span class="rb-icon-lg"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5v14"/><path d="M15 5v14"/><path d="M4 8l-2 4 2 4"/><path d="M20 8l2 4-2 4"/></svg></span>
-            <span class="rb-btn-lg-label">Fit</span>
-          </button>
-          <button class="rb-btn-lg" type="button" data-ss-grid-command="width-full" title="Stretch table to full page width">
-            <span class="rb-icon-lg"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 9v6"/><path d="M19 9v6"/><path d="M9 12h6"/><path d="M2 12h3"/><path d="M19 12h3"/></svg></span>
-            <span class="rb-btn-lg-label">Full</span>
-          </button>
-        </div>
-        <div class="rb-group-label">Width</div>
       </div>
     </div>
 
