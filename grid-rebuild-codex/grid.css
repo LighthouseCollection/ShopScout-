@@ -82,14 +82,14 @@
   background: var(--surface, #fff);
 }
 .ss-grid-host .slick-header-column {
-  background: var(--surface, #fff);
+  background: #f4f6f9;
   color: var(--ink-2, #2a3441);
   font-family: var(--font-body, "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif);
   font-size: 12px;
   font-weight: 600;
   letter-spacing: 0.03em;
   text-transform: none;
-  border-right: 1px solid #eaeef2;
+  /* border-right: 1px solid var(--button-shade-active); */
   padding-top: 10px;
   padding-bottom: 10px;
 }
@@ -260,7 +260,7 @@
   box-sizing: border-box;
   max-width: 100%;
   min-width: 0;
-  padding: 4px 10px;
+  padding: 2px;
   border: 1px solid hsl(212 55% 62%);
   border-radius: 6px;
   background: hsl(212 65% 95%);
@@ -404,7 +404,7 @@ a.ss-grid-logo-token:visited {
   align-items: center;
   gap: 3px;
   max-width: 100%;
-  padding: 4px 10px;
+  padding: 2px;
   border: 1px solid var(--rule-soft, #d1d5db);
   border-radius: 6px;
   background: var(--paper-2, #eaedf1);

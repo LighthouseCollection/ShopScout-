@@ -533,13 +533,14 @@
        numeric rating; the text-length estimator undercounts wide glyphs,
        so this type keeps a rating-specific floor. */
     if (column?.type === 'rating') return { min: 132, max: 200, pad: 20 };
-    /* Pill-wrapped cells (brand, source, spec, plain text pills) have
-       border+padding chrome the text-length estimator misses — bump the
-       pad so the pill has room on both sides. Text columns also render
-       their content as pills via plainCellHtml, so they need the same
-       chrome allowance — otherwise short values like "VHEP02" wrap. */
+    /* Pill-wrapped cells (brand, source, spec, plain text pills) need
+       the column wide enough for BOTH the cell's inner padding
+       (8px 12px = 24 horizontal) AND the pill's own border + padding
+       chrome (~6px). Otherwise the pill visually overflows the cell
+       and text spills past its border. 40 total gives cushion for the
+       sort indicator in the header too. */
     if (column?.type === 'brand' || column?.type === 'source' || column?.type === 'spec' || column?.type === 'text') {
-      return { min: 40, max: 520, pad: 28 };
+      return { min: 40, max: 520, pad: 40 };
     }
     if (column?.type === 'price') return { min: 40, max: 200, pad: 16 };
     return { min: 40, max: 520, pad: 16 };
