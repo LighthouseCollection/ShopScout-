@@ -237,7 +237,10 @@
     /* Restore the persisted width mode + reflect it in the toolbar. */
     let widthMode = 'fit';
     try {
-      widthMode = root.localStorage?.getItem('shopscout_grid_width_mode') === 'full' ? 'full' : 'fit';
+      /* Default to Full mode — users have consistently asked for the
+         table to fill the page. Fit is opt-in via the ribbon toggle. */
+      const stored = root.localStorage?.getItem('shopscout_grid_width_mode');
+      widthMode = stored === 'fit' ? 'fit' : 'full';
     } catch {}
     const shell = root.document?.querySelector('.ss-grid-shell');
     if (shell && shell.getAttribute('data-shell-width') !== widthMode) {

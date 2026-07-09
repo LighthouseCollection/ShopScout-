@@ -269,7 +269,28 @@ async function renderAll() {
   if (SS && typeof SS.flushProductRepoMirror === 'function') {
     await SS.flushProductRepoMirror();
   }
+  updateProductsPageTitle();
   if (grid && typeof grid.render === 'function') return grid.render();
+}
+
+/* Keep the products page title in sync with the currently-selected list
+   so the header band always names what you're looking at — same shape
+   info pages use ('Vertical Packs · list name' etc.). */
+async function updateProductsPageTitle() {
+  const titleEl = document.getElementById('productsPageTitle');
+  const subEl = document.getElementById('productsPageSubtitle');
+  if (!titleEl && !subEl) return;
+  try {
+    const data = await getData();
+    const listName = data?.activeList || 'Products';
+    const products = Array.isArray(data?.lists?.[listName]) ? data.lists[listName] : [];
+    if (titleEl) titleEl.textContent = listName;
+    if (subEl) {
+      subEl.textContent = products.length
+        ? `${products.length} product${products.length === 1 ? '' : 's'} in this list.`
+        : 'No products yet — add one to get started.';
+    }
+  } catch { /* best-effort, non-critical */ }
 }
 
 // --- View configuration modals ---

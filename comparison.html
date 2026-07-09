@@ -407,13 +407,21 @@
      feedback page. -->
 <div class="content" id="content"></div>
 
-<!-- Product grid mount point. The Codex Phase 2 grid keeps persistence
-     in ShopScout's repo/data layer and uses SlickGrid only as the
-     viewport/editor engine. -->
-<section class="product-grid-mount ss-grid-shell" id="productGrid" aria-live="polite">
-  <div class="ss-grid-status" id="ssGridStatus" aria-live="polite"></div>
-  <div class="ss-grid-host slick-default-theme" id="ssGridHost"></div>
-</section>
+<!-- Product grid mount point. Uniform page shell: same title band as
+     info pages (Vertical Packs, User Rules, Normalization Review) so
+     every dashboard route reads the same. -->
+<div class="dashboard-page dashboard-page--grid" id="productsPageShell">
+  <header class="dashboard-page-head">
+    <div>
+      <h2 id="productsPageTitle">Products</h2>
+      <p id="productsPageSubtitle">Your active product list.</p>
+    </div>
+  </header>
+  <section class="product-grid-mount ss-grid-shell" id="productGrid" aria-live="polite">
+    <div class="ss-grid-status" id="ssGridStatus" aria-live="polite"></div>
+    <div class="ss-grid-host" id="ssGridHost"></div>
+  </section>
+</div>
 
 <!-- Manual AI modal — sized to host ai-select.html without vertical scroll. -->
 <div class="modal-overlay" id="manualAiModal">
