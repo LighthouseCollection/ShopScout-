@@ -278,6 +278,69 @@
     return text ? esc(text) : '<span class="ss-grid-empty">-</span>';
   }
 
+  /* ---- Normalization Review renderers ---------------------------
+     Ported from slickGridAdapter.js htmlForNormalization* — same
+     markup / classes so the existing normalization-review.css rules
+     (raw / arrow / normalized, action buttons) apply unchanged. */
+  function normalizationValuesMatch(left, right) {
+    return textValue(left).trim().toLowerCase() === textValue(right).trim().toLowerCase();
+  }
+
+  function renderNormalizationProduct(params) {
+    const item = params.data || {};
+    const title = textValue(item.productTitle || item.title).trim() || 'Product';
+    const source = textValue(item.source).trim();
+    return `<div class="normalization-review-product">
+      <strong title="${escAttr(title)}">${esc(title)}</strong>
+      ${source ? `<span>${esc(source)}</span>` : ''}
+    </div>`;
+  }
+
+  function renderNormalizationPair(params) {
+    const item = params.data || {};
+    const rawField = params.colDef?.cellRendererParams?.rawField || 'raw';
+    const normalizedField = params.colDef?.cellRendererParams?.normalizedField || 'normalized';
+    const raw = textValue(item[rawField] ?? params.value).trim();
+    const normalized = textValue(item[normalizedField]).trim();
+    const shown = normalized || raw || '-';
+    if (normalizationValuesMatch(raw, normalized)) {
+      return `<span class="normalization-review-normal">${esc(shown)}</span>`;
+    }
+    return `<span class="normalization-review-raw">${esc(raw || '-')}</span>`
+      + '<span class="normalization-review-arrow">→</span>'
+      + `<span class="normalization-review-normal">${esc(shown)}</span>`;
+  }
+
+  function renderNormalizationReason(params) {
+    return `<span class="normalization-review-reason">${esc(textValue(params.value).trim() || 'review')}</span>`;
+  }
+
+  function renderNormalizationRule(params) {
+    const item = params.data || {};
+    const rule = textValue(params.value || item.rule || 'unmapped').trim() || 'unmapped';
+    const source = textValue(item.fieldSource).trim();
+    return `<code>${esc(rule)}</code>${source ? `<span>${esc(source)}</span>` : ''}`;
+  }
+
+  function normalizationActionAttrs(item) {
+    return `data-review-key="${escAttr(item?.reviewKey || '')}" `
+      + `data-product-id="${escAttr(item?.productId || '')}" `
+      + `data-raw-field="${escAttr(item?.rawField || '')}" `
+      + `data-field="${escAttr(item?.field || '')}" `
+      + `data-raw-value="${escAttr(item?.raw || '')}" `
+      + `data-normalized-value="${escAttr(item?.normalized || '')}"`;
+  }
+
+  function renderNormalizationActions(params) {
+    const item = params.data || {};
+    const attrs = normalizationActionAttrs(item);
+    return `<div class="normalization-review-actions ss-grid-review-actions">
+      <button class="dashboard-primary-action dashboard-secondary-action--small" type="button" data-normalization-action="accept-alias" title="Save this raw → normalized mapping as a user rule for this row only." ${attrs}>Accept alias</button>
+      <button class="dashboard-secondary-action dashboard-secondary-action--small" type="button" data-normalization-action="ignore" title="Mark this row as intentionally ignored so ShopScout never asks about this exact case again." ${attrs}>Ignore</button>
+      ${item.productId ? `<button class="dashboard-secondary-action dashboard-secondary-action--small" type="button" data-duplicate-open="${escAttr(item.productId)}" title="Open this product's detail page so you can inspect the source value in context.">Open</button>` : ''}
+    </div>`;
+  }
+
   /* AG Grid custom header component for matrix product columns.
      Renders the same thumb + wrapped title + action bar SlickGrid
      used, but as real DOM (not the HTML-string hack). AG Grid picks
@@ -335,6 +398,11 @@
     if (column.type === 'rating') return renderRating;
     if (column.type === 'matrixCell') return renderMatrixCell;
     if (column.type === 'attribute') return renderAttribute;
+    if (column.type === 'normalizationProduct') return renderNormalizationProduct;
+    if (column.type === 'normalizationPair') return renderNormalizationPair;
+    if (column.type === 'normalizationReason') return renderNormalizationReason;
+    if (column.type === 'normalizationRule') return renderNormalizationRule;
+    if (column.type === 'normalizationActions') return renderNormalizationActions;
     if ((column.field || column.id) === 'title') return renderTitle;
     return renderPlain;
   }
@@ -381,8 +449,17 @@
         field,
         headerName: (column.name || '').replace(/<[^>]+>/g, '').trim(),
         cellRenderer: columnTypeRenderer(column),
-        cellRendererParams: { ssType: column.type || 'text' },
-        sortable: !['selection','image','actions','matrixCell','attribute'].includes(column.type),
+        /* Pass through the source column config so renderers can pull
+           out custom fields (normalizationPair needs rawField /
+           normalizedField, matrix cells need field). Keeping the
+           projection column reachable here avoids adding a second
+           map from column id to config inside the renderers. */
+        cellRendererParams: {
+          ssType: column.type || 'text',
+          rawField: column.rawField,
+          normalizedField: column.normalizedField
+        },
+        sortable: !['selection','image','actions','matrixCell','attribute','normalizationActions','userRuleActions'].includes(column.type),
         resizable: true,
         suppressMovable: column.type === 'selection' || column.type === 'image' || isPinnedLeft,
         minWidth,

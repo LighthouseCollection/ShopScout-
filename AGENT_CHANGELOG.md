@@ -3202,3 +3202,48 @@ This file is the shared record for Claude and Codex. Append an entry for every m
   - **Grouping / sorting are intentionally off** in matrix mode (columns are products, not values — sorting products alphabetically is nonsensical here). Grouping was never wired for matrix either. If we ever want to sort matrix rows by attribute name we can flip `sortable: true` on the `attribute` column type.
   - **Actions column** doesn't exist in matrix mode (each product column carries its own action bar in the header). The `opts.onAction` handler already knows how to handle this shape.
   - **Next commit (3/5):** normalization-review projection to AG Grid — needs `renderNormalizationProduct`, `renderNormalizationPair`, `renderNormalizationReason`, `renderNormalizationRule`, `renderNormalizationActions` cell renderers. Same pattern as this commit.
+
+## 2026-07-08 - Claude normalization review migrated to AG Grid
+
+- Agent: Claude
+- Branch: grid-rebuild-codex
+- Commit: This commit (3/5 of the SlickGrid removal sequence).
+- Status: Implemented; user acceptance-tested visually. Automated tests not re-run.
+- Summary:
+  - Normalization Review page now renders through AG Grid. Ported all five normalization-specific cell renderers from `slickGridAdapter.js`:
+    * `renderNormalizationProduct` — product title (bold) + optional source line under it. Same `.normalization-review-product` markup so existing CSS applies unchanged.
+    * `renderNormalizationPair` — raw -> normalized value transition. Reads `rawField` and `normalizedField` from `cellRendererParams` (passed through `toAgColumns`). When raw and normalized match case-insensitively, renders only the normalized value (no arrow). When they differ, renders `raw` -> arrow -> normalized.
+    * `renderNormalizationReason` — reason chip via `.normalization-review-reason` span. Defaults to "review" when empty.
+    * `renderNormalizationRule` — `<code>` rule token + optional field-source hint. Defaults to "unmapped".
+    * `renderNormalizationActions` — three-button action bar (Accept alias / Ignore / Open) with a full `data-*` payload (reviewKey, productId, rawField, field, raw, normalized) so the document-level click handler in `comparison.js` can pick up and route.
+  - `columnTypeRenderer` now dispatches these five types explicitly.
+  - `toAgColumns.cellRendererParams` now carries through `rawField` and `normalizedField` from the projection column so `renderNormalizationPair` can look up the right two fields per column instance (Field column pairs `rawField` -> `field`; Value column pairs `raw` -> `normalized`).
+  - `normalizationActions` type added to the non-sortable set (it's a UI column, not data).
+  - `mountNormalizationReviewGrid` in `comparison.js` now prefers `globalThis.ShopScoutAgGridAdapter` with a temporary fallback to `ShopScoutSlickGridAdapter` in case something breaks during the transition window. Applied the `ag-theme-shopscout` class to the host instead of `slick-default-theme` so AG Grid's theme rules pick it up.
+  - `[data-normalization-action]` and `[data-duplicate-open]` clicks bubble unchanged: the AG Grid container's `containerClick` only calls `stopImmediatePropagation` for `[data-ss-grid-action]` and `[data-matrix-action]`, so normalization actions reach the document-level delegate in `comparison.js` where they already have wired handlers.
+- Files touched:
+  - `grid-rebuild-codex/agGridAdapter.js` — renderNormalizationProduct, renderNormalizationPair, renderNormalizationReason, renderNormalizationRule, renderNormalizationActions; columnTypeRenderer dispatch entries; rawField/normalizedField pass-through in cellRendererParams; sortable exclusion for normalizationActions.
+  - `comparison.js` — `mountNormalizationReviewGrid` swaps adapter to AG Grid, applies `ag-theme-shopscout` class.
+  - `AGENT_CHANGELOG.md` — this entry.
+- Validation run:
+  - `npm run build` -> Chrome / Edge / Firefox dists rebuilt (v3.3.0.e908e90 on this file's HEAD before commit).
+  - No automated tests re-run this commit.
+- Review / handoff:
+  - Reviewer: Codex.
+  - **What to check:**
+    1. **Normalization Review page renders rows.** From the Products tab -> Review & Rules group -> Normalize Review. Each unmapped or low-confidence normalization decision should show as a row with columns: Product, Category, Field, Value, Actions.
+    2. **Product column** — bold product title + optional source line underneath. Long titles should truncate/wrap without breaking the layout.
+    3. **Field / Value columns** — when raw and normalized match (case-insensitive), only the normalized value shows (no arrow). When they differ, show `raw` in muted red -> arrow -> `normalized` in green. Same styling as SlickGrid — driven by existing `.normalization-review-raw / -arrow / -normal` CSS classes.
+    4. **Actions column** — three buttons:
+       - **Accept alias** -> stores the raw -> normalized mapping as a user rule (permanent) via `repo.saveNormalizationReviewDecision(listId, {action: 'accept-alias', item: {...}})`.
+       - **Ignore** -> marks this exact case as intentionally ignored so ShopScout never asks again.
+       - **Open** (only when `productId` is set) -> opens the product detail page for context.
+       Verify each button's data attributes are populated correctly (right-click -> inspect) and that clicking each triggers the expected behavior.
+    5. **Row height** — matches the existing `rowHeight: 64` for `normalizationReview` mode in `agGridAdapter.js` gridOptions.
+    6. **Grid host container** — `#normalizationReviewGrid` is NOT inside a `.ss-grid-shell` wrapper (unlike Products / Compare). `fitShellToContent` and `distributeLeftover` in the AG Grid adapter both return early when they can't find `.ss-grid-shell`, so no column-width distribution happens. Columns are pure autoSize + explicit `column.width` from the projection. Verify the layout doesn't look starved or over-inflated.
+    7. **Fallback path** — if for any reason `ShopScoutAgGridAdapter` fails to load (e.g. vendored AG Grid missing), `mountNormalizationReviewGrid` falls back to `ShopScoutSlickGridAdapter`. This fallback will be removed in commit 5 (final SlickGrid deletion). Verify the fallback is genuinely dead code before deletion.
+    8. **Automated tests** — `tests/normalization-review-render.test.js` exists and tests the SlickGrid renderer output. When user rules migration lands and SlickGrid is deleted, this test needs updating to assert the AG Grid renderer output instead. Flag for Codex to update.
+- Follow-ups or risks:
+  - **Category column** currently uses `type: 'text'` which routes to `renderPlain`. It works but may need special styling (e.g. pill) if the category values are structured. Check with a real product list.
+  - **Pair renderer edge case:** when both raw and normalized are empty, shows `-`. When only one is empty and the other has a value, shows the non-empty side without arrow. Same behavior as SlickGrid.
+  - **Next commit (4/5):** User Rules page to AG Grid — needs `renderUserRuleCode` and `renderUserRuleActions`. Same pattern as this commit.
