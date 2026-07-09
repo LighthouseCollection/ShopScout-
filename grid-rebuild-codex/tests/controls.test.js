@@ -204,7 +204,7 @@ function createHarness() {
         ];
       }
     },
-    ShopScoutSlickGridAdapter: {
+    ShopScoutAgGridAdapter: {
       create(_host, projection, options) {
         capturedOptions = options;
         createdProjection = projection;

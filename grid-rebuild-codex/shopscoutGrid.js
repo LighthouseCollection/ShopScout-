@@ -837,7 +837,7 @@
         state.adapter = null;
         return;
       }
-      const adapterFactory = root.ShopScoutSlickGridAdapter;
+      const adapterFactory = root.ShopScoutAgGridAdapter;
       if (!adapterFactory || typeof adapterFactory.create !== 'function') {
         setHostMessage(host, 'Grid engine failed to load.');
         setStatus('Grid engine unavailable');

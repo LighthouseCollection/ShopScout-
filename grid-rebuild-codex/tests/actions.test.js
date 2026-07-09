@@ -77,7 +77,7 @@ function createContext(confirmResult) {
         };
       }
     },
-    ShopScoutSlickGridAdapter: {
+    ShopScoutAgGridAdapter: {
       create(_host, projection, options) {
         capturedOptions = options;
         return {
