@@ -227,6 +227,104 @@
     return pills || esc(text);
   }
 
+  /* Matrix cell — Compare view. `params.value` is a displayCell object
+     produced by buildComparisonMatrixProjection in projections.js:
+        { value, raw, corrected, confidence, sources, missing,
+          productId, url, source, field, ... }
+     Ports the SlickGrid htmlForMatrixCell logic: shows "Missing" for
+     empty rows, strikes through the raw value when a correction has
+     been applied, shows a confidence percent chip, and delegates to
+     renderBrand / renderSource for those two special fields when
+     there's no correction. */
+  function renderMatrixCell(params) {
+    const value = params.value;
+    if (!value || typeof value !== 'object') {
+      const text = textValue(value).trim();
+      if (!text) return '<span class="ss-grid-empty">Missing</span>';
+      const pills = pillsHtml(text, 'matrixCell', '');
+      return pills || esc(text);
+    }
+    if (value.missing) return '<span class="ss-grid-missing">Missing</span>';
+    const shown = textValue(value.value || value.corrected || value.raw).trim();
+    const raw = textValue(value.raw).trim();
+    const corrected = textValue(value.corrected).trim();
+    const field = String(value.field || '').replace(/^spec:/, '');
+    if (shown && !corrected && field === 'brand') {
+      return renderBrand({ value: shown });
+    }
+    if (shown && !corrected && field === 'source') {
+      return renderSource({ value: shown, data: { source: shown, url: value.url } });
+    }
+    const confidence = typeof value.confidence === 'number'
+      ? `<span class="ss-grid-confidence">${Math.round(value.confidence * 100)}%</span>`
+      : '';
+    if (corrected) {
+      const correctedPills = pillsHtml(corrected, 'matrixCell', value.field);
+      return `<span class="ss-grid-matrix-cell"><span class="ss-grid-corrected">${correctedPills || esc(corrected)}</span>`
+        + `${raw ? `<span class="ss-grid-was">was ${esc(raw)}</span>` : ''}${confidence}</span>`;
+    }
+    const shownHtml = shown
+      ? (pillsHtml(shown, 'matrixCell', value.field) || esc(shown))
+      : '<span class="ss-grid-empty">-</span>';
+    return `<span class="ss-grid-matrix-cell"><span>${shownHtml}</span>${confidence}</span>`;
+  }
+
+  /* Attribute column cell — the leftmost column in Compare view, whose
+     values are attribute names ("Brand", "Price", "Rating", ...). Just
+     the trimmed text; alignment/shading comes from the .ss-grid-cell-
+     attribute CSS class we add in cellClassForColumn. */
+  function renderAttribute(params) {
+    const text = textValue(params.value).trim();
+    return text ? esc(text) : '<span class="ss-grid-empty">-</span>';
+  }
+
+  /* AG Grid custom header component for matrix product columns.
+     Renders the same thumb + wrapped title + action bar SlickGrid
+     used, but as real DOM (not the HTML-string hack). AG Grid picks
+     it up via headerComponent in the colDef. */
+  function makeMatrixHeaderComponent(column) {
+    class MatrixHeader {
+      init() {
+        const doc = root.document;
+        this.eGui = doc.createElement('div');
+        this.eGui.className = 'ss-grid-product-head';
+        const label = textValue(column.name).trim() || 'Product';
+        const thumb = safeUrl(column.image);
+        if (thumb) {
+          const img = doc.createElement('img');
+          img.className = 'ss-grid-header-thumb';
+          img.src = thumb;
+          img.alt = '';
+          img.loading = 'lazy';
+          this.eGui.appendChild(img);
+        }
+        const titleWrap = doc.createElement('span');
+        titleWrap.className = 'ss-grid-product-head-title-wrap';
+        const title = doc.createElement('span');
+        title.className = 'ss-grid-product-head-title';
+        title.title = label;
+        title.textContent = label;
+        titleWrap.appendChild(title);
+        this.eGui.appendChild(titleWrap);
+        if (column.productId) {
+          const bar = doc.createElement('div');
+          bar.className = 'ss-grid-action-bar ss-grid-matrix-actions';
+          bar.setAttribute('role', 'toolbar');
+          bar.setAttribute('aria-label', 'Product actions');
+          bar.innerHTML = `
+            <button class="ss-grid-action-btn" type="button" data-matrix-action="open" data-matrix-product-id="${escAttr(column.productId)}" aria-label="Open product" title="Open"><span aria-hidden="true">&#8599;</span></button>
+            <button class="ss-grid-action-btn" type="button" data-matrix-action="rescan" data-matrix-product-id="${escAttr(column.productId)}" aria-label="Rescan product" title="Rescan"><span aria-hidden="true">&#8635;</span></button>
+            <button class="ss-grid-action-btn ss-grid-action-danger" type="button" data-matrix-action="delete" data-matrix-product-id="${escAttr(column.productId)}" aria-label="Delete product" title="Delete"><span aria-hidden="true">&times;</span></button>
+          `;
+          this.eGui.appendChild(bar);
+        }
+      }
+      getGui() { return this.eGui; }
+      refresh() { return false; }
+    }
+    return MatrixHeader;
+  }
+
   /* --- Column definition builder -------------------------------- */
   function columnTypeRenderer(column) {
     if (column.type === 'selection') return renderSelection;
@@ -235,6 +333,8 @@
     if (column.type === 'source') return renderSource;
     if (column.type === 'price') return renderPrice;
     if (column.type === 'rating') return renderRating;
+    if (column.type === 'matrixCell') return renderMatrixCell;
+    if (column.type === 'attribute') return renderAttribute;
     if ((column.field || column.id) === 'title') return renderTitle;
     return renderPlain;
   }
@@ -251,7 +351,9 @@
     return 40;
   }
 
-  const PINNED_LEFT_COLUMN_IDS = new Set(['select', 'thumb', 'title']);
+  /* Products-grid pinned columns: select / thumb / Name. Compare view
+     adds 'attribute' (the Buying Factor column). */
+  const PINNED_LEFT_COLUMN_IDS = new Set(['select', 'thumb', 'title', 'attribute']);
 
   function cellClassForColumn(column) {
     const parts = ['ss-grid-cell', `ss-grid-cell-${column.type || 'text'}`];
@@ -266,16 +368,24 @@
     return (columns || []).map(column => {
       const field = column.field || column.id;
       const isPinnedLeft = PINNED_LEFT_COLUMN_IDS.has(column.id);
+      const isMatrixCell = column.type === 'matrixCell';
+      /* Prefer explicit column.minWidth from projections.js over the
+         type-based fallback in columnMinWidth. Matrix product columns
+         pass minWidth: 180; attribute column passes 190. Ignoring
+         those was the reason Compare view collapsed narrow cells. */
+      const minWidth = typeof column.minWidth === 'number' && column.minWidth > 0
+        ? column.minWidth
+        : columnMinWidth(column);
       const colDef = {
         colId: column.id,
         field,
         headerName: (column.name || '').replace(/<[^>]+>/g, '').trim(),
         cellRenderer: columnTypeRenderer(column),
         cellRendererParams: { ssType: column.type || 'text' },
-        sortable: !['selection','image','actions'].includes(column.type),
+        sortable: !['selection','image','actions','matrixCell','attribute'].includes(column.type),
         resizable: true,
         suppressMovable: column.type === 'selection' || column.type === 'image' || isPinnedLeft,
-        minWidth: columnMinWidth(column),
+        minWidth,
         hide: !!column.defaultHidden,
         editable: !!column.editable,
         cellClass: cellClassForColumn(column),
@@ -283,6 +393,11 @@
         pinned: isPinnedLeft ? 'left' : undefined,
         lockPinned: isPinnedLeft || undefined
       };
+      /* Matrix product columns get a real header component so the
+         thumb + title + action bar render as DOM (not HTML string). */
+      if (isMatrixCell) {
+        colDef.headerComponent = makeMatrixHeaderComponent(column);
+      }
       if (column.width) colDef.width = column.width;
       return colDef;
     });
@@ -488,6 +603,24 @@
           ? rowData.find(r => String(r.id ?? r._id) === String(rowId))
           : null;
         if (typeof opts.onAction === 'function') opts.onAction(actionBtn.dataset.ssGridAction, row);
+        return;
+      }
+      /* Matrix product-header action bar (open/rescan/delete). The
+         header component embeds [data-matrix-action] buttons with a
+         [data-matrix-product-id] attribute. Route through onAction
+         with the productId so comparison.js's existing handler picks
+         it up (same shape SlickGrid used). */
+      const matrixBtn = target?.closest?.('[data-matrix-action]');
+      if (matrixBtn) {
+        event.preventDefault();
+        event.stopImmediatePropagation();
+        const action = matrixBtn.dataset.matrixAction;
+        const productId = matrixBtn.dataset.matrixProductId;
+        if (typeof opts.onMatrixAction === 'function') {
+          opts.onMatrixAction(action, productId);
+        } else if (typeof opts.onAction === 'function') {
+          opts.onAction(action, { id: productId, _shopScout: { productId } });
+        }
         return;
       }
       const checkbox = target?.closest?.('.ss-grid-select');

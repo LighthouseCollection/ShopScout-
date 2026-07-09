@@ -855,16 +855,13 @@
         state.adapter = null;
         return;
       }
-      /* Products grid → AG Grid (Phase 1 migrated).
-         comparisonMatrix / normalizationReview / userRules → SlickGrid
-         until their AG Grid renderers are wired (Phase 2 + 3).
-         SlickGrid has htmlForMatrixCell that unwraps the displayCell
-         { value, raw, corrected, ... } object shape produced by
-         buildComparisonMatrixProjection; AG Grid's renderPlain would
-         see the object and render nothing useful. */
+      /* Products grid + comparisonMatrix → AG Grid (Phase 1 + 2 done).
+         normalizationReview / userRules → SlickGrid until their
+         renderers are wired (Phase 3). AG Grid's renderMatrixCell
+         now unwraps the displayCell {value, raw, corrected, ...}
+         objects that comparison matrix rows produce. */
       const mode = projection?.mode;
-      const useSlickGrid = mode === 'comparisonMatrix'
-        || mode === 'normalizationReview'
+      const useSlickGrid = mode === 'normalizationReview'
         || mode === 'userRules';
       const adapterFactory = useSlickGrid
         ? root.ShopScoutSlickGridAdapter

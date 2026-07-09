@@ -150,14 +150,46 @@
   overflow: hidden;
 }
 
-/* Pinned-left row-label cells (Select / Thumb / Name) match the
-   header background so the frozen columns read as a distinct band
-   that separates identifiers from spec data. Add a clear right rule
-   so the frozen edge is obvious. */
+/* Pinned-left row-label cells (Select / Thumb / Name / Buying Factor)
+   match the header background so the frozen columns read as a distinct
+   band that separates identifiers from spec data. Add a clear right
+   rule so the frozen edge is obvious. */
 .ss-grid-host.ag-theme-shopscout .ag-cell.ss-grid-cell-select,
 .ss-grid-host.ag-theme-shopscout .ag-cell.ss-grid-cell-thumb,
-.ss-grid-host.ag-theme-shopscout .ag-cell.ss-grid-cell-title {
+.ss-grid-host.ag-theme-shopscout .ag-cell.ss-grid-cell-title,
+.ss-grid-host.ag-theme-shopscout .ag-cell.ss-grid-cell-attribute {
   background: #f4f6f9;
+}
+/* Attribute column (compare matrix leftmost) — left-aligned, bold.
+   The shading rule above already runs for .ss-grid-cell-attribute;
+   here we only fix alignment + weight. */
+.ss-grid-host.ag-theme-shopscout .ag-cell.ss-grid-cell-attribute {
+  justify-content: flex-start !important;
+  text-align: left !important;
+  font-weight: 700;
+  padding-left: 16px !important;
+}
+.ss-grid-host.ag-theme-shopscout .ag-header-cell[col-id="attribute"] {
+  background: #f4f6f9;
+}
+.ss-grid-host.ag-theme-shopscout .ag-header-cell[col-id="attribute"] .ag-header-cell-label {
+  justify-content: flex-start;
+  padding-left: 10px;
+}
+
+/* Compare matrix — taller header (thumb + wrapped title + actions)
+   already set via headerHeight: 180 in gridOptions. Center align the
+   product-column header content top-to-bottom via CSS since the
+   default AG Grid header uses baseline alignment. */
+.ss-grid-host.ag-theme-shopscout.ss-grid-is-matrix .ag-header-cell {
+  align-items: stretch;
+  padding-top: 8px;
+  padding-bottom: 8px;
+}
+.ss-grid-host.ag-theme-shopscout.ss-grid-is-matrix .ag-header-cell .ag-header-cell-comp-wrapper,
+.ss-grid-host.ag-theme-shopscout.ss-grid-is-matrix .ag-header-cell .ag-header-cell-label {
+  height: 100%;
+  align-items: flex-start;
 }
 .ss-grid-host.ag-theme-shopscout .ag-pinned-left-cols-container .ag-row {
   background: #f4f6f9;

@@ -3152,3 +3152,53 @@ This file is the shared record for Claude and Codex. Append an entry for every m
   - **width-fit / width-full command branch** in `shopscoutGrid.js` is now unreachable from the UI but the code path still exists. Not harmful (dead code); will be swept in the final SlickGrid-removal commit.
   - **Rescan Missing Data** was proposed in ChatGPT's grouping table but not implemented — user only asked for All + Selected. Add later if desired.
   - **Next 4 commits in this sequence** will migrate matrix / normalization review / user rules to AG Grid and then delete SlickGrid. Ribbon layout is stable now; the remaining work is purely engine-swap.
+
+## 2026-07-08 - Claude comparison matrix migrated to AG Grid
+
+- Agent: Claude
+- Branch: grid-rebuild-codex
+- Commit: This commit (2/5 of the SlickGrid removal sequence).
+- Status: Implemented; user acceptance-tested visually. Automated tests not re-run.
+- Summary:
+  - Comparison matrix (Compare view) now renders through AG Grid. `shopscoutGrid.js` routing was updated so only `normalizationReview` and `userRules` still fall through to SlickGrid; every other projection mode goes to `ShopScoutAgGridAdapter`.
+  - New cell renderer `renderMatrixCell` in `grid-rebuild-codex/agGridAdapter.js` — ports the SlickGrid `htmlForMatrixCell` logic:
+    * Empty / string values -> show `Missing` or run through pill renderer.
+    * `value.missing === true` -> `<span class="ss-grid-missing">Missing</span>`.
+    * Brand / source fields without a correction -> delegate to `renderBrand` / `renderSource` so the logo-token pill shows up.
+    * Corrected values -> strikethrough the raw with `<span class="ss-grid-was">was ...</span>` and show the corrected pill on top.
+    * All non-empty values get an optional confidence percent chip (`Math.round(value.confidence * 100)%`).
+  - New simple cell renderer `renderAttribute` for the leftmost Buying Factor column — just the trimmed text. Alignment / shading comes from the existing `.ss-grid-cell-attribute` CSS class.
+  - New AG Grid custom header component via `makeMatrixHeaderComponent(column)` — returns an ES class with `init/getGui/refresh`. Builds real DOM (not HTML string) for thumb + wrapped title + action bar. Registered on each matrix product column via `colDef.headerComponent`. This is the cleaner replacement for SlickGrid's `enableHtmlRendering: true` hack.
+  - `columnTypeRenderer` now dispatches `matrixCell -> renderMatrixCell` and `attribute -> renderAttribute`.
+  - `toAgColumns` now prefers `column.minWidth` when set (projections.js passes 180 for matrixCell / 190 for attribute) over the type-based fallback in `columnMinWidth`. This was the reason narrow matrix cells were collapsing.
+  - `PINNED_LEFT_COLUMN_IDS` extended to include `'attribute'` so the Buying Factor column is pinned left in the matrix view (same treatment as Name in the Products view).
+  - Sortable set to false for `matrixCell` and `attribute` column types (they're layout columns, not data columns).
+  - Click delegation extended: `[data-matrix-action]` buttons in header components now route through `opts.onMatrixAction` if the caller provides one, else fall back to `opts.onAction(action, {id: productId, _shopScout: {productId}})` — same shape SlickGrid used, so `comparison.js`'s existing action handler works unchanged.
+  - CSS additions in `grid-rebuild-codex/grid.css` under `.ss-grid-host.ag-theme-shopscout`:
+    * `.ag-cell.ss-grid-cell-attribute` picks up the pinned-band background (`#f4f6f9`) and gets left-aligned + bold + 16px left padding via `!important`.
+    * `.ag-header-cell[col-id="attribute"]` and its label get the same background + left alignment so the whole Buying Factor column reads as one row-header band top to bottom.
+    * `.ss-grid-is-matrix .ag-header-cell` gets `align-items: stretch`, top/bottom padding, and inner label alignment so the taller 180px matrix header shows the thumb + title + actions vertically stacked instead of baseline-collapsed.
+- Files touched:
+  - `grid-rebuild-codex/agGridAdapter.js` — renderMatrixCell, renderAttribute, makeMatrixHeaderComponent, matrix-action click delegation, minWidth respect, attribute pinning.
+  - `grid-rebuild-codex/shopscoutGrid.js` — remove `comparisonMatrix` from `useSlickGrid` condition.
+  - `grid-rebuild-codex/grid.css` — attribute-column shading + alignment for AG Grid theme, matrix header alignment fix.
+  - `AGENT_CHANGELOG.md` — this entry.
+- Validation run:
+  - `npm run build` -> Chrome / Edge / Firefox dists rebuilt (v3.3.0.d03e110 on this file's HEAD before the commit; will update on next build).
+  - No automated tests re-run this commit.
+- Review / handoff:
+  - Reviewer: Codex.
+  - **What to check:**
+    1. **Compare view renders data.** Switch to Compare via the ribbon's View group -> Compare button. Each row should show the attribute name in the first column and the value/pill/Missing state in each product column. Regression check: previously (SlickGrid) each product cell rendered "-" for a period — that was the reason we're doing this migration.
+    2. **Corrected values.** For a product where AI normalization changed a raw value (e.g. raw `4000mAh` -> canonical `4Ah`), the cell should show the corrected pill on top with `was 4000mAh` in muted text below.
+    3. **Confidence chip.** Cells with a numeric `value.confidence` should show a percent chip. Cells without confidence should NOT show `NaN%` — the `typeof === 'number'` guard prevents that.
+    4. **Brand / Source cells** — for these two field types with no correction, the cell should use the same brand/source pill (with the retailer logo-token) that the Products grid uses. Product source pill should still open the product URL in a new tab.
+    5. **Buying Factor column** — pinned left, shaded `#f4f6f9`, left-aligned, bold. Same treatment as the Name column in the Products grid.
+    6. **Matrix header actions** — the open / rescan / delete buttons in each product column header should still trigger `opts.onAction` with the correct product id. Verify Open opens the product URL, Rescan re-scrapes the single product, Delete removes the product from the list. Cross-check against SlickGrid's old behavior on the same handler contract.
+    7. **Matrix column width** — with 2-3 products in the list, product columns should be at least 180px (their explicit `minWidth`). Attribute column should be at least 190px. With many attributes (rows), the row height should be 44px (tighter than Products' 110px).
+    8. **Header layout at 180px** — the AG Grid custom header component embeds `.ss-grid-product-head` (`display: inline-flex; flex-direction: column`). Verify the thumb, title, and actions bar stack vertically without clipping. If clipping, the fix is either bumping `headerHeight: 180 -> 200` in gridOptions or shrinking `.ss-grid-header-thumb` height in grid.css.
+    9. **Data types on props.value** — `renderMatrixCell` guards for both non-object primitives (falls through to pill rendering) and null/undefined. If a projection ever changes shape this should still produce sensible output.
+- Follow-ups or risks:
+  - **Grouping / sorting are intentionally off** in matrix mode (columns are products, not values — sorting products alphabetically is nonsensical here). Grouping was never wired for matrix either. If we ever want to sort matrix rows by attribute name we can flip `sortable: true` on the `attribute` column type.
+  - **Actions column** doesn't exist in matrix mode (each product column carries its own action bar in the header). The `opts.onAction` handler already knows how to handle this shape.
+  - **Next commit (3/5):** normalization-review projection to AG Grid — needs `renderNormalizationProduct`, `renderNormalizationPair`, `renderNormalizationReason`, `renderNormalizationRule`, `renderNormalizationActions` cell renderers. Same pattern as this commit.
