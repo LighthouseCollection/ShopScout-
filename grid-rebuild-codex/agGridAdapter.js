@@ -295,6 +295,18 @@
     shell.style.overflowX = canvasWidth > shell.clientWidth + 2 ? 'auto' : 'hidden';
   }
 
+  /* Auto-size then distribute leftover shell width equally across
+     every visible column. Rule:
+       1. autoSizeAllColumns → each column = MAX(header, widest cell)
+          + 24px total (12px each side, from the CSS ag-cell padding).
+       2. Measure sum of column widths vs shell.clientWidth.
+       3. If shell has leftover space, split it evenly across all
+          visible columns (equal px each — NOT proportional). If 10
+          extra px and 10 columns, each column gets +1px. Ignores
+          columns not currently rendered (hidden/collapsed).
+     Reason we do NOT use AG Grid's sizeColumnsToFit: it distributes
+     proportionally to column flex, so wide columns eat more of the
+     leftover than narrow ones. User wants uniform px. */
   function autoSizeEverything(api, container) {
     if (!api) return;
     try {
@@ -304,16 +316,38 @@
         const ids = api.getColumnState().map(c => c.colId).filter(Boolean);
         api.autoSizeColumns(ids, false);
       }
-      /* Full mode: after content-fit, expand columns to fill remaining
-         shell width so the last column pins to the right edge instead
-         of leaving whitespace between it and the card border. */
-      const shell = container?.closest?.('.ss-grid-shell');
-      const mode = shell?.getAttribute?.('data-shell-width') === 'full' ? 'full' : 'fit';
-      if (mode === 'full' && typeof api.sizeColumnsToFit === 'function') {
-        setTimeout(() => { try { api.sizeColumnsToFit(); } catch {} }, 0);
-      }
+      setTimeout(() => distributeLeftover(api, container), 0);
     } catch (err) {
       console.warn('AG Grid auto-size failed', err);
+    }
+  }
+
+  function distributeLeftover(api, container) {
+    if (!api || !container) return;
+    const shell = container.closest?.('.ss-grid-shell');
+    if (!shell) return;
+    const headerCells = container.querySelectorAll?.('.ag-header-cell');
+    if (!headerCells || !headerCells.length) return;
+    const cols = [];
+    let sum = 0;
+    for (const cell of headerCells) {
+      const colId = cell.getAttribute?.('col-id');
+      const w = cell.offsetWidth || 0;
+      if (!colId || !w) continue;
+      cols.push({ colId, width: w });
+      sum += w;
+    }
+    if (!cols.length) return;
+    const shellWidth = shell.clientWidth || 0;
+    const leftover = shellWidth - sum;
+    if (leftover <= cols.length) return;
+    const perColumn = Math.floor(leftover / cols.length);
+    if (perColumn <= 0) return;
+    const state = cols.map(c => ({ colId: c.colId, width: c.width + perColumn }));
+    if (typeof api.applyColumnState === 'function') {
+      api.applyColumnState({ state });
+    } else if (typeof api.setColumnWidths === 'function') {
+      api.setColumnWidths(state.map(s => ({ key: s.colId, newWidth: s.width })));
     }
   }
 
