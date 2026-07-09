@@ -667,12 +667,17 @@
      especially) reserve a scrollbar gutter for `overflow-x: auto` even
      when content fits, so a spurious scrollbar shows on a grid that
      visually needs none. */
-  /* Dynamic shell width — content-sized, centered, capped at 1400px.
-     Matches the standard Notion/GitHub/Airtable pattern: small tables
-     don't stretch across ultra-wide monitors, big tables grow up to a
-     comfortable reading width then scroll horizontally beyond that. */
-  const SHELL_MAX_WIDTH = 1400;
+  /* Dynamic shell width — content-sized, centered, scales with viewport.
+     Cap is proportional to the browser's inner width, not a hardcoded
+     pixel number, so it looks right on a 1440px laptop AND on a 3280px
+     ultrawide. Formula: min(85% of viewport, viewport - 40px gutter).
+     Never smaller than 800px so tiny tables don't collapse. */
   const SHELL_HORIZONTAL_MARGIN = 40; /* 20px each side */
+  const SHELL_MIN_MAX_WIDTH = 800;
+  const SHELL_MAX_WIDTH_RATIO = 0.85;
+  function computeShellMaxWidth(viewportInner) {
+    return Math.max(SHELL_MIN_MAX_WIDTH, Math.round(viewportInner * SHELL_MAX_WIDTH_RATIO));
+  }
 
   function updateShellOverflow(container) {
     const host = container;
@@ -695,12 +700,13 @@
        padding-right buffer without triggering a scrollbar. */
     const mode = shell.getAttribute('data-shell-width') === 'full' ? 'full' : 'fit';
     const contentTarget = canvasWidth + 12;
+    const shellMaxWidth = computeShellMaxWidth(viewportInner);
     let targetWidth;
     if (mode === 'full') {
       targetWidth = viewportInner;
-    } else if (contentTarget > SHELL_MAX_WIDTH) {
-      /* Too many columns for a centered 1400px card — go full width
-         automatically so users don't have to hunt for the toggle. */
+    } else if (contentTarget > shellMaxWidth) {
+      /* Content wider than the viewport-scaled cap — go full width so
+         users don't have to hunt for the toggle. */
       targetWidth = viewportInner;
     } else {
       targetWidth = Math.min(contentTarget, viewportInner);
@@ -889,6 +895,19 @@
 
     applyProjection(dataView, grid, projection);
 
+    /* Recompute shell width when the browser window is resized. Debounced
+       via requestAnimationFrame so we don't thrash during a drag. */
+    let resizePending = false;
+    const onWindowResize = () => {
+      if (resizePending) return;
+      resizePending = true;
+      root.requestAnimationFrame?.(() => {
+        resizePending = false;
+        updateShellOverflow(grid.getContainerNode?.());
+      });
+    };
+    root.addEventListener?.('resize', onWindowResize);
+
     return {
       grid,
       dataView,
@@ -926,6 +945,7 @@
         setTimeout(() => node.classList.remove('ss-grid-cell-conflict'), 1800);
       },
       destroy() {
+        root.removeEventListener?.('resize', onWindowResize);
         if (grid && typeof grid.destroy === 'function') grid.destroy();
         if (dataView && typeof dataView.destroy === 'function') dataView.destroy();
       }
