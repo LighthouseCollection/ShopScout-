@@ -2390,30 +2390,23 @@ body.is-info-page .content { display: block; padding: 18px 22px 48px; }
    sit on the SAME baseline. Also normalize the rb-mini-label styling so
    "PRODUCT LIST", "FIND", and "SCOPE" render identically.
    ============================================================= */
-/* Center-aligned vertically inside the ribbon, with every input on one baseline.
-   Trick: give every rb-stack the same FIXED height (label + gap + input) so they
-   centre as identical blocks. */
+/* Search tab layout — vertical centering only. Ribbon.css owns
+   the row/label/select grid system universally now; the tab-scoped
+   height/justify/font-family overrides that used to live here
+   fought that system (spreading list action icons via
+   justify-content: space-between, restyling .rb-mini-label with
+   font-mono 9px 600, forcing selects to 28px). Removed. What's
+   left is only the vertical centering that Search needs because
+   its groups don't have bottom labels. */
 .ribbon-pane[data-pane="search"] .rb-group-content {
-  align-items: center;          /* middle-aligned in the ribbon pane */
-  padding-bottom: 14px;          /* match the bottom rb-group-label clearance */
+  align-items: center;
+  padding-bottom: 14px;
 }
-.ribbon-pane[data-pane="search"] .rb-stack {
-  gap: 4px;
+/* Search-tab-only rb-stack scope: exclude the List group so its
+   action row keeps the LEFT-aligned +/pencil/× layout from
+   ribbon.css. Applies only to the search inputs' own stacks. */
+.ribbon-pane[data-pane="search"] .rb-stack:not(.rb-list-actions):not(.rb-organize-tools) {
   align-self: center;
-  height: 48px;                  /* 16px label area + 4px gap + 28px input */
-  justify-content: space-between;
-}
-.ribbon-pane[data-pane="search"] .rb-mini-label {
-  font-family: var(--font-mono);
-  font-size: 9px;
-  font-weight: 600;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: var(--ink-3);
-  margin: 0 2px;
-  line-height: 16px;
-  height: 16px;
-  display: block;
 }
 .ribbon-pane[data-pane="search"] .product-search--row {
   align-items: center;
@@ -2421,12 +2414,6 @@ body.is-info-page .content { display: block; padding: 18px 22px 48px; }
 }
 .ribbon-pane[data-pane="search"] .product-search--row .rb-stack {
   align-self: center;
-}
-/* Force every input to the same height so the baselines line up exactly. */
-.ribbon-pane[data-pane="search"] .rb-search,
-.ribbon-pane[data-pane="search"] .rb-select,
-.ribbon-pane[data-pane="search"] .rb-select--wide {
-  height: 28px;
 }
 
 /* =============================================================
