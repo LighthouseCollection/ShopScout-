@@ -720,6 +720,15 @@
     const gridOptions = {
       columnDefs,
       rowData,
+      /* AG Grid v33+ ships two theming systems in parallel: the
+         new JS-based Theming API and the legacy CSS-class theming
+         we've been using (ag-theme-shopscout + vendor/ag-grid.min
+         .css). v36 tightened validation: if you use CSS theming
+         you MUST declare theme: 'legacy' or AG Grid throws
+         error #239 in postProcessThemeChange. Ours is CSS-based
+         (see grid.css .ag-theme-shopscout overrides), so
+         'legacy' is the correct switch. */
+      theme: 'legacy',
       domLayout: 'autoHeight',
       rowHeight: projection?.mode === 'normalizationReview' ? 64
         : projection?.mode === 'userRules' ? 60
