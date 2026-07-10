@@ -21,13 +21,24 @@
        3-icon row at 30px each + gaps + padding. */
     { id: 'thumb', field: 'image', name: '', type: 'image', width: 108, required: true },
     { id: 'title', field: 'title', name: 'Name', type: 'text', editable: true, required: true },
-    { id: 'brand', field: 'brand', name: 'Brand', type: 'brand', editable: true },
+    /* Fixed default-visible row after the frozen 3 (see FIXED_ORDER_IDS
+       below). Order: Price / Source / Rating / User Rating / Notes. */
     { id: 'newPrice', field: 'newPrice', name: 'Price', type: 'price', editable: true },
-    { id: 'source', field: 'source', name: 'Source', type: 'source', defaultHidden: true },
-    { id: 'modelName', field: 'modelName', name: 'Model', type: 'text', editable: true },
+    { id: 'source', field: 'source', name: 'Source', type: 'source' },
     { id: 'rating', field: 'rating', name: 'Rating', type: 'rating', editable: true },
-    { id: 'notes', field: 'notes', name: 'Notes', type: 'text', editable: true }
+    { id: 'userRating', field: 'userRating', name: 'User Rating', type: 'rating', editable: true },
+    { id: 'notes', field: 'notes', name: 'Notes', type: 'text', editable: true },
+    /* Remaining base columns — sorted alongside spec columns by how
+       many products have a value for them. */
+    { id: 'brand', field: 'brand', name: 'Brand', type: 'brand', editable: true },
+    { id: 'modelName', field: 'modelName', name: 'Model', type: 'text', editable: true }
   ];
+
+  /* Columns that stay in a fixed order after the frozen (select/thumb/
+     title) triplet and are always visible by default, even when no
+     product has a value yet. */
+  const FROZEN_COLUMN_IDS = new Set(['select', 'thumb', 'title']);
+  const FIXED_ORDER_IDS = ['newPrice', 'source', 'rating', 'userRating', 'notes'];
 
   const ACTIONS_COLUMN = { id: 'actions', field: '_actions', name: '', type: 'actions', width: 92, required: true };
 
@@ -41,6 +52,7 @@
     modelName: 'Model',
     modelNumber: 'Model Number',
     rating: 'Rating',
+    userRating: 'User Rating',
     reviewCount: 'Reviews',
     notes: 'Notes',
     sellerName: 'Seller',
@@ -404,13 +416,41 @@
        thumbnail in the image cell. Keeping ACTIONS_COLUMN in allColumns
        would surface an empty column at the far right that can't be
        hidden. */
-    /* Every not-explicitly-hidden column is shown by default.
-       Previously we auto-hid any column whose values were empty
-       across every row, but that turned out to be too aggressive —
-       users lost columns they wanted visible, with no obvious signal
-       for why they disappeared. Users can still hide columns
-       explicitly from the columns modal; nothing hides silently. */
-    const allColumns = BASE_COLUMNS.concat(specColumns)
+    /* Column ordering:
+       1) Frozen triplet: select, thumb, title.
+       2) Fixed default row in a specific order (Price, Source,
+          Rating, User Rating, Notes) — always visible, even if no
+          product has a value.
+       3) Everything else (base Brand/Model + every spec column)
+          sorted by how many products have a value for it,
+          descending. If a column has zero populated rows it's
+          marked defaultHidden — but only in this dynamic section,
+          so the fixed row above never disappears silently. */
+    const populatedRowCount = (column) => {
+      const field = column.field || column.id;
+      let count = 0;
+      for (const row of rows) if (hasNonEmptyCellValue(row?.[field])) count += 1;
+      return count;
+    };
+    const frozenCols = BASE_COLUMNS.filter(column => FROZEN_COLUMN_IDS.has(column.id));
+    const fixedCols = FIXED_ORDER_IDS
+      .map(id => BASE_COLUMNS.find(column => column.id === id))
+      .filter(Boolean);
+    const staticExtras = BASE_COLUMNS.filter(column =>
+      !FROZEN_COLUMN_IDS.has(column.id) && !FIXED_ORDER_IDS.includes(column.id)
+    );
+    const dynamicCols = staticExtras.concat(specColumns)
+      .map(column => ({ column, count: populatedRowCount(column) }))
+      .sort((a, b) => {
+        if (b.count !== a.count) return b.count - a.count;
+        return String(a.column.name).localeCompare(String(b.column.name));
+      })
+      .map(({ column, count }) => count === 0
+        ? Object.assign({}, column, { defaultHidden: true })
+        : column);
+    const allColumns = frozenCols
+      .concat(fixedCols)
+      .concat(dynamicCols)
       .filter(column => column.required || !removed.has(column.id));
     const filteredRows = applyFilters(rows, viewState.filters, scope);
     const sortedRows = applySort(filteredRows, viewState.sort);

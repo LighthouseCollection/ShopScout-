@@ -122,23 +122,19 @@ const rowsProjection = projections.buildProductsRowsProjection(products, {
 assert.equal(rowsProjection.mode, 'productsRows');
 assert.deepEqual(
   rowsProjection.columns.map(column => column.id).slice(0, 9),
-  ['select', 'thumb', 'title', 'brand', 'newPrice', 'modelName', 'rating', 'notes', 'spec:battery life'],
-  'products-as-rows shows every not-explicitly-hidden column, including empty ones (source is defaultHidden on the column itself, so it stays hidden)'
+  ['select', 'thumb', 'title', 'newPrice', 'source', 'rating', 'userRating', 'notes', 'spec:battery life'],
+  'default order: frozen (select/thumb/title), then fixed row Price/Source/Rating/User Rating/Notes, then the highest-populated dynamic column (spec:battery life is populated on both fixtures — ties with Brand, wins on alphabetical name)'
 );
 assert.ok(rowsProjection.allColumns.some(column => column.id === 'notes'),
   'Notes column is available (and now visible by default even when empty)');
 assert.ok(rowsProjection.columns.some(column => column.id === 'notes'),
-  'Notes is visible by default — the auto-hide-when-empty pass has been removed');
-assert.ok(rowsProjection.allColumns.some(column => column.id === 'source'),
-  'Source remains available in the columns modal even when hidden by default');
-assert.ok(!rowsProjection.columns.some(column => column.id === 'source'),
-  'Source is not visible until the user explicitly enables it — its BASE_COLUMNS entry sets defaultHidden');
-const sourceEnabledProjection = projections.buildProductsRowsProjection(products, {
-  visibleSpecKeys: ['battery life'],
-  viewState: { columnVisibility: { source: true } }
-});
-assert.ok(sourceEnabledProjection.columns.some(column => column.id === 'source'),
-  'Source can be explicitly re-enabled from column visibility state');
+  'Notes is visible by default in the fixed row');
+assert.ok(rowsProjection.allColumns.some(column => column.id === 'userRating'),
+  'User Rating column exists');
+assert.ok(rowsProjection.columns.some(column => column.id === 'userRating'),
+  'User Rating is visible by default even when no product has one');
+assert.ok(rowsProjection.columns.some(column => column.id === 'source'),
+  'Source is now part of the fixed row and visible by default');
 assert.ok(rowsProjection.columns.some(column => column.id === 'spec:battery life'),
   'requested canonical spec columns are included');
 assert.ok(rowsProjection.columns.some(column => column.id === 'spec:dpi'),
