@@ -581,7 +581,7 @@
             ? 'agNumberColumnFilter'
             : 'agTextColumnFilter'),
         suppressHeaderMenuButton: ['selection','image','actions','matrixCell','attribute','normalizationActions','userRuleActions'].includes(column.type),
-        suppressHeaderFilterButton: ['selection','image','actions','matrixCell','attribute','normalizationActions','userRuleActions'].includes(column.type),
+        suppressHeaderFilterButton: true,   /* filter lives inside the menu, not next to it */
         cellClass: cellClassForColumn(column),
         headerClass: 'ss-grid-header',
         pinned: isPinnedLeft ? 'left' : undefined,
@@ -736,21 +736,24 @@
       defaultColDef: {
         sortable: true,
         resizable: true,
-        /* AG Grid column-menu features (all Community). Each column
-           header now shows:
-             - a 3-dot menu button on hover (Pin, Autosize, Reset...)
-             - a funnel filter icon that opens the filter popup
-           Row-group panel from the screenshot is Enterprise only, so
-           it isn't enabled here — but Filter + Menu + drag-drop
-           column reorder are Community. */
+        /* One icon per header: the tabbed column MENU (hamburger).
+           It houses Sort + Pin + Autosize + Filter, so the standalone
+           funnel that used to sit next to the menu is suppressed —
+           having both created the "double icon" clutter the user
+           complained about. */
         filter: 'agTextColumnFilter',
+        menuTabs: ['generalMenuTab', 'filterMenuTab'],
         suppressHeaderMenuButton: false,
-        suppressHeaderFilterButton: false,
+        suppressHeaderFilterButton: true,
         wrapText: false,
         /* Don't let columns flex to fill remaining space — each column
            should be exactly the width needed by its widest cell. */
         flex: 0
       },
+      /* Force the legacy tabbed column menu (v33's "new" flat menu
+         has no filter tab, which is what forces the separate funnel
+         icon; legacy tabs put filter inside the menu). */
+      columnMenu: 'legacy',
       /* Let users drag ANY column header (except system ones) to
          reorder or drop into a different pinned region. Community
          supports drag-to-move; the visual "▧ Jan" ghost during drag
