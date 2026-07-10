@@ -922,114 +922,152 @@ a.ss-grid-rating-link:hover .ss-grid-stars {
 }
 
 /* ============================================================
-   AG Grid popups — column menu, filter popup, tooltip.
-   Match ribbon aesthetics: same font, same paper-2 background,
-   same soft-rule borders, same radius, no drop-shadow bevel.
-   AG Grid v33 popups are attached to <body>, so we must NOT
-   scope these under .ss-grid-host — the popup element sits
-   outside our container.
+   AG Grid popups — column menu + filter popup.
+   Popups render at <body> level, so we can't scope by
+   .ss-grid-host. Everything below keys off .ag-theme-shopscout
+   (the class we add to the popup wrapper via container class).
+   Clean layout: one column of controls, comfortable padding,
+   ribbon-native typography, no default AG Grid chrome bleeding
+   through.
    ============================================================ */
-.ag-theme-shopscout.ag-popup,
+
+/* Outer container */
 .ag-theme-shopscout .ag-menu,
-.ag-theme-shopscout .ag-popup-child,
-.ag-theme-shopscout .ag-filter,
-.ag-theme-shopscout .ag-tabs {
+.ag-theme-shopscout .ag-popup-child {
   font-family: var(--rbn-font, "Segoe UI Variable", "Segoe UI", system-ui, sans-serif);
   font-size: 12px;
   color: var(--ink, #0f1419);
   background: var(--surface, #fff);
   border: 1px solid var(--rule, #d1d5db);
   border-radius: 4px;
-  box-shadow: 0 4px 14px rgba(15, 23, 42, 0.08);
+  box-shadow: 0 4px 14px rgba(15, 23, 42, 0.10);
+  min-width: 220px;
 }
-.ag-theme-shopscout .ag-menu {
-  padding: 4px 0;
-}
+
+/* --- General menu (Sort/Pin/Autosize/...) ---------------- */
 .ag-theme-shopscout .ag-menu-list {
-  padding: 0;
+  padding: 4px 0;
 }
 .ag-theme-shopscout .ag-menu-option {
   padding: 6px 12px;
-  min-height: 30px;
+  min-height: 28px;
   gap: 8px;
+  cursor: pointer;
 }
 .ag-theme-shopscout .ag-menu-option-active,
 .ag-theme-shopscout .ag-menu-option:hover {
   background: var(--rbn-hover-bg, rgba(15, 23, 42, 0.06));
-  color: inherit;
-}
-.ag-theme-shopscout .ag-menu-option-icon,
-.ag-theme-shopscout .ag-menu-option-shortcut {
-  color: var(--ink-3, #5a6470);
 }
 .ag-theme-shopscout .ag-menu-separator {
   border-top: 1px solid var(--rule-soft, #eef1f5);
   margin: 4px 0;
 }
 
-/* Tabs across the top of the tabbed menu (General / Filter) */
+/* --- Tabs across the top (General / Filter) -------------- */
+.ag-theme-shopscout .ag-tabs {
+  border: 0;
+  background: transparent;
+}
 .ag-theme-shopscout .ag-tabs-header {
+  display: flex;
+  gap: 4px;
+  padding: 4px 8px 0;
   background: var(--paper-2, #f4f6f9);
   border-bottom: 1px solid var(--rule, #d1d5db);
-  padding: 0 4px;
 }
 .ag-theme-shopscout .ag-tab {
   padding: 8px 12px;
   color: var(--ink-3, #5a6470);
+  background: transparent;
   border: 0;
   border-bottom: 2px solid transparent;
-  border-radius: 0;
   cursor: pointer;
-}
-.ag-theme-shopscout .ag-tab:hover {
-  color: var(--ink, #0f1419);
-  background: transparent;
 }
 .ag-theme-shopscout .ag-tab-selected {
   color: var(--ink, #0f1419);
   border-bottom-color: var(--accent, #ecd496);
-  background: transparent;
+  font-weight: 600;
 }
 .ag-theme-shopscout .ag-tabs-body {
-  padding: 8px;
+  padding: 10px 12px;
 }
 
-/* Filter popup — "Contains" dropdown + text input */
+/* --- Filter popup body ----------------------------------- */
 .ag-theme-shopscout .ag-filter {
-  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 12px;
   min-width: 240px;
 }
+.ag-theme-shopscout .ag-filter-body-wrapper,
+.ag-theme-shopscout .ag-filter-body,
+.ag-theme-shopscout .ag-simple-filter-body-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* The "Contains" picker at the top of the filter body.
+   Style the whole widget as a single control — no nested
+   double-borders, no cropped chevron. */
 .ag-theme-shopscout .ag-filter-select,
-.ag-theme-shopscout .ag-picker-field,
-.ag-theme-shopscout .ag-select {
+.ag-theme-shopscout .ag-picker-field {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 30px;
+  padding: 0 10px;
   background: var(--surface, #fff);
   border: 1px solid var(--rule, #d1d5db);
   border-radius: 3px;
-  min-height: 26px;
-  padding: 0 8px;
-  font-family: inherit;
-  font-size: 12px;
   color: var(--ink, #0f1419);
+  cursor: pointer;
   transition: border-color 90ms ease, box-shadow 90ms ease;
 }
-.ag-theme-shopscout .ag-picker-field:focus-within,
-.ag-theme-shopscout .ag-select:focus-within {
+.ag-theme-shopscout .ag-picker-field-display,
+.ag-theme-shopscout .ag-picker-field-wrapper {
+  flex: 1;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font-family: inherit;
+  font-size: 12px;
+  min-width: 0;
+}
+.ag-theme-shopscout .ag-picker-field-icon {
+  color: var(--ink-3, #5a6470);
+  width: 14px;
+  height: 14px;
+  flex: 0 0 14px;
+}
+.ag-theme-shopscout .ag-picker-field:hover {
+  border-color: var(--ink-3, #5a6470);
+}
+.ag-theme-shopscout .ag-picker-field:focus-within {
   border-color: var(--accent, #ecd496);
   box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent, #ecd496) 32%, transparent);
   outline: 0;
 }
+
+/* The Filter... text input */
+.ag-theme-shopscout .ag-input-wrapper,
+.ag-theme-shopscout .ag-filter-body .ag-labeled {
+  width: 100%;
+}
 .ag-theme-shopscout .ag-input-field-input,
-.ag-theme-shopscout .ag-filter-filter,
 .ag-theme-shopscout .ag-text-field-input {
+  box-sizing: border-box;
+  width: 100%;
+  height: 30px;
+  padding: 0 10px;
   background: var(--surface, #fff);
   border: 1px solid var(--rule, #d1d5db);
   border-radius: 3px;
-  padding: 6px 8px;
-  min-height: 28px;
+  color: var(--ink, #0f1419);
   font-family: inherit;
   font-size: 12px;
-  color: var(--ink, #0f1419);
-  width: 100%;
   transition: border-color 90ms ease, box-shadow 90ms ease;
 }
 .ag-theme-shopscout .ag-input-field-input:focus,
@@ -1038,34 +1076,44 @@ a.ss-grid-rating-link:hover .ss-grid-stars {
   box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent, #ecd496) 32%, transparent);
   outline: 0;
 }
-.ag-theme-shopscout .ag-filter-body-wrapper {
-  gap: 8px;
+/* Kill the AG Grid magnifier-inside-input default that overlapped
+   the placeholder text ("Filter…" rendered as "Bter…"). */
+.ag-theme-shopscout .ag-input-field-input::-webkit-search-decoration,
+.ag-theme-shopscout .ag-input-field-input::-webkit-search-cancel-button,
+.ag-theme-shopscout .ag-input-field-input::-webkit-search-results-button,
+.ag-theme-shopscout .ag-input-field-input::-webkit-search-results-decoration {
+  display: none;
 }
-.ag-theme-shopscout .ag-filter-condition {
-  padding: 4px 0;
+.ag-theme-shopscout .ag-input-field-icon,
+.ag-theme-shopscout .ag-filter-body .ag-icon-filter {
+  display: none;
 }
+
+/* Apply / Clear buttons at the bottom of the filter body */
 .ag-theme-shopscout .ag-filter-apply-panel {
+  display: flex;
   gap: 6px;
+  justify-content: flex-end;
   padding-top: 8px;
+  margin-top: 2px;
   border-top: 1px solid var(--rule-soft, #eef1f5);
 }
-.ag-theme-shopscout .ag-standard-button {
+.ag-theme-shopscout .ag-standard-button,
+.ag-theme-shopscout .ag-filter-apply-panel button {
+  height: 28px;
+  padding: 0 14px;
   border: 1px solid var(--rule, #d1d5db);
+  border-radius: 3px;
   background: var(--surface, #fff);
   color: var(--ink, #0f1419);
-  padding: 5px 12px;
-  border-radius: 3px;
   font-family: inherit;
   font-size: 12px;
   cursor: pointer;
-  transition: background 90ms ease, border-color 90ms ease;
+  transition: background 90ms ease;
 }
-.ag-theme-shopscout .ag-standard-button:hover {
+.ag-theme-shopscout .ag-standard-button:hover,
+.ag-theme-shopscout .ag-filter-apply-panel button:hover {
   background: var(--rbn-hover-bg, rgba(15, 23, 42, 0.06));
-}
-.ag-theme-shopscout .ag-standard-button:focus-visible {
-  outline: 2px solid var(--accent, #ecd496);
-  outline-offset: 1px;
 }
 
 /* Column menu button (the hamburger on each header). Make it
@@ -1080,4 +1128,27 @@ a.ss-grid-rating-link:hover .ss-grid-stars {
 .ss-grid-host.ag-theme-shopscout .ag-header-cell-menu-button:focus,
 .ss-grid-host.ag-theme-shopscout .ag-header-cell-filtered .ag-header-cell-menu-button {
   opacity: 1;
+}
+
+/* AG Grid's suppressHeaderFilterButton is being ignored in
+   v33.x — the funnel icon keeps rendering next to the hamburger.
+   Nuke it with CSS so users see one icon per header. */
+.ss-grid-host.ag-theme-shopscout .ag-header-cell-filter-button,
+.ss-grid-host.ag-theme-shopscout .ag-header-icon.ag-header-cell-filter-button,
+.ss-grid-host.ag-theme-shopscout .ag-header-cell .ag-filter-icon {
+  display: none !important;
+}
+
+/* Source cell — the "Amazon"/logo pill was getting its bottom
+   border chopped off in matrix view because the ag-cell clipped
+   overflow. Reduce vertical padding so the pill lives inside the
+   cell without pushing against the edge, and let the wrapper span
+   overflow visibly. */
+.ss-grid-host.ag-theme-shopscout .ss-grid-logo-token {
+  padding: 1px 8px;
+  line-height: 1.3;
+}
+.ss-grid-host.ag-theme-shopscout .ss-grid-matrix-cell,
+.ss-grid-host.ag-theme-shopscout .ss-grid-cell-source {
+  overflow: visible;
 }

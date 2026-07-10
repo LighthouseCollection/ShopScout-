@@ -983,6 +983,17 @@
   gap: 6px;
   align-items: start;
 }
+/* theme.css .rb-select--wide has no max-width and comparison.css
+   .rb-select clamps to 240px only weakly. Neither is enough on wide
+   viewports where the group would otherwise happily stretch the
+   select past 250px. Force it. */
+.rb-office-ribbon .rb-group[data-group-id="list"] .rb-select,
+.rb-office-ribbon .rb-group[data-group-id="list"] .rb-select.rb-select--wide {
+  width: 250px;
+  min-width: 250px;
+  max-width: 250px;
+  box-sizing: border-box;
+}
 .rb-list-actions {
   display: flex;
   flex-direction: row;
