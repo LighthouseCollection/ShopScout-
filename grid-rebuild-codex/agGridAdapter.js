@@ -566,6 +566,22 @@
            (the pencil affordance says it, one click confirms it). */
         editable: column.type === 'myRating' ? false : !!column.editable,
         singleClickEdit: column.type === 'notes' || column.type === 'text',
+        /* Column-menu + filter affordances.
+           - System columns (checkbox / thumbnail / actions / matrix
+             attribute / normalization-review action columns) don't
+             get a menu or a filter — nothing to filter on and no
+             per-column options that make sense.
+           - Price / rating / myRating use the number filter so
+             ranges work (>= 50, between 4 and 5, etc.).
+           - Everything else uses the text filter with contains /
+             starts-with / equals variants. */
+        filter: (['selection','image','actions','matrixCell','attribute','normalizationActions','userRuleActions'].includes(column.type))
+          ? false
+          : (['price','rating','myRating'].includes(column.type)
+            ? 'agNumberColumnFilter'
+            : 'agTextColumnFilter'),
+        suppressHeaderMenuButton: ['selection','image','actions','matrixCell','attribute','normalizationActions','userRuleActions'].includes(column.type),
+        suppressHeaderFilterButton: ['selection','image','actions','matrixCell','attribute','normalizationActions','userRuleActions'].includes(column.type),
         cellClass: cellClassForColumn(column),
         headerClass: 'ss-grid-header',
         pinned: isPinnedLeft ? 'left' : undefined,
@@ -720,13 +736,26 @@
       defaultColDef: {
         sortable: true,
         resizable: true,
-        filter: false,
-        suppressHeaderMenuButton: true,
+        /* AG Grid column-menu features (all Community). Each column
+           header now shows:
+             - a 3-dot menu button on hover (Pin, Autosize, Reset...)
+             - a funnel filter icon that opens the filter popup
+           Row-group panel from the screenshot is Enterprise only, so
+           it isn't enabled here — but Filter + Menu + drag-drop
+           column reorder are Community. */
+        filter: 'agTextColumnFilter',
+        suppressHeaderMenuButton: false,
+        suppressHeaderFilterButton: false,
         wrapText: false,
         /* Don't let columns flex to fill remaining space — each column
            should be exactly the width needed by its widest cell. */
         flex: 0
       },
+      /* Let users drag ANY column header (except system ones) to
+         reorder or drop into a different pinned region. Community
+         supports drag-to-move; the visual "▧ Jan" ghost during drag
+         is stock AG Grid. */
+      suppressDragLeaveHidesColumns: true,
       onGridReady(evt) {
         setTimeout(() => {
           autoSizeEverything(evt.api, container);
