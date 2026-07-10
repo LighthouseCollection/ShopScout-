@@ -1182,36 +1182,20 @@
    The label + select land on the same grid rows as Sort By /
    Group By in the Organize group, so all textfields align. */
 .rb-office-ribbon .rb-group[data-group-id="list"] > .rb-group-content {
-  display: grid;
-  grid-template-columns: 250px auto;
-  grid-template-rows: var(--rbn-grid-rows);   /* 14 22 22 22 — same as every other group */
-  column-gap: 8px;
-  row-gap: var(--rbn-row-gap);
-  align-items: center;
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;                    /* both columns hug the top -- same rhythm as Organize */
+  gap: 8px;
 }
-/* Unpack the first .rb-stack (label + select pair) so its label
-   lands on row 1 and its select spans the three input rows. */
+/* Left column: PRODUCT LIST label + 250px select stacked. Matches
+   the .rb-organize-stack column layout so both groups' first
+   labels sit on the same visual y. */
 .rb-office-ribbon .rb-group[data-group-id="list"] > .rb-group-content > .rb-stack:not(.rb-list-actions) {
-  display: contents;
-}
-.rb-office-ribbon .rb-group[data-group-id="list"] > .rb-group-content > .rb-stack:not(.rb-list-actions) > .rb-mini-label {
-  grid-column: 1;
-  grid-row: 1;
-  align-self: end;
-}
-.rb-office-ribbon .rb-group[data-group-id="list"] > .rb-group-content > .rb-stack:not(.rb-list-actions) > .rb-select {
-  grid-column: 1;
-  grid-row: 2 / span 3;                       /* centered vertically in the input band */
-  align-self: center;
-}
-/* Actions column: right of the select, one button per grid row so
-   the +/pencil/x baseline mechanically matches Sort By / Group By
-   rows in adjacent groups. */
-.rb-office-ribbon .rb-group[data-group-id="list"] > .rb-group-content > .rb-list-actions {
-  grid-column: 2;
-  grid-row: 2 / span 3;
-  align-self: stretch;
-  justify-self: start;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0;
+  flex: 0 0 auto;
 }
 /* theme.css .rb-select--wide has no max-width and comparison.css
    .rb-select clamps to 240px only weakly. Neither is enough on wide
@@ -1230,16 +1214,14 @@
   font-weight: 400;
   box-sizing: border-box;
 }
-/* +/pencil/x stacked vertically. Three buttons occupy the three
-   input rows of the shared ribbon grid (22 + 22 + 22 with the
-   grid's row-gap between them), so each button baseline lines up
-   with the Sort By / Group By select rows in the adjacent group. */
+/* +/pencil/x stacked vertically. First button lines up with the
+   select on the left column, next two flow below. */
 .rb-list-actions {
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: space-between;   /* one button per grid row */
   gap: var(--rbn-row-gap);
+  margin-top: var(--rbn-label-h);             /* skip the label row so top button aligns with the select */
 }
 .rb-office-ribbon .rb-group[data-group-id="list"] .rb-list-actions .rb-btn-sm {
   width: var(--rbn-row-h);

@@ -156,8 +156,8 @@ assertIncludes('class="rb-group-content" data-collapsed-label="Organize"', 'Orga
 assertIncludes('class="rb-group-content" data-collapsed-label="Review"', 'Review popup button label is readable from group content');
 assert.ok(/\.rb-office-ribbon\s+\.rb-group\s*{[\s\S]{0,180}flex:\s*0 0 auto;/.test(ribbonCss),
   'Office ribbon groups do not flex-shrink into internal overlap');
-assert.ok(/\.rb-office-ribbon\s+\.rb-group\[data-group-id="list"\]\s+>\s+\.rb-group-content\s*{[\s\S]{0,320}grid-template-columns:\s*250px auto;/.test(ribbonCss),
-  'List group is a 2-column grid: 250px Product List select on the left, +/pencil/× vertical action stack on the right');
+assert.ok(/\.rb-office-ribbon\s+\.rb-group\[data-group-id="list"\]\s+>\s+\.rb-group-content\s*{[\s\S]{0,320}display:\s*flex;[\s\S]{0,200}align-items:\s*flex-start;/.test(ribbonCss),
+  'List group is a flex-row: label+select on the left, +/pencil/× action stack on the right, both top-aligned so PRODUCT LIST label sits on the same y as SORT BY in the Organize group');
 assert.ok(/\.rb-list-actions\s*{[\s\S]{0,220}flex-direction:\s*column;/.test(ribbonCss),
   'List actions are stacked VERTICALLY (+/pencil/× column to the right of the Product List select)');
 assert.ok(/\.rb-organize-tools\s+\.rb-btn-lg,[\s\S]{0,260}width:\s*auto;/.test(ribbonCss),
