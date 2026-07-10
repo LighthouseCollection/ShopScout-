@@ -1185,14 +1185,13 @@
 .rb-office-ribbon .rb-group[data-group-id="list"] > .rb-group-content {
   display: grid;
   grid-template-columns: 250px auto;
-  grid-template-rows: var(--rbn-label-h) var(--rbn-row-h);
+  grid-template-rows: var(--rbn-grid-rows);   /* 14 22 22 22 — same as every other group */
   column-gap: 8px;
   row-gap: var(--rbn-row-gap);
   align-items: center;
 }
 /* Unpack the first .rb-stack (label + select pair) so its label
-   lands on row 1 and its select on row 2. Scoped tightly to the
-   List group so it doesn't affect .rb-stack elsewhere. */
+   lands on row 1 and its select spans the three input rows. */
 .rb-office-ribbon .rb-group[data-group-id="list"] > .rb-group-content > .rb-stack:not(.rb-list-actions) {
   display: contents;
 }
@@ -1203,15 +1202,17 @@
 }
 .rb-office-ribbon .rb-group[data-group-id="list"] > .rb-group-content > .rb-stack:not(.rb-list-actions) > .rb-select {
   grid-column: 1;
-  grid-row: 2;
+  grid-row: 2 / span 3;                       /* centered vertically in the input band */
   align-self: center;
 }
-/* Actions column: right of the select, vertical stack, spans
-   both rows so it aligns top-to-bottom with the label + select. */
+/* Actions column: right of the select, one button per grid row so
+   the +/pencil/x baseline mechanically matches Sort By / Group By
+   rows in adjacent groups. */
 .rb-office-ribbon .rb-group[data-group-id="list"] > .rb-group-content > .rb-list-actions {
   grid-column: 2;
-  grid-row: 1 / span 2;
-  align-self: center;
+  grid-row: 2 / span 3;
+  align-self: stretch;
+  justify-self: start;
 }
 /* theme.css .rb-select--wide has no max-width and comparison.css
    .rb-select clamps to 240px only weakly. Neither is enough on wide
@@ -1230,24 +1231,24 @@
   font-weight: 400;
   box-sizing: border-box;
 }
-/* +/pencil/× stacked VERTICALLY to the right of the select. Each
-   button 22px so three buttons fit in the same total height as
-   the label(14) + gap(4) + select(22) column on the left = 40px
-   -- ish. Small gap between buttons; hug the top so buttons and
-   the select share a baseline at the top of the group content. */
+/* +/pencil/x stacked vertically. Three buttons occupy the three
+   input rows of the shared ribbon grid (22 + 22 + 22 with the
+   grid's row-gap between them), so each button baseline lines up
+   with the Sort By / Group By select rows in the adjacent group. */
 .rb-list-actions {
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
-  gap: 2px;
+  justify-content: space-between;   /* one button per grid row */
+  gap: var(--rbn-row-gap);
 }
 .rb-office-ribbon .rb-group[data-group-id="list"] .rb-list-actions .rb-btn-sm {
-  width: 22px;
-  height: 22px;
-  min-width: 22px;
+  width: var(--rbn-row-h);
+  height: var(--rbn-row-h);
+  min-width: var(--rbn-row-h);
   padding: 0;
   justify-content: center;
+  flex: 0 0 var(--rbn-row-h);
 }
 
 /* ==============================================================
