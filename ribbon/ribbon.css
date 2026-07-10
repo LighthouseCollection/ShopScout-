@@ -197,8 +197,8 @@
   align-items: center;
   justify-content: center;
   gap: 4px;
-  min-width: 64px;
-  max-width: 108px;                           /* was 88; fits "Categorize"/"Duplicates" without clipping */
+  min-width: 56px;
+  max-width: 88px;
   height: 68px;
   padding: 4px 6px 3px;
   border: 1px solid transparent;
@@ -211,7 +211,7 @@
   line-height: 1.15;
   text-align: center;
   cursor: pointer;
-  overflow: visible;                          /* don't clip the label under any circumstance */
+  overflow: hidden;
   transition: background 90ms ease, border-color 90ms ease;
 }
 .rb-office-ribbon .rb-btn-lg:hover {
