@@ -160,8 +160,49 @@
    word-break: keep-all + overflow-wrap: normal keep whole words on
    a line; if the word can't fit, text-overflow: ellipsis on the
    last visible line trims it cleanly. */
+/* Default .rb-btn-lg sizing — applies when a group has NO
+   data-group-size set (natural width before ScalingPolicy kicks
+   in). Was previously supplied by theme.css / comparison.css;
+   pulled here as part of the CSS ownership cleanup so ribbon.css
+   is the sole owner. Sized-mode overrides (large/middle/small)
+   further down still win when data-group-size is applied. */
 .rb-office-ribbon .rb-btn-lg {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  min-width: 56px;
+  max-width: 88px;
+  height: 68px;
+  padding: 4px 6px 3px;
+  border: 1px solid transparent;
+  border-radius: 3px;
+  background: transparent;
+  color: var(--ink, #0f1419);
+  font-family: inherit;
+  font-size: 11px;
+  font-weight: 400;
+  line-height: 1.15;
+  text-align: center;
+  cursor: pointer;
   overflow: hidden;
+  transition: background 90ms ease, border-color 90ms ease;
+}
+.rb-office-ribbon .rb-btn-lg:hover {
+  background: var(--rbn-hover-bg, rgba(15, 23, 42, 0.06));
+  border-color: var(--rbn-hover-border, rgba(15, 23, 42, 0.08));
+}
+.rb-office-ribbon .rb-icon-lg {
+  width: var(--rbn-icon-large-96, 32px);
+  height: var(--rbn-icon-large-96, 32px);
+  flex: 0 0 auto;
+  color: currentColor;
+  margin-bottom: 2px;
+}
+.rb-office-ribbon .rb-icon-lg svg {
+  width: 100%;
+  height: 100%;
 }
 .rb-office-ribbon .rb-btn-lg-label {
   display: -webkit-box;
@@ -173,6 +214,93 @@
   word-break: keep-all;
   overflow-wrap: normal;
   hyphens: none;
+  font-size: 11px;
+  font-weight: 400;
+  line-height: 1.15;
+  color: inherit;
+}
+
+/* Default .rb-btn-sm sizing — same story: was in theme.css, now
+   owned here so the small icon-buttons in the List group don't
+   render at browser default when data-group-size is absent. */
+.rb-office-ribbon .rb-btn-sm {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 22px;
+  padding: 3px 8px;
+  border: 1px solid transparent;
+  border-radius: 3px;
+  background: transparent;
+  color: var(--ink, #0f1419);
+  font-family: inherit;
+  font-size: 11px;
+  font-weight: 500;
+  line-height: 1;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background 90ms ease, border-color 90ms ease;
+}
+.rb-office-ribbon .rb-btn-sm:hover {
+  background: var(--rbn-hover-bg, rgba(15, 23, 42, 0.06));
+  border-color: var(--rbn-hover-border, rgba(15, 23, 42, 0.08));
+}
+.rb-office-ribbon .rb-btn-sm-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 14px;
+  height: 14px;
+  flex: 0 0 14px;
+  opacity: 0.75;
+}
+.rb-office-ribbon .rb-btn-sm-icon svg {
+  width: 100%;
+  height: 100%;
+}
+.rb-office-ribbon .rb-btn-sm:hover .rb-btn-sm-icon {
+  opacity: 1;
+}
+
+/* Default .rb-group sizing and group-label. */
+.rb-office-ribbon .rb-group {
+  display: inline-flex;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: stretch;
+  flex: 0 0 auto;
+  padding: var(--rbn-group-pad-t) var(--rbn-group-pad-r) var(--rbn-group-pad-b) var(--rbn-group-pad-l);
+  min-width: 0;
+}
+.rb-office-ribbon .rb-group-content {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  gap: 2px;
+  padding: 0;
+  min-height: 0;
+}
+.rb-office-ribbon .rb-group-label {
+  height: var(--rbn-group-label-h);
+  padding: 0;
+  color: var(--ink-3, #5a6470);
+  font-size: var(--rbn-group-label-fs);
+  font-weight: 400;
+  line-height: var(--rbn-group-label-h);
+  letter-spacing: 0;
+  text-align: center;
+  text-transform: none;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.rb-office-ribbon .rb-divider {
+  width: var(--rbn-group-sep-w);
+  height: var(--rbn-group-sep-h);
+  margin: var(--rbn-group-sep-mt) var(--rbn-group-sep-mh) var(--rbn-group-sep-mb);
+  background: var(--rbn-group-sep-color);
+  align-self: center;
+  flex: 0 0 auto;
 }
 
 /* ==============================================================
