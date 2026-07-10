@@ -785,9 +785,14 @@
 }
 
 /* ==============================================================
-   8. Stack (vertical column of buttons) — opt-in
+   8. Stack — vertical column of buttons. Applies universally so
+   any rb-stack inside the ribbon lays its children out top-to-
+   bottom (History / Compare runs / Export in AI Results, and any
+   other side-buttons). Was scoped to [data-group-size] which
+   meant groups at natural width fell back to browser default and
+   the buttons went horizontal.
    ============================================================== */
-.rb-office-ribbon .rb-group[data-group-size] .rb-stack {
+.rb-office-ribbon .rb-stack {
   display: inline-flex;
   flex-direction: column;
   align-items: stretch;
@@ -1255,7 +1260,7 @@
    ============================================================== */
 .rb-office-ribbon .rb-group[data-group-id="review"]:not([data-group-size]),
 .rb-office-ribbon .rb-group[data-group-id="review"][data-group-size="large"] {
-  min-width: 240px;
+  min-width: 300px;                          /* enough for "Duplicates" + "Categorize" full width */
 }
 .rb-office-ribbon .rb-group[data-group-id="review"]:not([data-group-size]) > .rb-group-content,
 .rb-office-ribbon .rb-group[data-group-id="review"][data-group-size="large"] > .rb-group-content {
