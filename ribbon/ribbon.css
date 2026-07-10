@@ -1291,12 +1291,11 @@
 .rb-office-ribbon .rb-group[data-group-id="review"]:not([data-group-size]) .rb-btn-lg .rb-btn-lg-label,
 .rb-office-ribbon .rb-group[data-group-id="review"][data-group-size="large"] .rb-btn-lg .rb-btn-lg-label {
   text-align: left !important;
-  white-space: normal;
+  white-space: nowrap;                       /* one line -- no 2-line "User\nRules" */
   font-size: 11px;
   line-height: 1.15;
-  font-weight: 400;                          /* standard weight, no bold */
-  -webkit-line-clamp: 2;
-  max-height: 2.4em;
+  font-weight: 400;
+  max-height: none;
 }
 
 /* ==============================================================
