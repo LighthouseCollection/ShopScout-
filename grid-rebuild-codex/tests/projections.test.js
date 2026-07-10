@@ -122,17 +122,17 @@ const rowsProjection = projections.buildProductsRowsProjection(products, {
 assert.equal(rowsProjection.mode, 'productsRows');
 assert.deepEqual(
   rowsProjection.columns.map(column => column.id).slice(0, 9),
-  ['select', 'thumb', 'title', 'newPrice', 'source', 'rating', 'userRating', 'notes', 'spec:battery life'],
+  ['select', 'thumb', 'title', 'newPrice', 'source', 'rating', 'myRating', 'notes', 'spec:battery life'],
   'default order: frozen (select/thumb/title), then fixed row Price/Source/Rating/User Rating/Notes, then the highest-populated dynamic column (spec:battery life is populated on both fixtures — ties with Brand, wins on alphabetical name)'
 );
 assert.ok(rowsProjection.allColumns.some(column => column.id === 'notes'),
   'Notes column is available (and now visible by default even when empty)');
 assert.ok(rowsProjection.columns.some(column => column.id === 'notes'),
   'Notes is visible by default in the fixed row');
-assert.ok(rowsProjection.allColumns.some(column => column.id === 'userRating'),
-  'User Rating column exists');
-assert.ok(rowsProjection.columns.some(column => column.id === 'userRating'),
-  'User Rating is visible by default even when no product has one');
+assert.ok(rowsProjection.allColumns.some(column => column.id === 'myRating'),
+  'My Rating column exists');
+assert.ok(rowsProjection.columns.some(column => column.id === 'myRating'),
+  'My Rating is visible by default even when no product has one');
 assert.ok(rowsProjection.columns.some(column => column.id === 'source'),
   'Source is now part of the fixed row and visible by default');
 assert.ok(rowsProjection.columns.some(column => column.id === 'spec:battery life'),

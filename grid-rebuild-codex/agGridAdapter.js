@@ -169,9 +169,10 @@
     return `<span class="ss-grid-logo-token ss-grid-source-logo" title="${escAttr(info.label)}">${esc(info.label)}</span>`;
   }
 
-  /* Format a parsed dollar amount as "$19.99" (or "$1,299.00" for
-     larger values). Preserves cents — no more $5 bucketing that
-     turned $19.99 into $20 and $9.99 into $10 on the grid. */
+  /* Round a parsed dollar amount to the nearest WHOLE dollar and
+     format as "$20" / "$1,299". Accurate (Math.round, not $5 or
+     $10 bucketing) but drops cents so prices are easy to compare
+     at a glance. Tooltip preserves the exact original text. */
   function formatPriceText(value) {
     const text = textValue(value).trim();
     if (!text) return '';
@@ -180,14 +181,15 @@
     if (!match) return '';
     const amount = Number(match[1].replace(/,/g, ''));
     if (!Number.isFinite(amount)) return '';
-    return `$${amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+    const rounded = Math.round(amount);
+    return `$${rounded.toLocaleString('en-US', { maximumFractionDigits: 0 })}`;
   }
   function renderPrice(params) {
     const text = textValue(params.value).trim();
     if (!text) return '<span class="ss-grid-empty">-</span>';
     const formatted = formatPriceText(text);
     if (!formatted) return `<span class="ss-grid-price">${esc(text)}</span>`;
-    return `<span class="ss-grid-price">${esc(formatted)}</span>`;
+    return `<span class="ss-grid-price" title="${escAttr(text)}">${esc(formatted)}</span>`;
   }
 
   /* Build a URL that jumps directly to the reviews section of the
@@ -224,6 +226,41 @@
       return `<a class="ss-grid-rating ss-grid-rating-link" href="${escAttr(url)}" target="_blank" rel="noopener noreferrer" title="${escAttr(label)}" aria-label="${escAttr(label)}">${inner}</a>`;
     }
     return `<span class="ss-grid-rating" aria-label="${escAttr(label)}">${inner}</span>`;
+  }
+
+  /* My Rating — the user's own 0-5 star rating for a product.
+     Distinct from the marketplace Rating column: no review count,
+     no link out. Empty state shows 5 grey outline stars so it's
+     obvious the column is INPUT-shaped; set values render in red
+     (.ss-grid-my-rating) so they're never confused with the gold
+     marketplace stars in the Rating column. Editable inline. */
+  function renderMyRating(params) {
+    const raw = textValue(params.value).trim();
+    const numeric = Number(String(raw).replace(/[^0-9.]/g, ''));
+    const set = raw !== '' && Number.isFinite(numeric);
+    const filled = set ? Math.max(0, Math.min(5, Math.round(numeric))) : 0;
+    const stars = '★'.repeat(filled) + '☆'.repeat(5 - filled);
+    const cls = set ? 'ss-grid-my-rating ss-grid-my-rating--set' : 'ss-grid-my-rating ss-grid-my-rating--empty';
+    const label = set ? `${raw} out of 5` : 'Click to rate (0-5)';
+    return `<span class="${cls}" title="${escAttr(label)}" aria-label="${escAttr(label)}"><span class="ss-grid-stars" aria-hidden="true">${stars}</span></span>`;
+  }
+
+  /* Notes — inline-editable free text. Blank cells show a
+     placeholder pencil affordance so it's obvious you can click
+     to type. Values render as plain text with the pencil hint
+     appearing on hover. */
+  function renderNotes(params) {
+    const text = textValue(params.value).trim();
+    if (!text) {
+      return `<span class="ss-grid-notes ss-grid-notes--empty" title="Click to add a note">`
+        + `<svg class="ss-grid-notes-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>`
+        + `<span class="ss-grid-notes-placeholder">Add note</span>`
+        + `</span>`;
+    }
+    return `<span class="ss-grid-notes ss-grid-notes--filled" title="${escAttr(text)}">`
+      + `<span class="ss-grid-notes-text">${esc(text)}</span>`
+      + `<svg class="ss-grid-notes-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>`
+      + `</span>`;
   }
 
   function renderTitle(params) {
@@ -440,6 +477,8 @@
     if (column.type === 'source') return renderSource;
     if (column.type === 'price') return renderPrice;
     if (column.type === 'rating') return renderRating;
+    if (column.type === 'myRating') return renderMyRating;
+    if (column.type === 'notes') return renderNotes;
     if (column.type === 'matrixCell') return renderMatrixCell;
     if (column.type === 'attribute') return renderAttribute;
     if (column.type === 'normalizationProduct') return renderNormalizationProduct;

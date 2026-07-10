@@ -464,6 +464,69 @@ a.ss-grid-rating-link:hover .ss-grid-stars {
   white-space: nowrap;
 }
 
+/* My Rating column — the user's own 0-5 rating. Visually distinct
+   from the marketplace Rating column: red stars when set, greyed-
+   out outline stars when empty (an input affordance). */
+.ss-grid-my-rating {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  cursor: pointer;
+}
+.ss-grid-my-rating .ss-grid-stars {
+  letter-spacing: 0.02em;
+}
+.ss-grid-my-rating--set .ss-grid-stars {
+  color: #d93025;                              /* Google Red 600 — distinct from Rating gold */
+}
+.ss-grid-my-rating--empty .ss-grid-stars {
+  color: var(--ink-4, #98a1ac);                /* muted grey outline stars */
+  opacity: 0.65;
+}
+.ss-grid-my-rating--empty:hover .ss-grid-stars {
+  color: #d93025;
+  opacity: 0.55;
+}
+
+/* Notes column — inline editable. Empty cell shows a pencil +
+   "Add note" placeholder so users know it's an input; filled
+   cells show the text with a subtle pencil hint on hover. */
+.ss-grid-notes {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  min-width: 0;
+  width: 100%;
+  cursor: text;
+}
+.ss-grid-notes-icon {
+  width: 12px;
+  height: 12px;
+  flex: 0 0 12px;
+  color: var(--ink-4, #98a1ac);
+  opacity: 0.65;
+}
+.ss-grid-notes-text {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
+}
+.ss-grid-notes--empty {
+  color: var(--ink-4, #98a1ac);
+  font-style: italic;
+}
+.ss-grid-notes--empty .ss-grid-notes-icon {
+  opacity: 0.85;
+}
+.ss-grid-notes--filled .ss-grid-notes-icon {
+  opacity: 0;                                  /* hide unless hovered */
+  transition: opacity 120ms ease;
+}
+.ag-cell:hover .ss-grid-notes--filled .ss-grid-notes-icon {
+  opacity: 0.65;
+}
+
 .ss-grid-sub,
 .ss-grid-empty {
   color: var(--ink-3, #5a6470);

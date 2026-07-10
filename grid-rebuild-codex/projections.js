@@ -26,8 +26,8 @@
     { id: 'newPrice', field: 'newPrice', name: 'Price', type: 'price', editable: true },
     { id: 'source', field: 'source', name: 'Source', type: 'source' },
     { id: 'rating', field: 'rating', name: 'Rating', type: 'rating', editable: true },
-    { id: 'userRating', field: 'userRating', name: 'User Rating', type: 'rating', editable: true },
-    { id: 'notes', field: 'notes', name: 'Notes', type: 'text', editable: true },
+    { id: 'myRating', field: 'myRating', name: 'My Rating', type: 'myRating', editable: true },
+    { id: 'notes', field: 'notes', name: 'Notes', type: 'notes', editable: true },
     /* Remaining base columns — sorted alongside spec columns by how
        many products have a value for them. */
     { id: 'brand', field: 'brand', name: 'Brand', type: 'brand', editable: true },
@@ -38,7 +38,7 @@
      title) triplet and are always visible by default, even when no
      product has a value yet. */
   const FROZEN_COLUMN_IDS = new Set(['select', 'thumb', 'title']);
-  const FIXED_ORDER_IDS = ['newPrice', 'source', 'rating', 'userRating', 'notes'];
+  const FIXED_ORDER_IDS = ['newPrice', 'source', 'rating', 'myRating', 'notes'];
 
   const ACTIONS_COLUMN = { id: 'actions', field: '_actions', name: '', type: 'actions', width: 92, required: true };
 
@@ -52,7 +52,7 @@
     modelName: 'Model',
     modelNumber: 'Model Number',
     rating: 'Rating',
-    userRating: 'User Rating',
+    myRating: 'My Rating',
     reviewCount: 'Reviews',
     notes: 'Notes',
     sellerName: 'Seller',
