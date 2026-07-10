@@ -1184,7 +1184,7 @@
 .rb-office-ribbon .rb-group[data-group-id="list"] > .rb-group-content {
   display: flex;
   flex-direction: row;
-  align-items: flex-start;                    /* both columns hug the top -- same rhythm as Organize */
+  align-items: center;                        /* label+select column centered in group; buttons match */
   gap: 8px;
 }
 /* Left column: PRODUCT LIST label + 250px select stacked. Matches
@@ -1214,14 +1214,13 @@
   font-weight: 400;
   box-sizing: border-box;
 }
-/* +/pencil/x stacked vertically. First button lines up with the
-   select on the left column, next two flow below. */
+/* +/pencil/x stacked vertically, centered next to the label+select
+   column so the whole List group reads as one balanced block. */
 .rb-list-actions {
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: var(--rbn-row-gap);
-  margin-top: var(--rbn-label-h);             /* skip the label row so top button aligns with the select */
 }
 .rb-office-ribbon .rb-group[data-group-id="list"] .rb-list-actions .rb-btn-sm {
   width: var(--rbn-row-h);
