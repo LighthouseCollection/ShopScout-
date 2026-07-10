@@ -260,7 +260,7 @@
   color: var(--ink, #0f1419);
   font-family: inherit;
   font-size: 11px;
-  font-weight: 500;
+  font-weight: 400;                          /* standard weight, no bold */
   line-height: 1;
   white-space: nowrap;
   cursor: pointer;
@@ -291,65 +291,20 @@
    base .rb-group rule itself lives in section 4 below (search for
    the second `.rb-office-ribbon .rb-group {` block).
 
-   RIBBON GRID: .rb-group-content is a CSS grid with the shared
-   --rbn-grid-rows template (label / row1 / row2 / row3). Children
-   flow horizontally (grid-auto-flow: column) so a group is a
-   column of stacked cells for each of its logical controls.
-
-     - Direct child .rb-mini-label:   grid-row 1
-     - Direct child .rb-select:        grid-row 2 (or 3/4 if pinned)
-     - Direct child .rb-btn-lg:        spans all 4 rows
-     - Direct child .rb-list-actions:  grid-row 3 (below Product List)
-     - Direct child .rb-stack (label + input pair): display: contents,
-       so its label and input become the group's grid items and land
-       on rows 1 and 2 respectively.
-
-   Groups that need a different layout (List, Organize with their
-   nested stack + tools columns) override this with their own more
-   specific grid rule further down. */
+   Default layout is flex-row. The --rbn-grid-rows variable is
+   still exported for groups that want to opt into a CSS grid
+   internally (List and Organize do — see their per-group rules
+   further down). Applying grid universally broke groups that use
+   custom sub-containers (.product-search--row on the Search tab,
+   .rb-organize-stack, etc.) because those direct children had
+   nowhere logical to land on the 4-row template. */
 .rb-office-ribbon .rb-group-content {
-  display: grid;
-  grid-template-rows: var(--rbn-grid-rows);
-  grid-auto-flow: column;
-  grid-auto-columns: auto;
-  column-gap: 4px;
-  row-gap: var(--rbn-row-gap);
+  display: flex;
+  flex: 1;
+  align-items: center;
+  gap: 2px;
   padding: 0;
   min-height: 0;
-  align-items: center;
-}
-
-/* Direct children default row placements. Everything is
-   `!important`-free so per-group grids can override. */
-.rb-office-ribbon .rb-group-content > .rb-stack {
-  /* Let stack's label + input participate in the group's grid
-     directly instead of forming a nested stack. */
-  display: contents;
-}
-.rb-office-ribbon .rb-group-content > .rb-mini-label,
-.rb-office-ribbon .rb-group-content > .rb-stack > .rb-mini-label {
-  grid-row: 1;
-  align-self: end;
-}
-.rb-office-ribbon .rb-group-content > .rb-select,
-.rb-office-ribbon .rb-group-content > .rb-stack > .rb-select,
-.rb-office-ribbon .rb-group-content > .rb-search {
-  grid-row: 2;
-  align-self: center;
-}
-.rb-office-ribbon .rb-group-content > .rb-btn-lg,
-.rb-office-ribbon .rb-group-content > details > .rb-btn-lg,
-.rb-office-ribbon .rb-group-content > .toolbar-menu > .rb-btn-lg {
-  grid-row: 1 / -1;
-  align-self: stretch;
-}
-/* details / toolbar-menu wrappers around a large button — the
-   wrapper itself needs to span the same rows as the button so it
-   doesn't collapse to row 1 only. */
-.rb-office-ribbon .rb-group-content > details,
-.rb-office-ribbon .rb-group-content > .toolbar-menu {
-  grid-row: 1 / -1;
-  align-self: stretch;
 }
 .rb-office-ribbon .rb-group-label {
   height: var(--rbn-group-label-h);
@@ -854,7 +809,7 @@
   padding: 0;
   font-family: var(--rbn-font);
   font-size: 10px;
-  font-weight: 500;
+  font-weight: 400;                          /* standard weight, no bold */
   letter-spacing: 0.04em;
   text-transform: uppercase;
   color: var(--ink-3, #5a6470);
@@ -1216,23 +1171,16 @@
    and puts the +/pencil/× action buttons in a LEFT-aligned row
    below, so the leftmost icon lines up with the start of the
    select. */
-/* List group participates in the ribbon-wide grid: the shared
-   4-row template. Two children matter — the Product List
-   label+select stack (which display: contents to spread onto rows
-   1-2) and the rb-list-actions row (which anchors to row 3).
-   Row 4 stays empty; the group's height still matches every other
-   group so alignment is consistent side-by-side. */
+/* List group participates in the ribbon-wide grid via the shared
+   token variables. Two rows: the Product List label+select stack
+   (auto-sized to fit its label + select at --rbn-row-h) sits on
+   top, the rb-list-actions button row below. */
 .rb-office-ribbon .rb-group[data-group-id="list"] > .rb-group-content {
+  display: grid;
   grid-template-columns: 250px;
-  grid-template-rows: var(--rbn-grid-rows);
-  grid-auto-flow: row;                        /* stack children vertically in the 250px column */
-  column-gap: 0;
-  row-gap: var(--rbn-row-gap);
+  grid-template-rows: auto auto;
+  gap: var(--rbn-row-gap) 0;
   align-items: start;
-}
-.rb-office-ribbon .rb-group[data-group-id="list"] .rb-list-actions {
-  grid-row: 3;
-  align-self: center;
 }
 /* theme.css .rb-select--wide has no max-width and comparison.css
    .rb-select clamps to 240px only weakly. Neither is enough on wide
@@ -1321,7 +1269,7 @@
   white-space: normal;
   font-size: 11px;
   line-height: 1.15;
-  font-weight: 500;
+  font-weight: 400;                          /* standard weight, no bold */
   -webkit-line-clamp: 2;
   max-height: 2.4em;
 }
