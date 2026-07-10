@@ -1435,24 +1435,17 @@
   .ribbon-pane.active {
     overflow: visible;
   }
-  .ribbon-shell .rb-group {
-    display: grid;
-    grid-template-rows: minmax(82px, 1fr) 22px;
-    align-items: stretch;
-    padding: 0 12px;
-  }
-  .ribbon-shell .rb-group-content {
-    align-items: center;
-    min-height: 82px;
-    padding-bottom: 0;
-  }
-  .ribbon-shell .rb-btn-lg,
-  .ribbon-shell .rb-btn-sm,
-  .ribbon-shell .rb-btn,
-  .ribbon-shell .rb-icon-btn,
-  .ribbon-shell .rb-toggle button,
-  .ribbon-shell .view-toggle button,
-  .ai-results-actions button {
+  /* ALL .ribbon-shell .rb-* overrides removed — this whole block
+     was an old parallel styling system that predates the Office
+     365 rewrite in ribbon/ribbon.css. It was fighting ribbon.css
+     with: 82px group rows, 76px .rb-btn-lg, 26px .rb-btn-sm, 30px
+     .rb-icon-lg, align-self: end + font-body on .rb-group-label
+     (the label-inconsistency bug the user kept flagging), and a
+     command-bar background stripe on every button. ribbon.css is
+     the sole owner now. Kept below only the ai-results-* variants
+     and .view-toggle which aren't part of the ribbon system. */
+  .ai-results-actions button,
+  .ai-results-page button {
     background: var(--office-command-bg);
     border: 1px solid transparent;
     color: var(--ink);
@@ -1460,99 +1453,17 @@
     box-shadow: var(--office-command-shadow);
     text-shadow: 0 1px 0 rgba(255,255,255,0.65);
   }
-  .ribbon-shell .rb-btn-lg {
-    min-width: 72px;
-    height: 76px;
-    padding: 5px 8px 4px;
-    border-radius: 5px;
-  }
-  .ribbon-shell .rb-btn-sm,
-  .ribbon-shell .rb-btn,
-  .ribbon-shell .rb-icon-btn {
-    min-height: 26px;
-    height: 26px;
-    border-radius: 4px;
-  }
-  .ribbon-shell .rb-btn-lg:hover,
-  .ribbon-shell .rb-btn-sm:hover,
-  .ribbon-shell .rb-btn:hover,
-  .ribbon-shell .rb-icon-btn:hover,
-  .ribbon-shell .rb-toggle button:hover,
-  .ribbon-shell .view-toggle button:hover,
-  .ribbon-shell .toolbar-menu[open] > .rb-btn-lg,
-  .ribbon-shell .toolbar-menu[open] > .rb-btn-sm,
   .ai-results-actions button:hover {
     background: var(--office-command-hover-bg);
     border-color: var(--office-command-border-hover);
     color: var(--ink);
     box-shadow: var(--office-command-hover-shadow);
   }
-  .ribbon-shell .rb-btn-lg.primary {
-    background: var(--office-command-bg);
-    border-color: transparent;
-    color: var(--ink);
-  }
-  .ribbon-shell .rb-btn-lg.primary:hover,
-  .ribbon-shell .toolbar-menu[open] > .rb-btn-lg.primary {
-    background: var(--office-command-hover-bg);
-    border-color: var(--office-command-border-hover);
-    color: var(--ink);
-    box-shadow: var(--office-command-hover-shadow);
-  }
-  .ribbon-shell .rb-btn-lg.primary.split-down::after {
-    color: #596674;
-  }
-  .ribbon-shell .rb-btn-lg.active,
-  .ribbon-shell .rb-btn-sm.active,
-  .ribbon-shell .rb-toggle button.active,
-  .ribbon-shell .view-toggle button.active,
-  .ribbon-shell .menu-item.active {
+  .ribbon-shell .view-toggle button.active {
     background: var(--office-command-active-bg);
     border-color: #8eb2cf;
     color: var(--primary);
     box-shadow: var(--office-command-hover-shadow);
-  }
-  .ribbon-shell .rb-btn-lg-label,
-  .ribbon-shell .rb-btn-sm-label,
-  .ribbon-shell .menu-item,
-  .ribbon-shell .rb-select,
-  .ribbon-shell button,
-  .ai-results-page button {
-    font-weight: 400;
-  }
-  .ribbon-shell .rb-group-label {
-    font-family: var(--font-body);
-    align-self: end;
-    min-height: 22px;
-    padding: 4px 0 5px;
-    color: #3f4852;
-    font-size: 11px;
-    font-weight: 400;
-    letter-spacing: 0;
-    text-transform: none;
-  }
-  .ribbon-shell .rb-icon-lg {
-    width: 30px;
-    height: 30px;
-    color: #111827;
-  }
-  .ribbon-shell .rb-icon-lg svg {
-    filter: drop-shadow(0 1px 0 rgba(255,255,255,0.7));
-  }
-  .ribbon-shell .rb-btn-sm-icon {
-    opacity: 0.82;
-    color: #1f2937;
-  }
-  .ribbon-shell .rb-group-content { gap: 7px; }
-  .ribbon-shell .rb-divider {
-    background: #d0d5dc;
-    margin: 9px 0 27px;
-  }
-  .ribbon-shell .layout-view-toggle {
-    gap: 4px;
-  }
-  .ribbon-shell .layout-view-toggle .rb-btn-lg {
-    min-width: 64px;
   }
   .ribbon-shell .product-search {
     gap: 4px;
