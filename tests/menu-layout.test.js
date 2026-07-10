@@ -147,6 +147,7 @@ assertIncludes('<div class="rb-group-label">View</div>',      'merged Products t
 assertIncludes('<div class="rb-group-label">Organize</div>',  'merged Products tab exposes Organize group');
 assertIncludes('<div class="rb-group-label">Review &amp; Rules</div>', 'merged Products tab exposes Review & Rules group');
 assertIncludes('data-group-id="list" data-collapsed-label="List"', 'Products List group has a collapsed popup label');
+assertIncludes('class="rb-stack rb-list-actions"', 'Products List actions render in a dedicated horizontal action row');
 assertIncludes('data-group-id="actions" data-collapsed-label="Products"', 'Products Actions group has a collapsed popup label');
 assertIncludes('data-group-id="view" data-collapsed-label="View"', 'Products View group has a collapsed popup label');
 assertIncludes('data-group-id="organize" data-collapsed-label="Organize"', 'Products Organize group has a collapsed popup label');
@@ -155,6 +156,12 @@ assertIncludes('class="rb-group-content" data-collapsed-label="Organize"', 'Orga
 assertIncludes('class="rb-group-content" data-collapsed-label="Review"', 'Review popup button label is readable from group content');
 assert.ok(/\.rb-office-ribbon\s+\.rb-group\s*{[\s\S]{0,180}flex:\s*0 0 auto;/.test(ribbonCss),
   'Office ribbon groups do not flex-shrink into internal overlap');
+assert.ok(/\.rb-office-ribbon\s+\.ribbon-pane\[data-pane="products"\]\s+\.rb-group\[data-group-id="list"\]\s+>\s+\.rb-group-content\s*{[\s\S]{0,220}grid-template-rows:\s*auto auto;/.test(ribbonCss),
+  'Products List group stacks the select over the action row');
+assert.ok(/\.rb-list-actions\s*{[\s\S]{0,180}flex-direction:\s*row;/.test(ribbonCss),
+  'Products List actions are horizontal, not a vertical icon rail');
+assert.ok(/\.rb-organize-tools\s+\.rb-btn-lg,[\s\S]{0,260}width:\s*auto;/.test(ribbonCss),
+  'Organize Filters/Reset buttons do not stretch into wide blocks');
 assert.ok(/\{\s*groupId:\s*'review',\s*size:\s*'Popup'\s*\}/.test(productsTabInitJs),
   'Review group collapses as a whole before it can overlap');
 assert.ok(/\{\s*groupId:\s*'organize',\s*size:\s*'Popup'\s*\}/.test(productsTabInitJs),

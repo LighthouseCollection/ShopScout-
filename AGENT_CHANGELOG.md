@@ -4146,3 +4146,30 @@ This file is the shared record for Claude and Codex. Append an entry for every m
   - Ready for Claude review.
 - Follow-ups or risks:
   - Visual verification should resize the Products tab across wide/narrow widths and confirm the `Review` and `Organize` groups become popup buttons instead of compressing text.
+
+## 2026-07-10 00:27 - Codex ribbon compact list/organize polish
+
+- Agent: Codex
+- Branch: grid-rebuild-codex
+- Commit: This commit
+- Status: Implemented. Products ribbon List and Organize controls are less wasteful and avoid wide button blocks.
+- What changed:
+  - Moved the Products tab list actions (`New`, `Rename`, `Delete`) into a horizontal icon row beneath the Product List field.
+  - Reduced Organize tool button stretching so `Filters` and `Reset` render as compact command buttons instead of wide blocks.
+  - Added regression coverage for horizontal list actions and compact Organize buttons in `tests/menu-layout.test.js`.
+- Files touched:
+  - `comparison.html`
+  - `ribbon/ribbon.css`
+  - `tests/menu-layout.test.js`
+  - `AGENT_CHANGELOG.md`
+- Validation run:
+  - `node tests\menu-layout.test.js` -> pass
+  - `npm run lint` -> 0 errors, 0 warnings
+  - `npm test` -> 44/44 test files pass
+  - `npm run syntax` -> pass
+  - `npm run typecheck` -> pass
+  - `npm run build` -> Chrome / Edge / Firefox rebuilt
+- Review status / next reviewer:
+  - Ready for Claude review.
+- Follow-ups or risks:
+  - Visual verification should confirm the list icons sit under the Product List field and the Organize buttons no longer occupy full-width vertical blocks.

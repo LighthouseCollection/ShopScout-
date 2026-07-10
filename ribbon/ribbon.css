@@ -969,6 +969,28 @@
   height: 100%;
 }
 
+.rb-office-ribbon .ribbon-pane[data-pane="products"] .rb-group[data-group-id="list"] > .rb-group-content {
+  display: grid;
+  grid-template-columns: minmax(190px, 260px);
+  grid-template-rows: auto auto;
+  gap: 6px;
+  align-items: start;
+}
+
+.rb-office-ribbon .ribbon-pane[data-pane="products"] .rb-group[data-group-id="list"] .rb-list-actions {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.rb-office-ribbon .ribbon-pane[data-pane="products"] .rb-group[data-group-id="list"] .rb-list-actions .rb-btn-sm {
+  width: 26px;
+  height: 26px;
+  min-width: 26px;
+}
+
 /* ==============================================================
    19c. Review & Rules group — 2×2 grid with each button rendered
    as icon-left + text-right, not the vertical stack default.
@@ -1148,7 +1170,7 @@
 .rb-office-ribbon .rb-group[data-group-id="organize"]:not([data-group-size]) > .rb-group-content,
 .rb-office-ribbon .rb-group[data-group-id="organize"][data-group-size="large"] > .rb-group-content {
   display: grid;
-  grid-template-columns: minmax(190px, 1fr) minmax(96px, auto);
+  grid-template-columns: minmax(190px, 1fr) max-content;
   grid-template-rows: 1fr 1fr;
   gap: 4px 8px;
   align-items: stretch;
@@ -1164,8 +1186,9 @@
   display: grid;
   grid-template-rows: 1fr 1fr;                 /* mirror the parent's 2-row grid */
   gap: 4px;
-  min-width: 96px;
+  min-width: 0;
   align-self: stretch;
+  justify-items: start;
 }
 .rb-office-ribbon .rb-organize-tools > .toolbar-menu {
   display: flex;                               /* let the details flex-fill its row */
@@ -1180,12 +1203,12 @@
   align-items: center;
   justify-content: flex-start;
   gap: 6px;
-  width: 100%;
+  width: auto;
   height: 100%;
   min-height: 0;
-  min-width: 0;
+  min-width: 78px;
   max-width: none;
-  padding: 3px 8px;
+  padding: 3px 10px;
   text-align: left;
 }
 .rb-office-ribbon .rb-organize-tools .rb-icon-lg {
