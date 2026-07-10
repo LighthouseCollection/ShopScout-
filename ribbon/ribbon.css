@@ -48,9 +48,9 @@
 
   /* Group */
   --rbn-group-pad-t: 4px;                 /* [Fluent:RibbonGroupBox.xaml:33] Padding="4 2 4 2" — top/left */
-  --rbn-group-pad-r: 2px;                 /* [Fluent:RibbonGroupBox.xaml:33] right */
+  --rbn-group-pad-r: 0px;                 /* horizontal padding lives on the divider so intra-button whitespace can't skew the visible gap */
   --rbn-group-pad-b: 4px;                 /* [Fluent:RibbonGroupBox.xaml:33] bottom */
-  --rbn-group-pad-l: 2px;                 /* [Fluent:RibbonGroupBox.xaml:33] left */
+  --rbn-group-pad-l: 0px;                 /* same reason as right */
   --rbn-group-simple-pad-h: 0px;          /* [Fluent:RibbonGroupBox.xaml:37] Simplified Padding="2 0" — but we inline the 2px into separator margin */
   --rbn-group-simple-pad-v: 2px;
 
@@ -59,7 +59,7 @@
   --rbn-group-sep-h: 55px;                /* [Fluent:RibbonGroupBox.xaml:9] Height="55" */
   --rbn-group-sep-mt: 5px;                /* [Fluent:RibbonGroupBox.xaml:10] Margin="2 5 2 10" — top */
   --rbn-group-sep-mb: 10px;               /* [Fluent:RibbonGroupBox.xaml:10] bottom */
-  --rbn-group-sep-mh: 2px;                /* [Fluent:RibbonGroupBox.xaml:10] left/right */
+  --rbn-group-sep-mh: 8px;                /* symmetric horizontal breathing room on both sides of the 1px divider so visible gap between any two groups is exactly 17px */
 
   /* Group label bar */
   --rbn-group-label-h: 18px;              /* [Invented] Height above the total 100/103 to leave 68 for Large button + 4+4 pad + 2 gap */
