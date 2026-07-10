@@ -1269,7 +1269,9 @@
   padding: 4px 8px;
   text-align: left;
   min-width: 0;
+  max-width: none;                             /* row layout -- 88px vertical cap is nonsense here */
   white-space: normal;
+  overflow: visible;                           /* label wraps -- do not clip a stray last character */
 }
 
 .rb-office-ribbon .rb-group[data-group-id="review"]:not([data-group-size]) .rb-btn-lg .rb-icon-lg,
