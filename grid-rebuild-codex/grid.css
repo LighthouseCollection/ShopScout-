@@ -46,185 +46,117 @@
 }
 
 /* ==========================================================
-   AG Grid overrides — align its default chrome with the same
-   look the SlickGrid CSS gave us: shaded header, soft row and
-   column separators, centered cell content, thumb+actions
-   stack in the image column, pill treatment for value cells.
+   AG Grid — thin, functional overrides only.
+   The quartz base theme (vendor/ag-grid/ag-theme-quartz.min.css)
+   owns headers, rows, cells, borders, spacing, and typography by
+   default. This block adds a subtle ShopScout tint plus the tiny
+   set of layout keeps our data model requires:
+     - shell edges (kill AG Grid's outer border so the rounded
+       shell isn't fighting a doubled inner rectangle)
+     - matrix header height + centering
+     - Name / Buying Factor left-alignment
+     - selection + image cells snap to no padding for the checkbox
+       and 58px thumbnail
+     - page-level scroll (autoHeight)
    ========================================================== */
-.ss-grid-host.ag-theme-shopscout {
-  --ag-borders: none;
-  --ag-border-color: #eaeef2;
-  --ag-header-background-color: #f4f6f9;
-  --ag-header-foreground-color: var(--ink-2, #2a3441);
-  --ag-header-column-separator-display: none;
+
+/* Brand tint via quartz's own CSS variables. Everything else is
+   stock quartz. */
+.ss-grid-host.ag-theme-quartz {
+  --ag-active-color: var(--accent, #ecd496);
+  --ag-selected-row-background-color: color-mix(in srgb, var(--accent, #ecd496) 20%, transparent);
+  --ag-row-hover-color: color-mix(in srgb, var(--primary, #0b3d4f) 4%, #fff);
   --ag-header-height: 42px;
-  --ag-row-hover-color: color-mix(in srgb, var(--primary, #0b3d4f) 5%, #fff);
-  --ag-row-border-color: #eaeef2;
-  --ag-cell-horizontal-border: 1px solid #eaeef2;
-  --ag-font-family: var(--font-body, "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif);
-  --ag-font-size: 13px;
-  --ag-foreground-color: var(--ink, #0f1419);
-  --ag-background-color: #fff;
-  --ag-odd-row-background-color: #fff;
 }
 
-.ss-grid-host.ag-theme-shopscout .ag-header {
-  border-bottom: 1px solid #d1d5db;
-}
-
-.ss-grid-host.ag-theme-shopscout .ag-header-cell {
-  background: #f4f6f9;
-  color: var(--ink-2, #2a3441);
-  font-family: var(--font-body, "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif);
-  font-size: 12px;
-  font-weight: 600;
-  letter-spacing: 0.03em;
-  text-transform: none;
-  padding: 10px 12px;
-  border-right: 1px solid var(--rule);
-}
-
-.ss-grid-host.ag-theme-shopscout .ag-header-cell .ag-header-cell-label {
-  justify-content: center;
-}
-
-.ss-grid-host.ag-theme-shopscout .ag-header-cell[col-id="title"] .ag-header-cell-label,
-.ss-grid-host.ag-theme-shopscout .ag-header-cell[col-id="thumb"] .ag-header-cell-label,
-.ss-grid-host.ag-theme-shopscout .ag-header-cell[col-id="select"] .ag-header-cell-label {
-  justify-content: flex-start;
-}
-
-.ss-grid-host.ag-theme-shopscout .ag-cell {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 8px 12px;
-  border-right: 1px solid #eaeef2;
-  color: var(--ink, #0f1419);
-  line-height: 1.4;
-  overflow: hidden;
-  user-select: text;
-}
-
-.ss-grid-host.ag-theme-shopscout .ag-cell.ss-grid-cell-title {
-  justify-content: flex-start;
-  text-align: left;
-}
-
-.ss-grid-host.ag-theme-shopscout .ag-cell.ss-grid-cell-selection,
-.ss-grid-host.ag-theme-shopscout .ag-cell.ss-grid-cell-image {
-  justify-content: center;
-  padding: 6px 4px;
-}
-
-.ss-grid-host.ag-theme-shopscout .ag-row {
-  border-bottom: 1px solid #eaeef2;
-}
-
-.ss-grid-host.ag-theme-shopscout .ag-row-hover {
-  background: color-mix(in srgb, var(--primary, #0b3d4f) 5%, #fff);
-}
-
-/* Disable AG Grid's own vertical scroll — page handles it via
-   domLayout: autoHeight. Also kill horizontal scrollbar; the shell
-   handles horizontal via updateShellOverflow. */
-.ss-grid-host.ag-theme-shopscout .ag-body-viewport,
-.ss-grid-host.ag-theme-shopscout .ag-body-horizontal-scroll,
-.ss-grid-host.ag-theme-shopscout .ag-body-vertical-scroll {
-  overflow: visible !important;
-}
-
-/* Kill AG Grid's own outer border + straight corners. The shell
-   (#productGrid.ss-grid-shell) draws the visible border and rounded
-   8px radius; AG Grid's inner .ag-root-wrapper + .ag-root would draw
-   a second border inside, creating a doubled edge at the corners and
-   flat (unrounded) corners fighting the shell's radius. */
-.ss-grid-host.ag-theme-shopscout,
-.ss-grid-host.ag-theme-shopscout .ag-root-wrapper,
-.ss-grid-host.ag-theme-shopscout .ag-root {
+/* Kill AG Grid's own outer border + straight corners so the shell
+   (#productGrid.ss-grid-shell) draws the only visible edge. */
+.ss-grid-host.ag-theme-quartz,
+.ss-grid-host.ag-theme-quartz .ag-root-wrapper,
+.ss-grid-host.ag-theme-quartz .ag-root {
   border: 0 !important;
   border-radius: inherit;
   background: transparent;
 }
-.ss-grid-host.ag-theme-shopscout .ag-root-wrapper {
+.ss-grid-host.ag-theme-quartz .ag-root-wrapper {
   overflow: hidden;
 }
 
-/* Pinned-left row-label cells (Select / Thumb / Name / Buying Factor)
-   match the header background so the frozen columns read as a distinct
-   band that separates identifiers from spec data. Add a clear right
-   rule so the frozen edge is obvious. */
-.ss-grid-host.ag-theme-shopscout .ag-cell.ss-grid-cell-select,
-.ss-grid-host.ag-theme-shopscout .ag-cell.ss-grid-cell-thumb,
-.ss-grid-host.ag-theme-shopscout .ag-cell.ss-grid-cell-title,
-.ss-grid-host.ag-theme-shopscout .ag-cell.ss-grid-cell-attribute {
-  background: #f4f6f9;
+/* Page handles vertical scroll via domLayout: autoHeight; horizontal
+   is handled by the shell. Let AG Grid's own scroll surfaces stay
+   visible so nothing double-scrolls. */
+.ss-grid-host.ag-theme-quartz .ag-body-viewport,
+.ss-grid-host.ag-theme-quartz .ag-body-horizontal-scroll,
+.ss-grid-host.ag-theme-quartz .ag-body-vertical-scroll {
+  overflow: visible !important;
 }
-/* Attribute column (compare matrix leftmost) — left-aligned, bold.
-   The shading rule above already runs for .ss-grid-cell-attribute;
-   here we only fix alignment + weight. */
-.ss-grid-host.ag-theme-shopscout .ag-cell.ss-grid-cell-attribute {
-  justify-content: flex-start !important;
-  text-align: left !important;
-  font-weight: 700;
-  padding-left: 16px !important;
-}
-.ss-grid-host.ag-theme-shopscout .ag-header-cell[col-id="attribute"] {
-  background: #f4f6f9;
-}
-.ss-grid-host.ag-theme-shopscout .ag-header-cell[col-id="attribute"] .ag-header-cell-label {
+
+/* Name / Buying Factor left-align (rest of the grid stays centered). */
+.ss-grid-host.ag-theme-quartz .ag-cell.ss-grid-cell-title,
+.ss-grid-host.ag-theme-quartz .ag-cell.ss-grid-cell-attribute {
   justify-content: flex-start;
-  padding-left: 10px;
+  text-align: left;
+}
+.ss-grid-host.ag-theme-quartz .ag-cell.ss-grid-cell-attribute {
+  font-weight: 700;
+  padding-left: 16px;
+}
+
+/* Selection + image cells: kill quartz's default cell padding so the
+   checkbox and 58px thumbnail center properly. */
+.ss-grid-host.ag-theme-quartz .ag-cell.ss-grid-cell-selection,
+.ss-grid-host.ag-theme-quartz .ag-cell.ss-grid-cell-image {
+  padding: 6px 4px;
 }
 
 /* Compare matrix — taller header (thumb + wrapped title + actions).
    Content is vertically centered inside the cell so top and bottom
    padding stay symmetric — the previous align-items: flex-start
    pushed content to the top and left dead space below. */
-.ss-grid-host.ag-theme-shopscout.ss-grid-is-matrix .ag-header-cell {
+.ss-grid-host.ag-theme-quartz.ss-grid-is-matrix .ag-header-cell {
   align-items: stretch;
   padding-top: 6px;
   padding-bottom: 6px;
 }
-.ss-grid-host.ag-theme-shopscout.ss-grid-is-matrix .ag-header-cell .ag-header-cell-comp-wrapper,
-.ss-grid-host.ag-theme-shopscout.ss-grid-is-matrix .ag-header-cell .ag-header-cell-label {
+.ss-grid-host.ag-theme-quartz.ss-grid-is-matrix .ag-header-cell .ag-header-cell-comp-wrapper,
+.ss-grid-host.ag-theme-quartz.ss-grid-is-matrix .ag-header-cell .ag-header-cell-label {
   height: 100%;
   align-items: center;                  /* vertical center */
   justify-content: center;              /* extra safety */
 }
 /* Product head itself: force horizontal center + no stray gap under
    the action bar. */
-.ss-grid-host.ag-theme-shopscout.ss-grid-is-matrix .ss-grid-product-head {
+.ss-grid-host.ag-theme-quartz.ss-grid-is-matrix .ss-grid-product-head {
   align-items: center;
   justify-content: center;
   gap: 4px;
   padding: 0;
   margin: 0;
 }
-.ss-grid-host.ag-theme-shopscout.ss-grid-is-matrix .ss-grid-matrix-actions {
+.ss-grid-host.ag-theme-quartz.ss-grid-is-matrix .ss-grid-matrix-actions {
   margin-top: 4px;
   margin-bottom: 0;
 }
-.ss-grid-host.ag-theme-shopscout .ag-pinned-left-cols-container .ag-row {
+.ss-grid-host.ag-theme-quartz .ag-pinned-left-cols-container .ag-row {
   background: #f4f6f9;
 }
-.ss-grid-host.ag-theme-shopscout .ag-pinned-left-cols-container .ag-row-hover,
-.ss-grid-host.ag-theme-shopscout .ag-pinned-left-header {
+.ss-grid-host.ag-theme-quartz .ag-pinned-left-cols-container .ag-row-hover,
+.ss-grid-host.ag-theme-quartz .ag-pinned-left-header {
   background: #f4f6f9;
 }
-.ss-grid-host.ag-theme-shopscout .ag-pinned-left-cols-container {
+.ss-grid-host.ag-theme-quartz .ag-pinned-left-cols-container {
   border-right: 1px solid #d1d5db;
 }
 
 /* Name column left-aligned (both header and cell). The Name column
    uses type: 'text' so the cellClass-anchored selector below is what
    catches it — matches the SlickGrid behavior. */
-.ss-grid-host.ag-theme-shopscout .ag-cell.ss-grid-cell-title {
+.ss-grid-host.ag-theme-quartz .ag-cell.ss-grid-cell-title {
   justify-content: flex-start !important;
   text-align: left;
   font-weight: 700;
 }
-.ss-grid-host.ag-theme-shopscout .ag-header-cell[col-id="title"] .ag-header-cell-label {
+.ss-grid-host.ag-theme-quartz .ag-header-cell[col-id="title"] .ag-header-cell-label {
   justify-content: flex-start;
 }
 
@@ -922,233 +854,16 @@ a.ss-grid-rating-link:hover .ss-grid-stars {
 }
 
 /* ============================================================
-   AG Grid popups — column menu + filter popup.
-   Popups render at <body> level, so we can't scope by
-   .ss-grid-host. Everything below keys off .ag-theme-shopscout
-   (the class we add to the popup wrapper via container class).
-   Clean layout: one column of controls, comfortable padding,
-   ribbon-native typography, no default AG Grid chrome bleeding
-   through.
+   AG Grid popups (column menu + filter) use stock quartz —
+   no overrides. Was previously a large block of CSS that
+   re-styled every menu / picker / input / button; deleted in
+   favor of quartz's own polished defaults.
    ============================================================ */
 
-/* Outer container */
-.ag-theme-shopscout .ag-menu,
-.ag-theme-shopscout .ag-popup-child {
-  font-family: var(--rbn-font, "Segoe UI Variable", "Segoe UI", system-ui, sans-serif);
-  font-size: 12px;
-  color: var(--ink, #0f1419);
-  background: var(--surface, #fff);
-  border: 1px solid var(--rule, #d1d5db);
-  border-radius: 4px;
-  box-shadow: 0 4px 14px rgba(15, 23, 42, 0.10);
-  min-width: 220px;
-}
-
-/* --- General menu (Sort/Pin/Autosize/...) ---------------- */
-.ag-theme-shopscout .ag-menu-list {
-  padding: 4px 0;
-}
-.ag-theme-shopscout .ag-menu-option {
-  padding: 6px 12px;
-  min-height: 28px;
-  gap: 8px;
-  cursor: pointer;
-}
-.ag-theme-shopscout .ag-menu-option-active,
-.ag-theme-shopscout .ag-menu-option:hover {
-  background: var(--rbn-hover-bg, rgba(15, 23, 42, 0.06));
-}
-.ag-theme-shopscout .ag-menu-separator {
-  border-top: 1px solid var(--rule-soft, #eef1f5);
-  margin: 4px 0;
-}
-
-/* --- Tabs across the top (General / Filter) -------------- */
-.ag-theme-shopscout .ag-tabs {
-  border: 0;
-  background: transparent;
-}
-.ag-theme-shopscout .ag-tabs-header {
-  display: flex;
-  gap: 4px;
-  padding: 4px 8px 0;
-  background: var(--paper-2, #f4f6f9);
-  border-bottom: 1px solid var(--rule, #d1d5db);
-}
-.ag-theme-shopscout .ag-tab {
-  padding: 8px 12px;
-  color: var(--ink-3, #5a6470);
-  background: transparent;
-  border: 0;
-  border-bottom: 2px solid transparent;
-  cursor: pointer;
-}
-.ag-theme-shopscout .ag-tab-selected {
-  color: var(--ink, #0f1419);
-  border-bottom-color: var(--accent, #ecd496);
-  font-weight: 600;
-}
-.ag-theme-shopscout .ag-tabs-body {
-  padding: 10px 12px;
-}
-
-/* --- Filter popup body ----------------------------------- */
-.ag-theme-shopscout .ag-filter {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  padding: 12px;
-  min-width: 240px;
-}
-.ag-theme-shopscout .ag-filter-body-wrapper,
-.ag-theme-shopscout .ag-filter-body,
-.ag-theme-shopscout .ag-simple-filter-body-wrapper {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
-/* The "Contains" picker at the top of the filter body.
-   Style the whole widget as a single control — no nested
-   double-borders, no cropped chevron. */
-.ag-theme-shopscout .ag-filter-select,
-.ag-theme-shopscout .ag-picker-field {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  height: 30px;
-  padding: 0 10px;
-  background: var(--surface, #fff);
-  border: 1px solid var(--rule, #d1d5db);
-  border-radius: 3px;
-  color: var(--ink, #0f1419);
-  cursor: pointer;
-  transition: border-color 90ms ease, box-shadow 90ms ease;
-}
-.ag-theme-shopscout .ag-picker-field-display,
-.ag-theme-shopscout .ag-picker-field-wrapper {
-  flex: 1;
-  padding: 0;
-  border: 0;
-  background: transparent;
-  color: inherit;
-  font-family: inherit;
-  font-size: 12px;
-  min-width: 0;
-}
-.ag-theme-shopscout .ag-picker-field-icon {
-  color: var(--ink-3, #5a6470);
-  width: 14px;
-  height: 14px;
-  flex: 0 0 14px;
-}
-.ag-theme-shopscout .ag-picker-field:hover {
-  border-color: var(--ink-3, #5a6470);
-}
-.ag-theme-shopscout .ag-picker-field:focus-within {
-  border-color: var(--accent, #ecd496);
-  box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent, #ecd496) 32%, transparent);
-  outline: 0;
-}
-
-/* The Filter... text input */
-.ag-theme-shopscout .ag-input-wrapper,
-.ag-theme-shopscout .ag-filter-body .ag-labeled {
-  width: 100%;
-}
-.ag-theme-shopscout .ag-input-field-input,
-.ag-theme-shopscout .ag-text-field-input {
-  box-sizing: border-box;
-  width: 100%;
-  height: 30px;
-  padding: 0 10px;
-  background: var(--surface, #fff);
-  border: 1px solid var(--rule, #d1d5db);
-  border-radius: 3px;
-  color: var(--ink, #0f1419);
-  font-family: inherit;
-  font-size: 12px;
-  transition: border-color 90ms ease, box-shadow 90ms ease;
-}
-.ag-theme-shopscout .ag-input-field-input:focus,
-.ag-theme-shopscout .ag-text-field-input:focus {
-  border-color: var(--accent, #ecd496);
-  box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent, #ecd496) 32%, transparent);
-  outline: 0;
-}
-/* Kill the AG Grid magnifier-inside-input default that overlapped
-   the placeholder text ("Filter…" rendered as "Bter…"). */
-.ag-theme-shopscout .ag-input-field-input::-webkit-search-decoration,
-.ag-theme-shopscout .ag-input-field-input::-webkit-search-cancel-button,
-.ag-theme-shopscout .ag-input-field-input::-webkit-search-results-button,
-.ag-theme-shopscout .ag-input-field-input::-webkit-search-results-decoration {
-  display: none;
-}
-.ag-theme-shopscout .ag-input-field-icon,
-.ag-theme-shopscout .ag-filter-body .ag-icon-filter {
-  display: none;
-}
-
-/* Apply / Clear buttons at the bottom of the filter body */
-.ag-theme-shopscout .ag-filter-apply-panel {
-  display: flex;
-  gap: 6px;
-  justify-content: flex-end;
-  padding-top: 8px;
-  margin-top: 2px;
-  border-top: 1px solid var(--rule-soft, #eef1f5);
-}
-.ag-theme-shopscout .ag-standard-button,
-.ag-theme-shopscout .ag-filter-apply-panel button {
-  height: 28px;
-  padding: 0 14px;
-  border: 1px solid var(--rule, #d1d5db);
-  border-radius: 3px;
-  background: var(--surface, #fff);
-  color: var(--ink, #0f1419);
-  font-family: inherit;
-  font-size: 12px;
-  cursor: pointer;
-  transition: background 90ms ease;
-}
-.ag-theme-shopscout .ag-standard-button:hover,
-.ag-theme-shopscout .ag-filter-apply-panel button:hover {
-  background: var(--rbn-hover-bg, rgba(15, 23, 42, 0.06));
-}
-
-/* Column menu button (the hamburger on each header). Make it
-   render at a size that reads clearly and only appears on
-   hover — cleaner default look. */
-.ss-grid-host.ag-theme-shopscout .ag-header-cell-menu-button {
-  opacity: 0;
-  transition: opacity 120ms ease;
-  color: var(--ink-3, #5a6470);
-}
-.ss-grid-host.ag-theme-shopscout .ag-header-cell:hover .ag-header-cell-menu-button,
-.ss-grid-host.ag-theme-shopscout .ag-header-cell-menu-button:focus,
-.ss-grid-host.ag-theme-shopscout .ag-header-cell-filtered .ag-header-cell-menu-button {
-  opacity: 1;
-}
-
-/* AG Grid's suppressHeaderFilterButton is being ignored in
-   v33.x — the funnel icon keeps rendering next to the hamburger.
-   Nuke it with CSS so users see one icon per header. */
-.ss-grid-host.ag-theme-shopscout .ag-header-cell-filter-button,
-.ss-grid-host.ag-theme-shopscout .ag-header-icon.ag-header-cell-filter-button,
-.ss-grid-host.ag-theme-shopscout .ag-header-cell .ag-filter-icon {
-  display: none !important;
-}
-
-/* Source cell — the "Amazon"/logo pill was getting its bottom
-   border chopped off in matrix view because the ag-cell clipped
-   overflow. Reduce vertical padding so the pill lives inside the
-   cell without pushing against the edge, and let the wrapper span
-   overflow visibly. */
-.ss-grid-host.ag-theme-shopscout .ss-grid-logo-token {
-  padding: 1px 8px;
-  line-height: 1.3;
-}
-.ss-grid-host.ag-theme-shopscout .ss-grid-matrix-cell,
-.ss-grid-host.ag-theme-shopscout .ss-grid-cell-source {
+/* Source cell — the "Amazon"/logo pill needs the ag-cell to allow
+   overflow so its bottom border isn't clipped by quartz's default
+   cell padding in the taller matrix view. */
+.ss-grid-host.ag-theme-quartz .ss-grid-matrix-cell,
+.ss-grid-host.ag-theme-quartz .ss-grid-cell-source {
   overflow: visible;
 }

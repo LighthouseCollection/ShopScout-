@@ -566,22 +566,17 @@
            (the pencil affordance says it, one click confirms it). */
         editable: column.type === 'myRating' ? false : !!column.editable,
         singleClickEdit: column.type === 'notes' || column.type === 'text',
-        /* Column-menu + filter affordances.
-           - System columns (checkbox / thumbnail / actions / matrix
-             attribute / normalization-review action columns) don't
-             get a menu or a filter — nothing to filter on and no
-             per-column options that make sense.
-           - Price / rating / myRating use the number filter so
-             ranges work (>= 50, between 4 and 5, etc.).
-           - Everything else uses the text filter with contains /
-             starts-with / equals variants. */
+        /* System columns (checkbox / thumbnail / actions / matrix
+           attribute / normalization-review action columns) get no
+           menu and no filter — nothing to filter on and no per-column
+           options make sense for them. Everything else uses stock
+           quartz menu + funnel with a type-appropriate filter. */
         filter: (['selection','image','actions','matrixCell','attribute','normalizationActions','userRuleActions'].includes(column.type))
           ? false
           : (['price','rating','myRating'].includes(column.type)
             ? 'agNumberColumnFilter'
             : 'agTextColumnFilter'),
         suppressHeaderMenuButton: ['selection','image','actions','matrixCell','attribute','normalizationActions','userRuleActions'].includes(column.type),
-        suppressHeaderFilterButton: true,   /* filter lives inside the menu, not next to it */
         cellClass: cellClassForColumn(column),
         headerClass: 'ss-grid-header',
         pinned: isPinnedLeft ? 'left' : undefined,
@@ -710,11 +705,12 @@
     }
 
     const opts = options || {};
-    /* ag-theme-quartz is the actual theme class AG Grid recognises —
-       it carries the @font-face for the icon font. Our custom
-       .ag-theme-shopscout overrides live on top. Without quartz here,
-       header icons render as missing-glyph boxes. */
-    container.classList.add('ss-grid-host', 'ag-theme-quartz', 'ag-theme-shopscout');
+    /* Single AG Grid theme class: quartz. Everything under
+       .ag-theme-quartz in grid.css is our narrow override layer
+       (shell fit, functional cell alignment, custom cell
+       renderers). No more parallel ag-theme-shopscout class —
+       one owner file, one theme name. */
+    container.classList.add('ss-grid-host', 'ag-theme-quartz');
     container.classList.toggle('ss-grid-is-matrix', projection?.mode === 'comparisonMatrix');
     container.style.width = '100%';
 
@@ -749,24 +745,18 @@
       defaultColDef: {
         sortable: true,
         resizable: true,
-        /* One icon per header: the tabbed column MENU (hamburger).
-           It houses Sort + Pin + Autosize + Filter, so the standalone
-           funnel that used to sit next to the menu is suppressed —
-           having both created the "double icon" clutter the user
-           complained about. */
+        /* Stock quartz column controls: hamburger (Sort / Pin /
+           Autosize / Reset) AND the filter funnel next to it. Both
+           are Community and both render cleanly in quartz — no
+           custom styling, no hiding, no columnMenu: 'legacy'
+           acrobatics. */
         filter: 'agTextColumnFilter',
-        menuTabs: ['generalMenuTab', 'filterMenuTab'],
         suppressHeaderMenuButton: false,
-        suppressHeaderFilterButton: true,
         wrapText: false,
         /* Don't let columns flex to fill remaining space — each column
            should be exactly the width needed by its widest cell. */
         flex: 0
       },
-      /* Force the legacy tabbed column menu (v33's "new" flat menu
-         has no filter tab, which is what forces the separate funnel
-         icon; legacy tabs put filter inside the menu). */
-      columnMenu: 'legacy',
       /* Let users drag ANY column header (except system ones) to
          reorder or drop into a different pinned region. Community
          supports drag-to-move; the visual "▧ Jan" ghost during drag

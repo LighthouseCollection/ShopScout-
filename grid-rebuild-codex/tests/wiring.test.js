@@ -39,18 +39,17 @@ assert.ok(!gridCss.includes('#eaeaea'),
   'grid overrides do not use the darker #eaeaea alternating row color');
 assert.ok(!gridCss.includes('#e5e7eb'),
   'grid border fallbacks use #d1d5db instead of #e5e7eb');
-assert.ok(/\.ag-cell[\s\S]{0,220}align-items:\s*center/.test(gridCss),
-  'grid cells vertically center their contents');
-assert.ok(/\.ag-cell[\s\S]{0,320}justify-content:\s*center/.test(gridCss),
-  'grid cells center content by default; only the Name (title) column overrides to flex-start');
-assert.ok(/\.ss-grid-cell-title[\s\S]{0,120}justify-content:\s*flex-start/.test(gridCss),
-  'Name column stays left-aligned even though everything else centers');
-assert.ok(/\.ag-cell[\s\S]{0,900}user-select:\s*text/.test(gridCss),
-  'grid cells allow normal browser text selection for copy/paste');
+/* Cell centering, cell padding, alternating row color, browser
+   text selection etc. are all handled by the stock quartz theme
+   now (vendor/ag-grid/ag-theme-quartz.min.css). Our override
+   layer only asserts that Name and Buying Factor stay
+   left-aligned — those are functional keeps for our data model. */
 assert.ok(/\.ag-cell\.ss-grid-cell-title[\s\S]{0,180}justify-content:\s*flex-start/.test(gridCss),
-  'product-name cells keep the title wrapper left aligned');
+  'Name column keeps left-alignment inside quartz');
 assert.ok(/\.ag-cell\.ss-grid-cell-title[\s\S]{0,220}text-align:\s*left/.test(gridCss),
-  'product-name cells keep product names left aligned');
+  'Name column keeps text-align: left inside quartz');
+assert.ok(/\.ag-cell\.ss-grid-cell-attribute[\s\S]{0,220}justify-content:\s*flex-start/.test(gridCss),
+  'Buying Factor column keeps left-alignment inside quartz');
 assert.ok(/\.ss-grid-logo-token[\s\S]{0,320}text-decoration:\s*none/.test(gridCss),
   'source and brand logo tokens suppress link underlines');
 assert.ok(/\.ss-grid-logo-token[\s\S]{0,360}max-width:\s*100%/.test(gridCss),
