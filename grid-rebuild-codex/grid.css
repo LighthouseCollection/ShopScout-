@@ -209,7 +209,7 @@
   line-height: 1.35;
   text-align: left;
   overflow-wrap: anywhere;
-  font-size: 14px;
+  font-size: 12px;
   font-weight: 700;
   color: var(--ink, #0f1419);
 }
@@ -402,7 +402,7 @@ a.ss-grid-rating-link:hover .ss-grid-stars {
 }
 
 .ss-grid-stars {
-  color: var(--accent, #ecd496);
+  color: #cda84b;
   letter-spacing: 0.02em;
   white-space: nowrap;
 }
