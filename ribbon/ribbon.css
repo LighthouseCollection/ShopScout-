@@ -197,8 +197,8 @@
   align-items: center;
   justify-content: center;
   gap: 4px;
-  min-width: 56px;
-  max-width: 88px;
+  min-width: 64px;
+  max-width: 108px;                           /* was 88; fits "Categorize"/"Duplicates" without clipping */
   height: 68px;
   padding: 4px 6px 3px;
   border: 1px solid transparent;
@@ -211,7 +211,7 @@
   line-height: 1.15;
   text-align: center;
   cursor: pointer;
-  overflow: hidden;
+  overflow: visible;                          /* don't clip the label under any circumstance */
   transition: background 90ms ease, border-color 90ms ease;
 }
 .rb-office-ribbon .rb-btn-lg:hover {
@@ -230,14 +230,12 @@
   height: 100%;
 }
 .rb-office-ribbon .rb-btn-lg-label {
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  max-height: 2.4em;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  word-break: keep-all;
-  overflow-wrap: normal;
+  display: block;
+  max-height: none;
+  overflow: visible;
+  white-space: normal;
+  overflow-wrap: break-word;                  /* allow long words to wrap onto 2 lines rather than clip */
+  word-break: normal;
   hyphens: none;
   font-size: 11px;
   font-weight: 400;
@@ -596,11 +594,12 @@
 }
 
 .rb-office-ribbon .rb-group[data-group-size] .rb-btn-lg-label {
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  max-height: 2.3em;
-  overflow: hidden;
+  display: block;
+  max-height: none;
+  overflow: visible;
+  white-space: normal;
+  overflow-wrap: break-word;
+  word-break: normal;
   font-size: 11px;
   font-weight: 400;
   line-height: 1.15;
