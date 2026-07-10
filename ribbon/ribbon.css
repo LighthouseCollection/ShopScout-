@@ -969,23 +969,28 @@
   height: 100%;
 }
 
-.rb-office-ribbon .ribbon-pane[data-pane="products"] .rb-group[data-group-id="list"] > .rb-group-content {
+/* Universal List-group layout — applies on every tab that mirrors
+   the group (File / Products / Analyze / Search). Was previously
+   scoped to [data-pane="products"] only, which is why the other
+   tabs looked inconsistent. Keeps the select at its natural width
+   and puts the +/pencil/× action buttons in a LEFT-aligned row
+   below, so the leftmost icon lines up with the start of the
+   select. */
+.rb-office-ribbon .rb-group[data-group-id="list"] > .rb-group-content {
   display: grid;
   grid-template-columns: minmax(190px, 260px);
   grid-template-rows: auto auto;
   gap: 6px;
   align-items: start;
 }
-
-.rb-office-ribbon .ribbon-pane[data-pane="products"] .rb-group[data-group-id="list"] .rb-list-actions {
+.rb-list-actions {
   display: flex;
   flex-direction: row;
   align-items: center;
-  justify-content: flex-end;
+  justify-content: flex-start;            /* LEFT-aligned, not flex-end */
   gap: 8px;
 }
-
-.rb-office-ribbon .ribbon-pane[data-pane="products"] .rb-group[data-group-id="list"] .rb-list-actions .rb-btn-sm {
+.rb-office-ribbon .rb-group[data-group-id="list"] .rb-list-actions .rb-btn-sm {
   width: 26px;
   height: 26px;
   min-width: 26px;
