@@ -133,6 +133,11 @@
     sans-serif;
 
   font-family: var(--rbn-font);
+
+  /* Minimum-visible-width safety net (Microsoft ScalingPolicy spec:
+     MinimalVisibleWidth = 300px). Below this the ribbon uses its
+     data-ribbon-overflow="hidden" fallback further down. */
+  min-width: var(--rbn-min-w);
 }
 
 /* Font override — ONLY when a specific group opts into the
@@ -262,16 +267,9 @@
   opacity: 1;
 }
 
-/* Default .rb-group sizing and group-label. */
-.rb-office-ribbon .rb-group {
-  display: inline-flex;
-  flex-direction: column;
-  justify-content: space-between;
-  align-items: stretch;
-  flex: 0 0 auto;
-  padding: var(--rbn-group-pad-t) var(--rbn-group-pad-r) var(--rbn-group-pad-b) var(--rbn-group-pad-l);
-  min-width: 0;
-}
+/* Default .rb-group-content / .rb-group-label / .rb-divider — the
+   base .rb-group rule itself lives in section 4 below (search for
+   the second `.rb-office-ribbon .rb-group {` block). */
 .rb-office-ribbon .rb-group-content {
   display: flex;
   flex: 1;
@@ -433,23 +431,29 @@
 /* ==============================================================
    4. Group + vertical separator
    ============================================================== */
-/* Base group — only structural (positioning for DialogLauncher, flex
-   column so the label bar sits below the content). No forced sizing
-   so existing HTML preserves its natural dimensions from comparison.css. */
+/* Base group — sole owner. Structural (flex column so the label
+   bar sits below the content, DialogLauncher positioning), plus
+   the universal Fluent-cited padding. Previously padding was
+   opted in via data-group-size, but the comparison.css rules
+   that supplied ambient padding have been deleted, so groups
+   without data-group-size ended up with 0 padding on all sides. */
 .rb-office-ribbon .rb-group {
-  position: relative;                       /* for absolute DialogLauncher */
+  position: relative;
   display: flex;
-  flex-direction: column;
   flex: 0 0 auto;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: stretch;
+  min-width: 0;
   margin: 0;
+  padding: var(--rbn-group-pad-t) var(--rbn-group-pad-r) var(--rbn-group-pad-b) var(--rbn-group-pad-l);
   background: transparent;
 }
 
-/* Strict Fluent padding + min-height ONLY when a group opts in via
-   data-group-size. */
+/* Strict Fluent min-height ONLY when a group opts in via
+   data-group-size (padding now lives on the base rule above). */
 .rb-office-ribbon .rb-group[data-group-size] {
   min-height: calc(var(--rbn-content-h) - var(--rbn-group-label-h));
-  padding: var(--rbn-group-pad-t) var(--rbn-group-pad-r) var(--rbn-group-pad-b) var(--rbn-group-pad-l);
 }
 
 /* Simplified group padding [Fluent:RibbonGroupBox.xaml:37] Padding="2 0" */
@@ -782,6 +786,7 @@
   text-transform: uppercase;
   color: var(--ink-3, #5a6470);
   line-height: var(--rbn-label-h);
+  text-align: left;
   white-space: nowrap;
 }
 
@@ -1040,10 +1045,10 @@
 
 /* ==============================================================
    16. Ribbon minimum width safety net + ScalingPolicy overflow states
+   The min-width safety net has moved up into section 1 (search for
+   `min-width: var(--rbn-min-w)`) so the root-level rule is a single
+   authoritative block. Only overflow states live here now.
    ============================================================== */
-.rb-office-ribbon {
-  min-width: var(--rbn-min-w);
-}
 
 /* Last-resort behavior when every Scale entry is exhausted and the
    pane still doesn't fit. Matches Microsoft's spec:
@@ -1264,13 +1269,12 @@
   gap: 0;                                   /* label already provides its own margin-bottom */
 }
 
-/* .rb-organize-label inherits the shared .rb-mini-label rule
-   above — this override just keeps the LEFT text-align that
-   Sort By / Group By rows need. No other overrides so the label
-   stays typographically identical to Product List. */
-.rb-office-ribbon .rb-organize-label {
-  text-align: left;
-}
+/* .rb-organize-label typography is fully inherited from the
+   shared universal-label rule above (search .rb-mini-label). The
+   left-alignment override that used to live here has been folded
+   INTO the shared rule as text-align: left, which matches
+   PRODUCT LIST's natural rendering too since its container puts
+   the label at the top of the group with no explicit alignment. */
 
 /* Sort input — dropdown + integrated direction toggle glyph
    sitting flush on the right edge of the combo, sharing the same
