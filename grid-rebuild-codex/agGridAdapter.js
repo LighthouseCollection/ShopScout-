@@ -239,9 +239,19 @@
     const numeric = Number(String(raw).replace(/[^0-9.]/g, ''));
     const set = raw !== '' && Number.isFinite(numeric);
     const filled = set ? Math.max(0, Math.min(5, Math.round(numeric))) : 0;
-    const stars = '★'.repeat(filled) + '☆'.repeat(5 - filled);
+    /* Each star is its own click target with data-my-rating-star="N".
+       The container-level click delegation reads N and dispatches
+       onCellCommit — no need to open an editor. Clicking the same
+       star that's currently the highest filled one clears back to 0
+       (so users can uncheck their rating). */
+    let stars = '';
+    for (let i = 1; i <= 5; i += 1) {
+      const glyph = i <= filled ? '★' : '☆';
+      const next = (set && filled === i) ? 0 : i;                     /* click same star = clear */
+      stars += `<span class="ss-grid-my-rating-star" data-my-rating-star="${next}" role="button" tabindex="0" aria-label="Rate ${i}">${glyph}</span>`;
+    }
     const cls = set ? 'ss-grid-my-rating ss-grid-my-rating--set' : 'ss-grid-my-rating ss-grid-my-rating--empty';
-    const label = set ? `${raw} out of 5` : 'Click to rate (0-5)';
+    const label = set ? `${raw} out of 5 — click a star to change` : 'Click a star to rate 1-5';
     return `<span class="${cls}" title="${escAttr(label)}" aria-label="${escAttr(label)}"><span class="ss-grid-stars" aria-hidden="true">${stars}</span></span>`;
   }
 
@@ -549,7 +559,13 @@
         suppressMovable: column.type === 'selection' || column.type === 'image' || isPinnedLeft,
         minWidth,
         hide: !!column.defaultHidden,
-        editable: !!column.editable,
+        /* My Rating handles its own click delegation on each star, so
+           AG Grid's built-in editor should stay OUT of the way — a
+           double-click into an input would be confusing. Notes uses
+           singleClickEdit so users don't have to guess it's editable
+           (the pencil affordance says it, one click confirms it). */
+        editable: column.type === 'myRating' ? false : !!column.editable,
+        singleClickEdit: column.type === 'notes' || column.type === 'text',
         cellClass: cellClassForColumn(column),
         headerClass: 'ss-grid-header',
         pinned: isPinnedLeft ? 'left' : undefined,
@@ -759,11 +775,40 @@
 
     const gridApi = ag.createGrid(container, gridOptions);
 
-    /* Click delegation for [data-ss-grid-action] and .ss-grid-select
-       inside the grid. AG Grid's onCellClicked would work but this
-       preserves the exact contract shopscoutGrid.js expects. */
+    /* Click delegation for [data-ss-grid-action], [data-my-rating-star],
+       and .ss-grid-select inside the grid. AG Grid's onCellClicked
+       would work but this preserves the exact contract
+       shopscoutGrid.js expects. */
     const containerClick = event => {
       const target = event.target;
+      /* My Rating star click — interactive per-star rating. The
+         renderer emits data-my-rating-star="N" (the value to commit
+         if this star is clicked; N is 0 when the same star that's
+         currently the highest filled is clicked again). */
+      const starEl = target?.closest?.('[data-my-rating-star]');
+      if (starEl) {
+        event.preventDefault();
+        event.stopImmediatePropagation();
+        const cellEl = starEl.closest('[row-id]') || starEl.closest('.ag-row');
+        const rowId = cellEl?.getAttribute?.('row-id');
+        const row = rowId != null
+          ? rowData.find(r => String(r.id ?? r._id) === String(rowId))
+          : null;
+        if (!row) return;
+        const nextValue = Number(starEl.dataset.myRatingStar);
+        const value = Number.isFinite(nextValue) ? nextValue : 0;
+        row.myRating = value === 0 ? '' : String(value);
+        /* Repaint just the myRating cell so the stars update
+           immediately. AG Grid's applyTransaction can also do this,
+           but refreshCells is cheaper for a single-cell change. */
+        try {
+          gridApi.refreshCells({ rowNodes: [gridApi.getRowNode(row.id)], columns: ['myRating'], force: true });
+        } catch { /* fall through — the delegated onCellCommit will trigger a full refresh via the store */ }
+        if (typeof opts.onCellCommit === 'function') {
+          opts.onCellCommit({ row, field: 'myRating', column: { colId: 'myRating', field: 'myRating' }, value: row.myRating });
+        }
+        return;
+      }
       const actionBtn = target?.closest?.('[data-ss-grid-action]');
       if (actionBtn) {
         event.preventDefault();
