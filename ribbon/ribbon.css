@@ -978,7 +978,7 @@
    select. */
 .rb-office-ribbon .rb-group[data-group-id="list"] > .rb-group-content {
   display: grid;
-  grid-template-columns: minmax(190px, 260px);
+  grid-template-columns: 250px;               /* fixed width for the Product List select */
   grid-template-rows: auto auto;
   gap: 6px;
   align-items: start;
