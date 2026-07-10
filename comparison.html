@@ -9,6 +9,11 @@
   <link rel="stylesheet" href="theme.css">
   <link rel="stylesheet" href="ui/ui-core.css">
   <link rel="stylesheet" href="vendor/ag-grid/ag-grid.min.css">
+  <!-- Quartz theme CSS contributes the AG Grid icon @font-face (embedded
+       as data URI). Without it every header icon renders as a missing
+       glyph box. We keep our own overrides under .ag-theme-shopscout in
+       grid.css; quartz is only here for the font. -->
+  <link rel="stylesheet" href="vendor/ag-grid/ag-theme-quartz.min.css">
   <link rel="stylesheet" href="comparison.css">
   <!-- Office 365-conformed ribbon overrides. Loaded AFTER comparison.css
        so the Office typography/sizing/label rules win over the earlier

@@ -710,7 +710,11 @@
     }
 
     const opts = options || {};
-    container.classList.add('ss-grid-host', 'ag-theme-shopscout');
+    /* ag-theme-quartz is the actual theme class AG Grid recognises —
+       it carries the @font-face for the icon font. Our custom
+       .ag-theme-shopscout overrides live on top. Without quartz here,
+       header icons render as missing-glyph boxes. */
+    container.classList.add('ss-grid-host', 'ag-theme-quartz', 'ag-theme-shopscout');
     container.classList.toggle('ss-grid-is-matrix', projection?.mode === 'comparisonMatrix');
     container.style.width = '100%';
 
