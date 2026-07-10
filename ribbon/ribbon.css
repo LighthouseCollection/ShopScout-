@@ -95,6 +95,19 @@
   --rbn-gs-medium: 6px;                   /* [Invented] */
   --rbn-gs-large: 12px;                   /* [Invented] */
 
+  /* Ribbon internal GRID SYSTEM — every group's content lives on
+     these exact rows so the Product List select, Sort By select,
+     Group By select all sit at the same y-position regardless of
+     which group they're in.
+       row-h  : height of any input/select/button row (matches
+                 Fluent's --rbn-btn-middle-h = 22px)
+       label-h: height reserved for a mini-label above an input
+       row-gap: vertical space between rows
+     Group content area = 3 rows + 2 gaps = 22*3 + 4*2 = 74px.  */
+  --rbn-row-h: 22px;
+  --rbn-label-h: 14px;
+  --rbn-row-gap: 4px;
+
   /* Min widths and thresholds */
   --rbn-min-w: 300px;                     /* [Microsoft ScalingPolicy + Fluent:Ribbon.cs:60] MinimalVisibleWidth = 300 */
   --rbn-simplified-threshold: 900px;      /* [Invented] Auto-switch to Simplified below this viewport width; matches Office 365 web */
@@ -622,21 +635,41 @@
   gap: 1px;
 }
 
-.rb-office-ribbon .rb-group[data-group-size] .rb-mini-label {
+/* Unified LABEL styling — applies to every mini-label anywhere in
+   the ribbon (PRODUCT LIST, SORT BY, GROUP BY, ...). Same font,
+   size, weight, casing, colour, and — critically — same height,
+   so labels across every group sit on the same baseline. Kills
+   the previous comparison.css .rb-mini-label mono/9px/600 look
+   which made PRODUCT LIST render differently from Sort By. */
+.rb-office-ribbon .rb-mini-label,
+.rb-office-ribbon .rb-organize-label {
+  display: block;
+  height: var(--rbn-label-h);
+  margin: 0 0 var(--rbn-row-gap) 0;
+  padding: 0;
+  font-family: var(--rbn-font);
   font-size: 10px;
-  font-weight: 400;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
   color: var(--ink-3, #5a6470);
-  line-height: 12px;
-  margin-bottom: 2px;
+  line-height: var(--rbn-label-h);
+  white-space: nowrap;
 }
 
 /* ==============================================================
    9. Select / dropdown control — opt-in
    ============================================================== */
-.rb-office-ribbon .rb-group[data-group-size] .rb-select {
+/* Universal select — used to be scoped to [data-group-size]
+   groups, but that meant selects in groups without an explicit
+   size (List, Organize inputs, etc.) fell back to the browser
+   default height and mismatched the rest of the ribbon.
+   Now every .rb-select inside the office ribbon lands on the
+   shared row grid (--rbn-row-h = 22px). */
+.rb-office-ribbon .rb-select {
   min-width: 140px;
   max-width: 220px;
-  height: 22px;                             /* Matches Fluent Middle button height */
+  height: var(--rbn-row-h);
   padding: 0 22px 0 6px;
   border: 1px solid var(--rule, #d1d5db);
   border-radius: 2px;
@@ -644,13 +677,14 @@
   color: var(--ink, #0f1419);
   font-size: 12px;
   font-weight: 400;
-  line-height: 22px;
+  line-height: var(--rbn-row-h);
   appearance: none;
   -webkit-appearance: none;
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 10 10'%3E%3Cpath fill='%235a6470' d='M2 4l3 3 3-3z'/%3E%3C/svg%3E");
   background-repeat: no-repeat;
   background-position: right 6px center;
   cursor: pointer;
+  box-sizing: border-box;
 }
 
 .rb-office-ribbon .rb-select:hover {
@@ -986,12 +1020,18 @@
 /* theme.css .rb-select--wide has no max-width and comparison.css
    .rb-select clamps to 240px only weakly. Neither is enough on wide
    viewports where the group would otherwise happily stretch the
-   select past 250px. Force it. */
+   select past 250px. Force it — AND lock the select height to the
+   ribbon grid row so it sits at exactly the same y-position as the
+   Sort By / Group By selects in the Organize group. */
 .rb-office-ribbon .rb-group[data-group-id="list"] .rb-select,
 .rb-office-ribbon .rb-group[data-group-id="list"] .rb-select.rb-select--wide {
   width: 250px;
   min-width: 250px;
   max-width: 250px;
+  height: var(--rbn-row-h);
+  line-height: var(--rbn-row-h);
+  font-size: 12px;
+  font-weight: 400;
   box-sizing: border-box;
 }
 .rb-list-actions {
@@ -1093,18 +1133,14 @@
   display: flex;
   flex-direction: column;
   align-items: stretch;
-  gap: 2px;
+  gap: 0;                                   /* label already provides its own margin-bottom */
 }
 
+/* .rb-organize-label inherits the shared .rb-mini-label rule
+   above — this override just keeps the LEFT text-align that
+   Sort By / Group By rows need. No other overrides so the label
+   stays typographically identical to Product List. */
 .rb-office-ribbon .rb-organize-label {
-  margin: 0;
-  padding: 0;
-  color: var(--ink-3, #5a6470);
-  font-size: 10px;
-  font-weight: 500;
-  letter-spacing: 0.02em;
-  text-transform: uppercase;
-  white-space: nowrap;
   text-align: left;
 }
 

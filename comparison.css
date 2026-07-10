@@ -2453,18 +2453,11 @@
 body.is-info-page #productGrid { display: none; }
 body.is-info-page .content { display: block; padding: 18px 22px 48px; }
 
-/* =============================================================
-   View-ribbon "mini label" used above small selects (Group by, Saved view)
-   ============================================================= */
-.rb-mini-label {
-  font-family: var(--font-mono);
-  font-size: 9px;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: var(--ink-3);
-  font-weight: 600;
-  margin: 0 2px 2px;
-}
+/* Legacy .rb-mini-label rule intentionally removed — the
+   canonical style now lives in ribbon/ribbon.css under the
+   .rb-office-ribbon selector so PRODUCT LIST, SORT BY, and
+   GROUP BY all render identically. Left this block as a marker
+   so future refactors know where the old rule used to be. */
 
 /* =============================================================
    Columns popover (anchored from the View ribbon's Columns button)
