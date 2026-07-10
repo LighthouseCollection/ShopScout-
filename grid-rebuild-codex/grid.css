@@ -91,6 +91,17 @@
   overflow: visible !important;
 }
 
+/* Every cell vertically centers its content. Rows here can be
+   tall (58px image, 2-line rating stack with review count, wrapped
+   pills), and quartz's default cell layout was leaving pills, prices
+   and text pinned to the top of tall rows. Force a flex layout on
+   every ag-cell so short content sits in the middle regardless of
+   row height. */
+.ss-grid-host.ag-theme-quartz .ag-cell {
+  display: flex;
+  align-items: center;
+}
+
 /* Name / Buying Factor left-align (rest of the grid stays centered). */
 .ss-grid-host.ag-theme-quartz .ag-cell.ss-grid-cell-title,
 .ss-grid-host.ag-theme-quartz .ag-cell.ss-grid-cell-attribute {
