@@ -802,20 +802,9 @@
   .ribbon-body { min-height: 66px; padding: 8px 18px 10px; border-bottom: 1px solid var(--rule); background: #f8fafc; }
   .ribbon-pane { display: none; justify-content: center; align-items: stretch; gap: 14px; min-width: 0; }
   .ribbon-pane.active { display: flex; }
-  .rb-group { display: flex; flex-direction: column; justify-content: center; gap: 5px; padding: 0 14px; border-left: 1px solid var(--rule); min-height: 48px; }
-  .rb-group:first-child { border-left: 0; }
-  .rb-group-label { color: var(--ink-3); font-family: var(--font-mono); font-size: 9px; font-weight: 800; letter-spacing: 0.14em; line-height: 1; text-transform: uppercase; }
-  .rb-group-row { display: flex; align-items: center; gap: 6px; flex-wrap: nowrap; }
-  .rb-label { color: var(--ink-3); font-size: 12px; white-space: nowrap; }
-  .rb-btn, .rb-icon-btn, .rb-select, .ribbon-shell .topbar-control { height: 32px; border: 1px solid var(--rule); border-radius: var(--radius); background: var(--card); color: var(--ink); font: inherit; font-size: 12px; font-weight: 650; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 6px; white-space: nowrap; transition: background 0.12s, border-color 0.12s, color 0.12s; }
-  .rb-btn { padding: 0 12px; }
-  .rb-icon-btn { width: 32px; padding: 0; font-size: 15px; }
-  .rb-btn:hover, .rb-icon-btn:hover, .toolbar-menu[open] > .rb-btn { background: var(--primary-light); border-color: var(--primary); color: var(--primary); }
-  .rb-btn:disabled, .rb-icon-btn:disabled, .menu-item:disabled { opacity: 0.45; cursor: not-allowed; }
-  .rb-btn[data-menu]::after { content: "▾"; font-size: 9px; opacity: 0.72; margin-left: 2px; }
-  .rb-select { min-width: 190px; max-width: 240px; padding: 0 30px 0 10px; color: var(--ink); background: var(--card); }
-  .topbar .ribbon-shell .rb-select { color: var(--ink); background: var(--card); border-color: var(--rule); }
-  .topbar .ribbon-shell .rb-select option { color: var(--ink); background: var(--card); }
+  /* .rb-* topbar component styling moved to ribbon/ribbon.css.
+     Was another near-duplicate of the Office 365 rules — this
+     one at 32px height, older sizing. */
   .ribbon-shell .toolbar-menu { position: relative; }
   .ribbon-shell .toolbar-menu-panel { top: calc(100% + 6px); left: 0; min-width: 220px; z-index: 260; border-color: var(--rule); border-radius: var(--radius-lg); box-shadow: 0 14px 32px rgba(15,20,25,0.16); }
   .ribbon-shell .menu-item { min-height: 32px; border-radius: var(--radius); color: var(--ink); font-weight: 600; justify-content: flex-start; }
@@ -899,7 +888,7 @@
     .ribbon-brand, .ribbon-actions { padding: 10px 14px; border-right: 0; }
     .ribbon-tab-list, .ribbon-pane.active { justify-content: flex-start; overflow-x: auto; }
     .ribbon-pane { gap: 8px; }
-    .rb-group { padding: 0 10px; }
+    /* .rb-group padding at this breakpoint moved to ribbon.css */
     .ai-results-meta { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   }
   @media (max-width: 620px) {
@@ -1004,146 +993,12 @@
   .ribbon-pane.active { display: flex; overflow-x: auto; overflow-y: visible; scrollbar-width: thin; }
   .ribbon-pane::-webkit-scrollbar { height: 5px; }
   .ribbon-pane::-webkit-scrollbar-thumb { background: var(--rule); border-radius: 3px; }
-  .rb-group {
-    display: flex;
-    flex-direction: column;
-    justify-content: stretch;
-    min-width: 0;
-    min-height: 0;
-    padding: 0 10px;
-    border-left: 0;
-    gap: 0;
-  }
-  .rb-group-content { flex: 1; display: flex; align-items: center; gap: 6px; padding-bottom: 4px; }
-  .rb-group-label {
-    display: block;
-    padding: 4px 0 6px;
-    border-top: 1px solid transparent;
-    color: var(--ink-3);
-    font-size: 10px;
-    font-weight: 500;
-    letter-spacing: 0.02em;
-    line-height: 1.1;
-    text-align: center;
-    text-transform: none;
-  }
-  .rb-divider { width: 1px; flex: 0 0 1px; background: var(--rule-soft); margin: 6px 0 22px; }
-  .rb-row { display: flex; align-items: center; gap: 2px; }
-  .rb-stack { display: flex; flex-direction: column; gap: 1px; align-self: stretch; justify-content: center; }
-  .rb-btn-lg {
-    min-width: 68px;
-    height: 70px;
-    padding: 5px 8px;
-    border: 1px solid transparent;
-    border-radius: 4px;
-    background: transparent;
-    color: var(--ink);
-    font: inherit;
-    cursor: pointer;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 5px;
-    position: relative;
-    text-align: center;
-    white-space: normal;
-  }
-  .rb-btn-lg:hover,
-  .toolbar-menu[open] > .rb-btn-lg { background: var(--paper-2); border-color: var(--rule); color: var(--ink); }
-  .rb-btn-lg:disabled,
-  .rb-btn-lg[aria-disabled="true"] { opacity: 0.38; color: var(--ink-4); cursor: not-allowed; filter: grayscale(1); }
-  .rb-btn-lg:disabled:hover,
-  .rb-btn-lg[aria-disabled="true"]:hover { background: transparent; border-color: transparent; color: var(--ink-4); }
-  .rb-btn-lg.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
-  .rb-btn-lg.primary:hover,
-  .toolbar-menu[open] > .rb-btn-lg.primary { background: #a85614; border-color: #a85614; color: #fff; }
-  .rb-btn-lg.split-down::after { content: "▾"; position: absolute; right: 8px; bottom: 2px; color: var(--ink-3); font-size: 9px; }
-  .rb-btn-lg.primary.split-down::after { color: rgba(255,255,255,0.85); }
-  /* True split button — main action button + dedicated chevron dropdown.
-     Distinct from .split-down (which is a single button whose sole
-     click opens a menu). Here the main button DOES a smart action,
-     the chevron reveals explicit choices. Used by Rescan Products. */
-  .rb-split { display: inline-flex; align-items: stretch; }
-  .rb-split-main { border-top-right-radius: 0; border-bottom-right-radius: 0; }
-  .rb-split-chev-wrap { position: relative; display: inline-flex; align-items: stretch; }
-  .rb-split-chev {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    min-width: 22px;
-    padding: 0 6px;
-    height: auto;
-    border: 1px solid transparent;
-    border-left: 1px solid var(--rule-soft);
-    border-top-right-radius: var(--radius-sm, 4px);
-    border-bottom-right-radius: var(--radius-sm, 4px);
-    background: transparent;
-    color: var(--ink-3);
-    font-size: 10px;
-    cursor: pointer;
-    list-style: none;
-  }
-  .rb-split-chev::-webkit-details-marker { display: none; }
-  .rb-split-chev:hover,
-  .rb-split-chev-wrap[open] > .rb-split-chev { background: var(--paper-2); border-color: var(--rule); color: var(--ink); }
-  .menu-divider { height: 1px; margin: 4px 0; background: var(--rule-soft); }
-  .rb-icon-lg { width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; color: currentColor; font-size: 23px; line-height: 1; }
-  .rb-icon-lg svg { width: 100%; height: 100%; }
-  .rb-btn-lg-label { font-size: 11px; font-weight: 600; line-height: 1.2; letter-spacing: -0.005em; }
-
-  .rb-btn-sm,
-  .rb-btn,
-  .rb-icon-btn {
-    height: 22px;
-    min-height: 22px;
-    padding: 3px 8px;
-    border: 1px solid transparent;
-    border-radius: 4px;
-    background: transparent;
-    color: var(--ink);
-    font: inherit;
-    font-size: 11px;
-    font-weight: 500;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: flex-start;
-    gap: 6px;
-    white-space: nowrap;
-  }
-  .rb-btn-sm:hover,
-  .rb-btn:hover,
-  .rb-icon-btn:hover,
-  .toolbar-menu[open] > .rb-btn-sm,
-  .toolbar-menu[open] > .rb-btn { background: var(--paper-2); border-color: var(--rule); color: var(--ink); }
-  .rb-btn-sm:disabled,
-  .rb-btn:disabled,
-  .rb-icon-btn:disabled,
-  .menu-item:disabled { opacity: 0.45; cursor: not-allowed; }
-  .rb-btn-sm.icon-only,
-  .rb-icon-btn { width: 22px; padding: 0; justify-content: center; font-size: 13px; }
-  .rb-btn-sm[data-menu]::after,
-  .rb-btn[data-menu]::after { content: "▾"; font-size: 8px; opacity: 0.55; margin-left: 2px; }
-  .rb-btn-sm-icon { width: 14px; height: 14px; flex-shrink: 0; opacity: 0.7; display: flex; align-items: center; justify-content: center; }
-  .rb-btn-sm-icon svg { width: 100%; height: 100%; }
-  .rb-btn-sm:hover .rb-btn-sm-icon { opacity: 1; }
-  .rb-label { color: var(--ink-3); font-size: 11px; white-space: nowrap; }
-  .rb-select {
-    min-width: 170px;
-    max-width: 240px;
-    height: 24px;
-    padding: 0 22px 0 8px;
-    border: 1px solid var(--rule);
-    border-radius: 4px;
-    background: #fff;
-    color: var(--ink);
-    font-family: inherit;
-    font-size: 11px;
-    font-weight: 600;
-    cursor: pointer;
-  }
-  .rb-search,
+  /* .rb-* component styling (rb-group, rb-btn-lg, rb-btn-sm,
+     rb-select, rb-search, rb-toggle, rb-split, rb-icon-lg,
+     rb-btn-lg-label, rb-btn-sm-icon, rb-label, summary.rb-btn*)
+     lives in ribbon/ribbon.css now. This block was a near-duplicate
+     of the Office 365 version — kept only .product-search /
+     .view-toggle since those aren't ribbon-owned. */
   .product-search input {
     height: 24px;
     width: 170px;
@@ -1155,14 +1010,11 @@
     font-family: inherit;
     font-size: 11px;
   }
-  .rb-search.lg,
   .product-search input { width: 200px; height: 28px; }
   .product-search { display: flex; flex-direction: column; align-items: stretch; gap: 4px; min-width: 0; }
   .product-search select { width: 120px; height: 24px; }
   .controls:empty { display: none; }
-  .rb-toggle,
   .view-toggle { display: inline-flex; align-items: center; background: #fff; border: 1px solid var(--rule); border-radius: 4px; padding: 1px; overflow: visible; }
-  .rb-toggle button,
   .view-toggle button {
     min-height: 0;
     padding: 3px 9px;
@@ -1178,15 +1030,8 @@
     align-items: center;
     gap: 5px;
   }
-  .rb-toggle button.active,
   .view-toggle button.active { background: var(--primary-tint); color: var(--primary); }
   .toolbar-menu { position: relative; }
-  summary.rb-btn-lg,
-  summary.rb-btn-sm,
-  summary.rb-btn { list-style: none; }
-  summary.rb-btn-lg::-webkit-details-marker,
-  summary.rb-btn-sm::-webkit-details-marker,
-  summary.rb-btn::-webkit-details-marker { display: none; }
   .ribbon-shell .toolbar-menu-panel {
     position: absolute;
     top: calc(100% + 6px);
@@ -1436,35 +1281,21 @@
   .cmp-table del { color: var(--bad); text-decoration: line-through; text-decoration-color: rgba(163,32,28,0.6); text-decoration-thickness: 1px; font-style: italic; }
   .cmp-table ins { color: var(--ok); text-decoration: none; font-weight: 600; }
 
-  @media (max-width: 1200px) {
-    .rb-search.lg, .product-search input { width: 130px; }
-    .rb-group { padding: 0 7px; }
-  }
+  /* Ribbon adaptive media queries removed — ribbon.css owns the
+     ScalingPolicy engine which handles shrink via data-group-size
+     attributes rather than viewport media queries. Only the
+     non-ribbon at-rules stay (analysis cards below). */
   @media (max-width: 1000px) {
-    .rb-btn-sm:has(.rb-btn-sm-icon) .rb-btn-sm-label { display: none; }
-    .rb-btn-sm:has(.rb-btn-sm-icon) { width: 24px; padding: 0; justify-content: center; }
-    .rb-btn-sm[data-menu]::after { display: none; }
-    .rb-search.lg, .product-search input { width: 92px; }
-    .rb-group { padding: 0 5px; }
-    .rb-divider { margin: 6px 0 18px; }
     .verdict-row,
     .risk-summary-row,
     .reviews-grid,
     .value-strip { grid-template-columns: 1fr; }
   }
   @media (max-width: 820px) {
-    .rb-btn-lg { min-width: 54px; height: 64px; padding: 4px 5px; }
-    .rb-btn-lg-label { font-size: 10px; }
-    .rb-icon-lg { width: 24px; height: 24px; }
-    .rb-group-label { font-size: 9px; }
     .ribbon-body { height: 92px; min-height: 92px; }
   }
   @media (max-width: 640px) {
-    .rb-btn-lg-label { display: none; }
-    .rb-btn-lg { min-width: 44px; height: 52px; }
-    .rb-group-label { display: none; }
     .ribbon-body { height: 64px; min-height: 64px; }
-    .rb-search.lg, .product-search input { width: 64px; }
     .page { padding: 0 14px; }
   }
 
@@ -1528,16 +1359,14 @@
   .ai-results-actions button { height: 34px; padding: 0 14px; border: 1px solid var(--rule); border-radius: var(--radius); background: var(--card); color: var(--ink); font-size: 12px; font-weight: 700; cursor: pointer; }
   .ai-results-actions button:hover { background: var(--paper-2); }
   .ai-results-body { padding: 0 0 40px; background: var(--paper); }
-  .rb-search.bound-search { width: 200px; height: 28px; }
+  /* .rb-search.bound-search width moved to ribbon.css */
   .value-card[data-tone="ok"],
   .review-card[data-tone="ok"] { background: var(--ok-tint); border-color: var(--ok-rule); }
   .value-card[data-tone="mid"],
   .review-card[data-tone="mid"] { background: var(--warn-tint); border-color: var(--warn-rule); }
   .value-card[data-tone="bad"],
   .review-card[data-tone="bad"] { background: var(--bad-tint); border-color: var(--bad-rule); }
-  .layout-view-toggle .rb-btn-lg.active { background: var(--primary-tint); border-color: #c8d6dc; color: var(--primary); }
-  .rb-btn-sm.active,
-  .rb-toggle button.active { background: var(--primary-tint); border-color: #c8d6dc; color: var(--primary); }
+  /* .rb-btn-lg/sm/toggle active-state styling moved to ribbon.css */
   /* compact-mode / no-gridlines rules were removed in Task 8. They
      applied only to the hand-rolled card/table renderers; the
      Database view (Tabulator) owns its own visual density. */

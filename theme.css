@@ -181,177 +181,11 @@ a:hover { color: var(--accent); }
   display: flex;
 }
 
-.rb-group {
-  display: flex;
-  flex-direction: column;
-  padding: 0 10px;
-  min-width: 0;
-}
-.rb-group-content {
-  flex: 1;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  padding-bottom: 4px;
-}
-.rb-group-label {
-  font-size: 10px;
-  color: var(--ink-3);
-  text-align: center;
-  padding: 4px 0 6px;
-  font-weight: 500;
-  letter-spacing: 0.02em;
-  border-top: 1px solid transparent;
-}
-
-.rb-divider {
-  width: 1px;
-  background: var(--rule-soft);
-  margin: 6px 0 22px;
-}
-
-/* Big button — icon on top, label below */
-.rb-btn-lg {
-  font: inherit;
-  background: transparent;
-  border: 1px solid transparent;
-  border-radius: 4px;
-  padding: 5px 8px;
-  min-width: 68px;
-  height: 70px;
-  display: flex; flex-direction: column; align-items: center; justify-content: center;
-  cursor: pointer;
-  gap: 5px;
-  color: var(--ink);
-  position: relative;
-}
-.rb-btn-lg:hover {
-  background: var(--paper-2);
-  border-color: var(--rule);
-}
-.rb-btn-lg.split-down::after {
-  content: "\25BE";
-  font-size: 9px;
-  color: var(--ink-3);
-  position: absolute;
-  bottom: 2px;
-  right: 8px;
-}
-.rb-btn-lg.primary {
-  background: var(--accent);
-  border-color: var(--accent);
-  color: #fff;
-}
-.rb-btn-lg.primary:hover { background: #a85614; border-color: #a85614; }
-.rb-btn-lg.primary.split-down::after { color: rgba(255,255,255,0.85); }
-
-.rb-icon-lg {
-  width: 28px; height: 28px;
-  display: flex; align-items: center; justify-content: center;
-  color: currentColor;
-}
-.rb-icon-lg svg { width: 100%; height: 100%; }
-.rb-btn-lg-label {
-  font-size: 11px;
-  font-weight: 600;
-  text-align: center;
-  line-height: 1.2;
-  letter-spacing: -0.005em;
-}
-
-/* Stacked column of small buttons */
-.rb-stack {
-  display: flex;
-  flex-direction: column;
-  gap: 1px;
-  align-self: stretch;
-  justify-content: center;
-}
-
-/* Small button — icon left, label right */
-.rb-btn-sm {
-  font: inherit;
-  background: transparent;
-  border: 1px solid transparent;
-  border-radius: 4px;
-  padding: 3px 8px;
-  height: 22px;
-  display: flex; align-items: center;
-  gap: 6px;
-  cursor: pointer;
-  font-size: 11px;
-  font-weight: 500;
-  color: var(--ink);
-  white-space: nowrap;
-}
-.rb-btn-sm:hover { background: var(--paper-2); border-color: var(--rule); }
-.rb-btn-sm.active { background: var(--primary-tint); border-color: #c8d6dc; color: var(--primary); font-weight: 600; }
-.rb-btn-sm.icon-only { width: 22px; padding: 0; justify-content: center; }
-.rb-btn-sm[data-menu]::after { content: "\25BE"; font-size: 8px; opacity: 0.55; margin-left: 2px; }
-.rb-btn-sm-icon { width: 14px; height: 14px; flex-shrink: 0; opacity: 0.7; display: flex; align-items: center; justify-content: center; }
-.rb-btn-sm-icon svg { width: 100%; height: 100%; }
-.rb-btn-sm:hover .rb-btn-sm-icon { opacity: 1; }
-
-.rb-row { display: flex; align-items: center; gap: 2px; }
-
-/* Toggle (e.g., Cards / Table view) */
-.rb-toggle {
-  display: inline-flex;
-  align-items: center;
-  background: #fff;
-  border: 1px solid var(--rule);
-  border-radius: 4px;
-  padding: 1px;
-}
-.rb-toggle button {
-  font: inherit;
-  background: transparent;
-  border: none;
-  border-radius: 3px;
-  padding: 3px 9px;
-  font-size: 11px;
-  font-weight: 600;
-  color: var(--ink-3);
-  cursor: pointer;
-  display: inline-flex; align-items: center; gap: 5px;
-}
-.rb-toggle button.active {
-  background: var(--primary-tint);
-  color: var(--primary);
-}
-.rb-toggle button:hover:not(.active) { color: var(--ink); }
-
-/* Select dropdown */
-.rb-select {
-  height: 24px;
-  padding: 0 22px 0 8px;
-  border: 1px solid var(--rule);
-  border-radius: 4px;
-  background: #fff;
-  color: var(--ink);
-  font-size: 11px;
-  font-weight: 600;
-  cursor: pointer;
-  min-width: 110px;
-  font-family: inherit;
-  appearance: none;
-  -webkit-appearance: none;
-  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='8' height='8' viewBox='0 0 8 8'><path d='M1 2.5l3 3 3-3' stroke='%235a6470' stroke-width='1.4' fill='none' stroke-linecap='round' stroke-linejoin='round'/></svg>");
-  background-repeat: no-repeat;
-  background-position: right 8px center;
-}
-
-.rb-search {
-  height: 24px;
-  padding: 0 8px 0 26px;
-  border: 1px solid var(--rule);
-  border-radius: 4px;
-  background: #fff url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%235a6470' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><circle cx='11' cy='11' r='7'/><path d='m20 20-3-3'/></svg>") no-repeat 8px center;
-  font-size: 11px;
-  font-family: inherit;
-  width: 140px;
-}
-.rb-search.lg { width: 200px; height: 28px; }
+/* .rb-* component rules moved to ribbon/ribbon.css — that file
+   is now the sole owner of ribbon component styling. Leaving
+   only the outer .ribbon-shell / .ribbon-tabs / .ribbon-brand /
+   .ribbon-tab / .ribbon-body / .ribbon-pane rules here since
+   those describe the dashboard chrome, not ribbon internals. */
 
 /* Topbar (old) - hide */
 .topbar { display: none; }
@@ -1639,36 +1473,9 @@ a:hover { color: var(--accent); }
 .ribbon-pane::-webkit-scrollbar { height: 5px; }
 .ribbon-pane::-webkit-scrollbar-thumb { background: var(--rule); border-radius: 3px; }
 
-@media (max-width: 1200px) {
-  .rb-search.lg { width: 130px; }
-  .rb-group { padding: 0 7px; }
-}
-
-@media (max-width: 1000px) {
-  .rb-btn-sm:has(.rb-btn-sm-icon) .rb-btn-sm-label { display: none; }
-  .rb-btn-sm:has(.rb-btn-sm-icon) { width: 24px; padding: 0; justify-content: center; }
-  .rb-btn-sm[data-menu]::after { display: none; }
-  .rb-search.lg { width: 92px; }
-  .rb-group { padding: 0 5px; }
-  .rb-divider { margin: 6px 0 18px; }
-}
-
-@media (max-width: 820px) {
-  .rb-btn-lg { min-width: 54px; height: 64px; padding: 4px 5px; }
-  .rb-btn-lg-label { font-size: 10px; }
-  .rb-icon-lg { width: 24px; height: 24px; }
-  .rb-group-label { font-size: 9px; }
-  .ribbon-body { height: 92px; }
-}
-
-@media (max-width: 640px) {
-  .rb-btn-lg-label { display: none; }
-  .rb-btn-lg { min-width: 44px; height: 52px; }
-  .rb-group-label { display: none; }
-  .ribbon-body { height: 64px; }
-  .rb-search.lg { width: 64px; }
-  .rb-toggle button span:not(.rb-icon) { display: none; }
-}
+/* Ribbon adaptive @media breakpoints removed — ribbon.css owns
+   the ScalingPolicy engine which handles adaptive shrink via
+   data-group-size attributes, not viewport media queries. */
 
 /* =============================================================
    Empty state — used in Second opinion and other empty panes
@@ -1805,27 +1612,7 @@ a:hover { color: var(--accent); }
    The two MUST render identically so the user sees the same control
    in every tab. Same padding, same label, same dropdown size.
    ============================================================= */
-.rb-select.rb-select--wide {
-  min-width: 200px;
-  height: 28px;
-  font-size: 12px;
-  font-weight: 600;
-}
-.rb-group--list-mirror,
-.rb-group[aria-label="Lists"] {
-  padding: 0 12px;
-  min-width: 220px;
-}
-.rb-group--list-mirror .rb-stack,
-.rb-group[aria-label="Lists"] .rb-stack { gap: 4px; align-self: stretch; }
-.rb-group--list-mirror .rb-mini-label,
-.rb-group[aria-label="Lists"] .rb-mini-label {
-  font-family: var(--font-mono);
-  font-size: 9px;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: var(--ink-3);
-  font-weight: 600;
-  margin: 0 2px 2px;
-}
+/* Lists group + rb-select--wide styling moved to
+   ribbon/ribbon.css (List group section). Was the source of
+   the recurring 200px min-width vs 250px lock fight. */
 
