@@ -1171,16 +1171,42 @@
    and puts the +/pencil/× action buttons in a LEFT-aligned row
    below, so the leftmost icon lines up with the start of the
    select. */
-/* List group participates in the ribbon-wide grid via the shared
-   token variables. Two rows: the Product List label+select stack
-   (auto-sized to fit its label + select at --rbn-row-h) sits on
-   top, the rb-list-actions button row below. */
+/* List group — real 2-column grid.
+     Col 1 (250px): Product List label (row 1) + select (row 2).
+     Col 2 (auto):  +/pencil/× buttons as a VERTICAL stack to the
+                    right of the select, spanning both rows.
+   The label + select land on the same grid rows as Sort By /
+   Group By in the Organize group, so all textfields align. */
 .rb-office-ribbon .rb-group[data-group-id="list"] > .rb-group-content {
   display: grid;
-  grid-template-columns: 250px;
-  grid-template-rows: auto auto;
-  gap: var(--rbn-row-gap) 0;
-  align-items: start;
+  grid-template-columns: 250px auto;
+  grid-template-rows: var(--rbn-label-h) var(--rbn-row-h);
+  column-gap: 8px;
+  row-gap: var(--rbn-row-gap);
+  align-items: center;
+}
+/* Unpack the first .rb-stack (label + select pair) so its label
+   lands on row 1 and its select on row 2. Scoped tightly to the
+   List group so it doesn't affect .rb-stack elsewhere. */
+.rb-office-ribbon .rb-group[data-group-id="list"] > .rb-group-content > .rb-stack:not(.rb-list-actions) {
+  display: contents;
+}
+.rb-office-ribbon .rb-group[data-group-id="list"] > .rb-group-content > .rb-stack:not(.rb-list-actions) > .rb-mini-label {
+  grid-column: 1;
+  grid-row: 1;
+  align-self: end;
+}
+.rb-office-ribbon .rb-group[data-group-id="list"] > .rb-group-content > .rb-stack:not(.rb-list-actions) > .rb-select {
+  grid-column: 1;
+  grid-row: 2;
+  align-self: center;
+}
+/* Actions column: right of the select, vertical stack, spans
+   both rows so it aligns top-to-bottom with the label + select. */
+.rb-office-ribbon .rb-group[data-group-id="list"] > .rb-group-content > .rb-list-actions {
+  grid-column: 2;
+  grid-row: 1 / span 2;
+  align-self: center;
 }
 /* theme.css .rb-select--wide has no max-width and comparison.css
    .rb-select clamps to 240px only weakly. Neither is enough on wide
@@ -1199,17 +1225,24 @@
   font-weight: 400;
   box-sizing: border-box;
 }
+/* +/pencil/× stacked VERTICALLY to the right of the select. Each
+   button 22px so three buttons fit in the same total height as
+   the label(14) + gap(4) + select(22) column on the left = 40px
+   -- ish. Small gap between buttons; hug the top so buttons and
+   the select share a baseline at the top of the group content. */
 .rb-list-actions {
   display: flex;
-  flex-direction: row;
+  flex-direction: column;
   align-items: center;
-  justify-content: flex-start;            /* LEFT-aligned, not flex-end */
-  gap: 8px;
+  justify-content: center;
+  gap: 2px;
 }
 .rb-office-ribbon .rb-group[data-group-id="list"] .rb-list-actions .rb-btn-sm {
-  width: 26px;
-  height: 26px;
-  min-width: 26px;
+  width: 22px;
+  height: 22px;
+  min-width: 22px;
+  padding: 0;
+  justify-content: center;
 }
 
 /* ==============================================================
