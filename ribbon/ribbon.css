@@ -1189,13 +1189,17 @@
 }
 /* Left column: PRODUCT LIST label + 250px select stacked. Matches
    the .rb-organize-stack column layout so both groups' first
-   labels sit on the same visual y. */
+   labels sit on the same visual y. Width hard-pinned to 250px so
+   the select can't be squeezed by the parent flex row. */
 .rb-office-ribbon .rb-group[data-group-id="list"] > .rb-group-content > .rb-stack:not(.rb-list-actions) {
   display: flex;
   flex-direction: column;
   align-items: stretch;
   gap: 0;
-  flex: 0 0 auto;
+  flex: 0 0 250px;
+  width: 250px;
+  min-width: 250px;
+  max-width: 250px;
 }
 /* theme.css .rb-select--wide has no max-width and comparison.css
    .rb-select clamps to 240px only weakly. Neither is enough on wide
