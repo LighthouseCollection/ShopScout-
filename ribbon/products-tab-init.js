@@ -195,19 +195,18 @@
 
   /* --- ScalingPolicy for the Products pane ------------------- */
   /* When the viewport narrows, downgrade in this order (each entry
-     is a step the engine tries in sequence):
+     is a step the engine tries in sequence). The two dense groups
+     collapse first because they contain multi-row controls and long
+     labels; shrinking them through Middle/Small creates internal
+     collisions instead of a real Office-style ribbon response:
 
-       1. Organize   -> Middle
-       2. Review     -> Middle
+       1. Review     -> Popup
+       2. Organize   -> Popup
        3. View       -> Middle
-       4. Organize   -> Small
-       5. Review     -> Small
-       6. View       -> Small
-       7. Organize   -> Popup
-       8. Review     -> Popup
-       9. View       -> Popup
-      10. Actions    -> Middle
-      11. Actions    -> Popup
+       4. View       -> Small
+       5. View       -> Popup
+       6. Actions    -> Middle
+       7. Actions    -> Popup
 
      The List group is left at Large throughout because the list
      picker is the anchor of the tab — collapsing it would remove
@@ -227,19 +226,14 @@
         { groupId: 'organize', size: 'Large' }
       ],
       scales: [
-        /* Tier 1 — trim the rightmost groups down to Middle */
-        { groupId: 'organize', size: 'Middle' },
-        { groupId: 'review',   size: 'Middle' },
-        { groupId: 'view',     size: 'Middle' },
-        /* Tier 2 — same groups drop to Small */
-        { groupId: 'organize', size: 'Small'  },
-        { groupId: 'review',   size: 'Small'  },
-        { groupId: 'view',     size: 'Small'  },
-        /* Tier 3 — collapse to Popup (single-button representation) */
-        { groupId: 'organize', size: 'Popup'  },
+        /* Tier 1 — dense groups collapse as whole groups, Office-style */
         { groupId: 'review',   size: 'Popup'  },
+        { groupId: 'organize', size: 'Popup'  },
+        /* Tier 2 — compact the simple View group */
+        { groupId: 'view',     size: 'Middle' },
+        { groupId: 'view',     size: 'Small'  },
         { groupId: 'view',     size: 'Popup'  },
-        /* Tier 4 — only List and Actions remain; start shrinking Actions */
+        /* Tier 3 — only List and Actions remain; start shrinking Actions */
         { groupId: 'actions',  size: 'Middle' },
         { groupId: 'actions',  size: 'Popup'  }
       ]

@@ -6,6 +6,8 @@ const html = fs.readFileSync(path.join(__dirname, '..', 'comparison.html'), 'utf
 const js = fs.readFileSync(path.join(__dirname, '..', 'comparison.js'), 'utf8');
 const gridAdapterJs = fs.readFileSync(path.join(__dirname, '..', 'grid-rebuild-codex', 'agGridAdapter.js'), 'utf8');
 const css = fs.readFileSync(path.join(__dirname, '..', 'comparison.css'), 'utf8');
+const ribbonCss = fs.readFileSync(path.join(__dirname, '..', 'ribbon', 'ribbon.css'), 'utf8');
+const productsTabInitJs = fs.readFileSync(path.join(__dirname, '..', 'ribbon', 'products-tab-init.js'), 'utf8');
 const feedbackJs = fs.readFileSync(path.join(__dirname, '..', 'comparison-feedback.js'), 'utf8');
 const settingsJs = fs.readFileSync(path.join(__dirname, '..', 'settings.js'), 'utf8');
 const settingsHtml = fs.readFileSync(path.join(__dirname, '..', 'settings.html'), 'utf8');
@@ -144,6 +146,23 @@ assertNotIncludes('data-list-mirror="view"',              'old View list-mirror 
 assertIncludes('<div class="rb-group-label">View</div>',      'merged Products tab exposes View group');
 assertIncludes('<div class="rb-group-label">Organize</div>',  'merged Products tab exposes Organize group');
 assertIncludes('<div class="rb-group-label">Review &amp; Rules</div>', 'merged Products tab exposes Review & Rules group');
+assertIncludes('data-group-id="list" data-collapsed-label="List"', 'Products List group has a collapsed popup label');
+assertIncludes('data-group-id="actions" data-collapsed-label="Products"', 'Products Actions group has a collapsed popup label');
+assertIncludes('data-group-id="view" data-collapsed-label="View"', 'Products View group has a collapsed popup label');
+assertIncludes('data-group-id="organize" data-collapsed-label="Organize"', 'Products Organize group has a collapsed popup label');
+assertIncludes('data-group-id="review" data-collapsed-label="Review"', 'Products Review group has a collapsed popup label');
+assertIncludes('class="rb-group-content" data-collapsed-label="Organize"', 'Organize popup button label is readable from group content');
+assertIncludes('class="rb-group-content" data-collapsed-label="Review"', 'Review popup button label is readable from group content');
+assert.ok(/\.rb-office-ribbon\s+\.rb-group\s*{[\s\S]{0,180}flex:\s*0 0 auto;/.test(ribbonCss),
+  'Office ribbon groups do not flex-shrink into internal overlap');
+assert.ok(/\{\s*groupId:\s*'review',\s*size:\s*'Popup'\s*\}/.test(productsTabInitJs),
+  'Review group collapses as a whole before it can overlap');
+assert.ok(/\{\s*groupId:\s*'organize',\s*size:\s*'Popup'\s*\}/.test(productsTabInitJs),
+  'Organize group collapses as a whole before controls can overlap');
+assert.ok(!/\{\s*groupId:\s*'review',\s*size:\s*'(Middle|Small)'\s*\}/.test(productsTabInitJs),
+  'Review group does not use squeeze-prone Middle/Small states');
+assert.ok(!/\{\s*groupId:\s*'organize',\s*size:\s*'(Middle|Small)'\s*\}/.test(productsTabInitJs),
+  'Organize group does not use squeeze-prone Middle/Small states');
 assertIncludes('data-ss-grid-command="mode-rows"',             'products-as-rows command exists');
 assertIncludes('data-ss-grid-command="mode-matrix"',           'compare command exists');
 assertIncludes('data-ss-grid-sort-field',                      'sort field picker exists');

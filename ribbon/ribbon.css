@@ -299,6 +299,7 @@
   position: relative;                       /* for absolute DialogLauncher */
   display: flex;
   flex-direction: column;
+  flex: 0 0 auto;
   margin: 0;
   background: transparent;
 }
@@ -976,10 +977,12 @@
    gap. Without this floor the grid squeezed each label down to
    ~34px and chopped both words to 6 chars (Possib / Duplic).
    ============================================================== */
-.rb-office-ribbon .rb-group[data-group-id="review"]:not([data-group-size="popup"]) {
+.rb-office-ribbon .rb-group[data-group-id="review"]:not([data-group-size]),
+.rb-office-ribbon .rb-group[data-group-id="review"][data-group-size="large"] {
   min-width: 240px;
 }
-.rb-office-ribbon .rb-group[data-group-id="review"] > .rb-group-content {
+.rb-office-ribbon .rb-group[data-group-id="review"]:not([data-group-size]) > .rb-group-content,
+.rb-office-ribbon .rb-group[data-group-id="review"][data-group-size="large"] > .rb-group-content {
   display: grid;
   grid-template-columns: 1fr 1fr;
   grid-template-rows: auto auto;
@@ -988,7 +991,8 @@
   padding: 4px;
 }
 
-.rb-office-ribbon .rb-group[data-group-id="review"] .rb-btn-lg {
+.rb-office-ribbon .rb-group[data-group-id="review"]:not([data-group-size]) .rb-btn-lg,
+.rb-office-ribbon .rb-group[data-group-id="review"][data-group-size="large"] .rb-btn-lg {
   display: flex;
   flex-direction: row;
   align-items: center;
@@ -1002,19 +1006,22 @@
   white-space: normal;
 }
 
-.rb-office-ribbon .rb-group[data-group-id="review"] .rb-btn-lg .rb-icon-lg {
+.rb-office-ribbon .rb-group[data-group-id="review"]:not([data-group-size]) .rb-btn-lg .rb-icon-lg,
+.rb-office-ribbon .rb-group[data-group-id="review"][data-group-size="large"] .rb-btn-lg .rb-icon-lg {
   width: 20px;
   height: 20px;
   margin: 0;
   flex: 0 0 20px;
 }
 
-.rb-office-ribbon .rb-group[data-group-id="review"] .rb-btn-lg .rb-icon-lg svg {
+.rb-office-ribbon .rb-group[data-group-id="review"]:not([data-group-size]) .rb-btn-lg .rb-icon-lg svg,
+.rb-office-ribbon .rb-group[data-group-id="review"][data-group-size="large"] .rb-btn-lg .rb-icon-lg svg {
   width: 100%;
   height: 100%;
 }
 
-.rb-office-ribbon .rb-group[data-group-id="review"] .rb-btn-lg .rb-btn-lg-label {
+.rb-office-ribbon .rb-group[data-group-id="review"]:not([data-group-size]) .rb-btn-lg .rb-btn-lg-label,
+.rb-office-ribbon .rb-group[data-group-id="review"][data-group-size="large"] .rb-btn-lg .rb-btn-lg-label {
   text-align: left !important;
   white-space: normal;
   font-size: 11px;
@@ -1032,7 +1039,8 @@
    colliding into each other. Without this the labels of the
    Sort/Group stack overlapped the Filters button icon.
    ============================================================== */
-.rb-office-ribbon .rb-group[data-group-id="organize"]:not([data-group-size="popup"]) {
+.rb-office-ribbon .rb-group[data-group-id="organize"]:not([data-group-size]),
+.rb-office-ribbon .rb-group[data-group-id="organize"][data-group-size="large"] {
   min-width: 300px;
 }
 .rb-office-ribbon .rb-organize-stack {
@@ -1137,14 +1145,16 @@
    the SAME two rows (1fr 1fr), so the buttons on the right sit
    at exactly the same y-positions as the Sort/Group rows on the
    left. Resizes cleanly because the rows grow/shrink together. */
-.rb-office-ribbon .rb-group[data-group-id="organize"] > .rb-group-content {
+.rb-office-ribbon .rb-group[data-group-id="organize"]:not([data-group-size]) > .rb-group-content,
+.rb-office-ribbon .rb-group[data-group-id="organize"][data-group-size="large"] > .rb-group-content {
   display: grid;
   grid-template-columns: minmax(190px, 1fr) minmax(96px, auto);
   grid-template-rows: 1fr 1fr;
   gap: 4px 8px;
   align-items: stretch;
 }
-.rb-office-ribbon .rb-group[data-group-id="organize"] > .rb-group-content > .rb-organize-stack {
+.rb-office-ribbon .rb-group[data-group-id="organize"]:not([data-group-size]) > .rb-group-content > .rb-organize-stack,
+.rb-office-ribbon .rb-group[data-group-id="organize"][data-group-size="large"] > .rb-group-content > .rb-organize-stack {
   grid-column: 1;
   grid-row: 1 / span 2;
 }

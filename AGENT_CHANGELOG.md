@@ -4114,3 +4114,35 @@ This file is the shared record for Claude and Codex. Append an entry for every m
     * If a downstream template (any of the 23) requires that `data-group-size` be explicitly set for its layout to render, and the policy walker skips it at wide viewport, the template's layout won't kick in. This is fine for the current Products tab (no templates applied yet) but WILL bite once commit 11's declarative migration is extended to apply `data-size-definition` per group. In that case, the wide-viewport IdealSize needs to be respected (e.g. `SixButtons-TwoColumns` at Large has a specific 2-column grid that only renders when both attributes are set).
     * **Suggested extension:** if a policy declares `idealSizes` with a non-default size (something other than Large), we should apply that even at wide viewport since the app explicitly wants that layout. Currently we skip all size attrs when the pane fits, which erases app-requested layouts. Add a `forceApply: true` option per idealSize entry if this becomes needed.
     * **Path B is still complete** — this commit is a bug fix within the sequence, not a new deliverable.
+
+## 2026-07-10 00:13 - Codex ribbon resize overlap fix
+
+- Agent: Codex
+- Branch: grid-rebuild-codex
+- Commit: This commit
+- Status: Implemented. Products ribbon resize no longer squeezes dense groups into overlapping labels/controls.
+- What changed:
+  - Fixed the Office-style ribbon resize failure by preventing `.rb-group` flex items from shrinking internally before the scaling policy can detect overflow.
+  - Changed Products ribbon scaling so dense groups (`Review`, `Organize`) collapse directly to Popup instead of passing through Middle/Small states that cannot safely fit selects and multi-row labels.
+  - Added collapsed popup labels to Products ribbon groups and their `.rb-group-content` elements so popup buttons render readable labels.
+  - Scoped the custom Review and Organize layouts to natural/Large mode only so they do not fight generic scaled templates.
+  - Removed three stale unused constants from `shared/values/cellValues.js`, bringing ESLint back to zero warnings.
+- Files touched:
+  - `comparison.html`
+  - `ribbon/products-tab-init.js`
+  - `ribbon/ribbon.css`
+  - `shared/values/cellValues.js`
+  - `tests/menu-layout.test.js`
+  - `AGENT_CHANGELOG.md`
+- Validation run:
+  - `node tests\menu-layout.test.js` -> pass
+  - `node tests\comparison-table-defaults.test.js` -> pass
+  - `npm test` -> 44/44 test files pass
+  - `npm run syntax` -> pass
+  - `npm run lint` -> 0 errors, 0 warnings
+  - `npm run typecheck` -> pass
+  - `npm run build` -> Chrome / Edge / Firefox rebuilt
+- Review status / next reviewer:
+  - Ready for Claude review.
+- Follow-ups or risks:
+  - Visual verification should resize the Products tab across wide/narrow widths and confirm the `Review` and `Organize` groups become popup buttons instead of compressing text.

@@ -305,19 +305,6 @@
     'low stock', 'limited', 'pending', 'expiring soon', 'partial',
     'warning', 'review', 'unmapped'
   ]);
-  const IDENTIFIER_FIELDS = new Set([
-    'brand', 'source', 'model', 'modelname', 'modelnumber', 'sku', 'gtin',
-    'upc', 'ean', 'asin', 'sellerid'
-  ]);
-  const TAXONOMY_FIELDS = new Set([
-    'category', 'type', 'sellername', 'seller', 'vertical', 'subcategory'
-  ]);
-  const NUMERIC_LIKE_FIELDS = new Set([
-    'weight', 'height', 'width', 'depth', 'length', 'capacity',
-    'batterycapacity', 'airflowcapacity', 'voltage', 'current',
-    'maximumpressure', 'wattage'
-  ]);
-
   function normalizeKey(str) {
     return String(str || '').toLowerCase().replace(/^spec:/, '').replace(/[\s_-]/g, '');
   }
