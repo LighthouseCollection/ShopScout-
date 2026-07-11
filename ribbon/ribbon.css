@@ -1222,7 +1222,7 @@
 .rb-office-ribbon .rb-group[data-group-id="list"] > .rb-group-content {
   display: flex;
   flex-direction: row;
-  align-items: center;                        /* label+select column centered in group; buttons match */
+  align-items: flex-end;                      /* bottom-align to match .product-search--row (FIND/SCOPE) baseline */
   gap: 8px;
 }
 /* Left column: PRODUCT LIST label + 250px select stacked. Matches

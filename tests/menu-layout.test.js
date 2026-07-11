@@ -156,8 +156,8 @@ assertIncludes('class="rb-group-content" data-collapsed-label="Organize"', 'Orga
 assertIncludes('class="rb-group-content" data-collapsed-label="Review"', 'Review popup button label is readable from group content');
 assert.ok(/\.rb-office-ribbon\s+\.rb-group\s*{[\s\S]{0,180}flex:\s*0 0 auto;/.test(ribbonCss),
   'Office ribbon groups do not flex-shrink into internal overlap');
-assert.ok(/\.rb-office-ribbon\s+\.rb-group\[data-group-id="list"\]\s+>\s+\.rb-group-content\s*{[\s\S]{0,320}display:\s*flex;[\s\S]{0,200}align-items:\s*center;/.test(ribbonCss),
-  'List group is a flex-row: label+select block on the left, +/pencil/× action stack on the right, both center-aligned in the group so the whole group reads as a balanced unit');
+assert.ok(/\.rb-office-ribbon\s+\.rb-group\[data-group-id="list"\]\s+>\s+\.rb-group-content\s*{[\s\S]{0,320}display:\s*flex;[\s\S]{0,200}align-items:\s*flex-end;/.test(ribbonCss),
+  'List group is a flex-row bottom-aligned to match FIND/SCOPE (.product-search--row) so PRODUCT LIST select and Search products input share the same baseline');
 assert.ok(/\.rb-list-actions\s*{[\s\S]{0,220}flex-direction:\s*column;/.test(ribbonCss),
   'List actions are stacked VERTICALLY (+/pencil/× column to the right of the Product List select)');
 assert.ok(/\.rb-organize-tools\s+\.rb-btn-lg,[\s\S]{0,260}width:\s*auto;/.test(ribbonCss),
