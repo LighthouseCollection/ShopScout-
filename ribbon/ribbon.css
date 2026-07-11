@@ -1234,6 +1234,7 @@
   display: flex;
   flex-direction: row;
   align-items: flex-end;                      /* bottom-align to match .product-search--row (FIND/SCOPE) baseline */
+  justify-content: center;                    /* label+select+buttons cluster centered inside the 300px group */
   gap: 8px;
 }
 /* Left column: PRODUCT LIST label + 250px select stacked. Matches
