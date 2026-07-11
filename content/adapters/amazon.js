@@ -83,12 +83,53 @@
   ];
 
   /* "About this item" feature bullets — usually marketing copy with embedded
-     numeric specs that the miner picks up. */
+     numeric specs that the miner picks up. Selectors are anchored to the
+     ACTUAL feature-bullets container(s) only. The old fallback
+     ".a-unordered-list.a-vertical .a-list-item" matched every list on the
+     page (shopping cart carousel, review histograms, "customers also
+     viewed", buy-again strip, sponsored carousels) so every unrelated
+     item text got emitted as a feature. That was the root cause of the
+     "was removed from Shopping Cart" / "Only 7 left in stock" strings
+     leaking into product features. */
   const FEATURE_BULLET_SELECTORS = [
     '#feature-bullets li',
     '#feature-bullets .a-list-item',
-    '.a-unordered-list.a-vertical .a-list-item'
+    '[data-feature-name="featurebullets"] .a-list-item',
+    '#featurebullets_feature_div .a-list-item',
   ];
+
+  /* Junk-text filters applied to every candidate feature bullet.
+     Any of these substrings triggers rejection. Case-insensitive. */
+  const FEATURE_JUNK_PATTERNS = [
+    /was removed from shopping cart/i,
+    /was already removed/i,
+    /moved to saved for later/i,
+    /delete failed/i,
+    /update failed/i,
+    /save this item for later/i,
+    /quantity is \d/i,
+    /updating quantity/i,
+    /only \d+ left in stock/i,
+    /#\d[\d,]* in [A-Z]/,                          // "#137 in Portable Air Compressors"
+    /^see top \d+ in/i,
+    /^compare with similar/i,
+    /^why you might like this/i,
+    /^customers also (viewed|bought)/i,
+    /^sponsored\b/i,
+    /^limited time\b/i,
+    /^\d star\d star\d star\d star\d star/i,       // review histogram label
+    /(\d+%){3,}/,                                  // "72%22%4%0%2%" concatenated review pct
+  ];
+
+  function isJunkBullet(text) {
+    if (!text) return true;
+    if (text.length < 5)   return true;
+    if (text.length > 600) return true;
+    for (const re of FEATURE_JUNK_PATTERNS) {
+      if (re.test(text)) return true;
+    }
+    return false;
+  }
 
   function test() {
     return /amazon\./i.test(location.hostname);
@@ -214,13 +255,14 @@
       }
     }
 
-    /* ---- Feature bullets ("About this item" — marketing strings) ---- */
+    /* ---- Feature bullets ("About this item" — marketing strings) ----
+       Junk filter drops shopping-cart / review-histogram / carousel
+       strings even if a scoped selector accidentally reaches one. */
     for (const sel of FEATURE_BULLET_SELECTORS) {
       for (const li of document.querySelectorAll(sel)) {
         const t = dom.textOf(li);
-        if (t && t.length > 4 && t.length < 600) {
-          emit(out, 'feature', null, t, 'adapter:amazon');
-        }
+        if (isJunkBullet(t)) continue;
+        emit(out, 'feature', null, t, 'adapter:amazon');
       }
     }
 

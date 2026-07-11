@@ -189,7 +189,7 @@
      around the whole page (the grid card handles that itself), no width
      cap so the grid can go edge-to-edge. Head still styled the same for
      visual consistency across every dashboard route. */
-  .dashboard-page--grid { max-width: none; margin: 0; border: 0; background: transparent; border-radius: 0; overflow: visible; padding: 0 20px 24px; }
+  .dashboard-page--grid { max-width: none; margin: 0; border: 0; background: transparent; border-radius: 0; overflow: visible; padding: 16px 20px 24px; }
   .dashboard-page--grid .dashboard-page-head {
     margin: 20px 0 10px;                     /* half the previous 20px gap between subtitle and grid */
     /* border: 1px solid var(--rule-soft); */
