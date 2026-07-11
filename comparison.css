@@ -2269,13 +2269,12 @@ body.is-info-page .content { display: block; padding: 18px 22px 48px; }
 .ribbon-shell .product-search--row input[type="search"] {
   width: 100%;
   min-width: 240px;
-  height: 28px;
-  /* Preserve magnifier icon room on the left and native cancel-X room on the right. */
-  padding: 0 28px 0 30px;
+  /* height + padding come from .rb-office-ribbon .rb-search now, so
+     the search input matches the PRODUCT LIST select chrome exactly. */
 }
 .ribbon-shell .product-search--row select.rb-select {
   width: 140px;
-  height: 28px;
+  /* height comes from the base .rb-office-ribbon .rb-select rule. */
 }
 /* Native browser X for type="search" — keep it visible. */
 .ribbon-shell .product-search--row input[type="search"]::-webkit-search-cancel-button {

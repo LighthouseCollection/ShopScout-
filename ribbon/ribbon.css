@@ -862,6 +862,44 @@
   border-color: var(--rbn-focus-outline);
 }
 
+/* Search input -- mirror .rb-select chrome so PRODUCT LIST and FIND
+   look like siblings. Same height (--rbn-row-h), border, radius,
+   font, background. Magnifier glyph replaces the dropdown caret; it
+   lives on the LEFT and the native type=search cancel-X takes the
+   right side. */
+.rb-office-ribbon .rb-search {
+  min-width: 140px;
+  max-width: 320px;
+  height: var(--rbn-row-h);
+  padding: 0 22px 0 22px;
+  border: 1px solid var(--rule, #d1d5db);
+  border-radius: 2px;
+  background: #fff;
+  color: var(--ink, #0f1419);
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 400;
+  line-height: var(--rbn-row-h);
+  appearance: none;
+  -webkit-appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 24 24' fill='none' stroke='%235a6470' stroke-width='2.4' stroke-linecap='round'%3E%3Ccircle cx='11' cy='11' r='7'/%3E%3Cpath d='M20 20l-3.5-3.5'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: left 6px center;
+  box-sizing: border-box;
+}
+.rb-office-ribbon .rb-search:hover {
+  border-color: var(--ink-3, #5a6470);
+}
+.rb-office-ribbon .rb-search:focus-visible {
+  outline: 2px solid var(--rbn-focus-outline);
+  outline-offset: -1px;
+  border-color: var(--rbn-focus-outline);
+}
+.rb-office-ribbon .rb-search::placeholder {
+  color: var(--ink-3, #5a6470);
+  opacity: 0.7;
+}
+
 /* ==============================================================
    10. Split-button primitive (light polish; full rebuild in commit 3)
    ============================================================== */
