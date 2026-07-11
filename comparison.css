@@ -790,7 +790,7 @@
   /* Sticky so the tabs + toolbar always stay at the top when the user
      scrolls a long product list. z-index above grid cells so hover
      states don't peek through. */
-  .ribbon-shell { position: sticky; top: 0; z-index: 50; background: #fafbfc; border-bottom: 1px solid var(--rule); color: var(--ink); }
+  .ribbon-shell { position: sticky; top: 0; z-index: 50; background: #fafbfc; border-bottom: 1px solid var(--rule); color: var(--ink); box-shadow: 0 2px 6px rgba(15, 23, 42, 0.10); }
   .ribbon-tabs { min-height: 46px; padding: 0 18px; background: var(--menu-bg); color: var(--menu-fg); display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 18px; }
   .ribbon-brand { padding-right: 18px; border-right: 1px solid var(--menu-divider); color: var(--menu-fg-bright); font-family: var(--font-display); font-size: 17px; font-weight: 800; white-space: nowrap; display: inline-flex; align-items: baseline; gap: 6px; }
   .ribbon-brand .build-tag { font-family: var(--font-mono); font-size: 10px; font-weight: 500; letter-spacing: 0.02em; color: color-mix(in srgb, var(--menu-fg-bright) 55%, transparent); }
@@ -799,8 +799,8 @@
   .ribbon-tab:hover { background: var(--menu-btn-bg-hover); color: var(--menu-fg-bright); }
   .ribbon-tab.active { color: var(--menu-fg-bright); border-bottom-color: var(--accent); background: rgba(255,255,255,0.06); }
   .ribbon-actions { display: inline-flex; align-items: center; gap: 12px; justify-content: flex-end; }
-  .ribbon-body { min-height: 66px; padding: 8px 18px 10px; border-bottom: 1px solid var(--rule); background: #f8fafc; }
-  .ribbon-pane { display: none; justify-content: center; align-items: stretch; gap: 14px; min-width: 0; }
+  .ribbon-body { min-height: 66px; padding: 8px 24px 10px; border-bottom: 1px solid var(--rule); background: #f8fafc; }
+  .ribbon-pane { display: none; justify-content: flex-start; align-items: stretch; gap: 14px; min-width: 0; }
   .ribbon-pane.active { display: flex; }
   /* .rb-* topbar component styling moved to ribbon/ribbon.css.
      Was another near-duplicate of the Office 365 rules — this
