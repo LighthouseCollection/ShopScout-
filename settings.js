@@ -4,6 +4,12 @@ let aiSettings = null;
 let selectedProviderId = 'openai';
 let keyVisible = false;
 
+function extensionStorage() {
+  const api = chrome;
+  if (!api || !api.storage || !api.storage.local) return null;
+  return api.storage.local;
+}
+
 document.addEventListener('DOMContentLoaded', () => {
   const mountEl = document.getElementById('settingsMount');
   if (mountEl) {
@@ -217,19 +223,23 @@ function currentSettingsRoot(startNode) {
 
 /* =============================================================
    Quick Capture Button (FAB) settings
-   Stored at chrome.storage.local.shopscout_capture_button:
+   Stored in extension local storage under shopscout_capture_button:
      { enabled: boolean, hiddenHosts: string[] }
    ============================================================= */
 const CAPTURE_BUTTON_KEY = 'shopscout_capture_button';
 
 async function loadCaptureButtonSettings() {
-  const stored = await chrome.storage.local.get(CAPTURE_BUTTON_KEY);
   const def = { enabled: true, hiddenHosts: [] };
+  const storage = extensionStorage();
+  if (!storage || typeof storage.get !== 'function') return def;
+  const stored = await storage.get(CAPTURE_BUTTON_KEY);
   return Object.assign(def, stored[CAPTURE_BUTTON_KEY] || {});
 }
 
 async function saveCaptureButtonSettings(next) {
-  await chrome.storage.local.set({ [CAPTURE_BUTTON_KEY]: next });
+  const storage = extensionStorage();
+  if (!storage || typeof storage.set !== 'function') return;
+  await storage.set({ [CAPTURE_BUTTON_KEY]: next });
 }
 
 function normalizeHostInput(raw) {
@@ -302,20 +312,24 @@ async function initCaptureButtonSettings() {
 
 /* =============================================================
    Open*Facts enrichment toggles (opt-in)
-   Stored at chrome.storage.local.shopscout_openfacts_enrich:
+   Stored in extension local storage under shopscout_openfacts_enrich:
      { enabled, food, beauty, pet, products }
    ============================================================= */
 const OPEN_FACTS_KEY = 'shopscout_openfacts_enrich';
 const OPEN_FACTS_SOURCES = ['food', 'beauty', 'pet', 'products'];
 
 async function loadOpenFactsSettings() {
-  const stored = await chrome.storage.local.get(OPEN_FACTS_KEY);
   const def = { enabled: false, food: true, beauty: true, pet: true, products: true };
+  const storage = extensionStorage();
+  if (!storage || typeof storage.get !== 'function') return def;
+  const stored = await storage.get(OPEN_FACTS_KEY);
   return Object.assign(def, stored[OPEN_FACTS_KEY] || {});
 }
 
 async function saveOpenFactsSettings(next) {
-  await chrome.storage.local.set({ [OPEN_FACTS_KEY]: next });
+  const storage = extensionStorage();
+  if (!storage || typeof storage.set !== 'function') return;
+  await storage.set({ [OPEN_FACTS_KEY]: next });
 }
 
 async function initOpenFactsToggles() {
@@ -348,7 +362,7 @@ function fallbackAISettings() {
 }
 
 async function loadAISettings() {
-  const storage = chrome?.storage?.local;
+  const storage = extensionStorage();
   if (!storage || typeof storage.get !== 'function') return fallbackAISettings();
   try {
     const stored = await storage.get(ShopScoutAI.AI_STORAGE_KEY);
@@ -361,9 +375,9 @@ async function loadAISettings() {
 
 async function saveAISettings() {
   aiSettings = ShopScoutAI.mergeSettings(aiSettings);
-  const storage = chrome?.storage?.local;
+  const storage = extensionStorage();
   if (!storage || typeof storage.set !== 'function') return;
-  await chrome.storage.local.set({ [ShopScoutAI.AI_STORAGE_KEY]: aiSettings });
+  await storage.set({ [ShopScoutAI.AI_STORAGE_KEY]: aiSettings });
 }
 
 function providerConfig(providerId) {

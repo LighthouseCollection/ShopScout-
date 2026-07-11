@@ -302,6 +302,9 @@ assert.ok(/function fallbackAISettings\(\)[\s\S]*ShopScoutAI\.mergeSettings\(nul
   'settings has a default AI settings fallback so provider options can render when storage is unavailable');
 assert.ok(/async function loadAISettings\(\)[\s\S]*catch\s*\(err\)[\s\S]*fallbackAISettings\(\)/.test(settingsJs),
   'AI provider settings load falls back instead of leaving the provider list empty');
+assert.ok(settingsJs.includes('function extensionStorage()'), 'settings has a safe extension storage helper');
+assert.ok(!settingsJs.includes('chrome?.storage?.local'), 'settings does not optional-chain an undeclared chrome object');
+assert.ok(!settingsJs.includes('chrome.storage.local'), 'settings storage calls route through the safe helper');
 assert.ok(aiProvidersJs.includes('Microsoft Copilot'), 'settings provider data includes Microsoft Copilot');
 assert.ok(aiProvidersJs.includes('Local LLM (Ollama / LM Studio)'), 'settings provider data includes local LLM setup');
 assert.ok(css.includes('.dashboard-settings-nav {') && css.includes('gap: 10px;'), 'embedded settings left nav has visible spacing between menu items');

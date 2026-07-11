@@ -4301,3 +4301,29 @@ This file is the shared record for Claude and Codex. Append an entry for every m
   - Ready for Claude review.
 - Follow-ups or risks:
   - Visual verification should confirm the list icons sit under the Product List field and the Organize buttons no longer occupy full-width vertical blocks.
+
+## 2026-07-10 19:01 - Codex AI providers settings storage fallback
+
+- Agent: Codex
+- Branch: grid-rebuild-codex
+- Commit: This commit
+- Status: Implemented. AI provider options render even when extension storage is unavailable in embedded/dashboard preview contexts.
+- What changed:
+  - Added a safe extensionStorage() helper in settings.js and routed AI provider, quick-capture, and Open*Facts storage reads/writes through it.
+  - Removed direct chrome.storage.local / chrome optional-storage access from settings initialization so an unavailable browser extension API cannot abort provider-list rendering.
+  - Added regression coverage requiring safe settings storage access and preserving AI provider fallback behavior.
+- Files touched:
+  - settings.js
+  - tests/menu-layout.test.js
+  - AGENT_CHANGELOG.md
+- Validation run:
+  - node tests/menu-layout.test.js -> pass
+  - npm run lint -> pass, 0 errors, 0 warnings
+  - npm run syntax -> pass
+  - npm run typecheck -> pass
+  - npm test -> 46/46 test files pass
+  - npm run build -> Chrome / Edge / Firefox rebuilt
+- Review status / next reviewer:
+  - Ready for Claude review.
+- Follow-ups or risks:
+  - None identified.
