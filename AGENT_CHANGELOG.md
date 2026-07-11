@@ -4117,7 +4117,7 @@ This file is the shared record for Claude and Codex. Append an entry for every m
 
 - Agent: Codex
 - Branch: grid-rebuild-codex
-- Commit: This commit
+- Commit: 0b1e283 (implementation); this commit records the changelog entry
 - Status: Implemented and published. Normalization v2 is loaded during on-demand product extraction and attached to captured spec data as a non-breaking sidecar.
 - What changed:
   - Added the normalization v2 runtime scripts to `background.js` content-script injection order before `content/productSchema.js`.
@@ -4138,6 +4138,34 @@ This file is the shared record for Claude and Codex. Append an entry for every m
   - Ready for Claude review.
 - Follow-ups or risks:
   - Downstream UI can now consume `specsNormalized`; legacy views remain on `.specs` until intentionally migrated.
+
+## 2026-07-10 18:53 - Codex AI providers settings fallback
+
+- Agent: Codex
+- Branch: grid-rebuild-codex
+- Commit: This commit
+- Status: Implemented. The AI Providers settings panel now renders provider options even when extension storage is unavailable or fails during settings load.
+- What changed:
+  - Added a default AI settings fallback in `settings.js` so `renderProviderList()` can populate the AI provider options instead of leaving the panel blank.
+  - Guarded AI settings save/load against missing `chrome.storage.local`, which is common when the dashboard is opened outside the extension runtime during development.
+  - Added regression coverage for the fallback path and for correct provider card CSS class mapping.
+  - Removed the retired v1 unit-display helper chain from `shared/values/cellValues.js`, clearing the lint warnings exposed by the unpublished normalization cleanup commit.
+- Files touched:
+  - `settings.js`
+  - `tests/menu-layout.test.js`
+  - `shared/values/cellValues.js`
+  - `AGENT_CHANGELOG.md`
+- Validation run:
+  - `node tests\menu-layout.test.js` -> pass
+  - `npm run lint` -> pass, 0 errors, 0 warnings
+  - `npm test` -> 46/46 test files pass
+  - `npm run syntax` -> pass
+  - `npm run typecheck` -> pass
+  - `npm run build` -> Chrome / Edge / Firefox rebuilt
+- Review status / next reviewer:
+  - Ready for Claude review.
+- Follow-ups or risks:
+  - None identified.
 
 ## 2026-07-09 - Claude Office 365 ribbon HOTFIX #2: only apply data-group-size when actually shrinking
 
