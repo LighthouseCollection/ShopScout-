@@ -204,6 +204,15 @@ window.SS = (() => {
       try { await migrate.migrateOnce(); }
       catch (err) { console.warn('SSMigrate failed', err); }
     }
+    /* Normalization v2 backfill -- fills flat.specsNormalized and
+       _spec.specs[k].normalized on products captured before Phase 2
+       landed. One-shot, idempotent (records normalizeV2AppliedAt in
+       meta). Runs after storage-to-IndexedDB migration so new records
+       are picked up too. */
+    if (migrate && migrate.normalizeV2Once) {
+      try { await migrate.normalizeV2Once(); }
+      catch (err) { console.warn('SSMigrate.normalizeV2Once failed', err); }
+    }
     if (productRepoAvailable()) {
       try { await globalThis.SSProductRepo.ensureDefaultList(); }
       catch (err) { console.warn('SS.bootstrapDataLayer: productRepo init failed', err); }
