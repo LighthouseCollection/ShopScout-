@@ -114,7 +114,7 @@ check('Voltage "9 volts_of_direct_current" -> 9 V (cleaned)',
   { canonical: 9, unit: 'V', display: '9 V' });
 
 r = N.field('Voltage', '12');
-r_ok = r.canonical === 12 && r.unit === 'V' && r.provenance.warnings.includes('inferred_unit_from_field');
+const r_ok = r.canonical === 12 && r.unit === 'V' && r.provenance.warnings.includes('inferred_unit_from_field');
 assert.ok(r_ok, 'Voltage bare "12" infers V and flags it in provenance');
 passed += 1;
 

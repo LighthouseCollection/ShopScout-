@@ -4161,6 +4161,34 @@ This file is the shared record for Claude and Codex. Append an entry for every m
     * **Suggested extension:** if a policy declares `idealSizes` with a non-default size (something other than Large), we should apply that even at wide viewport since the app explicitly wants that layout. Currently we skip all size attrs when the pane fits, which erases app-requested layouts. Add a `forceApply: true` option per idealSize entry if this becomes needed.
     * **Path B is still complete** — this commit is a bug fix within the sequence, not a new deliverable.
 
+## 2026-07-10 18:19 - Codex settings left navigation fix
+
+- Agent: Codex
+- Branch: grid-rebuild-codex
+- Commit: This commit
+- Status: Implemented. Embedded settings left navigation switches the main settings panel reliably.
+- What changed:
+  - Bound the settings left navigation immediately after the settings shell mounts, before async provider/settings initialization can fail or stall.
+  - Changed settings navigation to a delegated click handler on the mounted settings root, preventing duplicate listeners and preserving behavior after dynamic DOM updates.
+  - Added regression coverage requiring early settings-nav binding and root-scoped delegated click handling.
+  - Fixed an existing lint blocker in `tests/normalize-v2.test.js` by declaring `r_ok`.
+- Files touched:
+  - `settings.js`
+  - `tests/menu-layout.test.js`
+  - `tests/normalize-v2.test.js`
+  - `AGENT_CHANGELOG.md`
+- Validation run:
+  - `node tests\menu-layout.test.js` -> pass
+  - `npm run lint` -> pass, 0 errors, 0 warnings
+  - `npm test` -> 45/45 test files pass
+  - `npm run syntax` -> pass
+  - `npm run typecheck` -> pass
+  - `npm run build` -> Chrome / Edge / Firefox rebuilt
+- Review status / next reviewer:
+  - Ready for Claude review.
+- Follow-ups or risks:
+  - None identified.
+
 ## 2026-07-10 00:13 - Codex ribbon resize overlap fix
 
 - Agent: Codex

@@ -192,6 +192,8 @@ function settingsShellHtml() {
 async function mount(container) {
   if (!container) return;
   setTrustedHtml(container, settingsShellHtml());
+  bindSettingsNav(container);
+  showSettingsPanel('ai-providers', container);
   await init();
 }
 
@@ -502,13 +504,15 @@ function bindEditorEvents() {
   });
 }
 
-function bindSettingsNav() {
-  const rootEl = currentSettingsRoot();
-  rootEl.querySelectorAll('[data-settings-nav]').forEach(link => {
-    link.addEventListener('click', event => {
-      event.preventDefault();
-      showSettingsPanel(link.getAttribute('data-settings-nav'), rootEl);
-    });
+function bindSettingsNav(root = currentSettingsRoot()) {
+  const rootEl = currentSettingsRoot(root);
+  if (!rootEl || rootEl.dataset?.settingsNavBound === '1') return;
+  if (rootEl.dataset) rootEl.dataset.settingsNavBound = '1';
+  rootEl.addEventListener('click', event => {
+    const link = event.target.closest?.('[data-settings-nav]');
+    if (!link || !rootEl.contains(link)) return;
+    event.preventDefault();
+    showSettingsPanel(link.getAttribute('data-settings-nav'), rootEl);
   });
 }
 

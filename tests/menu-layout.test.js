@@ -267,6 +267,10 @@ assert.ok(settingsJs.includes('bindSettingsNav'), 'embedded settings binds left 
 assert.ok(settingsJs.includes('function currentSettingsRoot'), 'settings panel switching is scoped to the mounted settings root');
 assert.ok(settingsJs.includes('showSettingsPanel(link.getAttribute(\'data-settings-nav\'), rootEl)'), 'settings nav click updates the local settings main panel');
 assert.ok(settingsJs.includes('clearTestResult()'), 'settings nav switching clears transient Saved/test messages');
+assert.ok(/setTrustedHtml\(container,\s*settingsShellHtml\(\)\);\s*bindSettingsNav\(container\);/.test(settingsJs),
+  'settings mount binds left navigation before async settings initialization can fail');
+assert.ok(/rootEl\.addEventListener\('click'[\s\S]*closest\??\.\('\[data-settings-nav\]'\)/.test(settingsJs),
+  'settings left navigation uses delegated click handling inside the mounted root');
 assert.ok(!settingsJs.includes('dashboard-settings-side'), 'embedded settings does not render a duplicate right-side settings pane');
 assert.ok(!settingsJs.includes('id="savedPill"'), 'embedded settings does not render the floating Saved label');
 assert.ok(!settingsJs.includes('id="guideInstructions"'), 'embedded settings does not render an inline setup guide panel');
