@@ -2308,7 +2308,12 @@ body.is-info-page .content { display: block; padding: 18px 22px 48px; }
    font-mono 9px 600, forcing selects to 28px). Removed. What's
    left is only the vertical centering that Search needs because
    its groups don't have bottom labels. */
-.ribbon-pane[data-pane="search"] .rb-group-content {
+/* Exclude the List group -- it has its own dedicated centering
+   rule in ribbon.css (flex:1 + align-items:center + justify-content:
+   center) that must not be fought by tab-wide overrides. Applying
+   padding-bottom here to the List group shifted its content up by
+   14px vs the same List group on Analyze/Products/File tabs. */
+.ribbon-pane[data-pane="search"] .rb-group:not([data-group-id="list"]) > .rb-group-content {
   align-items: center;
   padding-bottom: 14px;
 }
