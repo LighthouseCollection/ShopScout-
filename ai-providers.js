@@ -421,7 +421,32 @@
   function normalizePromptOptions(input = {}) {
     const mode = typeof input?.payloadMode === 'string' ? input.payloadMode : DEFAULT_PROMPT_OPTIONS.payloadMode;
     const validMode = PROMPT_PAYLOAD_MODES.some(option => option.id === mode) ? mode : DEFAULT_PROMPT_OPTIONS.payloadMode;
-    return { payloadMode: validMode };
+    return {
+      payloadMode: validMode,
+      includedFields: normalizeIncludedFields(input?.includedFields),
+      reportSections: input?.reportSections && typeof input.reportSections === 'object' ? { ...input.reportSections } : {}
+    };
+  }
+
+  function normalizeIncludedFields(input) {
+    if (!Array.isArray(input)) return null;
+    return [...new Set(input.map(value => String(value || '').trim()).filter(Boolean))];
+  }
+
+  function promptFieldId(label) {
+    return String(label || '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '') || 'field';
+  }
+
+  function specFieldId(label) {
+    return `spec:${promptFieldId(label)}`;
+  }
+
+  function fieldSet(includedFields) {
+    return Array.isArray(includedFields) ? new Set(includedFields) : null;
+  }
+
+  function wantsField(wanted, id) {
+    return !wanted || wanted.has(id);
   }
 
   function recommendedAnalysisOptions(products = []) {
@@ -951,17 +976,19 @@
     return [...byId.values()];
   }
 
-  function compactSpecs(product, limit = 18) {
+  function compactSpecs(product, limit = 18, includedFields = null) {
     const raw = Array.isArray(product.rawSpecs)
       ? product.rawSpecs
       : Object.entries(product.specs || {}).map(([key, value]) => ({ key, value }));
     const seen = new Set();
     const specs = [];
+    const wanted = fieldSet(includedFields);
     for (const spec of raw) {
       const key = compactText(spec?.key, 80);
       const value = compactText(spec?.value, 180);
       const normalizedKey = key.toLowerCase();
       if (!key || !value || isJunkText(`${key} ${value}`) || seen.has(normalizedKey)) continue;
+      if (!wantsField(wanted, specFieldId(key))) continue;
       seen.add(normalizedKey);
       specs.push({ key, value });
       if (specs.length >= limit) break;
@@ -977,13 +1004,62 @@
       .slice(0, limit);
   }
 
-  function fallbackExcerpt(product) {
+  function fallbackExcerpt(product, includedFields = null) {
     const description = compactText(product.description, 700);
     return {
       descriptionExcerpt: isJunkText(description) ? '' : description,
       bullets: compactBullets(product, 5),
-      extraSpecs: compactSpecs(product, 30).slice(18)
+      extraSpecs: compactSpecs(product, 30, includedFields).slice(18)
     };
+  }
+
+  function filterProductSummaryFields(summary, includedFields) {
+    const wanted = fieldSet(includedFields);
+    if (!wanted) return summary;
+    const filtered = {
+      id: summary.id,
+      payloadMode: summary.payloadMode
+    };
+    if (wantsField(wanted, 'core:name')) {
+      filtered.name = summary.name;
+      filtered.listingTitle = summary.listingTitle;
+    }
+    if (wantsField(wanted, 'core:brand')) {
+      filtered.brand = summary.brand;
+      filtered.manufacturer = summary.manufacturer;
+    }
+    if (wantsField(wanted, 'core:model')) {
+      filtered.modelName = summary.modelName;
+      filtered.modelNumber = summary.modelNumber;
+    }
+    if (wantsField(wanted, 'core:price')) {
+      filtered.price = summary.price;
+      filtered.usedPrice = summary.usedPrice;
+    }
+    if (wantsField(wanted, 'core:source')) filtered.source = summary.source;
+    if (wantsField(wanted, 'core:seller')) filtered.seller = summary.seller;
+    if (wantsField(wanted, 'core:url')) filtered.url = summary.url;
+    if (wantsField(wanted, 'core:category')) filtered.category = summary.category;
+    if (wantsField(wanted, 'core:rating')) filtered.rating = summary.rating;
+    if (wantsField(wanted, 'core:reviewCount')) filtered.reviewCount = summary.reviewCount;
+    if (wantsField(wanted, 'core:identifiers') && summary.identifiers) filtered.identifiers = summary.identifiers;
+    if (Array.isArray(summary.specs)) {
+      filtered.specs = summary.specs.filter(spec => wantsField(wanted, specFieldId(spec.key)));
+    }
+    if (Array.isArray(summary.normalizedSpecs)) {
+      filtered.normalizedSpecs = summary.normalizedSpecs.filter(spec => wantsField(wanted, specFieldId(spec.key)));
+    }
+    if (Array.isArray(summary.bullets) && summary.bullets.length && wantsField(wanted, 'core:bullets')) {
+      filtered.bullets = summary.bullets;
+    }
+    if (summary.rawFallback) filtered.rawFallback = summary.rawFallback;
+    Object.keys(filtered).forEach(key => {
+      const value = filtered[key];
+      if (value === '' || value == null) delete filtered[key];
+      else if (Array.isArray(value) && !value.length) delete filtered[key];
+      else if (typeof value === 'object' && !Array.isArray(value) && !Object.keys(value).length) delete filtered[key];
+    });
+    return filtered;
   }
 
   function productSummary(products, promptOptions = {}) {
@@ -1013,7 +1089,7 @@
           mpn: compactText(product.mpn, 80),
           gtin: compactText(product.gtin, 80)
         },
-        specs: compactSpecs(product, 18),
+        specs: compactSpecs(product, 18, options.includedFields),
         normalizedSpecs: normalizeProductSpecs(product, 18),
         bullets: compactBullets(product, 3)
       };
@@ -1022,9 +1098,9 @@
       });
       if (!Object.keys(summary.identifiers).length) delete summary.identifiers;
       if (options.payloadMode === 'fallback') {
-        summary.rawFallback = fallbackExcerpt(product);
+        summary.rawFallback = fallbackExcerpt(product, options.includedFields);
       }
-      return summary;
+      return filterProductSummaryFields(summary, options.includedFields);
     });
   }
 
@@ -1209,6 +1285,7 @@
     enabledStagesForAnalysis,
     buildStagePrompt,
     estimatePromptPayload,
+    filterProductSummaryFields,
     buildRequest,
     parseProviderResponse,
     createEmptyTokenUsage,

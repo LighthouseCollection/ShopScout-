@@ -2,6 +2,43 @@
 
 This file is the shared record for Claude and Codex. Append an entry for every meaningful change so both agents can continue from the same factual project history.
 
+## 2026-07-11 02:53 - Codex manual AI prompt workflow revision
+
+- Agent: Codex
+- Branch: grid-rebuild-codex
+- Commit: This commit
+- Status: Implemented. Manual AI now uses the revised human-readable prompt shell, report-section selection, token-saving field selection, and paste-result-back workflow.
+- What changed:
+  - Replaced the old granular AI checklist UI with user-facing report sections: Category & Buying Factors, Master Comparison Table, Discrepancies & Fact-Checks, Claims/Value/Reviews, and Final Verdict.
+  - Added a dynamic Product Fields to Send checklist that includes core fields plus captured spec fields from the selected products before prompt generation.
+  - Wired selected field/spec IDs into `ShopScoutAI.productSummary()` so unchecked fields are actually omitted from compact prompt payloads.
+  - Revised the manual prompt text to require human-readable output, avoid JSON, prioritize captured facts, search only for missing/conflicting/official verification needs, and use `Listed value → Corrected value → Reason/source → Confidence`.
+  - Routed Manual AI through the Analyze with AI selection modal before opening the embedded manual AI provider selector.
+  - Added a Paste Manual AI Result modal that stores pasted manual AI reports with list context for later review.
+  - Added regression coverage for the manual AI engine and field-filtered prompt payloads.
+- Files touched:
+  - `ai-providers.js`
+  - `comparison.html`
+  - `comparison.css`
+  - `comparison.js`
+  - `tests/ai-analysis-options.test.js`
+  - `tests/ai-payload-options.test.js`
+  - `tests/manual-ai-engine.test.js`
+  - `AGENT_CHANGELOG.md`
+- Validation run:
+  - `node tests\manual-ai-engine.test.js` -> pass
+  - `node tests\ai-payload-options.test.js` -> pass
+  - `node tests\ai-analysis-options.test.js` -> pass
+  - `npm run syntax` -> pass
+  - `npm run lint` -> pass, 0 errors, 0 warnings
+  - `npm test` -> 47/47 test files pass
+  - `npm run typecheck` -> pass
+  - `npm run build` -> Chrome / Edge / Firefox rebuilt
+- Review status / next reviewer:
+  - Ready for Claude review.
+- Follow-ups or risks:
+  - Paste-back currently stores the manual AI report with list context. Applying corrections to product fields remains review-first and should be a separate parser/review workflow.
+
 ## 2026-07-11 — Claude session — Normalization v2 pipeline, Amazon scraper cleanup, ribbon polish
 
 - Agent: Claude

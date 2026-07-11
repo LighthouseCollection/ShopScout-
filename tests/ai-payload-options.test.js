@@ -74,6 +74,16 @@ assert.ok(
   'compact summary removes obvious marketplace junk'
 );
 
+const fieldFilteredSummary = AI.productSummary([junkProduct], {
+  payloadMode: 'compact',
+  includedFields: ['core:name', 'core:brand', 'core:price', 'spec:input-voltage']
+})[0];
+assert.strictEqual(fieldFilteredSummary.name, compactSummary.name, 'field-filtered summary keeps selected name');
+assert.strictEqual(fieldFilteredSummary.brand, compactSummary.brand, 'field-filtered summary keeps selected brand');
+assert.strictEqual(fieldFilteredSummary.price, compactSummary.price, 'field-filtered summary keeps selected price');
+assert.ok(!Object.prototype.hasOwnProperty.call(fieldFilteredSummary, 'source'), 'field-filtered summary omits unselected source');
+assert.strictEqual(fieldFilteredSummary.specs.map(spec => spec.key).join('|'), 'Input Voltage', 'field-filtered summary sends only selected specs');
+
 const fallbackSummary = AI.productSummary([junkProduct], { payloadMode: 'fallback' })[0];
 assert.ok(fallbackSummary.rawFallback, 'fallback summary includes raw fallback container');
 assert.ok(fallbackSummary.rawFallback.descriptionExcerpt.length <= 700, 'fallback description is capped');

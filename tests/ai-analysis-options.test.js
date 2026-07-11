@@ -97,8 +97,9 @@ const comparisonHtml = pageAndStyles('comparison.html', 'comparison.css');
 const comparisonJs = readFile('comparison.js');
 
 assert.ok(comparisonHtml.includes('id="aiOptionsModal"'), 'comparison page includes the AI options modal');
-assert.ok(comparisonHtml.includes('data-ai-option="verifySpecs"'), 'AI options modal includes verification checkbox');
-assert.ok(comparisonHtml.includes('data-ai-option="finalRecommendation"'), 'AI options modal includes final recommendation checkbox');
+assert.ok(comparisonHtml.includes('data-ai-section="discrepanciesFactChecks"'), 'AI options modal includes fact-check section checkbox');
+assert.ok(comparisonHtml.includes('data-ai-section="finalVerdict"'), 'AI options modal includes final verdict section checkbox');
+assert.ok(comparisonHtml.includes('id="aiFieldList"'), 'AI options modal includes field/spec token-control list');
 assert.ok(/\.ai-options-modal\s*\{[^}]*width:\s*min\(1080px, calc\(100vw - 32px\)\)/.test(comparisonHtml), 'AI options modal is wider so the full checklist is compact');
 assert.ok(/\.ai-options-body\s*\{[^}]*grid-template-columns:\s*repeat\(2, minmax\(0, 1fr\)\)/.test(comparisonHtml), 'AI options modal uses two compact group columns while each group remains single-column');
 assert.ok(/\.ai-option-list\s*\{[^}]*grid-template-columns:\s*1fr/.test(comparisonHtml), 'AI options are single column by default');

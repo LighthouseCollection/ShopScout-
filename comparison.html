@@ -452,6 +452,24 @@
   </div>
 </div>
 
+<!-- Manual AI paste-back modal -->
+<div class="modal-overlay" id="manualResultPasteModal">
+  <div class="modal embedded-modal embedded-modal--manual-result">
+    <div class="embedded-modal-header">
+      <div>
+        <h2>Paste Manual AI Result</h2>
+        <p>Paste the AI response here so ShopScout can keep it with this list. Structured corrections can be reviewed before they update products.</p>
+      </div>
+      <button class="close-btn" id="manualResultPasteClose" aria-label="Close">&times;</button>
+    </div>
+    <textarea id="manualResultPasteText" class="manual-result-paste-text" placeholder="Paste the AI report here..."></textarea>
+    <div class="modal-actions">
+      <button id="manualResultPasteCancel">Cancel</button>
+      <button class="btn-save" id="manualResultPasteSave">Save Result</button>
+    </div>
+  </div>
+</div>
+
 <!-- AI analysis results page -->
 <div class="ai-results-page" id="aiResultsPage">
   <div class="ai-results-report">
@@ -665,36 +683,28 @@
         <div class="ai-payload-estimate" id="aiPayloadEstimate">Payload estimate will appear here.</div>
       </div>
       <div class="ai-option-group">
-        <h3>Verification</h3>
+        <h3>Report Sections</h3>
         <div class="ai-option-list">
-          <label class="ai-option"><input type="checkbox" data-ai-option="verifySpecs" checked><span><strong>Confirm listing specs</strong><span>Verify listing specs against official, manufacturer, or authoritative sources.</span></span></label>
-          <label class="ai-option"><input type="checkbox" data-ai-option="missingSpecs" checked><span><strong>Find missing important specs</strong><span>Identify important category specs and fill them only from reliable sources.</span></span></label>
-          <label class="ai-option"><input type="checkbox" data-ai-option="marketingClaims" checked><span><strong>Check marketing claims</strong><span>Flag vague or exaggerated claims unless real specs support them.</span></span></label>
-          <label class="ai-option"><input type="checkbox" data-ai-option="correctConflicts" checked><span><strong>Correct conflicting data</strong><span>Show original listing values and corrected values when reliable sources disagree.</span></span></label>
+          <label class="ai-option"><input type="checkbox" data-ai-section="categoryBuyingFactors" checked><span><strong>Category &amp; Buying Factors</strong><span>Identify category, subcategory, product line, and comparison criteria.</span></span></label>
+          <label class="ai-option"><input type="checkbox" data-ai-section="masterComparisonTable" checked><span><strong>Master Comparison Table</strong><span>Dynamically compare products across the most important buying factors.</span></span></label>
+          <label class="ai-option"><input type="checkbox" data-ai-section="discrepanciesFactChecks" checked><span><strong>Discrepancies &amp; Fact-Checks</strong><span>Find missing specs, verify claims, and correct conflicts with the required arrow format.</span></span></label>
+          <label class="ai-option"><input type="checkbox" data-ai-section="claimsValueReviews" checked><span><strong>Claims, Value &amp; Reviews</strong><span>Analyze marketing claims, price-to-value, and review consensus.</span></span></label>
+          <label class="ai-option"><input type="checkbox" data-ai-section="finalVerdict" checked><span><strong>Final Verdict</strong><span>Clear use-case driven recommendations such as Best for X and Best Value.</span></span></label>
         </div>
       </div>
       <div class="ai-option-group">
-        <h3>Comparison</h3>
-        <div class="ai-option-list">
-          <label class="ai-option"><input type="checkbox" data-ai-option="comparisonColumns" checked><span><strong>Build comparison table columns</strong><span>Convert category buying factors into useful table columns.</span></span></label>
-          <label class="ai-option"><input type="checkbox" data-ai-option="priceValue" checked><span><strong>Compare price and value</strong><span>Analyze price, used price, shipping, specs, and overpricing.</span></span></label>
-          <label class="ai-option"><input type="checkbox" data-ai-option="reviewsRatings" checked><span><strong>Analyze reviews and ratings</strong><span>Use rating count, rating quality, common complaints, and review photos when available.</span></span></label>
-          <label class="ai-option"><input type="checkbox" data-ai-option="compareAll"><span><strong>Compare it all</strong><span>Create one combined table for buying factors, price and value, and reviews.</span></span></label>
+        <h3>Product Fields to Send</h3>
+        <p class="ai-option-hint">Uncheck low-value fields to reduce token use before ShopScout inserts product facts.</p>
+        <div class="ai-field-toolbar">
+          <button type="button" class="dashboard-secondary-action dashboard-secondary-action--small" id="aiFieldsCore">Core only</button>
+          <button type="button" class="dashboard-secondary-action dashboard-secondary-action--small" id="aiFieldsAll">Select all</button>
         </div>
+        <div class="ai-field-list" id="aiFieldList" aria-live="polite"></div>
       </div>
       <div class="ai-option-group">
-        <h3>Risk Checks</h3>
-        <div class="ai-option-list">
-          <label class="ai-option"><input type="checkbox" data-ai-option="rebrandDuplicate"><span><strong>Check rebrand / duplicate products</strong><span>Detect likely same products sold under different brands.</span></span></label>
-          <label class="ai-option"><input type="checkbox" data-ai-option="riskSummary"><span><strong>Risk summary</strong><span>Summarize verification, spec, seller, warranty, rebrand, and return risk.</span></span></label>
-          <label class="ai-option"><input type="checkbox" data-ai-option="sellerRisk"><span><strong>Seller / store reliability</strong><span>Useful for Alibaba, SHEIN, eBay, Temu, and unknown sellers.</span></span></label>
-        </div>
-      </div>
-      <div class="ai-option-group">
-        <h3>Final</h3>
-        <div class="ai-option-list">
-          <label class="ai-option"><input type="checkbox" data-ai-option="finalRecommendation" checked><span><strong>Final recommendation</strong><span>Best overall, best value, lowest risk, avoid/skip, and confidence level.</span></span></label>
-        </div>
+        <h3>Paste Result Back</h3>
+        <p class="ai-option-hint">Manual AI can be pasted back into ShopScout after the assistant responds. Table corrections are saved for review before product data is changed.</p>
+        <button type="button" class="dashboard-secondary-action" id="manualResultPasteBtn">Paste AI Result Back Into ShopScout</button>
       </div>
     </div>
     <div class="modal-actions ai-options-actions">
