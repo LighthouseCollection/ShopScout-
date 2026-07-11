@@ -782,6 +782,15 @@
 <script src="normalization/attributes.js"></script>
 <script src="normalization/matching.js"></script>
 <script src="normalization/review.js"></script>
+<!-- Normalization v2 — one pipeline, typed fields, {raw, canonical, display}
+     envelope per value. Loaded here so migration + grid readers (Phases 3-4)
+     can call ShopScoutNormalize.field(). See normalization/SPEC.md. -->
+<script src="normalization/registry.js"></script>
+<script src="normalization/libraries/enums.js"></script>
+<script src="normalization/normalizers/text.js"></script>
+<script src="normalization/normalizers/enum.js"></script>
+<script src="normalization/normalizers/measurement.js"></script>
+<script src="normalization/normalize.js"></script>
 <script src="data/productRepo.js"></script>
 <script src="data/viewsRepo.js"></script>
 <script src="data/migrate.js"></script>

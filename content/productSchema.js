@@ -30,11 +30,20 @@
  * @property {string|null} source
  * @property {Confidence}  confidence
  *
+ * @typedef {object} NormalizedValue
+ *   Normalization v2 sidecar value.
+ * @property {*} raw
+ * @property {*} canonical
+ * @property {string} [unit]
+ * @property {string} [display]
+ * @property {object} [provenance]
+ *
  * @typedef {object} SpecEntry
  *   The canonical-key → value entry in spec.specs / spec.itemDetails.
  * @property {string}      rawKey
  * @property {string}      rawValue
  * @property {string}      canonicalValue
+ * @property {NormalizedValue|null} [normalized]
  * @property {string|null} source
  * @property {Confidence}  confidence
  *
@@ -87,6 +96,7 @@
  * @property {string[]} imageUrls
  * @property {string[]} reviewImages
  * @property {Object<string,string>} specs
+ * @property {Object<string,NormalizedValue>} specsNormalized
  * @property {Array<{key:string,value:string,source?:string|null}>} rawSpecs
  * @property {string} asin
  * @property {string} sku
@@ -353,10 +363,21 @@
       const bucket = (obs.type === 'item_detail') ? spec.itemDetails : spec.specs;
       const existing = bucket[canonKey];
       if (!existing || gt(obs.confidence, existing.confidence)) {
+        /* v2 normalization envelope (per normalization/SPEC.md).
+           Attached as a sidecar so legacy readers can keep reading
+           canonicalValue while the new UI reads .normalized.display
+           and filters on .normalized.canonical. Null if the field
+           isn't in the registry or the v2 script isn't loaded. */
+        let normalized = null;
+        if (root.ShopScoutNormalize && typeof root.ShopScoutNormalize.field === 'function') {
+          try { normalized = root.ShopScoutNormalize.field(canonKey, rawValue); }
+          catch (err) { /* leave normalized null; legacy path still works */ }
+        }
         bucket[canonKey] = {
           rawKey: String(rawKey),
           rawValue: String(rawValue),
           canonicalValue: canonVal,
+          normalized,
           source: obs.source,
           confidence: obs.confidence
         };
@@ -472,7 +493,12 @@
       image:        (spec.media.productImages[0] && spec.media.productImages[0].url) || '',
       imageUrls:    spec.media.productImages.map(m => m.url),
       reviewImages: spec.media.userImages.map(m => m.url),
-      specs:        {},
+      specs:            {},
+      /* v2 sidecar: same keys as .specs, values are the full
+         normalization envelope {raw, canonical, unit?, display,
+         provenance}. Phase 3 readers switch to this; Phase 2
+         keeps .specs strings unchanged so nothing breaks yet. */
+      specsNormalized:  {},
       rawSpecs:     [],
       asin: '', sku: '', upc: '', ean: '', gtin: '', mpn: ''
     };
@@ -482,6 +508,7 @@
     }
     for (const [canonKey, entry] of Object.entries(spec.specs)) {
       flat.specs[canonKey] = entry.canonicalValue || entry.rawValue;
+      if (entry.normalized) flat.specsNormalized[canonKey] = entry.normalized;
       flat.rawSpecs.push({ key: entry.rawKey || canonKey, value: entry.rawValue, source: entry.source });
     }
     /* itemDetails (the "About this item" left-rail "Brand : Acme" rows)
@@ -489,6 +516,7 @@
        Previously they only went into flat.specs and were invisible. */
     for (const [canonKey, entry] of Object.entries(spec.itemDetails)) {
       if (!flat.specs[canonKey]) flat.specs[canonKey] = entry.canonicalValue || entry.rawValue;
+      if (entry.normalized && !flat.specsNormalized[canonKey]) flat.specsNormalized[canonKey] = entry.normalized;
       flat.rawSpecs.push({ key: entry.rawKey || canonKey, value: entry.rawValue, source: entry.source });
     }
     return flat;

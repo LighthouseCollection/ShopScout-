@@ -171,6 +171,17 @@ async function ensureContentScript(tabId) {
     files: [
       'security/sanitize.js',
       'utils.js',
+      /* Normalization v2 (per normalization/SPEC.md). Must precede
+         productSchema so assemble() can attach a normalized envelope
+         to every spec entry. Qty is required by the measurement
+         normalizer. */
+      'vendor/quantities.min.js',
+      'normalization/registry.js',
+      'normalization/libraries/enums.js',
+      'normalization/normalizers/text.js',
+      'normalization/normalizers/enum.js',
+      'normalization/normalizers/measurement.js',
+      'normalization/normalize.js',
       /* New pipeline */
       'content/confidenceRules.js',
       'content/domUtils.js',
