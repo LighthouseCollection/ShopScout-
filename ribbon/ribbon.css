@@ -1230,17 +1230,33 @@
   min-width: 300px;
   max-width: 300px;
 }
+/* Middle-align the content. Requires TWO pieces working together:
+     1. flex: 1 -- .rb-group-content by default only takes its
+        natural content height (~74px, dictated by the tallest
+        child = button column). Its parent .rb-group is
+        flex-direction: column with justify-content: space-between,
+        so the content area then sits at the top of the group and
+        the "List" label sits at the bottom. If we don't grow
+        .rb-group-content to fill the available height, there's no
+        empty vertical space for align-items: center to distribute.
+     2. align-items: center -- now that .rb-group-content fills
+        the full available height, both columns (label+select and
+        buttons) vertically center inside it.
+   justify-content: center handles horizontal centering.
+*/
 .rb-office-ribbon .rb-group[data-group-id="list"] > .rb-group-content {
   display: flex;
+  flex: 1;
   flex-direction: row;
-  align-items: flex-end;                      /* bottom-align to match .product-search--row (FIND/SCOPE) baseline */
-  justify-content: center;                    /* label+select+buttons cluster centered inside the 300px group */
+  align-items: center;
+  justify-content: center;
   gap: 8px;
 }
-/* Left column: PRODUCT LIST label + 250px select stacked. Matches
-   the .rb-organize-stack column layout so both groups' first
-   labels sit on the same visual y. Width hard-pinned to 250px so
-   the select can't be squeezed by the parent flex row. */
+/* Left column: PRODUCT LIST label + 250px select stacked. The
+   column's natural height is 14 + 22 = 36px. When the parent flex
+   row has align-items: center, this whole column gets vertically
+   centered inside the tall content area, which is exactly what
+   the user asked for. */
 .rb-office-ribbon .rb-group[data-group-id="list"] > .rb-group-content > .rb-stack:not(.rb-list-actions) {
   display: flex;
   flex-direction: column;
