@@ -294,6 +294,10 @@ assert.ok(settingsJs.includes('aria-expanded="${expanded ? \'true\' : \'false\'}
 assert.ok(settingsJs.includes('data-provider-toggle'), 'provider list has explicit accordion toggle buttons');
 assert.ok(settingsJs.includes('provider-state-on'), 'provider cards render muted enabled state');
 assert.ok(settingsJs.includes('provider-state-off'), 'provider cards render muted disabled state');
+assert.ok(settingsJs.includes('provider-card-${providerCardClass(state.cls)}'),
+  'provider cards map provider state to the expected provider-card-on/off/warn CSS class');
+assert.ok(!settingsJs.includes('provider-card-${state.cls}'),
+  'provider cards do not render invalid provider-card-provider-state-* classes');
 assert.ok(aiProvidersJs.includes('Microsoft Copilot'), 'settings provider data includes Microsoft Copilot');
 assert.ok(aiProvidersJs.includes('Local LLM (Ollama / LM Studio)'), 'settings provider data includes local LLM setup');
 assert.ok(css.includes('.dashboard-settings-nav {') && css.includes('gap: 10px;'), 'embedded settings left nav has visible spacing between menu items');

@@ -511,6 +511,10 @@
   function displayCell(productRow, field, scope) {
     const product = productRow?._shopScout?.product || productRow || {};
     const entry = specEntryFromProduct(product, field, scope);
+    /* v2 normalization envelope wins when present -- .display is
+       the already-formatted pill text ("9 V", "60 cm", ["Black","Red"]).
+       Only fall through to raw/canonicalValue when we don't have one. */
+    const normalized = entry && typeof entry === 'object' ? entry.normalized : null;
     const fromEntry = entry && typeof entry === 'object'
       ? (entry.rawValue ?? entry.value ?? entry.canonicalValue)
       : (entry ?? productRow?.[field]);
@@ -521,7 +525,12 @@
     const corrected = correctedValue != null && String(correctedValue) !== raw
       ? String(correctedValue)
       : null;
-    const value = corrected || raw;
+    let value;
+    if (normalized && normalized.display != null && normalized.display !== '—') {
+      value = Array.isArray(normalized.display) ? normalized.display.join(', ') : String(normalized.display);
+    } else {
+      value = corrected || raw;
+    }
     return {
       value,
       raw,

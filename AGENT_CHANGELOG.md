@@ -4113,6 +4113,32 @@ This file is the shared record for Claude and Codex. Append an entry for every m
     * **Other tabs (File, Analyze, Search, About)** still use inline SVGs and don't have ScalingPolicies. Same pattern applies — write a `<name>-tab-init.js` per tab, add `data-group-id` to its groups, define Commands, register a policy.
     * **Path B COMPLETE.** All 11 planned commits shipped. The ribbon now conforms to Microsoft's Windows Ribbon Framework spec at every layer: Command/Control model, 23 SizeDefinition templates with strict validation, ScalingPolicy engine matching descending Scale semantics, ContextualTabs with three-state ContextAvailable, dual-variant SVG icon library, and the declarative Products-tab wiring that ties it all together.
 
+## 2026-07-10 18:38 - Codex normalization v2 extraction publish
+
+- Agent: Codex
+- Branch: grid-rebuild-codex
+- Commit: This commit
+- Status: Implemented and published. Normalization v2 is loaded during on-demand product extraction and attached to captured spec data as a non-breaking sidecar.
+- What changed:
+  - Added the normalization v2 runtime scripts to `background.js` content-script injection order before `content/productSchema.js`.
+  - Updated `content/productSchema.js` so each assembled spec entry can include a `normalized` envelope when `ShopScoutNormalize.field()` supports that field.
+  - Added `specsNormalized` to the legacy flat product output while leaving existing `.specs` string values unchanged for backward compatibility.
+  - Updated JSDoc typedefs for `NormalizedValue`, `SpecEntry.normalized`, and `FlatProduct.specsNormalized`.
+- Files touched:
+  - `background.js`
+  - `content/productSchema.js`
+  - `AGENT_CHANGELOG.md`
+- Validation run:
+  - `npm run typecheck` -> pass
+  - `npm run lint` -> pass, 0 errors, 0 warnings
+  - `npm run syntax` -> pass
+  - `npm test` -> 46/46 test files pass
+  - `npm run build` -> Chrome / Edge / Firefox rebuilt
+- Review status / next reviewer:
+  - Ready for Claude review.
+- Follow-ups or risks:
+  - Downstream UI can now consume `specsNormalized`; legacy views remain on `.specs` until intentionally migrated.
+
 ## 2026-07-09 - Claude Office 365 ribbon HOTFIX #2: only apply data-group-size when actually shrinking
 
 - Agent: Claude

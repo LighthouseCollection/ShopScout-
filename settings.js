@@ -375,6 +375,10 @@ function providerCardState(provider) {
   };
 }
 
+function providerCardClass(stateCls) {
+  return String(stateCls || '').replace(/^provider-state-/, '') || 'off';
+}
+
 function renderProviderList() {
   const list = document.getElementById('providerList');
   if (!list) return;
@@ -384,7 +388,7 @@ function renderProviderList() {
     const providerId = ShopScoutSanitize.escapeAttribute(provider.id);
     const guideId = `provider-panel-${providerId}`;
     const model = provider.defaultModel || provider.models?.find(item => item.recommended)?.label || 'User-selected model';
-    return `<article class="provider-card ${expanded ? 'active' : ''} provider-card-${state.cls}" data-provider="${providerId}" data-provider-state="${state.cls}">
+    return `<article class="provider-card ${expanded ? 'active' : ''} provider-card-${providerCardClass(state.cls)}" data-provider="${providerId}" data-provider-state="${state.cls}">
       <button class="provider-card-toggle" type="button" data-provider-toggle="${providerId}" aria-expanded="${expanded ? 'true' : 'false'}" aria-controls="${guideId}">
         <span>
           <span class="provider-name">${ShopScoutSanitize.escapeHtml(provider.name)}</span>
