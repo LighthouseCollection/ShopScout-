@@ -226,6 +226,16 @@ If you approve:
 
 Total: ~5 focused commits. Each is revertible without touching the others.
 
+## Phase 5 as shipped
+
+Phase 5 landed as a partial retirement:
+
+- ✅ **`ShopScoutValues.prettify` and friends** (`normalizeMeasurement`, `normalizeMetric`, `normalizeDimensions`) — removed from `shared/values/cellValues.js` exports; test file `tests/local-units.test.js` deleted. These had zero non-test callers so retirement is complete.
+- ⏸ **`ShopScoutAttributeNormalization`** — still called by `data/productRepo.js`, `grid-rebuild-codex/projections.js`, `normalization/review.js`, `normalization/userRules.js`. Retirement requires rewriting the review UI to read from `flat.specsNormalized` instead of `_normalizedAttributes`. Deferred to a follow-up: the v2 pipeline is the authoritative source for display; the attributes track now duplicates that work for the review tool only.
+- ⏸ **`SSCanonical.canonicalValue`** — still called via `content/keyCanonicalizer.normalizeValue` from `productSchema.assemble`. Retirement requires teaching keyCanonicalizer to short-circuit when v2 has already produced an envelope. Deferred; the canonicalValue string it produces is now shadowed everywhere by `.normalized.display`, so its only ongoing cost is ~50 bytes per stored spec entry.
+
+Both deferred retirements are pure code-hygiene follow-ups. Nothing about user-visible normalization behavior changes when they land.
+
 ---
 
 **Open questions for you before I write any code:**

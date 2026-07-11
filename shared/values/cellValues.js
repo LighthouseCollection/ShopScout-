@@ -394,12 +394,18 @@
     return LOW_IS_BEST.has(k) ? 'low' : 'high';
   }
 
+  /* prettify / normalizeMeasurement / normalizeMetric / normalizeDimensions
+     were the v1 unit-conversion path. Superseded by
+     ShopScoutNormalize.field() (normalization/normalize.js) which reads a
+     typed field registry and returns a {raw, canonical, unit, display,
+     provenance} envelope per value. No production code called these
+     functions; the only test was tests/local-units.test.js which has
+     been retired. Not re-exported so nothing new can pick them up. */
   Object.assign(NS, {
-    prettify, parseNumeric, stableColor, splitToPills,
+    parseNumeric, stableColor, splitToPills,
     pillColorKey, pillFieldStyle, PILL_COLOR_KEYS,
     computeRanks, polarityForField,
-    /* exposed for parity with the old internals if needed */
-    normalizeTime, normalizeMetric, normalizeDimensions,
-    normalizeMeasurement, measurementSystemForLocale
+    /* Still exposed -- used by cell renderers for time/duration display: */
+    normalizeTime,
   });
 })(globalThis);
