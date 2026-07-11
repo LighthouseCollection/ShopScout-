@@ -116,13 +116,54 @@
     ASIN:         { type: 'text', clean: 'trim' },
   };
 
+  /* Leading modifiers commonly attached to a base spec field name.
+     Amazon / Icecat feeds emit "Maximum Pressure", "Min Voltage",
+     "Peak Wattage", "Rated Current", "Continuous Power", etc. The
+     underlying kind is identical to the base field (Pressure,
+     Voltage, ...), so strip the modifier before looking up.
+     Ordered longest-first so "Maximum" wins over "Max". */
+  const LEADING_MODIFIERS = [
+    'maximum', 'minimum', 'continuous', 'average',
+    'nominal', 'operating', 'working', 'standard',
+    'input', 'output', 'rated', 'total', 'peak',
+    'max', 'min', 'avg',
+  ];
+
+  /* Case-insensitive index built once from FIELD_REGISTRY so
+     lookups by any casing land on the canonical entry. */
+  const LOWER_INDEX = Object.create(null);
+  for (const key of Object.keys(FIELD_REGISTRY)) {
+    LOWER_INDEX[key.toLowerCase()] = key;
+  }
+
+  function stripLeadingModifier(name) {
+    const lower = String(name).toLowerCase().trim();
+    for (const mod of LEADING_MODIFIERS) {
+      /* Match "modifier<sep>rest" where sep is space, hyphen, or underscore. */
+      if (lower.startsWith(mod + ' ') || lower.startsWith(mod + '-') || lower.startsWith(mod + '_')) {
+        return name.slice(mod.length + 1).trim();
+      }
+    }
+    return null;
+  }
+
   function get(fieldName) {
     if (!fieldName) return null;
-    return FIELD_REGISTRY[fieldName] || null;
+    /* 1. Exact match */
+    if (FIELD_REGISTRY[fieldName]) return FIELD_REGISTRY[fieldName];
+    /* 2. Case-insensitive match */
+    const canonicalKey = LOWER_INDEX[String(fieldName).toLowerCase().trim()];
+    if (canonicalKey) return FIELD_REGISTRY[canonicalKey];
+    /* 3. Strip a leading modifier and try again. Recursive so
+       "Peak Continuous Wattage" collapses to "Wattage". Bounded
+       by the finite modifier list so it terminates. */
+    const stripped = stripLeadingModifier(fieldName);
+    if (stripped && stripped !== fieldName) return get(stripped);
+    return null;
   }
 
   function has(fieldName) {
-    return !!(fieldName && FIELD_REGISTRY[fieldName]);
+    return get(fieldName) !== null;
   }
 
   function list() {

@@ -298,6 +298,10 @@ assert.ok(settingsJs.includes('provider-card-${providerCardClass(state.cls)}'),
   'provider cards map provider state to the expected provider-card-on/off/warn CSS class');
 assert.ok(!settingsJs.includes('provider-card-${state.cls}'),
   'provider cards do not render invalid provider-card-provider-state-* classes');
+assert.ok(/function fallbackAISettings\(\)[\s\S]*ShopScoutAI\.mergeSettings\(null\)/.test(settingsJs),
+  'settings has a default AI settings fallback so provider options can render when storage is unavailable');
+assert.ok(/async function loadAISettings\(\)[\s\S]*catch\s*\(err\)[\s\S]*fallbackAISettings\(\)/.test(settingsJs),
+  'AI provider settings load falls back instead of leaving the provider list empty');
 assert.ok(aiProvidersJs.includes('Microsoft Copilot'), 'settings provider data includes Microsoft Copilot');
 assert.ok(aiProvidersJs.includes('Local LLM (Ollama / LM Studio)'), 'settings provider data includes local LLM setup');
 assert.ok(css.includes('.dashboard-settings-nav {') && css.includes('gap: 10px;'), 'embedded settings left nav has visible spacing between menu items');

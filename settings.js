@@ -343,13 +343,26 @@ async function initOpenFactsToggles() {
   }
 }
 
+function fallbackAISettings() {
+  return ShopScoutAI.mergeSettings(null);
+}
+
 async function loadAISettings() {
-  const stored = await chrome.storage.local.get(ShopScoutAI.AI_STORAGE_KEY);
-  return ShopScoutAI.mergeSettings(stored[ShopScoutAI.AI_STORAGE_KEY]);
+  const storage = chrome?.storage?.local;
+  if (!storage || typeof storage.get !== 'function') return fallbackAISettings();
+  try {
+    const stored = await storage.get(ShopScoutAI.AI_STORAGE_KEY);
+    return ShopScoutAI.mergeSettings(stored[ShopScoutAI.AI_STORAGE_KEY]);
+  } catch (err) {
+    console.warn('ShopScout settings: AI settings unavailable; showing provider defaults.', err);
+    return fallbackAISettings();
+  }
 }
 
 async function saveAISettings() {
   aiSettings = ShopScoutAI.mergeSettings(aiSettings);
+  const storage = chrome?.storage?.local;
+  if (!storage || typeof storage.set !== 'function') return;
   await chrome.storage.local.set({ [ShopScoutAI.AI_STORAGE_KEY]: aiSettings });
 }
 

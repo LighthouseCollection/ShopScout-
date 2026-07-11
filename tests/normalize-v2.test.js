@@ -190,6 +190,33 @@ assert.ok(r.provenance.warnings.some(w => w.startsWith('unknown_field:')),
   'Unregistered field flags itself in provenance');
 passed += 2;
 
+/* ---------------- Field-name aliasing ---------------- */
+
+r = N.field('Maximum Pressure', '150 psi');
+check('"Maximum Pressure" resolves to Pressure registry entry',
+  { canonical: r.canonical, unit: r.unit, display: r.display },
+  { canonical: 150, unit: 'psi', display: '150 psi' });
+
+r = N.field('Maximum Pressure', '150');
+check('"Maximum Pressure" bare 150 infers psi',
+  { canonical: r.canonical, unit: r.unit, display: r.display },
+  { canonical: 150, unit: 'psi', display: '150 psi' });
+
+r = N.field('Max Voltage', '48');
+check('"Max Voltage" bare 48 resolves + infers V',
+  { canonical: r.canonical, unit: r.unit, display: r.display },
+  { canonical: 48, unit: 'V', display: '48 V' });
+
+r = N.field('Rated Wattage', '1200 W');
+check('"Rated Wattage" resolves to Wattage',
+  { canonical: r.canonical, unit: r.unit, display: r.display },
+  { canonical: 1200, unit: 'W', display: '1200 W' });
+
+r = N.field('color', 'Black&red');   /* case-insensitive */
+check('lowercase "color" resolves to Color entry',
+  { canonical: r.canonical, display: r.display },
+  { canonical: ['Black', 'Red'], display: ['Black', 'Red'] });
+
 /* ---------------- Empty / null inputs ---------------- */
 
 r = N.field('Color', '');
