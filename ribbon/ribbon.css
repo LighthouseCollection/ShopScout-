@@ -1219,6 +1219,17 @@
                     right of the select, spanning both rows.
    The label + select land on the same grid rows as Sort By /
    Group By in the Organize group, so all textfields align. */
+/* Hard-pin the whole List group to a single fixed width so it looks
+   identical on every tab (File / Products / Analyze / Search)
+   regardless of what neighbor groups are in the pane. Without this
+   the flex row settles at different widths per tab and PRODUCT LIST
+   drifts left/right depending on neighbors. */
+.rb-office-ribbon .rb-group[data-group-id="list"] {
+  flex: 0 0 auto;
+  width: 300px;
+  min-width: 300px;
+  max-width: 300px;
+}
 .rb-office-ribbon .rb-group[data-group-id="list"] > .rb-group-content {
   display: flex;
   flex-direction: row;
