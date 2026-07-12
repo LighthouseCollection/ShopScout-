@@ -2,6 +2,43 @@
 
 This file is the shared record for Claude and Codex. Append an entry for every meaningful change so both agents can continue from the same factual project history.
 
+## 2026-07-12 07:56 - Codex manual AI accordion cleanup
+
+- Agent: Codex
+- Branch: grid-rebuild-codex
+- Commit: This commit
+- Status: Implemented. Manual AI setup now uses collapsed expand/collapse sections and moves paste-back to the Analyze ribbon.
+- What changed:
+  - Replaced text chevrons in the Manual AI setup sections with circular SVG expand/collapse controls.
+  - Applied the requested `ai-payload-estimate` and `ai-accordion-section` styling, including the warning-toned estimate box and unbordered accordion section shell.
+  - Converted the “What to Ask AI to Analyze” checklist from boxed cards to plain horizontal checklist rows with checkbox and title on the same line.
+  - Changed the top-level sections from single-open accordion behavior to independent expand/collapse behavior, with all sections collapsed by default when the modal opens.
+  - Converted “Product Data Included” into nested Core and Select Individual Meta Data accordions with four-column field layout.
+  - Tightened Product Data Included field rows with higher-specificity modal overrides, smaller text, explicit checkbox/text spacing, and more vertical room so metadata fields are not clipped.
+  - Removed the Paste Result Back block from the setup modal and added Paste result to the Analyze ribbon, opening the existing paste-back modal.
+  - Added regression tests covering the ribbon paste command, circular SVG accordion controls, unboxed report checklist, nested field accordions, and four-column field layout.
+- Files touched:
+  - `comparison.html`
+  - `comparison.css`
+  - `comparison.js`
+  - `tests/ai-analysis-options.test.js`
+  - `tests/manual-ai-engine.test.js`
+  - `AGENT_CHANGELOG.md`
+- Validation run:
+  - `node tests\manual-ai-engine.test.js` -> pass
+  - `node tests\ai-analysis-options.test.js` -> pass
+  - `node tests\ai-payload-options.test.js` -> pass
+  - `node tests\menu-layout.test.js` -> pass
+  - `npm run syntax` -> pass
+  - `npm run lint` -> pass, 0 errors, 0 warnings
+  - `npm run typecheck` -> pass
+  - `npm test` -> 47/47 test files pass
+  - `npm run build` -> Chrome / Edge / Firefox rebuilt
+- Review status / next reviewer:
+  - Ready for Claude review.
+- Follow-ups or risks:
+  - Browser visual inspection was not available in this turn; DOM/CSS regression tests cover the requested layout and controls.
+
 ## 2026-07-12 02:37 - Codex manual AI modal accordion flow
 
 - Agent: Codex

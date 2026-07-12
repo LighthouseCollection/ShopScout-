@@ -14,13 +14,14 @@ mustInclude(comparisonHtml, 'data-ai-section="discrepanciesFactChecks"', 'AI mod
 mustInclude(comparisonHtml, 'data-ai-section="claimsValueReviews"', 'AI modal exposes Claims, Value & Reviews section');
 mustInclude(comparisonHtml, 'data-ai-section="finalVerdict"', 'AI modal exposes Final Verdict section');
 mustInclude(comparisonHtml, 'id="aiFieldList"', 'AI modal includes dynamic field/spec checklist');
-mustInclude(comparisonHtml, 'id="manualResultPasteBtn"', 'Manual AI flow has paste-result-back entry point');
+mustInclude(comparisonHtml, 'data-command="paste-ai-result"', 'Analyze ribbon has paste-result-back entry point');
 
 mustInclude(comparisonJs, 'function aiSectionInputs()', 'comparison script reads report section checkboxes');
 mustInclude(comparisonJs, 'function renderAiFieldSelection', 'comparison script renders dynamic product fields before prompt generation');
 mustInclude(comparisonJs, 'function collectAiFieldSelectionFromModal', 'comparison script collects selected meta/spec fields');
 mustInclude(comparisonJs, 'function analysisOptionsFromSections', 'comparison script maps report sections to existing AI analysis flags');
 mustInclude(comparisonJs, 'function openManualResultPasteModal', 'comparison script exposes paste-result-back workflow');
+mustInclude(comparisonJs, "command === 'paste-ai-result'", 'comparison script routes ribbon paste-result-back command');
 mustInclude(comparisonJs, 'includedFields', 'prompt options carry selected field/spec list');
 mustInclude(comparisonJs, 'Captured specs [each specification is an individual field (column)]', 'manual prompt tells AI each captured spec is a field');
 mustInclude(comparisonJs, 'Listed value → Corrected value → Reason/source → Confidence', 'manual prompt enforces correction arrow syntax');

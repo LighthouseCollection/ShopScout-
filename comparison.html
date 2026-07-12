@@ -311,6 +311,7 @@
           <div class="rb-stack">
             <button class="rb-btn-sm" data-command="ai-results"><span class="rb-btn-sm-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></span><span class="rb-btn-sm-label">History</span></button>
             <button class="rb-btn-sm" data-command="ai-results"><span class="rb-btn-sm-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="8" height="8" rx="1"/><rect x="13" y="3" width="8" height="8" rx="1"/><rect x="3" y="13" width="8" height="8" rx="1"/><rect x="13" y="13" width="8" height="8" rx="1"/></svg></span><span class="rb-btn-sm-label">Compare runs</span></button>
+            <button class="rb-btn-sm" data-command="paste-ai-result"><span class="rb-btn-sm-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M5 21h14"/></svg></span><span class="rb-btn-sm-label">Paste result</span></button>
             <button class="rb-btn-sm" data-command="export"><span class="rb-btn-sm-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M7 10l5 5 5-5"/><path d="M12 15V3"/></svg></span><span class="rb-btn-sm-label">Export</span></button>
           </div>
         </div>
@@ -673,11 +674,11 @@
       <button class="close-btn" id="aiOptionsClose">&times;</button>
     </div>
     <div class="ai-options-body ai-options-body--accordion">
-      <div class="ai-accordion-section active" data-ai-accordion-section>
-        <button type="button" class="ai-accordion-trigger" data-ai-accordion-trigger aria-expanded="true">
+      <div class="ai-accordion-section" data-ai-accordion-section>
+        <button type="button" class="ai-accordion-trigger" data-ai-accordion-trigger aria-expanded="false">
           <span class="ai-accordion-step">1</span>
           <span class="ai-accordion-title"><strong>Data to Send</strong><span>Choose how much evidence ShopScout puts into the prompt.</span></span>
-          <span class="ai-accordion-chevron" aria-hidden="true">⌄</span>
+          <span class="ai-accordion-chevron" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></span>
         </button>
         <div class="ai-accordion-panel">
           <p class="ai-option-hint">Data to Send controls the amount of evidence. Product Data Included controls which fields are allowed inside that evidence.</p>
@@ -693,10 +694,10 @@
         <button type="button" class="ai-accordion-trigger" data-ai-accordion-trigger aria-expanded="false">
           <span class="ai-accordion-step">2</span>
           <span class="ai-accordion-title"><strong>What to Ask AI to Analyze</strong><span>Select the report sections the AI should produce.</span></span>
-          <span class="ai-accordion-chevron" aria-hidden="true">⌄</span>
+          <span class="ai-accordion-chevron" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></span>
         </button>
         <div class="ai-accordion-panel">
-          <div class="ai-option-list">
+          <div class="ai-option-list ai-option-list--plain">
             <label class="ai-option"><input type="checkbox" data-ai-section="categoryBuyingFactors" checked><span><strong>Category &amp; Buying Factors</strong><span>Identify category, subcategory, product line, and comparison criteria.</span></span></label>
             <label class="ai-option"><input type="checkbox" data-ai-section="masterComparisonTable" checked><span><strong>Master Comparison Table</strong><span>Dynamically compare products across the most important buying factors.</span></span></label>
             <label class="ai-option"><input type="checkbox" data-ai-section="discrepanciesFactChecks" checked><span><strong>Discrepancies &amp; Fact-Checks</strong><span>Find missing specs, verify claims, and correct conflicts with the required arrow format.</span></span></label>
@@ -709,7 +710,7 @@
         <button type="button" class="ai-accordion-trigger" data-ai-accordion-trigger aria-expanded="false">
           <span class="ai-accordion-step">3</span>
           <span class="ai-accordion-title"><strong>Product Data Included</strong><span>Choose the fields and captured specs allowed in the prompt.</span></span>
-          <span class="ai-accordion-chevron" aria-hidden="true">⌄</span>
+          <span class="ai-accordion-chevron" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></span>
         </button>
         <div class="ai-accordion-panel">
           <p class="ai-option-hint">Uncheck low-value fields to reduce token use before ShopScout inserts product facts.</p>
@@ -719,11 +720,6 @@
           </div>
           <div class="ai-field-list" id="aiFieldList" aria-live="polite"></div>
         </div>
-      </div>
-      <div class="ai-paste-back-block">
-        <h3>Paste Result Back</h3>
-        <p class="ai-option-hint">Manual AI can be pasted back into ShopScout after the assistant responds. Table corrections are saved for review before product data is changed.</p>
-        <button type="button" class="dashboard-secondary-action" id="manualResultPasteBtn">Paste AI Result Back Into ShopScout</button>
       </div>
     </div>
     <div class="modal-actions ai-options-actions">

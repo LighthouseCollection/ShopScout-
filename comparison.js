@@ -1911,6 +1911,7 @@ function bindRibbonCommandEvents() {
         toast.show('Could not read clipboard', 'error');
       }
     } else if (command === 'manual-ai') openManualAiModal();
+    else if (command === 'paste-ai-result') openManualResultPasteModal();
     else if (command === 'ai-results') openLatestAiResults();
     else if (command === 'settings') openSettingsPage();
     else if (command === 'duplicate-review') openDuplicateReviewPage();
@@ -2088,6 +2089,32 @@ function aiSelectedFieldIds() {
   return aiFieldInputs().filter(input => input.checked).map(input => input.dataset.aiField);
 }
 
+function aiAccordionChevronSvg() {
+  return `<span class="ai-accordion-chevron" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></span>`;
+}
+
+function aiFieldAccordionHtml({ title, description, bodyHtml, active = false }) {
+  return `<section class="ai-field-accordion${active ? ' active' : ''}" data-ai-field-accordion>` +
+    `<button type="button" class="ai-field-accordion-trigger" data-ai-field-accordion-trigger aria-expanded="${active ? 'true' : 'false'}">` +
+      `<span class="ai-field-accordion-title"><strong>${esc(title)}</strong><span>${esc(description)}</span></span>` +
+      aiAccordionChevronSvg() +
+    `</button>` +
+    bodyHtml +
+  `</section>`;
+}
+
+function bindAiFieldAccordionEvents() {
+  document.querySelectorAll('#aiFieldList [data-ai-field-accordion-trigger]').forEach(trigger => {
+    trigger.addEventListener('click', () => {
+      const section = trigger.closest('[data-ai-field-accordion]');
+      if (!section) return;
+      const active = !section.classList.contains('active');
+      section.classList.toggle('active', active);
+      trigger.setAttribute('aria-expanded', active ? 'true' : 'false');
+    });
+  });
+}
+
 function renderAiFieldSelection(products) {
   const list = document.getElementById('aiFieldList');
   if (!list) return;
@@ -2104,7 +2131,23 @@ function renderAiFieldSelection(products) {
   const specHtml = [...specNames.entries()].sort((a, b) => a[1].localeCompare(b[1])).map(([id, label]) =>
     `<label class="ai-field-item" title="${escAttr(label)}"><input type="checkbox" data-ai-field="${escAttr(id)}" checked><span>${esc(label)}</span></label>`
   ).join('');
-  setTrustedHtml(list, `<h4>Core</h4>${coreHtml}${specHtml ? `<h4>Captured specs</h4>${specHtml}` : '<h4>Captured specs</h4><p class="ai-option-hint">No captured spec fields found for the selected products.</p>'}`);
+  const coreSection = aiFieldAccordionHtml({
+    title: 'Core',
+    description: 'Recommended identity, pricing, source, and review fields.',
+    bodyHtml: `<div class="ai-field-grid">${coreHtml}</div>`,
+    active: true
+  });
+  const specBody = specHtml
+    ? `<div class="ai-field-grid">${specHtml}</div>`
+    : '<p class="ai-option-hint ai-field-empty">No captured spec fields found for the selected products.</p>';
+  const specSection = aiFieldAccordionHtml({
+    title: 'Select Individual Meta Data',
+    description: 'Captured metadata and specification columns available for this prompt.',
+    bodyHtml: specBody,
+    active: true
+  });
+  setTrustedHtml(list, coreSection + specSection);
+  bindAiFieldAccordionEvents();
   aiFieldInputs().forEach(input => input.addEventListener('change', updatePromptPayloadEstimate));
 }
 
@@ -2329,7 +2372,7 @@ async function openAiOptionsModal(productIndexes, providerId = 'auto', runMode =
   if (runBtn) runBtn.textContent = runMode === 'manual' ? 'Create Prompt' : 'Run Analysis';
   updateAiOptionsStatus();
   await updatePromptPayloadEstimate();
-  openAiAccordionSection(document.querySelector('#aiOptionsModal [data-ai-accordion-section]'));
+  collapseAiAccordionSections();
   document.getElementById('aiOptionsModal')?.classList.add('active');
 }
 
@@ -2338,13 +2381,22 @@ function closeAiOptionsModal() {
   pendingAiRunOptions = null;
 }
 
-function openAiAccordionSection(section) {
+function setAiAccordionSectionExpanded(section, active) {
   const target = section?.closest?.('[data-ai-accordion-section]') || section;
   if (!target) return;
+  target.classList.toggle('active', active);
+  target.querySelector('[data-ai-accordion-trigger]')?.setAttribute('aria-expanded', active ? 'true' : 'false');
+}
+
+function toggleAiAccordionSection(section) {
+  const target = section?.closest?.('[data-ai-accordion-section]') || section;
+  if (!target) return;
+  setAiAccordionSectionExpanded(target, !target.classList.contains('active'));
+}
+
+function collapseAiAccordionSections() {
   document.querySelectorAll('#aiOptionsModal [data-ai-accordion-section]').forEach(item => {
-    const active = item === target;
-    item.classList.toggle('active', active);
-    item.querySelector('[data-ai-accordion-trigger]')?.setAttribute('aria-expanded', active ? 'true' : 'false');
+    setAiAccordionSectionExpanded(item, false);
   });
 }
 
@@ -2352,7 +2404,7 @@ function bindAiOptionsEvents() {
   const modal = document.getElementById('aiOptionsModal');
   if (!modal) return;
   modal.querySelectorAll('[data-ai-accordion-trigger]').forEach(trigger => {
-    trigger.addEventListener('click', () => openAiAccordionSection(trigger));
+    trigger.addEventListener('click', () => toggleAiAccordionSection(trigger));
   });
   aiOptionInputs().forEach(input => input.addEventListener('change', () => {
     updateAiOptionsStatus();
@@ -2361,7 +2413,6 @@ function bindAiOptionsEvents() {
   payloadModeInputs().forEach(input => input.addEventListener('change', updatePromptPayloadEstimate));
   document.getElementById('aiFieldsCore')?.addEventListener('click', () => setAiFieldSelection('core'));
   document.getElementById('aiFieldsAll')?.addEventListener('click', () => setAiFieldSelection('all'));
-  document.getElementById('manualResultPasteBtn')?.addEventListener('click', openManualResultPasteModal);
   document.getElementById('aiOptionsClose')?.addEventListener('click', closeAiOptionsModal);
   document.getElementById('aiOptionsCancel')?.addEventListener('click', closeAiOptionsModal);
   document.getElementById('aiOptionsRecommended')?.addEventListener('click', async () => {
