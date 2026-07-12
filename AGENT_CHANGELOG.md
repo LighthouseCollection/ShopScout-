@@ -2,6 +2,39 @@
 
 This file is the shared record for Claude and Codex. Append an entry for every meaningful change so both agents can continue from the same factual project history.
 
+## 2026-07-12 02:37 - Codex manual AI modal accordion flow
+
+- Agent: Codex
+- Branch: grid-rebuild-codex
+- Commit: This commit
+- Status: Implemented. The Manual AI options modal now uses a stacked accordion/wizard layout instead of split columns.
+- What changed:
+  - Converted the modal body into three full-width accordion sections: Data to Send, What to Ask AI to Analyze, and Product Data Included.
+  - Added numbered accordion headers with concise descriptions and chevron state.
+  - Kept Paste Result Back as a secondary block below the three-step flow.
+  - Added `openAiAccordionSection()` so only one section is expanded at a time.
+  - Reset the modal to step 1 whenever Analyze with AI / Manual AI opens.
+  - Updated tests to lock the stacked accordion structure and expanded/collapsed panel behavior.
+- Files touched:
+  - `comparison.html`
+  - `comparison.css`
+  - `comparison.js`
+  - `tests/ai-analysis-options.test.js`
+  - `AGENT_CHANGELOG.md`
+- Validation run:
+  - `node tests\ai-analysis-options.test.js` -> pass
+  - `node tests\manual-ai-engine.test.js` -> pass
+  - `node tests\ai-payload-options.test.js` -> pass
+  - `npm run syntax` -> pass
+  - `npm run lint` -> pass, 0 errors, 0 warnings
+  - `npm test` -> 47/47 test files pass
+  - `npm run typecheck` -> pass
+  - `npm run build` -> Chrome / Edge / Firefox rebuilt
+- Review status / next reviewer:
+  - Ready for Claude review.
+- Follow-ups or risks:
+  - No prompt/payload behavior changed; this is a layout and interaction cleanup.
+
 ## 2026-07-12 02:23 - Codex manual AI modal data-to-send clarity
 
 - Agent: Codex

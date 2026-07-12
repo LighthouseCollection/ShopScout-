@@ -98,6 +98,8 @@ const comparisonJs = readFile('comparison.js');
 
 assert.ok(comparisonHtml.includes('id="aiOptionsModal"'), 'comparison page includes the AI options modal');
 assert.ok(comparisonHtml.includes('Data to Send'), 'AI options modal uses clearer Data to Send wording');
+assert.ok(comparisonHtml.includes('data-ai-accordion-section'), 'AI options modal uses stacked accordion sections');
+assert.ok(comparisonHtml.includes('data-ai-accordion-trigger'), 'AI options modal exposes accordion triggers');
 assert.ok(comparisonHtml.includes('Example: name, brand, price'), 'compact data option includes an example');
 assert.ok(comparisonHtml.includes('Example: “34 selected fields, about 688 tokens.”'), 'estimate option includes an example');
 assert.ok(comparisonHtml.includes('Example: short bullet/description excerpts'), 'raw fallback option includes an example');
@@ -105,13 +107,16 @@ assert.ok(comparisonHtml.includes('data-ai-section="discrepanciesFactChecks"'), 
 assert.ok(comparisonHtml.includes('data-ai-section="finalVerdict"'), 'AI options modal includes final verdict section checkbox');
 assert.ok(comparisonHtml.includes('id="aiFieldList"'), 'AI options modal includes field/spec token-control list');
 assert.ok(/\.ai-options-modal\s*\{[^}]*width:\s*min\(1080px, calc\(100vw - 32px\)\)/.test(comparisonHtml), 'AI options modal is wider so the full checklist is compact');
-assert.ok(/\.ai-options-body\s*\{[^}]*grid-template-columns:\s*minmax\(0, \.95fr\) minmax\(0, 1\.05fr\)/.test(comparisonHtml), 'AI options modal uses two clear content columns while each group remains single-column');
+assert.ok(/\.ai-options-body\s*\{[^}]*flex-direction:\s*column/.test(comparisonHtml), 'AI options modal stacks accordion sections vertically');
+assert.ok(/\.ai-accordion-panel\s*\{[^}]*display:\s*none/.test(comparisonHtml), 'accordion panels collapse by default');
+assert.ok(/\.ai-accordion-section\.active \.ai-accordion-panel\s*\{[^}]*display:\s*block/.test(comparisonHtml), 'active accordion panel opens');
 assert.ok(/\.ai-payload-list\s*\{[^}]*grid-template-columns:\s*repeat\(3, minmax\(0, 1fr\)\)/.test(comparisonHtml), 'data-to-send options render as compact horizontal cards');
 assert.ok(/\.ai-option-list\s*\{[^}]*grid-template-columns:\s*1fr/.test(comparisonHtml), 'AI options are single column by default');
 assert.ok(!/\.ai-option-list\s*\{[^}]*repeat\(2/.test(comparisonHtml), 'AI options no longer use a two-column grid');
 assert.ok(comparisonHtml.includes('.ai-option, .ai-option * { text-transform: none; letter-spacing: 0; }'), 'AI option labels override generic modal uppercase styling');
 assert.ok(comparisonHtml.includes('background: var(--paper);') && comparisonHtml.includes('border: 1px solid var(--rule-strong);'), 'AI options modal follows the new comparison theme tokens');
 assert.ok(comparisonJs.includes('openAiOptionsModal'), 'comparison script opens the AI options modal before running');
+assert.ok(comparisonJs.includes('function openAiAccordionSection'), 'comparison script controls accordion section state');
 assert.ok(comparisonJs.includes('analysisOptions'), 'comparison script sends selected analysis options to the background pipeline');
 
 console.log('ai analysis options tests passed');

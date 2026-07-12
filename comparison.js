@@ -2329,6 +2329,7 @@ async function openAiOptionsModal(productIndexes, providerId = 'auto', runMode =
   if (runBtn) runBtn.textContent = runMode === 'manual' ? 'Create Prompt' : 'Run Analysis';
   updateAiOptionsStatus();
   await updatePromptPayloadEstimate();
+  openAiAccordionSection(document.querySelector('#aiOptionsModal [data-ai-accordion-section]'));
   document.getElementById('aiOptionsModal')?.classList.add('active');
 }
 
@@ -2337,9 +2338,22 @@ function closeAiOptionsModal() {
   pendingAiRunOptions = null;
 }
 
+function openAiAccordionSection(section) {
+  const target = section?.closest?.('[data-ai-accordion-section]') || section;
+  if (!target) return;
+  document.querySelectorAll('#aiOptionsModal [data-ai-accordion-section]').forEach(item => {
+    const active = item === target;
+    item.classList.toggle('active', active);
+    item.querySelector('[data-ai-accordion-trigger]')?.setAttribute('aria-expanded', active ? 'true' : 'false');
+  });
+}
+
 function bindAiOptionsEvents() {
   const modal = document.getElementById('aiOptionsModal');
   if (!modal) return;
+  modal.querySelectorAll('[data-ai-accordion-trigger]').forEach(trigger => {
+    trigger.addEventListener('click', () => openAiAccordionSection(trigger));
+  });
   aiOptionInputs().forEach(input => input.addEventListener('change', () => {
     updateAiOptionsStatus();
     updatePromptPayloadEstimate();

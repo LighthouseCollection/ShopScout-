@@ -444,11 +444,19 @@
   .ai-options-header { padding: 12px 16px 9px; border-bottom: 1px solid var(--rule); display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; background: var(--card); }
   .ai-options-title h2 { margin: 0 0 3px; display: block; font-size: 15px; font-weight: 650; color: var(--ink); }
   .ai-options-title p { color: var(--ink-3); font-size: 12px; line-height: 1.35; max-width: 720px; }
-  .ai-options-body { display: grid; grid-template-columns: minmax(0, .95fr) minmax(0, 1.05fr); align-items: start; gap: 12px 16px; padding: 12px 16px; overflow-y: auto; max-height: calc(min(76vh, 760px) - 116px); background: var(--paper); }
-  .ai-option-group { margin-bottom: 0; }
-  .ai-option-group--payload, .ai-option-group--paste { grid-column: 1 / -1; }
-  .ai-option-group:last-child { margin-bottom: 0; }
-  .ai-option-group h3 { font-size: 12px; font-weight: 650; text-transform: none; letter-spacing: 0; color: var(--ink-3); margin-bottom: 5px; }
+  .ai-options-body { display: flex; flex-direction: column; gap: 8px; padding: 12px 16px; overflow-y: auto; max-height: calc(min(76vh, 760px) - 116px); background: var(--paper); }
+  .ai-accordion-section { border: 1px solid var(--rule); border-radius: var(--radius-sm); background: var(--card); overflow: hidden; }
+  .ai-accordion-section.active { border-color: var(--primary); box-shadow: 0 0 0 1px color-mix(in srgb, var(--primary) 18%, transparent); }
+  .ai-accordion-trigger { width: 100%; display: grid; grid-template-columns: 28px minmax(0, 1fr) 18px; align-items: center; gap: 10px; padding: 10px 12px; border: 0; background: var(--card); color: var(--ink); text-align: left; cursor: pointer; }
+  .ai-accordion-section.active .ai-accordion-trigger { background: var(--primary-light); }
+  .ai-accordion-trigger:focus-visible { outline: 2px solid var(--primary); outline-offset: -2px; }
+  .ai-accordion-step { display: inline-flex; align-items: center; justify-content: center; width: 24px; height: 24px; border-radius: 999px; background: var(--paper); border: 1px solid var(--rule-strong); color: var(--primary-dark); font-size: 12px; font-weight: 700; }
+  .ai-accordion-title strong { display: block; font-size: 13px; font-weight: 650; line-height: 1.25; color: var(--ink); }
+  .ai-accordion-title span { display: block; margin-top: 2px; font-size: 11px; line-height: 1.35; color: var(--ink-3); }
+  .ai-accordion-chevron { justify-self: end; color: var(--ink-3); font-size: 16px; transition: transform .15s ease; }
+  .ai-accordion-section.active .ai-accordion-chevron { transform: rotate(180deg); }
+  .ai-accordion-panel { display: none; padding: 10px 12px 12px; border-top: 1px solid var(--rule); background: var(--paper); }
+  .ai-accordion-section.active .ai-accordion-panel { display: block; }
   .ai-option-list { display: grid; grid-template-columns: 1fr; gap: 6px; }
   .ai-payload-list { grid-template-columns: repeat(3, minmax(0, 1fr)); }
   .ai-option { display: grid; grid-template-columns: 16px 1fr; gap: 8px; padding: 7px 9px; border: 1px solid var(--rule); border-radius: var(--radius-sm); background: var(--card); cursor: pointer; text-transform: none; letter-spacing: 0; }
@@ -469,6 +477,8 @@
   .ai-payload-estimate { margin-top: 7px; padding: 7px 9px; border: 1px solid var(--rule-strong); border-radius: var(--radius-sm); background: var(--primary-light); color: var(--primary-dark); font-size: 11px; line-height: 1.35; }
   .ai-options-actions { padding: 9px 16px 10px; margin-top: 0; border-top: 1px solid var(--rule); background: var(--card); align-items: center; }
   .ai-options-actions .ai-options-status { margin-right: auto; font-size: 12px; color: var(--ink-3); }
+  .ai-paste-back-block { border: 1px solid var(--rule); border-radius: var(--radius-sm); background: var(--card); padding: 10px 12px; }
+  .ai-paste-back-block h3 { font-size: 12px; font-weight: 650; text-transform: none; letter-spacing: 0; color: var(--ink-3); margin-bottom: 5px; }
   .embedded-modal--manual-result { width: min(920px, calc(100vw - 32px)); }
   .manual-result-paste-text { width: 100%; min-height: 360px; resize: vertical; border: 1px solid var(--rule-strong); border-radius: var(--radius-sm); padding: 12px; font: 13px/1.45 ui-monospace, SFMono-Regular, Consolas, "Liberation Mono", monospace; color: var(--ink); background: var(--paper); }
   @media (max-width: 760px) {

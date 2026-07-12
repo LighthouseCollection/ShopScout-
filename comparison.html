@@ -672,37 +672,55 @@
       </div>
       <button class="close-btn" id="aiOptionsClose">&times;</button>
     </div>
-    <div class="ai-options-body">
-      <div class="ai-option-group ai-option-group--payload">
-        <h3>Data to Send</h3>
-        <p class="ai-option-hint">Controls how much product evidence ShopScout inserts into the prompt. The field checklist below controls which fields are allowed inside that data.</p>
-        <div class="ai-option-list ai-payload-list">
-          <label class="ai-option ai-option--payload"><input type="radio" name="aiPayloadMode" data-payload-mode="compact" value="compact" checked><span><strong>Compact</strong><span>Captured facts plus product URLs. Example: name, brand, price, rating, source URL, and selected specs.</span></span></label>
-          <label class="ai-option ai-option--payload"><input type="radio" name="aiPayloadMode" data-payload-mode="estimate" value="estimate"><span><strong>Compact + estimate</strong><span>Same compact data, with token estimate shown before sending. Example: “34 selected fields, about 688 tokens.”</span></span></label>
-          <label class="ai-option ai-option--payload"><input type="radio" name="aiPayloadMode" data-payload-mode="fallback" value="fallback"><span><strong>Compact + raw fallback</strong><span>Compact data plus capped raw excerpts only when facts are insufficient. Example: short bullet/description excerpts for missing specs.</span></span></label>
-        </div>
-        <div class="ai-payload-estimate" id="aiPayloadEstimate">Payload estimate will appear here.</div>
-      </div>
-      <div class="ai-option-group ai-option-group--sections">
-        <h3>What to Ask AI to Analyze</h3>
-        <div class="ai-option-list">
-          <label class="ai-option"><input type="checkbox" data-ai-section="categoryBuyingFactors" checked><span><strong>Category &amp; Buying Factors</strong><span>Identify category, subcategory, product line, and comparison criteria.</span></span></label>
-          <label class="ai-option"><input type="checkbox" data-ai-section="masterComparisonTable" checked><span><strong>Master Comparison Table</strong><span>Dynamically compare products across the most important buying factors.</span></span></label>
-          <label class="ai-option"><input type="checkbox" data-ai-section="discrepanciesFactChecks" checked><span><strong>Discrepancies &amp; Fact-Checks</strong><span>Find missing specs, verify claims, and correct conflicts with the required arrow format.</span></span></label>
-          <label class="ai-option"><input type="checkbox" data-ai-section="claimsValueReviews" checked><span><strong>Claims, Value &amp; Reviews</strong><span>Analyze marketing claims, price-to-value, and review consensus.</span></span></label>
-          <label class="ai-option"><input type="checkbox" data-ai-section="finalVerdict" checked><span><strong>Final Verdict</strong><span>Clear use-case driven recommendations such as Best for X and Best Value.</span></span></label>
+    <div class="ai-options-body ai-options-body--accordion">
+      <div class="ai-accordion-section active" data-ai-accordion-section>
+        <button type="button" class="ai-accordion-trigger" data-ai-accordion-trigger aria-expanded="true">
+          <span class="ai-accordion-step">1</span>
+          <span class="ai-accordion-title"><strong>Data to Send</strong><span>Choose how much evidence ShopScout puts into the prompt.</span></span>
+          <span class="ai-accordion-chevron" aria-hidden="true">⌄</span>
+        </button>
+        <div class="ai-accordion-panel">
+          <p class="ai-option-hint">Data to Send controls the amount of evidence. Product Data Included controls which fields are allowed inside that evidence.</p>
+          <div class="ai-option-list ai-payload-list">
+            <label class="ai-option ai-option--payload"><input type="radio" name="aiPayloadMode" data-payload-mode="compact" value="compact" checked><span><strong>Compact</strong><span>Captured facts plus product URLs. Example: name, brand, price, rating, source URL, and selected specs.</span></span></label>
+            <label class="ai-option ai-option--payload"><input type="radio" name="aiPayloadMode" data-payload-mode="estimate" value="estimate"><span><strong>Compact + estimate</strong><span>Same compact data, with token estimate shown before sending. Example: “34 selected fields, about 688 tokens.”</span></span></label>
+            <label class="ai-option ai-option--payload"><input type="radio" name="aiPayloadMode" data-payload-mode="fallback" value="fallback"><span><strong>Compact + raw fallback</strong><span>Compact data plus capped raw excerpts only when facts are insufficient. Example: short bullet/description excerpts for missing specs.</span></span></label>
+          </div>
+          <div class="ai-payload-estimate" id="aiPayloadEstimate">Payload estimate will appear here.</div>
         </div>
       </div>
-      <div class="ai-option-group ai-option-group--fields">
-        <h3>Product Data Included</h3>
-        <p class="ai-option-hint">Uncheck low-value fields to reduce token use before ShopScout inserts product facts.</p>
-        <div class="ai-field-toolbar">
-          <button type="button" class="dashboard-secondary-action dashboard-secondary-action--small" id="aiFieldsCore">Core only</button>
-          <button type="button" class="dashboard-secondary-action dashboard-secondary-action--small" id="aiFieldsAll">Select all</button>
+      <div class="ai-accordion-section" data-ai-accordion-section>
+        <button type="button" class="ai-accordion-trigger" data-ai-accordion-trigger aria-expanded="false">
+          <span class="ai-accordion-step">2</span>
+          <span class="ai-accordion-title"><strong>What to Ask AI to Analyze</strong><span>Select the report sections the AI should produce.</span></span>
+          <span class="ai-accordion-chevron" aria-hidden="true">⌄</span>
+        </button>
+        <div class="ai-accordion-panel">
+          <div class="ai-option-list">
+            <label class="ai-option"><input type="checkbox" data-ai-section="categoryBuyingFactors" checked><span><strong>Category &amp; Buying Factors</strong><span>Identify category, subcategory, product line, and comparison criteria.</span></span></label>
+            <label class="ai-option"><input type="checkbox" data-ai-section="masterComparisonTable" checked><span><strong>Master Comparison Table</strong><span>Dynamically compare products across the most important buying factors.</span></span></label>
+            <label class="ai-option"><input type="checkbox" data-ai-section="discrepanciesFactChecks" checked><span><strong>Discrepancies &amp; Fact-Checks</strong><span>Find missing specs, verify claims, and correct conflicts with the required arrow format.</span></span></label>
+            <label class="ai-option"><input type="checkbox" data-ai-section="claimsValueReviews" checked><span><strong>Claims, Value &amp; Reviews</strong><span>Analyze marketing claims, price-to-value, and review consensus.</span></span></label>
+            <label class="ai-option"><input type="checkbox" data-ai-section="finalVerdict" checked><span><strong>Final Verdict</strong><span>Clear use-case driven recommendations such as Best for X and Best Value.</span></span></label>
+          </div>
         </div>
-        <div class="ai-field-list" id="aiFieldList" aria-live="polite"></div>
       </div>
-      <div class="ai-option-group ai-option-group--paste">
+      <div class="ai-accordion-section" data-ai-accordion-section>
+        <button type="button" class="ai-accordion-trigger" data-ai-accordion-trigger aria-expanded="false">
+          <span class="ai-accordion-step">3</span>
+          <span class="ai-accordion-title"><strong>Product Data Included</strong><span>Choose the fields and captured specs allowed in the prompt.</span></span>
+          <span class="ai-accordion-chevron" aria-hidden="true">⌄</span>
+        </button>
+        <div class="ai-accordion-panel">
+          <p class="ai-option-hint">Uncheck low-value fields to reduce token use before ShopScout inserts product facts.</p>
+          <div class="ai-field-toolbar">
+            <button type="button" class="dashboard-secondary-action dashboard-secondary-action--small" id="aiFieldsCore">Core only</button>
+            <button type="button" class="dashboard-secondary-action dashboard-secondary-action--small" id="aiFieldsAll">Select all</button>
+          </div>
+          <div class="ai-field-list" id="aiFieldList" aria-live="polite"></div>
+        </div>
+      </div>
+      <div class="ai-paste-back-block">
         <h3>Paste Result Back</h3>
         <p class="ai-option-hint">Manual AI can be pasted back into ShopScout after the assistant responds. Table corrections are saved for review before product data is changed.</p>
         <button type="button" class="dashboard-secondary-action" id="manualResultPasteBtn">Paste AI Result Back Into ShopScout</button>
