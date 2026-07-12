@@ -143,11 +143,11 @@ This file is the shared record for Claude and Codex. Append an entry for every m
 - Follow-ups or risks:
   - Paste-back currently stores the manual AI report with list context. Applying corrections to product fields remains review-first and should be a separate parser/review workflow.
 
-## 2026-07-11 — Claude session — Normalization v2 pipeline, Amazon scraper cleanup, ribbon polish
+## 2026-07-12 — Claude session — Normalization v2 pipeline, Amazon scraper cleanup, ribbon polish
 
 - Agent: Claude
 - Branch: grid-rebuild-codex
-- Commits: `e1948aa` → `68bfc5f` (18 commits this session)
+- Commits: `e1948aa` → `68bfc5f` (18 commits across 2026-07-11 and 2026-07-12)
 - Status: Landed on branch, pushed via this session's request. Extension build at `dist/*` matches `HEAD`.
 - Summary:
   - Long iterative session driven by real user grievances: mixed-unit columns (`23.6 inches` next to `50 centimeters`), color pills reading `Black&red` / `2-blue`, voltage cells rendering `9 volts_of_direct_current`, and one specific "Maximum Pressure" column showing bare `150` alongside `150 psi`. Rather than patch each defect, the user pushed for the correct shape. Result is a full v2 normalization pipeline shipped in 5 phases plus a scraper cleanup and ribbon polish arc.
