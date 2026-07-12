@@ -673,17 +673,18 @@
       <button class="close-btn" id="aiOptionsClose">&times;</button>
     </div>
     <div class="ai-options-body">
-      <div class="ai-option-group">
-        <h3>Prompt Payload</h3>
-        <div class="ai-option-list">
-          <label class="ai-option"><input type="radio" name="aiPayloadMode" data-payload-mode="compact" value="compact" checked><span><strong>Compact hybrid</strong><span>Send compact captured facts plus product URLs. Do not send raw page text.</span></span></label>
-          <label class="ai-option"><input type="radio" name="aiPayloadMode" data-payload-mode="estimate" value="estimate"><span><strong>Hybrid + token estimate</strong><span>Use compact hybrid and show the estimated payload size before sending.</span></span></label>
-          <label class="ai-option"><input type="radio" name="aiPayloadMode" data-payload-mode="fallback" value="fallback"><span><strong>Hybrid + raw fallback</strong><span>Use compact facts first, with capped raw excerpts only if facts are insufficient.</span></span></label>
+      <div class="ai-option-group ai-option-group--payload">
+        <h3>Data to Send</h3>
+        <p class="ai-option-hint">Controls how much product evidence ShopScout inserts into the prompt. The field checklist below controls which fields are allowed inside that data.</p>
+        <div class="ai-option-list ai-payload-list">
+          <label class="ai-option ai-option--payload"><input type="radio" name="aiPayloadMode" data-payload-mode="compact" value="compact" checked><span><strong>Compact</strong><span>Captured facts plus product URLs. Example: name, brand, price, rating, source URL, and selected specs.</span></span></label>
+          <label class="ai-option ai-option--payload"><input type="radio" name="aiPayloadMode" data-payload-mode="estimate" value="estimate"><span><strong>Compact + estimate</strong><span>Same compact data, with token estimate shown before sending. Example: “34 selected fields, about 688 tokens.”</span></span></label>
+          <label class="ai-option ai-option--payload"><input type="radio" name="aiPayloadMode" data-payload-mode="fallback" value="fallback"><span><strong>Compact + raw fallback</strong><span>Compact data plus capped raw excerpts only when facts are insufficient. Example: short bullet/description excerpts for missing specs.</span></span></label>
         </div>
         <div class="ai-payload-estimate" id="aiPayloadEstimate">Payload estimate will appear here.</div>
       </div>
-      <div class="ai-option-group">
-        <h3>Report Sections</h3>
+      <div class="ai-option-group ai-option-group--sections">
+        <h3>What to Ask AI to Analyze</h3>
         <div class="ai-option-list">
           <label class="ai-option"><input type="checkbox" data-ai-section="categoryBuyingFactors" checked><span><strong>Category &amp; Buying Factors</strong><span>Identify category, subcategory, product line, and comparison criteria.</span></span></label>
           <label class="ai-option"><input type="checkbox" data-ai-section="masterComparisonTable" checked><span><strong>Master Comparison Table</strong><span>Dynamically compare products across the most important buying factors.</span></span></label>
@@ -692,8 +693,8 @@
           <label class="ai-option"><input type="checkbox" data-ai-section="finalVerdict" checked><span><strong>Final Verdict</strong><span>Clear use-case driven recommendations such as Best for X and Best Value.</span></span></label>
         </div>
       </div>
-      <div class="ai-option-group">
-        <h3>Product Fields to Send</h3>
+      <div class="ai-option-group ai-option-group--fields">
+        <h3>Product Data Included</h3>
         <p class="ai-option-hint">Uncheck low-value fields to reduce token use before ShopScout inserts product facts.</p>
         <div class="ai-field-toolbar">
           <button type="button" class="dashboard-secondary-action dashboard-secondary-action--small" id="aiFieldsCore">Core only</button>
@@ -701,7 +702,7 @@
         </div>
         <div class="ai-field-list" id="aiFieldList" aria-live="polite"></div>
       </div>
-      <div class="ai-option-group">
+      <div class="ai-option-group ai-option-group--paste">
         <h3>Paste Result Back</h3>
         <p class="ai-option-hint">Manual AI can be pasted back into ShopScout after the assistant responds. Table corrections are saved for review before product data is changed.</p>
         <button type="button" class="dashboard-secondary-action" id="manualResultPasteBtn">Paste AI Result Back Into ShopScout</button>

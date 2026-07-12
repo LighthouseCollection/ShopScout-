@@ -386,17 +386,17 @@
   const PROMPT_PAYLOAD_MODES = [
     {
       id: 'compact',
-      label: 'Compact hybrid',
+      label: 'Compact',
       description: 'Send compact captured facts plus product URLs. Do not send raw page text.'
     },
     {
       id: 'estimate',
-      label: 'Hybrid + token estimate',
-      description: 'Use compact hybrid and show the estimated payload size before sending.'
+      label: 'Compact + estimate',
+      description: 'Use compact data and show the estimated payload size before sending.'
     },
     {
       id: 'fallback',
-      label: 'Hybrid + raw fallback',
+      label: 'Compact + raw fallback',
       description: 'Use compact facts first, with capped raw excerpts only if facts are insufficient.'
     }
   ];

@@ -2,6 +2,40 @@
 
 This file is the shared record for Claude and Codex. Append an entry for every meaningful change so both agents can continue from the same factual project history.
 
+## 2026-07-12 02:23 - Codex manual AI modal data-to-send clarity
+
+- Agent: Codex
+- Branch: grid-rebuild-codex
+- Commit: This commit
+- Status: Implemented. The Manual AI options modal now explains Data to Send clearly and shows examples for every payload option.
+- What changed:
+  - Renamed the confusing `Prompt Payload` UI section to `Data to Send`.
+  - Added explanatory copy clarifying that Data to Send controls the amount of evidence, while Product Data Included controls which fields are allowed inside that evidence.
+  - Added examples to each data mode: Compact, Compact + estimate, and Compact + raw fallback.
+  - Renamed modal columns to `What to Ask AI to Analyze` and `Product Data Included`.
+  - Tightened the modal grid so data modes render as compact horizontal cards and product-field checkboxes align cleanly without label overlap.
+  - Aligned `ai-providers.js` payload mode labels with the new user-facing names.
+  - Updated regression coverage for the new wording and example text.
+- Files touched:
+  - `ai-providers.js`
+  - `comparison.html`
+  - `comparison.css`
+  - `tests/ai-analysis-options.test.js`
+  - `AGENT_CHANGELOG.md`
+- Validation run:
+  - `node tests\ai-analysis-options.test.js` -> pass
+  - `node tests\ai-payload-options.test.js` -> pass
+  - `node tests\manual-ai-engine.test.js` -> pass
+  - `npm run syntax` -> pass
+  - `npm run lint` -> pass, 0 errors, 0 warnings
+  - `npm test` -> 47/47 test files pass
+  - `npm run typecheck` -> pass
+  - `npm run build` -> Chrome / Edge / Firefox rebuilt
+- Review status / next reviewer:
+  - Ready for Claude review.
+- Follow-ups or risks:
+  - No runtime behavior change beyond clearer option labels. Field filtering remains implemented by the previous manual AI workflow commit.
+
 ## 2026-07-11 02:53 - Codex manual AI prompt workflow revision
 
 - Agent: Codex
