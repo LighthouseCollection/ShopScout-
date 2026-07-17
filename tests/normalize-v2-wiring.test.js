@@ -1,7 +1,7 @@
-/* Phase 2 wiring test: prove that when normalization/*.js is loaded
+/* Normalization wiring test: prove that when normalization/*.js is loaded
    before content/productSchema.js, assemble() attaches a
-   .normalized envelope to each spec entry AND toLegacyFlatProduct
-   mirrors it to flat.specsNormalized. Uses the exact defect strings
+   .normalized envelope to each spec entry AND toLegacyFlatProduct keeps
+   the normalized sidecar without restoring legacy flat spec copies. Uses the exact defect strings
    the user showed on screen so a regression here immediately shouts. */
 const assert = require('assert');
 const fs = require('fs');
@@ -86,15 +86,16 @@ assert.ok(voltEntry && voltEntry.normalized,                             'Voltag
 assert.strictEqual(voltEntry.normalized.canonical, 9,                    'Voltage volts_of_direct_current cleaned to 9');
 assert.strictEqual(voltEntry.normalized.unit,      'V',                  'Voltage canonical unit is V');
 assert.strictEqual(voltEntry.normalized.display,   '9 V',                'Voltage display is "9 V"');
-assert.strictEqual(voltEntry.canonicalValue,       '9 V',                'legacy canonicalValue mirrors v2 display when available');
+assert.strictEqual(Object.prototype.hasOwnProperty.call(voltEntry, 'canonicalValue'), false,
+  'new ProductSpec entries do not persist legacy canonicalValue');
 
 const lenEntry = spec.specs.Length || spec.itemDetails.Length;
 assert.ok(lenEntry && lenEntry.normalized,                                'Length entry has .normalized');
 assert.strictEqual(lenEntry.normalized.canonical,  59.9,                  'Length 23.6 inches converted to 59.9 cm');
 assert.strictEqual(lenEntry.normalized.unit,       'cm',                  'Length canonical unit is cm');
 
-/* toLegacyFlatProduct must mirror the envelope onto flat.specsNormalized,
-   and leave flat.specs as bare strings so legacy readers still work. */
+/* toLegacyFlatProduct mirrors the envelope onto flat.specsNormalized and
+   no longer writes legacy flat specs/rawSpecs copies. */
 const flat = NS.toLegacyFlatProduct(spec);
 assert.ok(flat,                                          'toLegacyFlatProduct returned a value');
 assert.ok(flat.specsNormalized,                          'flat.specsNormalized sidecar exists');
@@ -109,9 +110,11 @@ assert.ok(flatVolt,                                       'flat.specsNormalized.
 assert.strictEqual(flatVolt.canonical, 9,                 'flat.specsNormalized.Voltage.canonical == 9');
 assert.strictEqual(flatVolt.display,   '9 V',             'flat.specsNormalized.Voltage.display == "9 V"');
 
-/* Legacy .specs bare strings are still written (Phase 3 hasn't switched
-   readers yet). Verify at least one entry to be sure. */
-assert.ok(typeof flat.specs.Color === 'string' || Array.isArray(flat.specs.Color),
-  'flat.specs.Color still populated for legacy readers');
+assert.strictEqual(Object.prototype.hasOwnProperty.call(flat, 'specs'), false,
+  'flat.specs is not written for new captures');
+assert.strictEqual(Object.prototype.hasOwnProperty.call(flat, 'rawSpecs'), false,
+  'flat.rawSpecs is not written for new captures');
+assert.ok(flat._spec && flat._spec.specs && flat._spec.specs.Color,
+  'ProductSpec remains attached for spec readers');
 
 console.log('normalize-v2-wiring.test.js: 15 assertions passed');

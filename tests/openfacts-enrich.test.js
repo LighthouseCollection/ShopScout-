@@ -66,7 +66,7 @@ vm.runInContext(fs.readFileSync(openFactsPath, 'utf8'), context, { filename: ope
         Quantity: {
           rawKey: 'Quantity',
           rawValue: '250 ml',
-          canonicalValue: '250 ml',
+          value: '250 ml',
           source: 'listing',
           confidence: 1
         }
@@ -80,6 +80,9 @@ vm.runInContext(fs.readFileSync(openFactsPath, 'utf8'), context, { filename: ope
   assert.strictEqual(Array.isArray(record.specs), false, 'OpenFacts does not create legacy specs arrays');
   assert.strictEqual(record.specs.Brand, 'Acme Foods', 'OpenFacts writes object specs');
   assert.ok(record._spec.specs.Brand, 'OpenFacts writes ProductSpec spec bucket entries');
+  assert.strictEqual(record._spec.specs.Brand.value, 'Acme Foods', 'OpenFacts writes ProductSpec value');
+  assert.strictEqual(Object.prototype.hasOwnProperty.call(record._spec.specs.Brand, 'canonicalValue'), false,
+    'OpenFacts does not write legacy canonicalValue');
   assert.strictEqual(record._spec.specs.Brand.source, 'openfacts:products', 'OpenFacts keeps source provenance on ProductSpec entries');
   assert.strictEqual(record.specs.Quantity, '250 ml', 'OpenFacts does not overwrite existing captured specs');
   assert.strictEqual(record.specsNormalized, undefined, 'OpenFacts invalidates stale normalized sidecar when specs change');

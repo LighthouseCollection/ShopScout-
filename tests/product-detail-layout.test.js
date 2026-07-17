@@ -39,6 +39,10 @@ assert.ok(
   source.includes('p = applyEditedSpecsToProduct(p, collectSpecsFromEditor())'),
   'saveEdit uses the ProductSpec-aware edit buffer helper'
 );
+assert.ok(
+  !source.includes('canonicalValue: value'),
+  'detail/rescan edit buffers do not write legacy canonicalValue'
+);
 
 const detailFunction = source.slice(
   source.indexOf('async function openProductDetail'),

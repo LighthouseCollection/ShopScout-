@@ -60,6 +60,7 @@
   function entryDisplay(entry, envelope, raw) {
     const fromEnvelope = displayFromEnvelope(envelope);
     if (fromEnvelope) return fromEnvelope;
+    if (entry && typeof entry === 'object' && entry.value != null) return String(entry.value);
     if (entry && typeof entry === 'object' && entry.canonicalValue != null) return String(entry.canonicalValue);
     return text(raw);
   }

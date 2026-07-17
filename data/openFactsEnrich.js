@@ -103,7 +103,7 @@
       record._spec.specs[cleanKey] = {
         rawKey: cleanKey,
         rawValue: cleanValue,
-        canonicalValue: cleanValue,
+        value: cleanValue,
         source: sourceLabel,
         confidence: 1
       };

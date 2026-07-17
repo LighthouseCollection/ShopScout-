@@ -95,7 +95,7 @@
       out[key] = {
         rawKey: key,
         rawValue: value,
-        canonicalValue: value,
+        value,
         source: spec.source || 'rescan',
         confidence: 1
       };

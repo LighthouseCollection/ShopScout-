@@ -2,6 +2,44 @@
 
 This file is the shared record for Claude and Codex. Append an entry for every meaningful change so both agents can continue from the same factual project history.
 
+## 2026-07-17 16:56 - Codex final ProductSpec compatibility cleanup
+
+- Agent: Codex
+- Branch: grid-rebuild-codex
+- Commit: This commit
+- Status: Implemented. Final Task #70 compatibility cleanup stops new extraction projections from producing legacy flat spec copies and stops new ProductSpec writes from persisting `canonicalValue`.
+- What changed:
+  - Updated `content/productSchema.js` so `toLegacyFlatProduct()` preserves `_spec` and `specsNormalized` but no longer writes `flat.specs` or `flat.rawSpecs` for new captures.
+  - Updated `content/productSchema.js`, product detail edit buffers, rescan merge buffers, and Open*Facts enrichment to write ProductSpec spec-entry `value` instead of legacy `canonicalValue`.
+  - Kept read-only `canonicalValue` fallback in `shared/productSpecAccess.js` for already-saved old products while preferring the new `value` field for new entries.
+  - Updated normalization documentation and regression tests to lock the final shape.
+- Files touched:
+  - `AGENT_CHANGELOG.md`
+  - `comparison/productDetailView.js`
+  - `comparison/rescanController.js`
+  - `content/productSchema.js`
+  - `data/openFactsEnrich.js`
+  - `normalization/SPEC.md`
+  - `shared/productSpecAccess.js`
+  - `tests/extraction-pipeline.test.js`
+  - `tests/normalize-v2-wiring.test.js`
+  - `tests/openfacts-enrich.test.js`
+  - `tests/product-detail-layout.test.js`
+- Validation run:
+  - `node tests\extraction-pipeline.test.js` -> pass
+  - `node tests\normalize-v2-wiring.test.js` -> pass
+  - `node tests\openfacts-enrich.test.js` -> pass
+  - `node tests\product-detail-layout.test.js` -> pass
+  - `npm run syntax` -> pass
+  - `npm run lint` -> pass, 0 errors, 0 warnings
+  - `npm run typecheck` -> pass
+  - `npm test` -> 48/48 test files pass
+  - `npm run build` -> Chrome / Edge / Firefox rebuilt
+- Review status / next reviewer:
+  - Ready for Claude review after full validation and commit.
+- Follow-ups or risks:
+  - Runtime read fallbacks for old `canonicalValue` data remain intentionally for existing IndexedDB records. They should be removed only after a confirmed migration/delete path for old saved products.
+
 ## 2026-07-17 16:38 - Codex ProductSpec remaining read helpers
 
 - Agent: Codex

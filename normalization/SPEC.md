@@ -231,10 +231,11 @@ Total: ~5 focused commits. Each is revertible without touching the others.
 Phase 5 landed in follow-up slices:
 
 - ✅ **`ShopScoutValues.prettify` and friends** (`normalizeMeasurement`, `normalizeMetric`, `normalizeDimensions`) — removed from `shared/values/cellValues.js` exports; test file `tests/local-units.test.js` deleted. These had zero non-test callers so retirement is complete.
-- ✅ **`SSCanonical.canonicalValue`** — removed from the public `SSCanonical` API. `productSchema.assemble` now mirrors v2 `.normalized.display` into the legacy `canonicalValue` spec-entry field only for compatibility.
+- ✅ **`SSCanonical.canonicalValue`** — removed from the public `SSCanonical` API. `productSchema.assemble` now writes ProductSpec entries with `value` plus the v2 `.normalized` envelope; it no longer persists the legacy `canonicalValue` field for new captures.
 - ✅ **`ShopScoutAttributeNormalization` / `_normalizedAttributes`** — retired from runtime. ProductRepo writes v2 `specsNormalized`, the grid projects from v2 display values, and the normalization review queue reads `rawSpecs` + `specsNormalized` instead of the old sidecar.
+- ✅ **`content/productSchema.js` flat spec compatibility writes** — retired. `toLegacyFlatProduct()` now projects identity, price, media, identifiers, `_spec`, and `specsNormalized`; it no longer writes `flat.specs` or `flat.rawSpecs` for new captures.
 
-The remaining `canonicalValue` string property is a legacy data-field on spec entries, not the old public API. Removing that persisted compatibility field belongs to the broader ProductSpec consumer migration.
+Read-only fallback support for already-saved old records remains in central access helpers so existing IndexedDB products can still render during migration. New writes should not create `canonicalValue` entries or `flat.specs` / `flat.rawSpecs` from the extraction projection.
 
 ---
 

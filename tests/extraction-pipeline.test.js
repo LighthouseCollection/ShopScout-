@@ -128,13 +128,14 @@ const userImageUrls    = (spec.media.userImages    || []).map(m => m.url);
 assert.ok(productImageUrls.includes('https://example.com/p1.jpg'), 'product image emitted');
 assert.ok(userImageUrls.includes('https://example.com/u1.jpg'), 'user image emitted');
 
-/* ---- toLegacyFlatProduct shim ---- */
+/* ---- toLegacyFlatProduct projection ---- */
 const legacy = NS.toLegacyFlatProduct(spec);
 assert.strictEqual(legacy.title, 'JSON-LD Title');
 assert.strictEqual(legacy.brand, 'Acme');
 assert.strictEqual(legacy.sku, 'SKU-99', 'identifier promoted to flat slot');
-assert.ok(legacy.specs && typeof legacy.specs === 'object', 'legacy.specs is canonKey→value');
-assert.ok(Object.keys(legacy.specs).some(k => /weight/i.test(k)), 'legacy specs include weight');
-assert.ok(Array.isArray(legacy.rawSpecs) && legacy.rawSpecs.length >= 1, 'rawSpecs present');
+assert.strictEqual(Object.prototype.hasOwnProperty.call(legacy, 'specs'), false, 'legacy flat specs are not written');
+assert.strictEqual(Object.prototype.hasOwnProperty.call(legacy, 'rawSpecs'), false, 'legacy rawSpecs are not written');
+assert.ok(legacy._spec && legacy._spec.specs, 'ProductSpec is preserved for spec consumers');
+assert.ok(Object.keys(legacy._spec.specs).some(k => /weight/i.test(k)), 'ProductSpec specs include weight');
 
 console.log('extraction-pipeline.test.js — all assertions passed');

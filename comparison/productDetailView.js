@@ -215,7 +215,7 @@ function productSpecBucketFromRows(specs) {
     out[key] = {
       rawKey: key,
       rawValue: value,
-      canonicalValue: value,
+      value,
       source: spec.source || 'manual',
       confidence: 1
     };
@@ -403,7 +403,7 @@ function collectAllSpecRows(p) {
     for (const [k, v] of Object.entries(p.specs)) push(k, v);
   }
   /* Prefer the v2 normalized display when present (e.g. "9 V" instead of
-     "9 volts_of_direct_current"). Falls back to canonicalValue / rawValue
+     "9 volts_of_direct_current"). Falls back to legacy canonicalValue / rawValue
      for products captured before Phase 2 landed. */
   function displayFromEntry(entry) {
     if (!entry) return '';
