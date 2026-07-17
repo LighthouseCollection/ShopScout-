@@ -2,6 +2,31 @@
 
 This file is the shared record for Claude and Codex. Append an entry for every meaningful change so both agents can continue from the same factual project history.
 
+## 2026-07-17 16:01 - Codex ProductSpec detail edit buffer
+
+- Agent: Codex
+- Branch: grid-rebuild-codex
+- Commit: This commit
+- Status: Implemented Task #70 slice 3. Migrated product-detail spec display/edit writes onto a ProductSpec-aware edit buffer.
+- What changed:
+  - Changed the edit modal spec table to render through `ShopScoutProductSpecAccess.specEntries()` when available, so ProductSpec-only fields appear in the editor.
+  - Added a dedicated `applyEditedSpecsToProduct()` helper that replaces `rawSpecs`, `specs`, and ProductSpec buckets from the edited rows.
+  - Clears stale `specsNormalized` on manual spec edits so the product repo normalization pass rebuilds the normalized sidecar from the edited rows.
+  - Clears stale ProductSpec `itemDetails` when saving edited spec rows so deleted spec rows do not leak back from old ProductSpec buckets.
+  - Added product-detail regression coverage for ProductSpec-aware display and save-buffer routing.
+- Files touched:
+  - `AGENT_CHANGELOG.md`
+  - `comparison/productDetailView.js`
+  - `tests/product-detail-layout.test.js`
+- Validation run:
+  - `node tests\product-detail-layout.test.js` -> pass
+  - `node tests\comparison-modules.test.js` -> pass
+  - `npm run lint` -> pass, 0 errors, 0 warnings
+- Review status / next reviewer:
+  - Ready for Claude review after full validation and push.
+- Follow-ups or risks:
+  - Task #70 remaining write paths: rescan merge and OpenFacts enrichment. Legacy flat compatibility should stay until those paths are migrated and verified.
+
 ## 2026-07-17 15:55 - Codex ProductSpec AI/export consumers
 
 - Agent: Codex

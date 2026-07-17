@@ -88,7 +88,7 @@ async function openEditModal(idx) {
   // Specs & Features
   document.getElementById('editBullets').value = (p.bullets || []).join('\n');
   document.getElementById('editDescription').value = p.description || '';
-  renderSpecTable(p.rawSpecs || []);
+  renderSpecTable(productSpecEntries(p));
 
   // Media
   document.getElementById('editImage').value = p.image || '';
@@ -182,10 +182,73 @@ function collectSpecsFromEditor() {
   return specs;
 }
 
+function productSpecEntries(product) {
+  const access = root.ShopScoutProductSpecAccess;
+  if (access && typeof access.specEntries === 'function') {
+    return access.specEntries(product || {})
+      .map(spec => ({
+        key: String(spec.rawField || spec.key || spec.field || '').trim(),
+        value: String(spec.display ?? spec.value ?? spec.raw ?? '').trim(),
+        source: String(spec.source || '').trim()
+      }))
+      .filter(spec => spec.key && spec.value);
+  }
+  return collectAllSpecRows(product || {});
+}
+
+function specDictFromRows(specs) {
+  const out = {};
+  for (const spec of specs || []) {
+    const key = String(spec?.key || '').trim();
+    const value = String(spec?.value ?? '').trim();
+    if (key && value) out[key] = value;
+  }
+  return out;
+}
+
+function productSpecBucketFromRows(specs) {
+  const out = {};
+  for (const spec of specs || []) {
+    const key = String(spec?.key || '').trim();
+    const value = String(spec?.value ?? '').trim();
+    if (!key || !value) continue;
+    out[key] = {
+      rawKey: key,
+      rawValue: value,
+      canonicalValue: value,
+      source: spec.source || 'manual',
+      confidence: 1
+    };
+  }
+  return out;
+}
+
+function applyEditedSpecsToProduct(product, specs) {
+  const next = product || {};
+  const rows = (specs || [])
+    .map(spec => ({
+      key: String(spec?.key || '').trim(),
+      value: String(spec?.value ?? '').trim(),
+      source: String(spec?.source || '').trim()
+    }))
+    .filter(spec => spec.key && spec.value);
+  next.rawSpecs = rows.map(spec => Object.assign(
+    { key: spec.key, value: spec.value },
+    spec.source ? { source: spec.source } : {}
+  ));
+  next.specs = specDictFromRows(rows);
+  delete next.specsNormalized;
+  next._spec = Object.assign({}, next._spec || {}, {
+    specs: productSpecBucketFromRows(rows),
+    itemDetails: {}
+  });
+  return next;
+}
+
 async function saveEdit() {
   const products = await getProducts();
   if (editIndex < 0 || editIndex >= products.length) return;
-  const p = products[editIndex];
+  let p = products[editIndex];
 
   // General
   p.title = document.getElementById('editTitle').value.trim();
@@ -216,7 +279,8 @@ async function saveEdit() {
   const bulletsText = document.getElementById('editBullets').value.trim();
   p.bullets = bulletsText ? bulletsText.split('\n').map(b => b.trim()).filter(Boolean) : [];
   p.description = document.getElementById('editDescription').value.trim();
-  p.rawSpecs = collectSpecsFromEditor();
+  p = applyEditedSpecsToProduct(p, collectSpecsFromEditor());
+  products[editIndex] = p;
 
   // Media
   p.image = document.getElementById('editImage').value.trim();

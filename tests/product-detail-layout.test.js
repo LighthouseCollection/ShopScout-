@@ -23,6 +23,22 @@ assert.ok(
   'product header renders before the product detail tab menu'
 );
 assert.ok(source.includes("label: 'General'"), 'product detail first tab label remains General');
+assert.ok(
+  source.includes('function productSpecEntries(product)'),
+  'product detail owns a ProductSpec-aware spec entry helper'
+);
+assert.ok(
+  source.includes('renderSpecTable(productSpecEntries(p))'),
+  'edit modal renders specs through ProductSpec access instead of rawSpecs only'
+);
+assert.ok(
+  source.includes('function applyEditedSpecsToProduct(product, specs)'),
+  'saving detail specs updates ProductSpec and normalized sidecars through a dedicated helper'
+);
+assert.ok(
+  source.includes('p = applyEditedSpecsToProduct(p, collectSpecsFromEditor())'),
+  'saveEdit uses the ProductSpec-aware edit buffer helper'
+);
 
 const detailFunction = source.slice(
   source.indexOf('async function openProductDetail'),
