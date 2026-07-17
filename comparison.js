@@ -241,7 +241,7 @@ function searchFieldParts(product, fieldId) {
   if (fieldId === 'specs') {
     return [
       ...(product.bullets || []),
-      ...(product.rawSpecs || []).flatMap(spec => [spec.key, spec.value])
+      ...productSpecEntries(product).flatMap(spec => [spec.key, spec.value])
     ];
   }
   if (fieldId === 'notes') {
@@ -2115,9 +2115,19 @@ function specFieldId(label) {
 }
 
 function productSpecEntries(product) {
-  const specs = Array.isArray(product?.rawSpecs) ? product.rawSpecs : Array.isArray(product?.specs) ? product.specs : [];
+  const access = globalThis.ShopScoutProductSpecAccess || (typeof window !== 'undefined' ? window.ShopScoutProductSpecAccess : null);
+  const specs = access && typeof access.specEntries === 'function'
+    ? access.specEntries(product || {})
+    : Array.isArray(product?.rawSpecs)
+      ? product.rawSpecs
+      : Array.isArray(product?.specs)
+        ? product.specs
+        : [];
   return specs
-    .map(spec => ({ key: formatManualValue(spec?.key), value: formatManualValue(spec?.value) }))
+    .map(spec => ({
+      key: formatManualValue(spec?.rawField || spec?.key || spec?.field),
+      value: formatManualValue(spec?.display ?? spec?.value ?? spec?.raw)
+    }))
     .filter(spec => spec.key && spec.value);
 }
 
@@ -2947,10 +2957,20 @@ function productDisplayName(product) {
 
 function exportSpecEntries(product) {
   const SH = globalThis.SSSpecHeuristic;
-  const list = SH && SH.specListOf ? SH.specListOf(product) : (Array.isArray(product?.rawSpecs) ? product.rawSpecs : []);
+  const access = globalThis.ShopScoutProductSpecAccess || (typeof window !== 'undefined' ? window.ShopScoutProductSpecAccess : null);
+  const list = access && typeof access.specEntries === 'function'
+    ? access.specEntries(product || {})
+    : SH && SH.specListOf
+      ? SH.specListOf(product)
+      : Array.isArray(product?.rawSpecs)
+        ? product.rawSpecs
+        : [];
   return (Array.isArray(list) ? list : [])
-    .filter(spec => spec && spec.key != null && spec.value != null && spec.value !== '')
-    .map(spec => ({ key: String(spec.key), value: String(spec.value) }));
+    .filter(spec => spec && (spec.rawField || spec.key || spec.field) != null && (spec.display ?? spec.value ?? spec.raw) != null && (spec.display ?? spec.value ?? spec.raw) !== '')
+    .map(spec => ({
+      key: String(spec.rawField || spec.key || spec.field),
+      value: String(spec.display ?? spec.value ?? spec.raw)
+    }));
 }
 
 function exportRecord(product, fields) {
@@ -3121,7 +3141,6 @@ async function doCopyPlain(opts) {
     toast.show('Pick at least one field to copy', 'error');
     return;
   }
-  const SH = globalThis.SSSpecHeuristic;
   const blocks = [];
   for (const p of products) {
     const lines = [];
@@ -3133,7 +3152,7 @@ async function doCopyPlain(opts) {
     if (includePrice && p.newPrice) lines.push('Price: ' + p.newPrice);
     if (includeUrl   && p.url)   lines.push(SS.canonicalizeProductUrl ? SS.canonicalizeProductUrl(p.url) : p.url);
     if (includeSpecs) {
-      const list = SH && SH.specListOf ? SH.specListOf(p) : (Array.isArray(p.rawSpecs) ? p.rawSpecs : []);
+      const list = exportSpecEntries(p);
       for (const s of list) {
         if (!s || s.key == null || s.value == null || s.value === '') continue;
         lines.push(s.key + ': ' + s.value);

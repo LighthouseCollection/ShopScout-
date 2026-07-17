@@ -4,7 +4,9 @@ const path = require('path');
 const vm = require('vm');
 
 const providerPath = path.join(__dirname, '..', 'ai-providers.js');
+const productSpecAccessPath = path.join(__dirname, '..', 'shared', 'productSpecAccess.js');
 const source = fs.readFileSync(providerPath, 'utf8');
+const productSpecAccessSource = fs.readFileSync(productSpecAccessPath, 'utf8');
 
 const context = {
   console,
@@ -19,6 +21,7 @@ const context = {
 context.window = context.globalThis;
 
 vm.createContext(context);
+vm.runInContext(productSpecAccessSource, context, { filename: productSpecAccessPath });
 vm.runInContext(source, context, { filename: providerPath });
 
 const AI = context.globalThis.ShopScoutAI;
@@ -72,6 +75,40 @@ assert.ok(
 assert.ok(
   !JSON.stringify(compactSummary).includes('Previous page Next page Click Here'),
   'compact summary removes obvious marketplace junk'
+);
+
+const productSpecSummary = AI.productSummary([{
+  title: 'Normalized product',
+  rawSpecs: [{ key: 'Colour', value: 'midnight blue' }],
+  specsNormalized: {
+    Colour: {
+      raw: 'midnight blue',
+      canonical: 'Navy Blue',
+      display: 'Navy Blue',
+      provenance: { confidence: 0.95, rules: ['enum:color:navy-blue'] }
+    }
+  },
+  _spec: {
+    itemDetails: {
+      Material: {
+        rawKey: 'Material',
+        rawValue: 'SS304',
+        canonicalValue: 'Stainless Steel 304',
+        confidence: 0.9,
+        source: 'manufacturer'
+      }
+    }
+  }
+}], { payloadMode: 'compact' })[0];
+assert.deepStrictEqual(
+  JSON.parse(JSON.stringify(productSpecSummary.specs.map(spec => [spec.key, spec.value]))),
+  [['Colour', 'Navy Blue'], ['Material', 'Stainless Steel 304']],
+  'AI compact payload uses ProductSpec access helpers for normalized displays and ProductSpec-only fields'
+);
+assert.deepStrictEqual(
+  JSON.parse(JSON.stringify(productSpecSummary.normalizedSpecs.map(spec => [spec.key, spec.value]))),
+  [['Colour', 'Navy Blue'], ['Material', 'Stainless Steel 304']],
+  'AI normalized spec ledger is sourced from the ProductSpec access boundary'
 );
 
 const fieldFilteredSummary = AI.productSummary([junkProduct], {

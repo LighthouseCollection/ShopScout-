@@ -21,6 +21,9 @@ mustInclude(comparisonJs, 'function aiSectionInputs()', 'comparison script reads
 mustInclude(comparisonJs, 'function renderAiFieldSelection', 'comparison script renders dynamic product fields before prompt generation');
 mustInclude(comparisonJs, 'function collectAiFieldSelectionFromModal', 'comparison script collects selected meta/spec fields');
 mustInclude(comparisonJs, 'function analysisOptionsFromSections', 'comparison script maps report sections to existing AI analysis flags');
+mustInclude(comparisonJs, 'ShopScoutProductSpecAccess', 'manual/export/search spec consumers use the ProductSpec access boundary');
+mustInclude(comparisonJs, 'productSpecEntries(product).flatMap', 'search text reads specs through ProductSpec entries');
+mustInclude(comparisonJs, 'function exportSpecEntries(product)', 'export/copy specs route through a shared spec entry helper');
 mustInclude(comparisonJs, 'function openManualResultPasteModal', 'comparison script exposes paste-result-back workflow');
 mustInclude(comparisonJs, "command === 'paste-ai-result'", 'comparison script routes ribbon paste-result-back command');
 mustInclude(comparisonJs, 'manual AI pasted result', 'paste-result-back creates a normal AI run that can be opened from AI Results');

@@ -2,6 +2,41 @@
 
 This file is the shared record for Claude and Codex. Append an entry for every meaningful change so both agents can continue from the same factual project history.
 
+## 2026-07-17 15:55 - Codex ProductSpec AI/export consumers
+
+- Agent: Codex
+- Branch: grid-rebuild-codex
+- Commit: This commit
+- Status: Implemented Task #70 slice 2. Migrated AI prompt/export spec summaries to the shared ProductSpec read boundary.
+- What changed:
+  - Updated `SS.normalizeProductSpecs()` to prefer `ShopScoutProductSpecAccess.specEntries()` so AI/export utility summaries use normalized displays and ProductSpec-only fields.
+  - Updated manual/auto AI provider summaries to prefer the same ProductSpec accessor for compact specs, normalized specs, and selected-field filtering.
+  - Updated dashboard manual prompt field discovery, search-text spec matching, export specs, and plain-copy specs to route through the shared ProductSpec entry helper.
+  - Added focused regression coverage for normalized displays and ProductSpec-only fields in utility and AI payload summaries.
+  - Added static dashboard coverage that manual/search/export spec consumers reference the ProductSpec access boundary.
+- Files touched:
+  - `AGENT_CHANGELOG.md`
+  - `ai-providers.js`
+  - `comparison.js`
+  - `tests/ai-payload-options.test.js`
+  - `tests/manual-ai-engine.test.js`
+  - `tests/utils.test.js`
+  - `utils.js`
+- Validation run:
+  - `node tests\utils.test.js` -> pass
+  - `node tests\ai-payload-options.test.js` -> pass
+  - `node tests\ai-providers.test.js` -> pass
+  - `node tests\manual-ai-engine.test.js` -> pass
+  - `npm run syntax` -> pass
+  - `npm run lint` -> pass, 0 errors, 0 warnings
+  - `npm run typecheck` -> pass
+  - `npm test` -> 46/46 test files pass
+  - `npm run build` -> Chrome / Edge / Firefox rebuilt
+- Review status / next reviewer:
+  - Ready for Claude review.
+- Follow-ups or risks:
+  - Task #70 still has write-path slices remaining: product detail edit/save, rescan merge, OpenFacts enrichment, and eventual removal of legacy `flat.specs` / `flat.rawSpecs` compatibility after all consumers are migrated.
+
 ## 2026-07-17 14:15 - Codex ProductSpec read boundary
 
 - Agent: Codex

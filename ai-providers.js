@@ -960,13 +960,16 @@
   }
 
   function normalizeProductSpecs(product, limit = 30) {
-    const raw = Array.isArray(product?.rawSpecs)
-      ? product.rawSpecs
-      : Object.entries(product?.specs || {}).map(([key, value]) => ({ key, value }));
+    const specAccess = root.ShopScoutProductSpecAccess;
+    const raw = specAccess && typeof specAccess.specEntries === 'function'
+      ? specAccess.specEntries(product || {})
+      : Array.isArray(product?.rawSpecs)
+        ? product.rawSpecs
+        : Object.entries(product?.specs || {}).map(([key, value]) => ({ key, value }));
     const byId = new Map();
     for (const spec of raw) {
-      const normalizedKey = normalizeSpecKeyLabel(spec?.key);
-      const value = normalizeSpecValue(compactText(spec?.value, 180));
+      const normalizedKey = normalizeSpecKeyLabel(spec?.rawField || spec?.key || spec?.field);
+      const value = normalizeSpecValue(compactText(spec?.display ?? spec?.value ?? spec?.raw, 180));
       if (!normalizedKey.id || !normalizedKey.label || !value || isJunkText(`${normalizedKey.label} ${value}`)) continue;
       const existing = byId.get(normalizedKey.id);
       if (!existing) byId.set(normalizedKey.id, { key: normalizedKey.label, value });
@@ -977,15 +980,18 @@
   }
 
   function compactSpecs(product, limit = 18, includedFields = null) {
-    const raw = Array.isArray(product.rawSpecs)
-      ? product.rawSpecs
-      : Object.entries(product.specs || {}).map(([key, value]) => ({ key, value }));
+    const specAccess = root.ShopScoutProductSpecAccess;
+    const raw = specAccess && typeof specAccess.specEntries === 'function'
+      ? specAccess.specEntries(product || {})
+      : Array.isArray(product.rawSpecs)
+        ? product.rawSpecs
+        : Object.entries(product.specs || {}).map(([key, value]) => ({ key, value }));
     const seen = new Set();
     const specs = [];
     const wanted = fieldSet(includedFields);
     for (const spec of raw) {
-      const key = compactText(spec?.key, 80);
-      const value = compactText(spec?.value, 180);
+      const key = compactText(spec?.rawField || spec?.key || spec?.field, 80);
+      const value = compactText(spec?.display ?? spec?.value ?? spec?.raw, 180);
       const normalizedKey = key.toLowerCase();
       if (!key || !value || isJunkText(`${key} ${value}`) || seen.has(normalizedKey)) continue;
       if (!wantsField(wanted, specFieldId(key))) continue;

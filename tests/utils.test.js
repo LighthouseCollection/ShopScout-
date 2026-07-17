@@ -4,7 +4,9 @@ const path = require('path');
 const vm = require('vm');
 
 const utilsPath = path.join(__dirname, '..', 'utils.js');
+const productSpecAccessPath = path.join(__dirname, '..', 'shared', 'productSpecAccess.js');
 const source = fs.readFileSync(utilsPath, 'utf8');
+const productSpecAccessSource = fs.readFileSync(productSpecAccessPath, 'utf8');
 
 const context = {
   window: {},
@@ -18,6 +20,7 @@ const context = {
 };
 
 vm.createContext(context);
+vm.runInContext(productSpecAccessSource, context, { filename: productSpecAccessPath });
 vm.runInContext(source, context, { filename: utilsPath });
 
 const SS = context.window.SS;
@@ -117,6 +120,34 @@ assert.strictEqual(
   JSON.stringify(normalizedSpecs.map(spec => [spec.key, spec.value])),
   JSON.stringify([['DPI', '1200 DPI'], ['Input voltage', '12 V']]),
   'normalizeProductSpecs merges duplicate spec labels and normalizes simple units'
+);
+
+const productSpecNormalizedSpecs = SS.normalizeProductSpecs({
+  rawSpecs: [{ key: 'Colour', value: 'midnight blue' }],
+  specsNormalized: {
+    Colour: {
+      raw: 'midnight blue',
+      canonical: 'Navy Blue',
+      display: 'Navy Blue',
+      provenance: { confidence: 0.95, rules: ['enum:color:navy-blue'] }
+    }
+  },
+  _spec: {
+    itemDetails: {
+      Material: {
+        rawKey: 'Material',
+        rawValue: 'SS304',
+        canonicalValue: 'Stainless Steel 304',
+        confidence: 0.9,
+        source: 'manufacturer'
+      }
+    }
+  }
+});
+assert.strictEqual(
+  JSON.stringify(productSpecNormalizedSpecs.map(spec => [spec.key, spec.value])),
+  JSON.stringify([['Colour', 'Navy Blue'], ['Material', 'Stainless Steel 304']]),
+  'normalizeProductSpecs uses ProductSpec access helpers for normalized displays and ProductSpec-only fields'
 );
 
 const formulaField = SS.escapeCsvField('=IMPORTXML("https://example.com")');

@@ -448,13 +448,16 @@ window.SS = (() => {
   }
 
   function normalizeProductSpecs(product) {
-    const raw = Array.isArray(product?.rawSpecs)
-      ? product.rawSpecs
-      : Object.entries(product?.specs || {}).map(([key, value]) => ({ key, value }));
+    const specAccess = globalThis.ShopScoutProductSpecAccess || window.ShopScoutProductSpecAccess;
+    const raw = specAccess && typeof specAccess.specEntries === 'function'
+      ? specAccess.specEntries(product || {})
+      : Array.isArray(product?.rawSpecs)
+        ? product.rawSpecs
+        : Object.entries(product?.specs || {}).map(([key, value]) => ({ key, value }));
     const byId = new Map();
     for (const spec of raw) {
-      const normalizedKey = normalizeSpecKeyLabel(spec?.key);
-      const value = normalizeSpecValue(spec?.value);
+      const normalizedKey = normalizeSpecKeyLabel(spec?.rawField || spec?.key || spec?.field);
+      const value = normalizeSpecValue(spec?.display ?? spec?.value ?? spec?.raw);
       if (!normalizedKey.id || !normalizedKey.label || !value) continue;
       const existing = byId.get(normalizedKey.id);
       if (!existing) {
