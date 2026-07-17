@@ -168,6 +168,10 @@ assert.ok(rescanSource.includes('updates price, availability, images, and captur
   'rescan confirmation explains what data gets refreshed');
 assert.ok(rescanSource.includes('Your list, notes, and saved AI results stay in place'),
   'rescan confirmation explains what data is preserved');
+assert.ok(rescanSource.includes('ShopScoutProductSpecAccess'),
+  'rescan merge reads fresh/existing specs through ProductSpec access');
+assert.ok(rescanSource.includes('delete product.specsNormalized'),
+  'rescan merge invalidates stale normalized sidecars after spec changes');
 vm.runInContext(rescanSource, rescanCtx, { filename: 'comparison/rescanController.js' });
 const rc = rescanCtx.ShopScoutComparison && rescanCtx.ShopScoutComparison.rescanController;
 assert.ok(rc, 'ShopScoutComparison.rescanController namespace registered');

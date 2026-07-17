@@ -2,6 +2,31 @@
 
 This file is the shared record for Claude and Codex. Append an entry for every meaningful change so both agents can continue from the same factual project history.
 
+## 2026-07-17 16:05 - Codex ProductSpec rescan merge
+
+- Agent: Codex
+- Branch: grid-rebuild-codex
+- Commit: This commit
+- Status: Implemented Task #70 slice 4. Migrated rescan spec merge logic to a ProductSpec-aware merge path.
+- What changed:
+  - Added ProductSpec-aware spec extraction to `comparison/rescanController.js`.
+  - Changed rescan merge to detect new spec rows from ProductSpec access entries instead of only `fresh.rawSpecs`.
+  - Rebuilds `rawSpecs`, `specs`, and ProductSpec buckets when new specs are merged.
+  - Invalidates stale `specsNormalized` after rescan spec changes so repo normalization rebuilds normalized sidecars from merged rows.
+  - Added module regression assertions for ProductSpec access and normalized sidecar invalidation in rescan merge.
+- Files touched:
+  - `AGENT_CHANGELOG.md`
+  - `comparison/rescanController.js`
+  - `tests/comparison-modules.test.js`
+- Validation run:
+  - `node tests\comparison-modules.test.js` -> pass
+  - `npm run lint` -> pass, 0 errors, 0 warnings
+  - `npm run syntax` -> pass
+- Review status / next reviewer:
+  - Ready for Claude review after full validation and push.
+- Follow-ups or risks:
+  - Task #70 remaining write path: OpenFacts enrichment. Legacy flat compatibility should stay until OpenFacts and final legacy cleanup are complete.
+
 ## 2026-07-17 16:01 - Codex ProductSpec detail edit buffer
 
 - Agent: Codex

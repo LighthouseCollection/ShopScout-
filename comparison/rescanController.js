@@ -40,6 +40,99 @@
     if (target) target.innerHTML = html == null ? '' : String(html);
   }
 
+  function normalizedSpecKey(key) {
+    const access = root.ShopScoutProductSpecAccess;
+    if (access && typeof access.canonicalKey === 'function') return access.canonicalKey(key);
+    return String(key || '').trim().replace(/\s+/g, ' ');
+  }
+
+  function productSpecEntries(product) {
+    const access = root.ShopScoutProductSpecAccess;
+    if (access && typeof access.specEntries === 'function') {
+      return access.specEntries(product || {})
+        .map(spec => ({
+          key: String(spec.rawField || spec.key || spec.field || '').trim(),
+          value: String(spec.display ?? spec.value ?? spec.raw ?? '').trim(),
+          source: String(spec.source || '').trim()
+        }))
+        .filter(spec => spec.key && spec.value);
+    }
+    const rows = [];
+    const seen = new Set();
+    const push = (key, value, source) => {
+      const cleanKey = String(key || '').trim();
+      const cleanValue = String(value ?? '').trim();
+      const id = normalizedSpecKey(cleanKey).toLowerCase();
+      if (!cleanKey || !cleanValue || seen.has(id)) return;
+      seen.add(id);
+      rows.push({ key: cleanKey, value: cleanValue, source: String(source || '').trim() });
+    };
+    if (Array.isArray(product?.rawSpecs)) {
+      product.rawSpecs.forEach(spec => push(spec?.key, spec?.value, spec?.source));
+    }
+    if (product?.specs && typeof product.specs === 'object' && !Array.isArray(product.specs)) {
+      Object.entries(product.specs).forEach(([key, value]) => push(key, value, ''));
+    }
+    return rows;
+  }
+
+  function specDictFromRows(rows) {
+    const out = {};
+    for (const spec of rows || []) {
+      const key = String(spec?.key || '').trim();
+      const value = String(spec?.value ?? '').trim();
+      if (key && value) out[key] = value;
+    }
+    return out;
+  }
+
+  function productSpecBucketFromRows(rows) {
+    const out = {};
+    for (const spec of rows || []) {
+      const key = String(spec?.key || '').trim();
+      const value = String(spec?.value ?? '').trim();
+      if (!key || !value) continue;
+      out[key] = {
+        rawKey: key,
+        rawValue: value,
+        canonicalValue: value,
+        source: spec.source || 'rescan',
+        confidence: 1
+      };
+    }
+    return out;
+  }
+
+  function applyMergedSpecRows(product, rows) {
+    product.rawSpecs = (rows || []).map(spec => Object.assign(
+      { key: spec.key, value: spec.value },
+      spec.source ? { source: spec.source } : {}
+    ));
+    product.specs = specDictFromRows(rows);
+    delete product.specsNormalized;
+    product._spec = Object.assign({}, product._spec || {}, {
+      specs: productSpecBucketFromRows(rows),
+      itemDetails: {}
+    });
+  }
+
+  function mergeSpecRows(existing, fresh) {
+    const existingRows = productSpecEntries(existing);
+    const mergedRows = existingRows.slice();
+    const seen = new Set(existingRows.map(spec => normalizedSpecKey(spec.key).toLowerCase()).filter(Boolean));
+    const newRows = [];
+    for (const spec of productSpecEntries(fresh)) {
+      const id = normalizedSpecKey(spec.key).toLowerCase();
+      if (!id || seen.has(id)) continue;
+      seen.add(id);
+      const row = { key: spec.key, value: spec.value, source: spec.source };
+      mergedRows.push(row);
+      newRows.push(row);
+    }
+    if (newRows.length) applyMergedSpecRows(existing, mergedRows);
+    return { oldCount: existingRows.length, newCount: newRows.length, totalCount: mergedRows.length };
+  }
+
   /* === Begin extracted block (was comparison.js:3968-4307) === */
 
 // --- Rescan single product ---
@@ -274,18 +367,16 @@ function mergeProduct(existing, fresh) {
   if (fresh.image && !existing.image) { existing.image = fresh.image; }
   if (fresh.imageUrls?.length && (!existing.imageUrls || fresh.imageUrls.length > existing.imageUrls.length)) { existing.imageUrls = fresh.imageUrls; }
 
-  // Specs: accumulate — keep existing, add new
-  const oldSpecCount = (existing.rawSpecs || []).length;
-  if (fresh.rawSpecs?.length) {
-    const existingKeys = new Set((existing.rawSpecs || []).map(s => s.key.toLowerCase()));
-    const newSpecs = fresh.rawSpecs.filter(s => !existingKeys.has(s.key.toLowerCase()));
-    if (newSpecs.length) {
-      existing.rawSpecs = [...(existing.rawSpecs || []), ...newSpecs];
-      changes.push({ field: 'rawSpecs', label: 'Specs', oldVal: `${oldSpecCount} specs`, newVal: `${existing.rawSpecs.length} specs (+${newSpecs.length} new)` });
-    }
-  }
-  if (fresh.specs) {
-    existing.specs = { ...(existing.specs || {}), ...fresh.specs };
+  // Specs: accumulate through ProductSpec access so rescans include
+  // ProductSpec-only fields and invalidate stale normalized sidecars.
+  const specMerge = mergeSpecRows(existing, fresh);
+  if (specMerge.newCount) {
+    changes.push({
+      field: 'rawSpecs',
+      label: 'Specs',
+      oldVal: `${specMerge.oldCount} specs`,
+      newVal: `${specMerge.totalCount} specs (+${specMerge.newCount} new)`
+    });
   }
 
   // Bullets: take longer list
