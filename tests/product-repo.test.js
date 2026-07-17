@@ -14,6 +14,7 @@ const dbSrc = fs.readFileSync(path.join(__dirname, '..', 'data', 'db.js'), 'utf8
 const rulesSrc = fs.readFileSync(path.join(__dirname, '..', 'normalization', 'libraries', 'defaultRules.js'), 'utf8');
 const userRulesSrc = fs.readFileSync(path.join(__dirname, '..', 'normalization', 'userRules.js'), 'utf8');
 const taxonomySrc = fs.readFileSync(path.join(__dirname, '..', 'normalization', 'taxonomyBridge.js'), 'utf8');
+const productSpecAccessSrc = fs.readFileSync(path.join(__dirname, '..', 'shared', 'productSpecAccess.js'), 'utf8');
 const matchingSrc = fs.readFileSync(path.join(__dirname, '..', 'normalization', 'matching.js'), 'utf8');
 const packsSrc = fs.readFileSync(path.join(__dirname, '..', 'normalization', 'libraries', 'generatedPacks.js'), 'utf8');
 const registrySrc = fs.readFileSync(path.join(__dirname, '..', 'normalization', 'registry.js'), 'utf8');
@@ -174,6 +175,7 @@ async function createRepoContext() {
   vm.runInContext(enumNormalizerSrc, ctx, { filename: 'normalization/normalizers/enum.js' });
   vm.runInContext(measurementNormalizerSrc, ctx, { filename: 'normalization/normalizers/measurement.js' });
   vm.runInContext(normalizeSrc, ctx, { filename: 'normalization/normalize.js' });
+  vm.runInContext(productSpecAccessSrc, ctx, { filename: 'shared/productSpecAccess.js' });
   vm.runInContext(matchingSrc, ctx, { filename: 'normalization/matching.js' });
   vm.runInContext(repoSrc, ctx, { filename: 'data/productRepo.js' });
   return ctx;

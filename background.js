@@ -20,6 +20,7 @@ if (typeof importScripts === 'function' && !globalThis.SSProductRepo) {
       'normalization/normalizers/enum.js',
       'normalization/normalizers/measurement.js',
       'normalization/normalize.js',
+      'shared/productSpecAccess.js',
       'normalization/matching.js',
       'data/productRepo.js',
       'data/migrate.js'

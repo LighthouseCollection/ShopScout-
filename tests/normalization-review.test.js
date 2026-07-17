@@ -3,12 +3,16 @@ const fs = require('fs');
 const path = require('path');
 const vm = require('vm');
 
-const src = fs.readFileSync(path.join(__dirname, '..', 'normalization', 'review.js'), 'utf8');
-
 const ctx = { console };
 ctx.globalThis = ctx;
 vm.createContext(ctx);
-vm.runInContext(src, ctx, { filename: 'normalization/review.js' });
+for (const relPath of [
+  'shared/productSpecAccess.js',
+  'normalization/review.js'
+]) {
+  const src = fs.readFileSync(path.join(__dirname, '..', relPath), 'utf8');
+  vm.runInContext(src, ctx, { filename: relPath });
+}
 
 const review = ctx.ShopScoutNormalizationReview;
 assert.ok(review, 'normalization review module registers global API');

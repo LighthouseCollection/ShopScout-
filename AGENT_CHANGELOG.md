@@ -2,6 +2,54 @@
 
 This file is the shared record for Claude and Codex. Append an entry for every meaningful change so both agents can continue from the same factual project history.
 
+## 2026-07-17 14:15 - Codex ProductSpec read boundary
+
+- Agent: Codex
+- Branch: grid-rebuild-codex
+- Commit: This commit
+- Status: Implemented Task #70 slice 1. Added a shared ProductSpec read accessor and moved key read consumers away from ad hoc `rawSpecs` / `specs` / `_spec` branching.
+- What changed:
+  - Added `shared/productSpecAccess.js` as the central read-only bridge across ProductSpec, `specsNormalized`, and legacy flat spec shapes.
+  - Wired ProductSpec access helpers into comparison, popup, and background runtime load order before matching/review/repo consumers.
+  - Updated shared spec flattening to read through `ShopScoutProductSpecAccess.specEntries()` when available.
+  - Updated comparison-matrix spec cells to read ProductSpec entries through the shared accessor while preserving raw, corrected, confidence, source, and missing metadata.
+  - Updated duplicate matching identifier extraction to scan spec entries through the shared accessor, including ProductSpec-backed identifiers.
+  - Updated normalization review collection to use the shared accessor when available while keeping v2 provenance and identifier exclusion behavior.
+  - Added focused ProductSpec access tests and tightened existing projection, matching, review, popup, and comparison load-order tests.
+- Files touched:
+  - `background.js`
+  - `comparison.html`
+  - `popup.html`
+  - `shared/productSpecAccess.js`
+  - `shared/projections/specProjection.js`
+  - `grid-rebuild-codex/projections.js`
+  - `grid-rebuild-codex/tests/projections.test.js`
+  - `normalization/matching.js`
+  - `normalization/review.js`
+  - `tests/product-spec-access.test.js`
+  - `tests/comparison-table-defaults.test.js`
+  - `tests/dedupe-candidates.test.js`
+  - `tests/normalization-review.test.js`
+  - `tests/popup-layout.test.js`
+  - `tests/product-repo.test.js`
+  - `tests/user-rules-normalization.test.js`
+- Validation run:
+  - `node tests\product-spec-access.test.js` -> pass
+  - `node tests\normalization-review.test.js` -> pass
+  - `node tests\dedupe-candidates.test.js` -> pass
+  - `node grid-rebuild-codex\tests\projections.test.js` -> pass
+  - `node tests\product-repo.test.js` -> pass
+  - `node tests\user-rules-normalization.test.js` -> pass
+  - `npm run syntax` -> pass
+  - `npm run lint` -> pass, 0 errors, 0 warnings
+  - `npm run typecheck` -> pass
+  - `npm test` -> 46/46 test files pass
+  - `npm run build` -> Chrome / Edge / Firefox rebuilt
+- Review status / next reviewer:
+  - Ready for Claude review.
+- Follow-ups or risks:
+  - Task #70 is not fully complete. Remaining slices should migrate write/edit consumers such as product detail editing, rescan merge logic, AI/export prompt builders, and any direct display helpers that still branch on legacy spec shapes.
+
 ## 2026-07-17 19:10 - Codex attribute sidecar retirement
 
 - Agent: Codex

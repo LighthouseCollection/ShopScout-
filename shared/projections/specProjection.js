@@ -26,31 +26,26 @@
     const canonKey = canon && canon.canonicalKey
       ? (key) => canon.canonicalKey(key)
       : (key) => String(key || '').trim();
+    const specAccess = scope.ShopScoutProductSpecAccess || root.ShopScoutProductSpecAccess;
     const SH = scope.SSSpecHeuristic || root.SSSpecHeuristic;
     const values = scope.ShopScoutValues || root.ShopScoutValues;
 
     const flattened = (Array.isArray(rows) ? rows : []).map(product => {
       const flat = Object.assign({}, product);
-      const normalizedByCanonical = Object.create(null);
-      if (product && product.specsNormalized && typeof product.specsNormalized === 'object') {
-        for (const [fieldName, envelope] of Object.entries(product.specsNormalized)) {
-          const key = canonKey(fieldName);
-          if (!key || !envelope || typeof envelope !== 'object') continue;
-          normalizedByCanonical[key] = envelope;
-        }
-      }
-      const list = SH && SH.specListOf
-        ? SH.specListOf(product)
-        : (Array.isArray(product.specs) ? product.specs : []);
+      const list = specAccess && typeof specAccess.specEntries === 'function'
+        ? specAccess.specEntries(product, { root: scope })
+        : SH && SH.specListOf
+          ? SH.specListOf(product)
+          : (Array.isArray(product.specs) ? product.specs : []);
       const seen = new Set();
       for (const spec of list) {
-        if (!spec || spec.key == null) continue;
-        const key = canonKey(spec.key);
+        const rawKey = spec?.rawField ?? spec?.key ?? spec?.field;
+        if (!spec || rawKey == null) continue;
+        const key = spec.field || canonKey(rawKey);
         if (!key || seen.has(key)) continue;
         seen.add(key);
-        const normalized = normalizedByCanonical[key];
-        if (normalized && normalized.display != null && normalized.display !== '—') {
-          flat['spec:' + key] = Array.isArray(normalized.display) ? normalized.display.join(', ') : String(normalized.display);
+        if (spec.display != null && spec.display !== '') {
+          flat['spec:' + key] = String(spec.display);
         } else {
           flat['spec:' + key] = spec.value == null ? '' : String(spec.value);
         }

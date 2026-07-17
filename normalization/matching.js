@@ -155,12 +155,17 @@
       product && product.modelNumber,
       product && product.modelName
     ];
-    const specs = Array.isArray(product && product.specs) ? product.specs
-      : Array.isArray(product && product.rawSpecs) ? product.rawSpecs
-        : [];
+    const specAccess = root.ShopScoutProductSpecAccess;
+    const specs = specAccess && typeof specAccess.specEntries === 'function'
+      ? specAccess.specEntries(product || {})
+      : Array.isArray(product && product.specs) ? product.specs
+        : Array.isArray(product && product.rawSpecs) ? product.rawSpecs
+          : [];
     for (const spec of specs) {
-      const key = normalizeText(spec && spec.key);
-      if (/(asin|upc|gtin|ean|mpn|model|part number|sku)/.test(key)) direct.push(spec && spec.value);
+      const key = normalizeText(spec && (spec.rawField || spec.key || spec.field));
+      if (/(asin|upc|gtin|ean|mpn|model|part number|sku)/.test(key)) {
+        direct.push(spec && (spec.raw || spec.value || spec.display));
+      }
     }
     return direct;
   }

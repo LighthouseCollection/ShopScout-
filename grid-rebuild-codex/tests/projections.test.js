@@ -36,6 +36,7 @@ function createContext() {
   loadScript(ctx, 'shared/values/cellValues.js');
   loadScript(ctx, 'normalization/libraries/defaultRules.js');
   loadScript(ctx, 'normalization/userRules.js');
+  loadScript(ctx, 'shared/productSpecAccess.js');
   loadScript(ctx, 'shared/projections/specProjection.js');
   loadScript(ctx, 'grid-rebuild-codex/projections.js');
   return ctx;

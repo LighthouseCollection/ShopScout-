@@ -136,12 +136,12 @@
   }
 
   function entryFromV2(product, rawSpec) {
-    if (!rawSpec || rawSpec.key == null) return null;
-    const rawField = text(rawSpec.key);
+    if (!rawSpec || (rawSpec.key == null && rawSpec.rawField == null && rawSpec.field == null)) return null;
+    const rawField = text(rawSpec.rawField || rawSpec.key || rawSpec.field);
     if (!rawField) return null;
     const mapped = normalizeSpecField(product, rawField);
-    const field = text(mapped.field || rawField);
-    const envelope = product?.specsNormalized?.[field];
+    const field = text(rawSpec.field || mapped.field || rawField);
+    const envelope = rawSpec.normalized || product?.specsNormalized?.[field];
     if (!envelope || typeof envelope !== 'object') return null;
     const provenance = envelope.provenance || {};
     const warnings = Array.isArray(provenance.warnings) ? provenance.warnings : [];
@@ -149,8 +149,8 @@
     return {
       field,
       rawField,
-      raw: rawSpec.value,
-      normalized: displayFromEnvelope(envelope, rawSpec.value),
+      raw: rawSpec.raw ?? rawSpec.value,
+      normalized: rawSpec.display || displayFromEnvelope(envelope, rawSpec.raw ?? rawSpec.value),
       confidence: Number(provenance.confidence) || 0,
       rule: unmapped ? 'unmapped' : text((provenance.rules || [])[0] || provenance.method || ''),
       fieldRule: text(provenance.fieldRule || mapped.fieldRule || ''),
@@ -160,7 +160,10 @@
   }
 
   function v2Entries(product) {
-    const rawSpecs = Array.isArray(product?.rawSpecs) ? product.rawSpecs : [];
+    const specAccess = root.ShopScoutProductSpecAccess;
+    const rawSpecs = specAccess && typeof specAccess.specEntries === 'function'
+      ? specAccess.specEntries(product || {})
+      : Array.isArray(product?.rawSpecs) ? product.rawSpecs : [];
     return rawSpecs.map(rawSpec => entryFromV2(product, rawSpec)).filter(Boolean);
   }
 

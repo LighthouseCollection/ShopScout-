@@ -434,6 +434,10 @@
 
   function specEntryFromProduct(product, field, scope) {
     if (!field.startsWith('spec:')) return null;
+    const specAccess = scope?.ShopScoutProductSpecAccess || root.ShopScoutProductSpecAccess;
+    if (specAccess && typeof specAccess.specEntry === 'function') {
+      return specAccess.specEntry(product, field.slice(5), { root: scope || root });
+    }
     const wanted = canonicalKey(field.slice(5), scope);
     const specs = product?._spec?.specs;
     if (specs && typeof specs === 'object') {
@@ -475,17 +479,21 @@
        Only fall through to raw/canonicalValue when we don't have one. */
     const normalized = entry && typeof entry === 'object' ? entry.normalized : null;
     const fromEntry = entry && typeof entry === 'object'
-      ? (entry.rawValue ?? entry.value ?? entry.canonicalValue)
+      ? (entry.raw ?? entry.rawValue ?? entry.value ?? entry.canonicalValue)
       : (entry ?? productRow?.[field]);
     const raw = fromEntry == null ? '' : String(fromEntry);
     const correctedValue = entry && typeof entry === 'object' && entry.canonicalValue != null
       ? entry.canonicalValue
-      : correctionFor(product, field);
+      : entry && typeof entry === 'object' && entry.display != null && String(entry.display) !== raw
+        ? entry.display
+        : correctionFor(product, field);
     const corrected = correctedValue != null && String(correctedValue) !== raw
       ? String(correctedValue)
       : null;
     let value;
-    if (normalized && normalized.display != null && normalized.display !== '—') {
+    if (entry && typeof entry === 'object' && entry.display != null && entry.display !== '') {
+      value = String(entry.display);
+    } else if (normalized && normalized.display != null && normalized.display !== '—') {
       value = Array.isArray(normalized.display) ? normalized.display.join(', ') : String(normalized.display);
     } else {
       value = corrected || raw;

@@ -75,6 +75,10 @@ assert.ok(cmpHtml.indexOf('src="normalization/normalize.js"') > -1,
   'normalization/normalize.js is loaded on comparison page');
 assert.ok(cmpHtml.indexOf('src="normalization/normalize.js"') < cmpHtml.indexOf('src="data/productRepo.js"'),
   'v2 normalization loads before productRepo on comparison page');
+assert.ok(cmpHtml.indexOf('src="shared/productSpecAccess.js"') > -1,
+  'ProductSpec access helpers are loaded on comparison page');
+assert.ok(cmpHtml.indexOf('src="shared/productSpecAccess.js"') < cmpHtml.indexOf('src="normalization/matching.js"'),
+  'ProductSpec access helpers load before matching on comparison page');
 assert.ok(cmpHtml.indexOf('src="normalization/matching.js"') > -1,
   'normalization/matching.js is loaded on comparison page');
 assert.ok(cmpHtml.indexOf('src="normalization/matching.js"') < cmpHtml.indexOf('src="data/productRepo.js"'),

@@ -21,6 +21,10 @@ assert.ok(html.indexOf('src="normalization/normalize.js"') > -1,
   'popup loads v2 normalization dispatcher for captured products');
 assert.ok(html.indexOf('src="normalization/normalize.js"') < html.indexOf('src="data/productRepo.js"'),
   'v2 normalization loads before productRepo in the popup');
+assert.ok(html.indexOf('src="shared/productSpecAccess.js"') > -1,
+  'popup loads ProductSpec access helpers for spec-aware product operations');
+assert.ok(html.indexOf('src="shared/productSpecAccess.js"') < html.indexOf('src="normalization/matching.js"'),
+  'ProductSpec access helpers load before matching in the popup');
 assert.ok(html.indexOf('src="normalization/matching.js"') > -1,
   'popup loads dedupe matching helpers for product lists');
 assert.ok(html.indexOf('src="normalization/matching.js"') < html.indexOf('src="data/productRepo.js"'),

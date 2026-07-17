@@ -11,6 +11,7 @@ const textNormalizerSrc = fs.readFileSync(path.join(__dirname, '..', 'normalizat
 const enumNormalizerSrc = fs.readFileSync(path.join(__dirname, '..', 'normalization', 'normalizers', 'enum.js'), 'utf8');
 const measurementNormalizerSrc = fs.readFileSync(path.join(__dirname, '..', 'normalization', 'normalizers', 'measurement.js'), 'utf8');
 const normalizeSrc = fs.readFileSync(path.join(__dirname, '..', 'normalization', 'normalize.js'), 'utf8');
+const productSpecAccessSrc = fs.readFileSync(path.join(__dirname, '..', 'shared', 'productSpecAccess.js'), 'utf8');
 const reviewSrc = fs.readFileSync(path.join(__dirname, '..', 'normalization', 'review.js'), 'utf8');
 
 const ctx = { console };
@@ -24,6 +25,7 @@ vm.runInContext(textNormalizerSrc, ctx, { filename: 'normalization/normalizers/t
 vm.runInContext(enumNormalizerSrc, ctx, { filename: 'normalization/normalizers/enum.js' });
 vm.runInContext(measurementNormalizerSrc, ctx, { filename: 'normalization/normalizers/measurement.js' });
 vm.runInContext(normalizeSrc, ctx, { filename: 'normalization/normalize.js' });
+vm.runInContext(productSpecAccessSrc, ctx, { filename: 'shared/productSpecAccess.js' });
 
 const userRules = ctx.ShopScoutUserNormalizationRules;
 assert.ok(userRules, 'user rules module registers global API');
