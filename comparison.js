@@ -54,6 +54,7 @@ const AI_REPORT_SECTION_DEFINITIONS = [
   { id: 'masterComparisonTable', label: 'Master Comparison Table', defaultChecked: true },
   { id: 'discrepanciesFactChecks', label: 'Discrepancies & Fact-Checks', defaultChecked: true },
   { id: 'claimsValueReviews', label: 'Claims, Value & Reviews', defaultChecked: true },
+  { id: 'riskSellerChecks', label: 'Risk & Seller Checks', defaultChecked: false },
   { id: 'finalVerdict', label: 'Final Verdict', defaultChecked: true }
 ];
 
@@ -1229,22 +1230,53 @@ async function saveManualResultPasteResult() {
   }
   const data = await getData();
   const activeList = data?.activeList || document.getElementById('listSelect')?.value || 'My Products';
-  const record = {
+  const products = Array.isArray(data?.lists?.[activeList]) ? data.lists[activeList] : [];
+  const createdAt = new Date().toISOString();
+  const stage = globalThis.ShopScoutAI?.createEvidenceEvent
+    ? ShopScoutAI.createEvidenceEvent({
+      providerId: 'manual-ai',
+      model: 'manual paste',
+      stage: 'comparison',
+      status: 'completed',
+      responseText: text,
+      confidence: 'manual'
+    })
+    : {
+      id: `evidence-${Date.now()}`,
+      providerId: 'manual-ai',
+      providerName: 'Manual AI',
+      model: 'manual paste',
+      stage: 'comparison',
+      status: 'completed',
+      timestamp: createdAt,
+      prompt: '',
+      responseText: text,
+      parsedJson: null,
+      sourceUrls: [],
+      verifiesEventIds: [],
+      confidence: 'manual',
+      error: ''
+    };
+  const run = {
     id: `manual-${Date.now()}`,
     listName: activeList,
-    createdAt: new Date().toISOString(),
+    productIndexes: products.map((_, index) => index),
+    productUrls: products.map(product => product?.url || ''),
+    analysisOptions: collectAiOptionsFromSectionsForProducts(normalizeAiSections(), products),
+    promptOptions: { payloadMode: 'manual-paste' },
+    startedAt: createdAt,
+    completedAt: createdAt,
+    status: 'completed',
     source: 'manual-ai',
-    text
+    note: 'manual AI pasted result',
+    stages: [stage]
   };
-  const storage = chrome?.storage?.local;
-  const key = 'shopscout_manual_ai_results';
-  if (storage?.get && storage?.set) {
-    const stored = await storage.get(key);
-    const rows = Array.isArray(stored?.[key]) ? stored[key] : [];
-    await storage.set({ [key]: [record, ...rows].slice(0, 50) });
-  }
+  const runs = Array.isArray(data.aiRuns) ? data.aiRuns.filter(item => item?.id !== run.id) : [];
+  data.aiRuns = [run, ...runs].slice(0, 30);
+  await saveData(data);
   closeManualResultPasteModal();
   toast.show('Manual AI result saved');
+  renderAiResultsPage(run, buildRunProductList(data, run));
 }
 
 async function openManualAiModal() {
@@ -2048,8 +2080,12 @@ function selectedReportSectionLabels(sections = {}) {
     .map(section => section.label);
 }
 
-function analysisOptionsFromSections(sections = {}) {
+function collectAiOptionsFromSectionsForProducts(sections = {}, products = []) {
   const normalized = normalizeAiSections(sections);
+  const recommended = globalThis.ShopScoutAI?.recommendedAnalysisOptions
+    ? ShopScoutAI.recommendedAnalysisOptions(products)
+    : {};
+  if (recommended.sellerRisk) normalized.riskSellerChecks = true;
   return {
     verifySpecs: !!normalized.discrepanciesFactChecks,
     missingSpecs: !!normalized.discrepanciesFactChecks,
@@ -2059,11 +2095,15 @@ function analysisOptionsFromSections(sections = {}) {
     priceValue: !!normalized.claimsValueReviews,
     reviewsRatings: !!normalized.claimsValueReviews,
     compareAll: !!normalized.masterComparisonTable,
-    rebrandDuplicate: false,
-    riskSummary: !!normalized.claimsValueReviews,
-    sellerRisk: false,
+    rebrandDuplicate: !!normalized.riskSellerChecks,
+    riskSummary: !!normalized.claimsValueReviews || !!normalized.riskSellerChecks,
+    sellerRisk: !!normalized.riskSellerChecks,
     finalRecommendation: !!normalized.finalVerdict
   };
+}
+
+function analysisOptionsFromSections(sections = {}) {
+  return collectAiOptionsFromSectionsForProducts(sections);
 }
 
 function promptFieldId(label) {
@@ -2287,8 +2327,11 @@ function collectPromptPayloadOptionsFromModal() {
     : { payloadMode, includedFields, reportSections };
 }
 
-function collectAiOptionsFromModal() {
-  const options = analysisOptionsFromSections(collectAiSectionsFromModal());
+function collectAiOptionsFromModal(products = []) {
+  const sections = collectAiSectionsFromModal();
+  const options = products.length
+    ? collectAiOptionsFromSectionsForProducts(sections, products)
+    : analysisOptionsFromSections(sections);
   return globalThis.ShopScoutAI?.normalizeAnalysisOptions
     ? ShopScoutAI.normalizeAnalysisOptions(options)
     : options;
@@ -2315,8 +2358,13 @@ async function getAiOptionsProducts(productIndexes) {
 }
 
 async function getRecommendedAiOptions(productIndexes) {
-  await getAiOptionsProducts(productIndexes);
-  return normalizeAiSections();
+  const products = await getAiOptionsProducts(productIndexes);
+  const sections = normalizeAiSections();
+  const recommended = globalThis.ShopScoutAI?.recommendedAnalysisOptions
+    ? ShopScoutAI.recommendedAnalysisOptions(products)
+    : {};
+  if (recommended.sellerRisk || recommended.rebrandDuplicate || recommended.riskSummary) sections.riskSellerChecks = true;
+  return sections;
 }
 
 function updateAiOptionsStatus() {
@@ -2426,7 +2474,9 @@ function bindAiOptionsEvents() {
   document.getElementById('aiOptionsRun')?.addEventListener('click', async () => {
     const runBtn = document.getElementById('aiOptionsRun');
     if (runBtn?.disabled) return;
-    const options = collectAiOptionsFromModal();
+    const run = pendingAiRunOptions || {};
+    const products = await getAiOptionsProducts(run.productIndexes);
+    const options = collectAiOptionsFromModal(products);
     if (!selectedAiOptionCount()) {
       toast.show('Select at least one report section', 'error');
       return;
@@ -2440,7 +2490,6 @@ function bindAiOptionsEvents() {
       runBtn.disabled = true;
       runBtn.textContent = 'Starting...';
     }
-    const run = pendingAiRunOptions || {};
     document.getElementById('aiOptionsModal')?.classList.remove('active');
     pendingAiRunOptions = null;
     try {

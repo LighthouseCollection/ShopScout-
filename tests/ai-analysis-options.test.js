@@ -36,6 +36,11 @@ assert.strictEqual(defaults.riskSummary, false, 'risk summary is optional by def
 assert.strictEqual(defaults.sellerRisk, false, 'seller/store risk is optional by default');
 assert.strictEqual(defaults.finalRecommendation, true, 'final recommendation is selected by default');
 
+const recommendedHighRisk = AI.recommendedAnalysisOptions([{ source: 'Alibaba', seller: 'Marketplace seller' }]);
+assert.strictEqual(recommendedHighRisk.sellerRisk, true, 'recommended analysis enables seller risk for higher-risk marketplaces');
+const recommendedAmazon = AI.recommendedAnalysisOptions([{ source: 'Amazon', seller: 'Amazon.com' }]);
+assert.strictEqual(recommendedAmazon.sellerRisk, false, 'recommended analysis keeps seller risk off for reputable sources');
+
 const products = [{
   title: 'Waterproof 5K Helmet Camera',
   brand: 'Camco',
@@ -106,6 +111,7 @@ assert.ok(comparisonHtml.includes('Example: “34 selected fields, about 688 tok
 assert.ok(comparisonHtml.includes('Example: short bullet/description excerpts'), 'raw fallback option includes an example');
 assert.ok(comparisonHtml.includes('ai-option-list ai-option-list--plain'), 'report section checklist uses unboxed plain rows');
 assert.ok(comparisonHtml.includes('data-ai-section="discrepanciesFactChecks"'), 'AI options modal includes fact-check section checkbox');
+assert.ok(comparisonHtml.includes('data-ai-section="riskSellerChecks"'), 'AI options modal includes optional risk and seller checks');
 assert.ok(comparisonHtml.includes('data-ai-section="finalVerdict"'), 'AI options modal includes final verdict section checkbox');
 assert.ok(comparisonHtml.includes('id="aiFieldList"'), 'AI options modal includes field/spec token-control list');
 assert.ok(!comparisonHtml.includes('class="ai-paste-back-block"'), 'paste-result-back is not embedded inside the AI options modal');
@@ -132,5 +138,8 @@ assert.ok(comparisonHtml.includes('background: var(--paper);') && comparisonHtml
 assert.ok(comparisonJs.includes('openAiOptionsModal'), 'comparison script opens the AI options modal before running');
 assert.ok(comparisonJs.includes('function collapseAiAccordionSections'), 'comparison script resets expand/collapse sections to collapsed when opened');
 assert.ok(comparisonJs.includes('analysisOptions'), 'comparison script sends selected analysis options to the background pipeline');
+assert.ok(/function collectAiOptionsFromSectionsForProducts\([\s\S]*sellerRisk:\s*!!normalized\.riskSellerChecks/.test(comparisonJs), 'risk/seller section maps to seller risk analysis');
+assert.ok(/function collectAiOptionsFromSectionsForProducts\([\s\S]*rebrandDuplicate:\s*!!normalized\.riskSellerChecks/.test(comparisonJs), 'risk/seller section maps to rebrand duplicate analysis');
+assert.ok(/function getRecommendedAiOptions[\s\S]*recommendedAnalysisOptions\(products\)/.test(comparisonJs), 'recommended modal state remains product-sensitive');
 
 console.log('ai analysis options tests passed');

@@ -2,6 +2,38 @@
 
 This file is the shared record for Claude and Codex. Append an entry for every meaningful change so both agents can continue from the same factual project history.
 
+## 2026-07-17 18:05 - Codex Manual AI regression fixes
+
+- Agent: Codex
+- Branch: grid-rebuild-codex
+- Commit: This commit
+- Status: Implemented. Fixed three Manual AI regressions found during Claude review.
+- What changed:
+  - Changed Paste Manual AI Result from an unreachable side-key save to a normal completed `aiRuns` record, so pasted manual reports immediately open in the existing AI Results page.
+  - Added dashboard-side `shopscout_ai_runs` load/save support in `utils.js` so repo-backed `getData()` snapshots include saved AI runs.
+  - Added optional `Risk & Seller Checks` to the Manual AI section picker and mapped it to `sellerRisk`, `rebrandDuplicate`, and risk-summary analysis flags.
+  - Restored product-sensitive recommended behavior: high-risk marketplaces such as Alibaba now turn on the risk/seller section automatically, while reputable sources keep it off.
+  - Added regression coverage for paste-back reachability, shared AI-run storage, risk/seller stage mapping, and product-sensitive recommendations.
+- Files touched:
+  - `comparison.html`
+  - `comparison.js`
+  - `utils.js`
+  - `tests/ai-analysis-options.test.js`
+  - `tests/manual-ai-engine.test.js`
+  - `AGENT_CHANGELOG.md`
+- Validation run:
+  - `node tests\manual-ai-engine.test.js` -> pass
+  - `node tests\ai-analysis-options.test.js` -> pass
+  - `npm run syntax` -> pass
+  - `npm run lint` -> pass, 0 errors, 0 warnings
+  - `npm run typecheck` -> pass
+  - `npm test` -> 47/47 test files pass
+  - `npm run build` -> Chrome / Edge / Firefox rebuilt
+- Review status / next reviewer:
+  - Ready for Claude review.
+- Follow-ups or risks:
+  - Paste-back stores and displays the raw human-readable manual report. Applying field-level corrections from pasted reports remains a separate review/parser workflow.
+
 ## 2026-07-12 07:56 - Codex manual AI accordion cleanup
 
 - Agent: Codex

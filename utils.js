@@ -2,6 +2,7 @@ var chrome = globalThis.browser || globalThis.chrome;
 
 window.SS = (() => {
   const STORAGE_KEY = 'shopscout_data';
+  const AI_RUNS_KEY = 'shopscout_ai_runs';
 
   // --- Storage ---
   // Legacy compatibility shape: { lists: { [listName]: Product[] }, activeList: string }
@@ -45,6 +46,7 @@ window.SS = (() => {
     const active = await normalizeRepoActiveList(lists);
     lists = await repo.listLists();
     const snapshot = { lists: {}, activeList: active?.name || 'My Products' };
+    snapshot.aiRuns = await loadAIAnalysisRuns();
     for (const list of lists) {
       snapshot.lists[list.name] = await repo.listProducts(list.id);
     }
@@ -105,18 +107,24 @@ window.SS = (() => {
 
   async function getData() {
     if (productRepoAvailable()) return getDataFromProductRepo();
-    const d = await chrome.storage.local.get(STORAGE_KEY);
+    const d = await chrome.storage.local.get([STORAGE_KEY, AI_RUNS_KEY]);
     const data = d[STORAGE_KEY] || { lists: { 'My Products': [] }, activeList: 'My Products' };
-    if (!data.lists || !Object.keys(data.lists).length) return { lists: { 'My Products': [] }, activeList: 'My Products' };
+    data.aiRuns = Array.isArray(d[AI_RUNS_KEY]) ? d[AI_RUNS_KEY] : (Array.isArray(data.aiRuns) ? data.aiRuns : []);
+    if (!data.lists || !Object.keys(data.lists).length) return { lists: { 'My Products': [] }, activeList: 'My Products', aiRuns: data.aiRuns };
     if (!data.lists[data.activeList]) data.activeList = Object.keys(data.lists)[0];
     return data;
   }
   async function saveData(data) {
+    if (data && Object.prototype.hasOwnProperty.call(data, 'aiRuns')) {
+      await saveAIAnalysisRuns(data.aiRuns);
+    }
     if (productRepoAvailable()) {
       await saveDataToProductRepo(data);
       return;
     }
-    await chrome.storage.local.set({ [STORAGE_KEY]: data });
+    const legacy = data && typeof data === 'object' ? { ...data } : data;
+    if (legacy && typeof legacy === 'object') delete legacy.aiRuns;
+    await chrome.storage.local.set({ [STORAGE_KEY]: legacy });
     scheduleProductRepoMirror(data);
   }
   async function getProducts() { const d = await getData(); return d.lists[d.activeList] || []; }
@@ -148,6 +156,17 @@ window.SS = (() => {
       console.warn('SS.flushProductRepoMirror: productRepo mirror failed', err);
       return false;
     }
+  }
+
+  async function loadAIAnalysisRuns() {
+    const stored = await chrome.storage.local.get([AI_RUNS_KEY, STORAGE_KEY]);
+    if (Array.isArray(stored[AI_RUNS_KEY])) return stored[AI_RUNS_KEY];
+    const legacyRuns = stored[STORAGE_KEY]?.aiRuns;
+    return Array.isArray(legacyRuns) ? legacyRuns : [];
+  }
+
+  async function saveAIAnalysisRuns(runs) {
+    await chrome.storage.local.set({ [AI_RUNS_KEY]: Array.isArray(runs) ? runs.slice(0, 30) : [] });
   }
 
   /* Mirror the legacy blob into IndexedDB. Replaces lists/products wholesale —
