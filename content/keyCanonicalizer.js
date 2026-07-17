@@ -163,15 +163,7 @@
 
   function normalizeValue(rawValue) {
     if (rawValue == null) return '';
-    const trimmed = String(rawValue).replace(/\s+/g, ' ').trim();
-    if (!trimmed) return '';
-    try {
-      if (root.SSCanonical && root.SSCanonical.canonicalValue) {
-        const c = root.SSCanonical.canonicalValue(trimmed);
-        if (c) return c;
-      }
-    } catch { /* tolerate */ }
-    return trimmed;
+    return String(rawValue).replace(/\s+/g, ' ').trim();
   }
 
   NS.keyCanonicalizer = {

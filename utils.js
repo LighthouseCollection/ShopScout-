@@ -433,12 +433,6 @@ window.SS = (() => {
   }
 
   function normalizeSpecValue(value) {
-    /* If SSCanonical is ready and js-quantities recognizes the value, return
-       the unit-normalized short form ("120 watts" -> "120W"). */
-    if (globalThis.SSCanonical && globalThis.SSCanonical.isReady && globalThis.SSCanonical.isReady()) {
-      const canonical = globalThis.SSCanonical.canonicalValue(value);
-      if (canonical) return canonical;
-    }
     let text = String(value || '').replace(/\s+/g, ' ').trim();
     if (!text) return '';
     text = text

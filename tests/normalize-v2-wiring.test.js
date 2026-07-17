@@ -86,6 +86,7 @@ assert.ok(voltEntry && voltEntry.normalized,                             'Voltag
 assert.strictEqual(voltEntry.normalized.canonical, 9,                    'Voltage volts_of_direct_current cleaned to 9');
 assert.strictEqual(voltEntry.normalized.unit,      'V',                  'Voltage canonical unit is V');
 assert.strictEqual(voltEntry.normalized.display,   '9 V',                'Voltage display is "9 V"');
+assert.strictEqual(voltEntry.canonicalValue,       '9 V',                'legacy canonicalValue mirrors v2 display when available');
 
 const lenEntry = spec.specs.Length || spec.itemDetails.Length;
 assert.ok(lenEntry && lenEntry.normalized,                                'Length entry has .normalized');

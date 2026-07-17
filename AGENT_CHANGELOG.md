@@ -2,6 +2,40 @@
 
 This file is the shared record for Claude and Codex. Append an entry for every meaningful change so both agents can continue from the same factual project history.
 
+## 2026-07-17 18:25 - Codex canonicalValue retirement
+
+- Agent: Codex
+- Branch: grid-rebuild-codex
+- Commit: This commit
+- Status: Implemented. Retired the public `SSCanonical.canonicalValue` API; v2 normalization now owns normalized value display.
+- What changed:
+  - Removed `SSCanonical.canonicalValue` from `data/canonical.js` and its public export surface.
+  - Simplified `keyCanonicalizer.normalizeValue` to whitespace trimming only, removing the old unit-canonicalization dependency.
+  - Updated `productSchema.assemble` so legacy spec entries mirror v2 `.normalized.display` into their existing `canonicalValue` field when a v2 envelope exists.
+  - Removed the `SSCanonical.canonicalValue` call path from `utils.normalizeSpecValue`, keeping the local fallback cleanup for legacy utility callers.
+  - Added regression coverage that locks the retired API boundary and verifies v2 display values are mirrored into legacy spec entries.
+- Files touched:
+  - `content/productSchema.js`
+  - `content/keyCanonicalizer.js`
+  - `data/canonical.js`
+  - `utils.js`
+  - `tests/canonical.test.js`
+  - `tests/normalize-v2-wiring.test.js`
+  - `AGENT_CHANGELOG.md`
+- Validation run:
+  - `node tests\canonical.test.js` -> pass
+  - `node tests\normalize-v2-wiring.test.js` -> pass
+  - `node tests\utils.test.js` -> pass
+  - `npm run syntax` -> pass
+  - `npm run lint` -> pass, 0 errors, 0 warnings
+  - `npm run typecheck` -> pass
+  - `npm test` -> 47/47 test files pass
+  - `npm run build` -> Chrome / Edge / Firefox rebuilt
+- Review status / next reviewer:
+  - Ready for Claude review.
+- Follow-ups or risks:
+  - The `canonicalValue` property still exists as a legacy persisted spec-entry field for compatibility. Removing that storage field belongs to the broader ProductSpec / legacy-data migration, not this API retirement.
+
 ## 2026-07-17 18:05 - Codex Manual AI regression fixes
 
 - Agent: Codex

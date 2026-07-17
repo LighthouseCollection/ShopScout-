@@ -359,7 +359,6 @@
         }
         return spec;
       }
-      const canonVal = NS.keyCanonicalizer ? NS.keyCanonicalizer.normalizeValue(rawValue) : String(rawValue);
       const bucket = (obs.type === 'item_detail') ? spec.itemDetails : spec.specs;
       const existing = bucket[canonKey];
       if (!existing || gt(obs.confidence, existing.confidence)) {
@@ -373,6 +372,9 @@
           try { normalized = root.ShopScoutNormalize.field(canonKey, rawValue); }
           catch (err) { /* leave normalized null; legacy path still works */ }
         }
+        const canonVal = normalized && normalized.display != null
+          ? (Array.isArray(normalized.display) ? normalized.display.join(', ') : String(normalized.display))
+          : (NS.keyCanonicalizer ? NS.keyCanonicalizer.normalizeValue(rawValue) : String(rawValue));
         bucket[canonKey] = {
           rawKey: String(rawKey),
           rawValue: String(rawValue),

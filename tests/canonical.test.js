@@ -35,6 +35,7 @@ assert.strictEqual(C.canonicalKey(''),               '',     'empty -> empty');
 assert.strictEqual(C.canonicalKey(null),             '',     'null -> empty');
 /* Unknown key — passthrough preserved with original casing */
 assert.strictEqual(C.canonicalKey('Custom Field'),   'Custom Field', 'unknown key passthrough');
+assert.strictEqual(C.canonicalValue, undefined, 'canonicalValue is retired; v2 normalization owns value display');
 
 /* ---- abbreviation table sanity ---- */
 const abbr = C._abbreviations;

@@ -15,7 +15,6 @@
      ready()                          — load + build indices (idempotent)
      isReady()                        — true after first ready()
      canonicalKey(variant)            — long form -> short canonical
-     canonicalValue(value)            — unit-aware short form
      findCategory(query)              — match a category by name/breadcrumb
      matchProductToCategory(product)  — best-fit category for a product
      knownAttributesFor(category)     — Shopify-declared attribute names
@@ -291,26 +290,6 @@
     return trimmed;
   }
 
-  function canonicalValue(value) {
-    if (value == null) return '';
-    const trimmed = String(value).trim();
-    if (!trimmed) return '';
-    if (root.Qty) {
-      try {
-        const qty = root.Qty(trimmed);
-        if (qty && typeof qty.scalar === 'number' && qty.units) {
-          const unit = qty.units();
-          if (unit) {
-            const short = canonicalKey(unit) || unit;
-            const num = qty.scalar;
-            return (num % 1 === 0 ? num.toString() : num.toFixed(2)) + short;
-          }
-        }
-      } catch { /* not a quantity */ }
-    }
-    return trimmed;
-  }
-
   /* Find a category by name or breadcrumb. Tries:
        1. Exact full_name match (case-insensitive)
        2. Suffix match (the query is the tail of some full_name)
@@ -397,7 +376,6 @@
     ready,
     isReady,
     canonicalKey,
-    canonicalValue,
     findCategory,
     matchProductToCategory,
     knownAttributesFor,
