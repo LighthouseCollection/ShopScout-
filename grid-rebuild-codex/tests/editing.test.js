@@ -5,6 +5,7 @@ const vm = require('vm');
 
 const root = path.join(__dirname, '..', '..');
 const source = fs.readFileSync(path.join(root, 'grid-rebuild-codex', 'editing.js'), 'utf8');
+const productSpecAccessSource = fs.readFileSync(path.join(root, 'shared', 'productSpecAccess.js'), 'utf8');
 
 const ctx = {
   console,
@@ -17,6 +18,7 @@ const ctx = {
 };
 ctx.globalThis = ctx;
 vm.createContext(ctx);
+vm.runInContext(productSpecAccessSource, ctx, { filename: 'shared/productSpecAccess.js' });
 vm.runInContext(source, ctx, { filename: 'grid-rebuild-codex/editing.js' });
 
 const editing = ctx.ShopScoutGridCodexEditing;
@@ -53,6 +55,30 @@ assert.deepEqual(addedSpecPatch.rawSpecs, [
   { key: 'Battery Life', value: '2 hours' },
   { key: 'Water Resistance', value: 'IPX7' }
 ], 'missing spec edits append a friendly-label rawSpec entry');
+
+const productSpecOnly = {
+  id: 'p-spec',
+  _spec: {
+    itemDetails: {
+      Material: {
+        rawKey: 'Material',
+        rawValue: 'SS304',
+        canonicalValue: 'Stainless Steel 304',
+        source: 'manufacturer'
+      }
+    }
+  },
+  specsNormalized: {
+    Material: { display: 'Stainless Steel 304' }
+  }
+};
+const materialPatch = editing.buildProductPatch(productSpecOnly, { field: 'spec:material', value: 'Aluminum' });
+assert.deepEqual(materialPatch.rawSpecs, [
+  { key: 'Material', value: 'Aluminum', source: 'manufacturer' }
+], 'spec edits can update ProductSpec-only fields through the shared access boundary');
+assert.deepEqual(materialPatch.specs, { Material: 'Aluminum' }, 'spec edit patches include the legacy object sidecar for compatibility');
+assert.ok(materialPatch._spec.specs.Material, 'spec edit patches include ProductSpec bucket entries');
+assert.equal(materialPatch.specsNormalized, null, 'spec edit patches clear stale normalized display sidecars');
 
 assert.equal(JSON.stringify(product), original, 'edit patch builder does not mutate product objects');
 

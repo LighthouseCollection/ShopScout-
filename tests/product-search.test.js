@@ -18,5 +18,6 @@ assert.ok(js.includes('function getSearchableProductText'), 'comparison script b
 assert.ok(js.includes('function activateProductListForAction'), 'cross-list product actions switch to the owning list first');
 assert.ok(gridJs.includes('function applySearch'), 'Codex grid applies the product search query');
 assert.ok(gridJs.includes("scope === 'all'"), 'Codex grid handles all-list search scope');
+assert.ok(gridJs.includes('ShopScoutProductSpecAccess'), 'grid search reads specification text through ProductSpec access');
 
 console.log('product search tests passed');

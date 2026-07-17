@@ -433,7 +433,7 @@ window.SS = (() => {
   }
 
   function normalizeSpecValue(value) {
-    let text = String(value || '').replace(/\s+/g, ' ').trim();
+    let text = String(value ?? '').replace(/\s+/g, ' ').trim();
     if (!text) return '';
     text = text
       .replace(/\b(\d+(?:\.\d+)?)\s*(?:dots?\s+per\s+inch|dpi)\b/ig, '$1 DPI')
@@ -447,17 +447,32 @@ window.SS = (() => {
     return text;
   }
 
-  function normalizeProductSpecs(product) {
+  function productSpecEntries(product) {
     const specAccess = globalThis.ShopScoutProductSpecAccess || window.ShopScoutProductSpecAccess;
-    const raw = specAccess && typeof specAccess.specEntries === 'function'
-      ? specAccess.specEntries(product || {})
-      : Array.isArray(product?.rawSpecs)
-        ? product.rawSpecs
-        : Object.entries(product?.specs || {}).map(([key, value]) => ({ key, value }));
+    if (specAccess && typeof specAccess.specEntries === 'function') {
+      return specAccess.specEntries(product || {})
+        .map(spec => ({
+          key: spec.rawField || spec.key || spec.field,
+          value: spec.display ?? spec.value ?? spec.raw
+        }))
+        .filter(spec => spec.key && spec.value != null && spec.value !== '');
+    }
+    if (Array.isArray(product?.rawSpecs)) {
+      return product.rawSpecs
+        .map(spec => ({ key: spec?.key || spec?.field || spec?.rawField, value: spec?.value ?? spec?.display ?? spec?.raw }))
+        .filter(spec => spec.key && spec.value != null && spec.value !== '');
+    }
+    return Object.entries(product?.specs || {})
+      .map(([key, value]) => ({ key, value }))
+      .filter(spec => spec.key && spec.value != null && spec.value !== '');
+  }
+
+  function normalizeProductSpecs(product) {
+    const raw = productSpecEntries(product);
     const byId = new Map();
     for (const spec of raw) {
-      const normalizedKey = normalizeSpecKeyLabel(spec?.rawField || spec?.key || spec?.field);
-      const value = normalizeSpecValue(spec?.display ?? spec?.value ?? spec?.raw);
+      const normalizedKey = normalizeSpecKeyLabel(spec?.key);
+      const value = normalizeSpecValue(spec?.value);
       if (!normalizedKey.id || !normalizedKey.label || !value) continue;
       const existing = byId.get(normalizedKey.id);
       if (!existing) {
@@ -1139,6 +1154,7 @@ window.SS = (() => {
     if (!categoryKey || !CATEGORY_RUBRICS[categoryKey]) return { found: [], missing: [], factors: [] };
     const rubric = CATEGORY_RUBRICS[categoryKey];
     const factors = rubric.factors;
+    const specEntries = productSpecEntries(product);
 
     const allText = [
       product.title || '',
@@ -1146,14 +1162,10 @@ window.SS = (() => {
       product.manufacturer || '',
       (product.bullets || []).join(' '),
       product.description || '',
-      (product.rawSpecs || []).map(s => s.key + ' ' + s.value).join(' '),
-      Object.entries(product.specs || {}).map(([k, v]) => k + ' ' + v).join(' ')
+      specEntries.map(s => `${s.key} ${s.value}`).join(' ')
     ].join(' ').toLowerCase();
 
-    const specKeys = new Set([
-      ...Object.keys(product.specs || {}),
-      ...(product.rawSpecs || []).map(s => s.key.toLowerCase())
-    ].map(k => k.toLowerCase()));
+    const specKeys = new Set(specEntries.map(s => String(s.key || '').toLowerCase()));
 
     const found = [];
     const missing = [];
@@ -1260,7 +1272,7 @@ window.SS = (() => {
     const byKey = new Map();
     products.forEach((product, productIndex) => {
       const categoryKey = inferCategory(product);
-      (product.rawSpecs || []).forEach((spec, specIndex) => {
+      productSpecEntries(product).forEach((spec, specIndex) => {
         const label = String(spec?.key || '').replace(/\s+/g, ' ').trim();
         if (!label) return;
         const score = comparisonSpecScore(label, categoryKey);
@@ -1331,12 +1343,10 @@ window.SS = (() => {
       if (p.bullets?.length) t += `\nFeature Bullets:\n${p.bullets.map(b => `  • ${b}`).join('\n')}\n`;
       const cleanDescription = sanitizeProductDescription(p.description, p.source);
       if (cleanDescription) t += `\nDescription:\n  ${cleanDescription.substring(0, 1000)}\n`;
-      if (p.rawSpecs?.length) {
+      const specs = productSpecEntries(p);
+      if (specs.length) {
         t += `\nSpecifications:\n`;
-        p.rawSpecs.forEach(s => { t += `  ${s.key}: ${s.value}\n`; });
-      } else if (p.specs && Object.keys(p.specs).length) {
-        t += `\nSpecifications:\n`;
-        Object.entries(p.specs).forEach(([k, v]) => { t += `  ${k}: ${v}\n`; });
+        specs.forEach(s => { t += `  ${s.key}: ${s.value}\n`; });
       }
     }
     return t + '\n';

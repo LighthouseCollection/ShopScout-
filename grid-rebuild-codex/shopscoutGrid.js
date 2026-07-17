@@ -110,8 +110,10 @@
   }
 
   function searchableText(product) {
-    const specs = (Array.isArray(product?.rawSpecs) ? product.rawSpecs : [])
-      .flatMap(spec => [spec?.key, spec?.value]);
+    const access = root.ShopScoutProductSpecAccess;
+    const specs = access && typeof access.specEntries === 'function'
+      ? access.specEntries(product || {}).flatMap(spec => [spec?.rawField || spec?.key || spec?.field, spec?.display ?? spec?.value ?? spec?.raw])
+      : (Array.isArray(product?.rawSpecs) ? product.rawSpecs : []).flatMap(spec => [spec?.key, spec?.value]);
     return [
       product?.title,
       product?.listingTitle,

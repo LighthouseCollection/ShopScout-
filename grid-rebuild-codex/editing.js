@@ -34,6 +34,17 @@
   }
 
   function rawSpecList(product) {
+    const access = root.ShopScoutProductSpecAccess;
+    if (access && typeof access.specEntries === 'function') {
+      return access.specEntries(product || {}).map(spec => {
+        const next = {
+          key: spec.rawField || spec.key || spec.field,
+          value: spec.display ?? spec.value ?? spec.raw
+        };
+        if (spec.source) next.source = spec.source;
+        return next;
+      });
+    }
     if (Array.isArray(product?.rawSpecs)) {
       return product.rawSpecs.map(spec => Object.assign({}, spec));
     }
@@ -57,7 +68,27 @@
       return Object.assign({}, spec, { value });
     });
     if (!matched) rawSpecs.push({ key: friendlyLabel(specKey), value });
-    return { rawSpecs };
+    const specs = {};
+    const productSpecBucket = {};
+    rawSpecs.forEach(spec => {
+      const key = String(spec?.key || '').trim();
+      const specValue = spec?.value == null ? '' : spec.value;
+      if (!key) return;
+      specs[key] = specValue;
+      productSpecBucket[key] = {
+        rawKey: key,
+        rawValue: specValue,
+        value: specValue,
+        source: spec.source || 'manual-edit',
+        confidence: 1
+      };
+    });
+    return {
+      rawSpecs,
+      specs,
+      specsNormalized: null,
+      _spec: { specs: productSpecBucket }
+    };
   }
 
   function buildProductPatch(product, edit) {

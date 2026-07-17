@@ -166,6 +166,16 @@
      Always returns an array. */
   function specListOf(product) {
     if (!product) return [];
+    const access = root.ShopScoutProductSpecAccess;
+    if (access && typeof access.specEntries === 'function') {
+      return access.specEntries(product)
+        .map(spec => ({
+          key: spec.rawField || spec.key || spec.field,
+          value: spec.display ?? spec.value ?? spec.raw,
+          source: spec.source || ''
+        }))
+        .filter(spec => spec.key && spec.value != null && spec.value !== '');
+    }
     if (Array.isArray(product.rawSpecs) && product.rawSpecs.length) return product.rawSpecs;
     if (Array.isArray(product.specs)) return product.specs;
     const out = [];

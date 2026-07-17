@@ -2,6 +2,48 @@
 
 This file is the shared record for Claude and Codex. Append an entry for every meaningful change so both agents can continue from the same factual project history.
 
+## 2026-07-17 16:38 - Codex ProductSpec remaining read helpers
+
+- Agent: Codex
+- Branch: grid-rebuild-codex
+- Commit: This commit
+- Status: Implemented. Remaining spec read helpers for utility prompts, grid search, background AI prompts, and grid inline edits now use the ProductSpec access boundary where available.
+- What changed:
+  - Routed `utils.js` missing-attribute detection, comparison spec selection, and detailed AI prompt formatting through one `productSpecEntries()` helper backed by `ShopScoutProductSpecAccess`.
+  - Routed `data/specHeuristic.js` through `ShopScoutProductSpecAccess.specEntries()` so ProductSpec-only fields participate in heuristic column picking.
+  - Routed background context-menu AI prompt spec formatting through a ProductSpec-aware helper.
+  - Routed grid search text through ProductSpec access so ProductSpec-only fields are searchable.
+  - Updated grid inline spec edits to read ProductSpec-only fields and write refreshed `rawSpecs`, object `specs`, `_spec.specs`, and a nulled `specsNormalized` sidecar to avoid stale normalized displays.
+  - Added regression coverage for ProductSpec-only utility prompts, heuristic reads, grid search, background prompt formatting, and inline spec edits.
+- Files touched:
+  - `background.js`
+  - `data/specHeuristic.js`
+  - `grid-rebuild-codex/editing.js`
+  - `grid-rebuild-codex/shopscoutGrid.js`
+  - `grid-rebuild-codex/tests/editing.test.js`
+  - `tests/background-productspec-prompt.test.js`
+  - `tests/canonical.test.js`
+  - `tests/product-search.test.js`
+  - `tests/utils.test.js`
+  - `utils.js`
+  - `AGENT_CHANGELOG.md`
+- Validation run:
+  - `node grid-rebuild-codex\tests\editing.test.js` -> pass
+  - `node tests\product-search.test.js` -> pass
+  - `node tests\background-productspec-prompt.test.js` -> pass
+  - `node tests\utils.test.js` -> pass
+  - `node tests\canonical.test.js` -> pass
+  - `node tests\product-spec-access.test.js` -> pass
+  - `npm run syntax` -> pass
+  - `npm run lint` -> pass, 0 errors, 0 warnings
+  - `npm run typecheck` -> pass
+  - `npm test` -> 48/48 test files pass
+  - `npm run build` -> Chrome / Edge / Firefox rebuilt
+- Review status / next reviewer:
+  - Ready for Claude review.
+- Follow-ups or risks:
+  - Legacy compatibility fallbacks remain intentionally in central access helpers, ingestion/backfill code, and write-side sidecar maintenance. Do not remove `flat.specs` / `flat.rawSpecs` from `content/productSchema.js` until the remaining compatibility consumers are explicitly cleared.
+
 ## 2026-07-17 16:08 - Codex ProductSpec OpenFacts enrichment
 
 - Agent: Codex

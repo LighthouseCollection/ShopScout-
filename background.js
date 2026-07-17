@@ -352,6 +352,21 @@ async function addProduct(tab) {
 }
 
 // --- Copy for AI (used by context menu) ---
+function backgroundSpecEntries(product) {
+  const access = globalThis.ShopScoutProductSpecAccess;
+  if (access && typeof access.specEntries === 'function') {
+    return access.specEntries(product || {})
+      .map(spec => ({
+        key: spec.rawField || spec.key || spec.field,
+        value: spec.display ?? spec.value ?? spec.raw
+      }))
+      .filter(spec => spec.key && spec.value != null && spec.value !== '');
+  }
+  return Array.isArray(product?.rawSpecs)
+    ? product.rawSpecs.map(spec => ({ key: spec?.key, value: spec?.value })).filter(spec => spec.key && spec.value != null && spec.value !== '')
+    : [];
+}
+
 function formatProductBg(p, i, n, detailed) {
   let t = `────────────────────────────────────────\nProduct ${i + 1} of ${n}\n`;
   const displayName = displayProductNameBg(p);
@@ -374,7 +389,8 @@ function formatProductBg(p, i, n, detailed) {
   t += `URL:            ${p.url}\n`;
   if (p.notes) t += `Notes:          ${p.notes}\n`;
   if (detailed && p.bullets?.length) t += `\nFeature Bullets:\n${p.bullets.map(b => '  • ' + b).join('\n')}\n`;
-  if (detailed && p.rawSpecs?.length) { t += `\nSpecifications:\n`; p.rawSpecs.forEach(s => { t += `  ${s.key}: ${s.value}\n`; }); }
+  const specs = detailed ? backgroundSpecEntries(p) : [];
+  if (specs.length) { t += `\nSpecifications:\n`; specs.forEach(s => { t += `  ${s.key}: ${s.value}\n`; }); }
   return t + '\n';
 }
 

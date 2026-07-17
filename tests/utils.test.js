@@ -150,6 +150,34 @@ assert.strictEqual(
   'normalizeProductSpecs uses ProductSpec access helpers for normalized displays and ProductSpec-only fields'
 );
 
+const productSpecOnlyProduct = {
+  title: 'Steel Bottle',
+  brand: 'Acme',
+  newPrice: '$12.99',
+  url: 'https://example.com/steel-bottle',
+  _spec: {
+    itemDetails: {
+      Material: {
+        rawKey: 'Material',
+        rawValue: 'SS304',
+        canonicalValue: 'Stainless Steel 304',
+        source: 'manufacturer',
+        confidence: 0.9
+      }
+    }
+  }
+};
+assert.ok(
+  SS.getCategoryComparisonSpecKeys([productSpecOnlyProduct], 4).includes('Material'),
+  'getCategoryComparisonSpecKeys reads ProductSpec-only fields'
+);
+
+const productSpecDeepPrompt = SS.buildPrompt([productSpecOnlyProduct], 'verify');
+assert.ok(
+  productSpecDeepPrompt.includes('Material: Stainless Steel 304'),
+  'detailed AI prompts include ProductSpec-only specification fields'
+);
+
 const formulaField = SS.escapeCsvField('=IMPORTXML("https://example.com")');
 assert.ok(
   formulaField.startsWith('"\'=IMPORTXML('),

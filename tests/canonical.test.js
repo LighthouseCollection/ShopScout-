@@ -7,6 +7,7 @@ const path = require('path');
 const vm = require('vm');
 
 const canonicalSrc = fs.readFileSync(path.join(__dirname, '..', 'data', 'canonical.js'), 'utf8');
+const productSpecAccessSrc = fs.readFileSync(path.join(__dirname, '..', 'shared', 'productSpecAccess.js'), 'utf8');
 const heuristicSrc = fs.readFileSync(path.join(__dirname, '..', 'data', 'specHeuristic.js'), 'utf8');
 
 const ctx = {
@@ -18,6 +19,7 @@ const ctx = {
 ctx.globalThis = ctx;
 vm.createContext(ctx);
 vm.runInContext(canonicalSrc, ctx, { filename: 'canonical.js' });
+vm.runInContext(productSpecAccessSrc, ctx, { filename: 'productSpecAccess.js' });
 vm.runInContext(heuristicSrc, ctx, { filename: 'specHeuristic.js' });
 
 const C = ctx.SSCanonical;
@@ -74,6 +76,22 @@ assert.strictEqual(new Set(allKeys).size, allKeys.length, 'allSpecKeys returns d
 /* getSpecValueFor pulls the raw value */
 assert.strictEqual(H.getSpecValueFor(tvs[0], 'Screen size'),  '65 in', 'getSpecValueFor row 0 Screen size');
 assert.strictEqual(H.getSpecValueFor(tvs[1], 'HDMI ports'),   '',      'getSpecValueFor row 1 missing key -> empty');
+
+const productSpecOnly = [{
+  _spec: {
+    itemDetails: {
+      Material: {
+        rawKey: 'Material',
+        rawValue: 'SS304',
+        canonicalValue: 'Stainless Steel 304',
+        source: 'manufacturer',
+        confidence: 0.9
+      }
+    }
+  }
+}];
+assert.ok(H.allSpecKeys(productSpecOnly).includes('Material'), 'spec heuristic reads ProductSpec-only fields');
+assert.strictEqual(H.getSpecValueFor(productSpecOnly[0], 'Material'), 'Stainless Steel 304', 'ProductSpec-only values use ProductSpec display');
 
 /* ---- spec heuristic: respects coverage threshold ---- */
 const mixed = [
