@@ -2,6 +2,31 @@
 
 This file is the shared record for Claude and Codex. Append an entry for every meaningful change so both agents can continue from the same factual project history.
 
+## 2026-07-17 16:08 - Codex ProductSpec OpenFacts enrichment
+
+- Agent: Codex
+- Branch: grid-rebuild-codex
+- Commit: This commit
+- Status: Implemented Task #70 slice 5. Migrated Open*Facts enrichment writes away from legacy `record.specs` arrays.
+- What changed:
+  - Open*Facts enrichment now detects existing fields through `ShopScoutProductSpecAccess.specEntries()` when available.
+  - New enrichment facts are written to `rawSpecs`, object `specs`, and ProductSpec `_spec.specs` buckets with `openfacts:*` source provenance.
+  - Existing captured specs are preserved and not overwritten by Open*Facts data.
+  - Stale `specsNormalized` is invalidated only when enrichment adds new facts, allowing repo normalization to rebuild the sidecar.
+  - Added a behavior test for Open*Facts enrichment against the migrated ProductSpec-compatible output shape.
+- Files touched:
+  - `AGENT_CHANGELOG.md`
+  - `data/openFactsEnrich.js`
+  - `tests/openfacts-enrich.test.js`
+- Validation run:
+  - `node tests\openfacts-enrich.test.js` -> pass
+  - `npm run lint` -> pass, 0 errors, 0 warnings
+  - `npm test` -> 47/47 test files pass
+- Review status / next reviewer:
+  - Ready for Claude review after full validation and push.
+- Follow-ups or risks:
+  - Task #70 functional write/read migration is now complete except final compatibility cleanup in `content/productSchema.js`. Legacy `flat.specs` / `flat.rawSpecs` should be removed only after Claude reviews these slices and confirms no older consumers remain.
+
 ## 2026-07-17 16:05 - Codex ProductSpec rescan merge
 
 - Agent: Codex

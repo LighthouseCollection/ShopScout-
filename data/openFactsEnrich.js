@@ -68,13 +68,47 @@
      keys that aren't already present on the record. */
   function mergeIntoRecord(record, blob, sourceLabel) {
     if (!record || !blob) return record;
-    if (!Array.isArray(record.specs)) record.specs = [];
-    const seen = new Set(record.specs.map(s => String((s && s.key) || '').toLowerCase()));
+    const access = root.ShopScoutProductSpecAccess;
+    const specKey = key => access && typeof access.canonicalKey === 'function'
+      ? access.canonicalKey(key).toLowerCase()
+      : String(key || '').trim().toLowerCase();
+    const existingEntries = access && typeof access.specEntries === 'function'
+      ? access.specEntries(record)
+      : [
+          ...(Array.isArray(record.rawSpecs) ? record.rawSpecs : []),
+          ...(!Array.isArray(record.specs) && record.specs && typeof record.specs === 'object'
+            ? Object.entries(record.specs).map(([key, value]) => ({ key, value }))
+            : [])
+        ];
+    const seen = new Set(existingEntries.map(s => specKey(s.rawField || s.key || s.field)).filter(Boolean));
+    if (!Array.isArray(record.rawSpecs)) record.rawSpecs = [];
+    if (Array.isArray(record.specs) || !record.specs || typeof record.specs !== 'object') {
+      record.specs = {};
+      for (const spec of record.rawSpecs) {
+        const key = String(spec?.key || '').trim();
+        const value = String(spec?.value ?? '').trim();
+        if (key && value) record.specs[key] = value;
+      }
+    }
+    record._spec = Object.assign({}, record._spec || {}, { specs: Object.assign({}, record._spec?.specs || {}) });
+    let changed = false;
     function addSpec(key, value) {
       if (!key || value == null || value === '') return;
-      if (seen.has(key.toLowerCase())) return;
-      record.specs.push({ key, value: String(value).trim(), source: sourceLabel });
-      seen.add(key.toLowerCase());
+      const cleanKey = String(key).trim();
+      const cleanValue = String(value).trim();
+      const id = specKey(cleanKey);
+      if (!id || seen.has(id)) return;
+      record.rawSpecs.push({ key: cleanKey, value: cleanValue, source: sourceLabel });
+      record.specs[cleanKey] = cleanValue;
+      record._spec.specs[cleanKey] = {
+        rawKey: cleanKey,
+        rawValue: cleanValue,
+        canonicalValue: cleanValue,
+        source: sourceLabel,
+        confidence: 1
+      };
+      seen.add(id);
+      changed = true;
     }
     addSpec('Brand',          blob.brands);
     addSpec('Ingredients',    blob.ingredients_text);
@@ -93,6 +127,7 @@
       addSpec('Sugar',   n['sugars_100g'] != null ? n['sugars_100g'] + ' g/100g' : '');
       addSpec('Salt',    n['salt_100g'] != null ? n['salt_100g'] + ' g/100g' : '');
     }
+    if (changed) delete record.specsNormalized;
     return record;
   }
 
