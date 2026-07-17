@@ -9,16 +9,18 @@ assert.ok(html.includes('id="addWindowBtn"'), 'popup keeps Add Products from Ope
 assert.ok(html.includes('id="urlSubmitBtn"'), 'popup keeps Add URL as a gather action');
 assert.ok(html.indexOf('src="normalization/libraries/defaultRules.js"') > -1,
   'popup loads the normalization rule library for captured products');
-assert.ok(html.indexOf('src="normalization/libraries/defaultRules.js"') < html.indexOf('src="normalization/attributes.js"'),
-  'normalization rule library loads before attribute normalization in the popup');
+assert.ok(html.indexOf('src="normalization/libraries/defaultRules.js"') < html.indexOf('src="normalization/registry.js"'),
+  'normalization rule library loads before v2 normalization in the popup');
 assert.ok(html.indexOf('src="normalization/taxonomyBridge.js"') > -1,
   'popup loads taxonomy bridge for captured products');
-assert.ok(html.indexOf('src="normalization/taxonomyBridge.js"') < html.indexOf('src="normalization/attributes.js"'),
-  'taxonomy bridge loads before attribute normalization in the popup');
-assert.ok(html.indexOf('src="normalization/attributes.js"') > -1,
-  'popup loads attribute normalization for captured products');
-assert.ok(html.indexOf('src="normalization/attributes.js"') < html.indexOf('src="data/productRepo.js"'),
-  'attribute normalization loads before productRepo in the popup');
+assert.ok(html.indexOf('src="normalization/taxonomyBridge.js"') < html.indexOf('src="normalization/registry.js"'),
+  'taxonomy bridge loads before v2 normalization in the popup');
+assert.ok(!html.includes('src="normalization/attributes.js"'),
+  'popup no longer loads retired attribute normalization sidecar');
+assert.ok(html.indexOf('src="normalization/normalize.js"') > -1,
+  'popup loads v2 normalization dispatcher for captured products');
+assert.ok(html.indexOf('src="normalization/normalize.js"') < html.indexOf('src="data/productRepo.js"'),
+  'v2 normalization loads before productRepo in the popup');
 assert.ok(html.indexOf('src="normalization/matching.js"') > -1,
   'popup loads dedupe matching helpers for product lists');
 assert.ok(html.indexOf('src="normalization/matching.js"') < html.indexOf('src="data/productRepo.js"'),

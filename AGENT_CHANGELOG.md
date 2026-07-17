@@ -2,6 +2,63 @@
 
 This file is the shared record for Claude and Codex. Append an entry for every meaningful change so both agents can continue from the same factual project history.
 
+## 2026-07-17 19:10 - Codex attribute sidecar retirement
+
+- Agent: Codex
+- Branch: grid-rebuild-codex
+- Commit: This commit
+- Status: Implemented. Retired `ShopScoutAttributeNormalization` and stopped writing/reading `_normalizedAttributes` in runtime paths.
+- What changed:
+  - Removed `normalization/attributes.js` and its runtime loads from popup, comparison, and background contexts.
+  - Moved user/default enum rule lookup and generated vertical-pack enum lookup into the v2 enum normalizer.
+  - Extended the v2 normalization dispatcher to accept per-product normalization context, preserving per-product vertical pack behavior.
+  - Added v2 registry entries for `Connectivity Technology` and `Upholstery Material`, covering current pack-backed normalization paths.
+  - Changed `productRepo` add/replace/rebuild paths to persist `specs` + `specsNormalized` instead of `_normalizedAttributes`.
+  - Changed the normalization review queue to read `rawSpecs` + `specsNormalized` and split list-like features from v2 envelopes.
+  - Changed grid projections to render v2 normalized displays from `specsNormalized` and removed render-time attribute normalization.
+  - Updated popup/comparison load-order tests and user-rule/review/product-repo/projection tests for the v2-only path.
+  - Updated `normalization/SPEC.md` from deferred status to completed retirement status.
+- Files touched:
+  - `background.js`
+  - `comparison.html`
+  - `popup.html`
+  - `data/productRepo.js`
+  - `grid-rebuild-codex/projections.js`
+  - `grid-rebuild-codex/tests/projections.test.js`
+  - `shared/projections/specProjection.js`
+  - `normalization/SPEC.md`
+  - `normalization/attributes.js` (deleted)
+  - `normalization/libraries/enums.js`
+  - `normalization/normalize.js`
+  - `normalization/normalizers/enum.js`
+  - `normalization/registry.js`
+  - `normalization/review.js`
+  - `normalization/userRules.js`
+  - `tests/attribute-normalization.test.js` (deleted)
+  - `tests/normalization-libraries.test.js` (deleted)
+  - `tests/comparison-table-defaults.test.js`
+  - `tests/normalization-review.test.js`
+  - `tests/popup-layout.test.js`
+  - `tests/product-repo.test.js`
+  - `tests/user-rules-normalization.test.js`
+- Validation run:
+  - `node tests\product-repo.test.js` -> pass
+  - `node tests\normalization-review.test.js` -> pass
+  - `node grid-rebuild-codex\tests\projections.test.js` -> pass
+  - `node tests\popup-layout.test.js` -> pass
+  - `node tests\comparison-table-defaults.test.js` -> pass
+  - `node tests\user-rules-normalization.test.js` -> pass
+  - `node tests\normalize-v2.test.js` -> pass
+  - `npm run syntax` -> pass
+  - `npm run lint` -> pass, 0 errors, 0 warnings
+  - `npm run typecheck` -> pass
+  - `npm test` -> 45/45 test files pass
+  - `npm run build` -> Chrome / Edge / Firefox rebuilt
+- Review status / next reviewer:
+  - Ready for Claude review.
+- Follow-ups or risks:
+  - Existing products that only have legacy `_normalizedAttributes` but no `rawSpecs` / `specsNormalized` will not feed the review queue until normal v2 backfill or recapture provides `specsNormalized`. Current migration already backfills v2 from `specs` for display; review needs raw field/value pairs for precise approval items.
+
 ## 2026-07-17 18:25 - Codex canonicalValue retirement
 
 - Agent: Codex

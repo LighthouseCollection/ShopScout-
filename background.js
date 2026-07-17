@@ -14,7 +14,12 @@ if (typeof importScripts === 'function' && !globalThis.SSProductRepo) {
       'normalization/libraries/generatedPacks.js',
       'normalization/taxonomyBridge.js',
       'normalization/userRules.js',
-      'normalization/attributes.js',
+      'normalization/registry.js',
+      'normalization/libraries/enums.js',
+      'normalization/normalizers/text.js',
+      'normalization/normalizers/enum.js',
+      'normalization/normalizers/measurement.js',
+      'normalization/normalize.js',
       'normalization/matching.js',
       'data/productRepo.js',
       'data/migrate.js'

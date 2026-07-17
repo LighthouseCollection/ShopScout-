@@ -13,10 +13,15 @@ Dexie.dependencies.IDBKeyRange = IDBKeyRange;
 const dbSrc = fs.readFileSync(path.join(__dirname, '..', 'data', 'db.js'), 'utf8');
 const rulesSrc = fs.readFileSync(path.join(__dirname, '..', 'normalization', 'libraries', 'defaultRules.js'), 'utf8');
 const userRulesSrc = fs.readFileSync(path.join(__dirname, '..', 'normalization', 'userRules.js'), 'utf8');
-const attrSrc = fs.readFileSync(path.join(__dirname, '..', 'normalization', 'attributes.js'), 'utf8');
 const taxonomySrc = fs.readFileSync(path.join(__dirname, '..', 'normalization', 'taxonomyBridge.js'), 'utf8');
 const matchingSrc = fs.readFileSync(path.join(__dirname, '..', 'normalization', 'matching.js'), 'utf8');
 const packsSrc = fs.readFileSync(path.join(__dirname, '..', 'normalization', 'libraries', 'generatedPacks.js'), 'utf8');
+const registrySrc = fs.readFileSync(path.join(__dirname, '..', 'normalization', 'registry.js'), 'utf8');
+const enumLibSrc = fs.readFileSync(path.join(__dirname, '..', 'normalization', 'libraries', 'enums.js'), 'utf8');
+const textNormalizerSrc = fs.readFileSync(path.join(__dirname, '..', 'normalization', 'normalizers', 'text.js'), 'utf8');
+const enumNormalizerSrc = fs.readFileSync(path.join(__dirname, '..', 'normalization', 'normalizers', 'enum.js'), 'utf8');
+const measurementNormalizerSrc = fs.readFileSync(path.join(__dirname, '..', 'normalization', 'normalizers', 'measurement.js'), 'utf8');
+const normalizeSrc = fs.readFileSync(path.join(__dirname, '..', 'normalization', 'normalize.js'), 'utf8');
 const repoSrc = fs.readFileSync(path.join(__dirname, '..', 'data', 'productRepo.js'), 'utf8');
 const esciFixture = JSON.parse(fs.readFileSync(
   path.join(__dirname, '..', 'normalization', 'libraries', 'generated', 'esciSubstitutes.json'),
@@ -163,7 +168,12 @@ async function createRepoContext() {
   });
   vm.runInContext(userRulesSrc, ctx, { filename: 'normalization/userRules.js' });
   vm.runInContext(taxonomySrc, ctx, { filename: 'normalization/taxonomyBridge.js' });
-  vm.runInContext(attrSrc, ctx, { filename: 'normalization/attributes.js' });
+  vm.runInContext(registrySrc, ctx, { filename: 'normalization/registry.js' });
+  vm.runInContext(enumLibSrc, ctx, { filename: 'normalization/libraries/enums.js' });
+  vm.runInContext(textNormalizerSrc, ctx, { filename: 'normalization/normalizers/text.js' });
+  vm.runInContext(enumNormalizerSrc, ctx, { filename: 'normalization/normalizers/enum.js' });
+  vm.runInContext(measurementNormalizerSrc, ctx, { filename: 'normalization/normalizers/measurement.js' });
+  vm.runInContext(normalizeSrc, ctx, { filename: 'normalization/normalize.js' });
   vm.runInContext(matchingSrc, ctx, { filename: 'normalization/matching.js' });
   vm.runInContext(repoSrc, ctx, { filename: 'data/productRepo.js' });
   return ctx;
@@ -275,33 +285,30 @@ async function seedProducts(repo, listId) {
       'product list stores detected verticals seen for future pack loading');
     assert.ok(added._normalizationContext.knownAttributes.includes('Keyboard Layout'),
       'added product stores Shopify taxonomy attribute hints');
-    assert.deepStrictEqual(plain(added._normalizedAttributes.Color), {
-      rawField: 'Colour',
-      raw: 'midnight blue',
-      normalized: 'Navy Blue',
-      confidence: 0.95,
-      rule: 'enum:color:navy-blue'
-    }, 'added product carries normalized Color provenance');
-    assert.deepStrictEqual(plain(added._normalizedAttributes.Size), {
-      rawField: 'Size Name',
-      raw: 'medium',
-      normalized: 'M',
-      confidence: 1,
-      rule: 'enum:size:m'
-    }, 'added product carries normalized Size provenance');
-    assert.deepStrictEqual(plain(added._normalizedAttributes['Connectivity Technology']), {
-      rawField: 'Connectivity Tech',
-      raw: 'Bluetooth',
-      normalized: 'Bluetooth',
-      confidence: 0.92,
-      rule: 'pack-enum:connectivity-technology:bluetooth',
-      fieldRule: 'taxonomy-field:connectivity-technology',
-      fieldSource: 'shopify-taxonomy'
-    }, 'added product uses Shopify taxonomy field mapping plus vertical pack vocabulary');
+    assert.strictEqual(added._normalizedAttributes, undefined,
+      'added product no longer persists the legacy normalized-attributes sidecar');
+    assert.strictEqual(added.specs.Color, 'Navy Blue',
+      'added product mirrors v2 Color display into specs');
+    assert.strictEqual(added.specs.Size, 'M',
+      'added product mirrors v2 Size display into specs');
+    assert.strictEqual(added.specs['Connectivity Technology'], 'Bluetooth',
+      'added product mirrors v2 pack-normalized connectivity display into specs');
+    assert.deepStrictEqual(plain(added.specsNormalized.Color.display), ['Navy Blue'],
+      'added product carries v2 Color display provenance');
+    assert.strictEqual(added.specsNormalized.Size.display, 'M',
+      'added product carries v2 Size display provenance');
+    assert.deepStrictEqual(plain(added.specsNormalized['Connectivity Technology'].display), ['Bluetooth'],
+      'added product uses Shopify taxonomy field mapping plus vertical pack vocabulary through v2');
+    assert.strictEqual(added.specsNormalized['Connectivity Technology'].provenance.rules[0], 'pack-enum:connectivity-technology:bluetooth',
+      'v2 pack-normalized connectivity records pack rule provenance');
+    assert.strictEqual(added.specsNormalized['Connectivity Technology'].provenance.fieldSource, 'shopify-taxonomy',
+      'v2 connectivity records taxonomy field provenance');
 
     const stored = await repo.getProduct(added.id);
-    assert.strictEqual(stored._normalizedAttributes.Color.normalized, 'Navy Blue',
-      'normalized attributes are persisted in IndexedDB');
+    assert.strictEqual(stored._normalizedAttributes, undefined,
+      'legacy normalized attributes are not persisted in IndexedDB');
+    assert.deepStrictEqual(plain(stored.specsNormalized.Color.display), ['Navy Blue'],
+      'v2 normalized specs are persisted in IndexedDB');
     assert.strictEqual(stored._normalizationContext.source, 'shopify-taxonomy',
       'taxonomy context is persisted in IndexedDB');
   });
@@ -356,9 +363,9 @@ async function seedProducts(repo, listId) {
       'first product stores its own electronics vertical context');
     assert.strictEqual(added[1]._normalizationContext.vertical.id, 'furniture',
       'second product stores its own furniture vertical context');
-    assert.strictEqual(added[0]._normalizedAttributes['Connectivity Technology'].normalized, 'Bluetooth',
+    assert.deepStrictEqual(plain(added[0].specsNormalized['Connectivity Technology'].display), ['Bluetooth'],
       'electronics product normalizes against electronics pack vocabulary');
-    assert.strictEqual(added[1]._normalizedAttributes['Upholstery Material'].normalized, 'Faux Leather',
+    assert.strictEqual(added[1].specsNormalized['Upholstery Material'].display, 'Faux Leather',
       'furniture product normalizes against furniture pack vocabulary');
 
     let list = await db.product_lists.get(listId);
@@ -450,8 +457,10 @@ async function seedProducts(repo, listId) {
       'normalization rebuild backfills product-level normalization only where the product has detectable context');
 
     const updated = await repo.getProduct('old-1');
-    assert.strictEqual(updated._normalizedAttributes.Color.normalized, 'Navy Blue',
-      'normalization rebuild backfills normalized attributes for existing captured products');
+    assert.strictEqual(updated._normalizedAttributes, undefined,
+      'normalization rebuild does not recreate the retired normalized-attributes sidecar');
+    assert.deepStrictEqual(plain(updated.specsNormalized.Color.display), ['Navy Blue'],
+      'normalization rebuild backfills v2 normalized specs for existing captured products');
     assert.strictEqual(updated._normalizationContext.category.leaf, 'Keyboards',
       'normalization rebuild backfills taxonomy context for existing captured products');
     const plainUpdated = await repo.getProduct('old-2');
@@ -506,9 +515,9 @@ async function seedProducts(repo, listId) {
       title: 'Bluetooth keyboard',
       rawSpecs: [{ key: 'Connectivity Tech', value: 'Bluetooth LE' }]
     });
-    assert.strictEqual(added._normalizedAttributes['Connectivity Technology'].normalized, 'Bluetooth',
+    assert.deepStrictEqual(plain(added.specsNormalized['Connectivity Technology'].display), ['Bluetooth'],
       'saved user normalization rules apply to future captured products');
-    assert.strictEqual(added._normalizedAttributes['Connectivity Technology'].rule, 'user-enum:connectivity-technology:bluetooth',
+    assert.strictEqual(added.specsNormalized['Connectivity Technology'].provenance.rules[0], 'user-enum:connectivity-technology:bluetooth',
       'saved user normalization rules mark provenance as user-approved');
 
     const ignore = await repo.saveNormalizationReviewDecision(listId, {

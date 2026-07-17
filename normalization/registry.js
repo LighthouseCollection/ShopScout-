@@ -72,6 +72,17 @@
       enumKey: 'Connector Type',
       splitOn: /\s*[,/]\s*/,
     },
+    'Connectivity Technology': {
+      type: 'enum',
+      multi: true,
+      enumKey: 'Connectivity Technology',
+      splitOn: MULTI_SPLIT,
+    },
+    'Upholstery Material': {
+      type: 'enum',
+      multi: false,
+      enumKey: 'Upholstery Material',
+    },
 
     /* ---- measurement fields ----
        kind is the js-quantities family name. If the parsed unit

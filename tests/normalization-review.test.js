@@ -21,35 +21,35 @@ const products = [
     _normalizationContext: {
       category: { leaf: 'Keyboards', fullName: 'Electronics > Computer Accessories > Keyboards' }
     },
-    _normalizedAttributes: {
+    rawSpecs: [
+      { key: 'Color', value: 'midnight blue' },
+      { key: 'Connectivity Technology', value: 'Bluetooth' }
+    ],
+    specsNormalized: {
       Color: {
-        rawField: 'Colour',
         raw: 'midnight blue',
-        normalized: 'Navy Blue',
-        confidence: 0.95,
-        rule: 'enum:color:navy-blue'
+        canonical: 'Navy Blue',
+        display: 'Navy Blue',
+        provenance: { method: 'enum.split-and-map', confidence: 0.95, rules: ['enum:color:navy-blue'], warnings: [] }
       },
       'Connectivity Technology': {
-        rawField: 'Connectivity Tech',
         raw: 'Bluetooth',
-        normalized: 'Bluetooth',
-        confidence: 0,
-        rule: 'unmapped',
-        fieldRule: 'taxonomy-field:connectivity-technology',
-        fieldSource: 'shopify-taxonomy'
+        canonical: 'Bluetooth',
+        display: 'Bluetooth',
+        provenance: { method: 'enum.split-and-map', confidence: 0, rules: [], warnings: ['unmapped:Bluetooth'] }
       }
     }
   },
   {
     id: 'p2',
     title: 'Known exact product',
-    _normalizedAttributes: {
+    rawSpecs: [{ key: 'Size', value: 'medium' }],
+    specsNormalized: {
       Size: {
-        rawField: 'Size Name',
         raw: 'medium',
-        normalized: 'M',
-        confidence: 1,
-        rule: 'enum:size:m'
+        canonical: 'M',
+        display: 'M',
+        provenance: { method: 'enum.split-and-map', confidence: 1, rules: ['enum:size:m'], warnings: [] }
       }
     }
   }
@@ -64,15 +64,15 @@ assert.deepStrictEqual(JSON.parse(JSON.stringify(items[0])), {
   source: 'Amazon',
   category: 'Keyboards',
   field: 'Connectivity Technology',
-  rawField: 'Connectivity Tech',
+  rawField: 'Connectivity Technology',
   raw: 'Bluetooth',
   normalized: 'Bluetooth',
   confidence: 0,
   rule: 'unmapped',
-  fieldRule: 'taxonomy-field:connectivity-technology',
-  fieldSource: 'shopify-taxonomy',
+  fieldRule: '',
+  fieldSource: '',
   reason: 'unmapped value',
-  reviewKey: 'p1|connectivity tech|connectivity technology|bluetooth|bluetooth'
+  reviewKey: 'p1|connectivity technology|connectivity technology|bluetooth|bluetooth'
 }, 'review item includes provenance and product context');
 
 const featureItems = review.collectNormalizationReviewItems([
@@ -83,13 +83,13 @@ const featureItems = review.collectNormalizationReviewItems([
     _normalizationContext: {
       category: { leaf: 'Keyboards' }
     },
-    _normalizedAttributes: {
+    rawSpecs: [{ key: 'Additional Features', value: 'Backlit, Low-Profile Key, Rechargeable' }],
+    specsNormalized: {
       'Additional Features': {
-        rawField: 'Additional Features',
         raw: 'Backlit, Low-Profile Key, Rechargeable',
-        normalized: 'Backlit, Low-Profile Key, Rechargeable',
-        confidence: 0,
-        rule: 'unmapped'
+        canonical: ['Backlit', 'Low-Profile Key', 'Rechargeable'],
+        display: ['Backlit', 'Low-Profile Key', 'Rechargeable'],
+        provenance: { method: 'enum.split-and-map', confidence: 0, rules: [], warnings: ['unmapped:Backlit'] }
       }
     }
   }
@@ -118,41 +118,43 @@ const identifierItems = review.collectNormalizationReviewItems([
     id: 'p4',
     title: 'Identifier-heavy product',
     source: 'Amazon',
-    _normalizedAttributes: {
+    rawSpecs: [
+      { key: 'ASIN', value: 'B0056BYSWY' },
+      { key: 'Global Trade Identification Number', value: '00012345678905' },
+      { key: 'Mfr Part Number', value: 'MXK-MINI-MAC' },
+      { key: 'Model Number', value: '920-012644' },
+      { key: 'UPC', value: '123456789012' }
+    ],
+    specsNormalized: {
       ASIN: {
-        rawField: 'ASIN',
         raw: 'B0056BYSWY',
-        normalized: 'B0056BYSWY',
-        confidence: 0,
-        rule: 'unmapped'
+        canonical: 'B0056BYSWY',
+        display: 'B0056BYSWY',
+        provenance: { method: 'text.trim', confidence: 0, warnings: ['unmapped:B0056BYSWY'] }
       },
-      GTIN: {
-        rawField: 'Global Trade Identification Number',
+      'Global Trade Identification Number': {
         raw: '00012345678905',
-        normalized: '00012345678905',
-        confidence: 0,
-        rule: 'unmapped'
+        canonical: '00012345678905',
+        display: '00012345678905',
+        provenance: { method: 'text.trim', confidence: 0, warnings: ['unmapped:00012345678905'] }
       },
-      MPN: {
-        rawField: 'Mfr Part Number',
+      'Mfr Part Number': {
         raw: 'MXK-MINI-MAC',
-        normalized: 'MXK-MINI-MAC',
-        confidence: 0,
-        rule: 'unmapped'
+        canonical: 'MXK-MINI-MAC',
+        display: 'MXK-MINI-MAC',
+        provenance: { method: 'text.trim', confidence: 0, warnings: ['unmapped:MXK-MINI-MAC'] }
       },
-      'Model number': {
-        rawField: 'Model Number',
+      'Model Number': {
         raw: '920-012644',
-        normalized: '920-012644',
-        confidence: 0,
-        rule: 'unmapped'
+        canonical: '920-012644',
+        display: '920-012644',
+        provenance: { method: 'text.trim', confidence: 0, warnings: ['unmapped:920-012644'] }
       },
       UPC: {
-        rawField: 'UPC',
         raw: '123456789012',
-        normalized: '123456789012',
-        confidence: 0,
-        rule: 'unmapped'
+        canonical: '123456789012',
+        display: '123456789012',
+        provenance: { method: 'text.trim', confidence: 0, warnings: ['unmapped:123456789012'] }
       }
     }
   }

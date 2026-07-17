@@ -19,6 +19,7 @@ function createContext() {
         return String(value || '')
           .trim()
           .toLowerCase()
+          .replace(/\bcolour\b/g, 'color')
           .replace(/\bdots per inch\b/g, 'dpi')
           .replace(/\bvolts?\b/g, 'v')
           .replace(/\s+/g, ' ');
@@ -35,7 +36,6 @@ function createContext() {
   loadScript(ctx, 'shared/values/cellValues.js');
   loadScript(ctx, 'normalization/libraries/defaultRules.js');
   loadScript(ctx, 'normalization/userRules.js');
-  loadScript(ctx, 'normalization/attributes.js');
   loadScript(ctx, 'shared/projections/specProjection.js');
   loadScript(ctx, 'grid-rebuild-codex/projections.js');
   return ctx;
@@ -69,7 +69,15 @@ const products = [
       { key: 'Battery Life', value: '2 hours' },
       { key: 'Dots per inch', value: '800 DPI' },
       { key: 'Colour', value: 'midnight blue' }
-    ]
+    ],
+    specsNormalized: {
+      Color: {
+        raw: 'midnight blue',
+        canonical: 'Navy Blue',
+        display: 'Navy Blue',
+        provenance: { method: 'enum.split-and-map', confidence: 0.95, rules: ['enum:color:navy-blue'], warnings: [] }
+      }
+    }
   },
   {
     id: 'p2',
@@ -86,7 +94,15 @@ const products = [
       { key: 'battery life', value: '90 minutes' },
       { key: 'Voltage', value: '12 volts' },
       { key: 'Power Source', value: 'wired' }
-    ]
+    ],
+    specsNormalized: {
+      'Power Source': {
+        raw: 'wired',
+        canonical: 'Corded Electric',
+        display: 'Corded Electric',
+        provenance: { method: 'enum.split-and-map', confidence: 0.95, rules: ['enum:power-source:corded-electric'], warnings: [] }
+      }
+    }
   }
 ];
 
@@ -166,13 +182,8 @@ assert.equal(rowsProjection.rows[0]._shopScout.revision, 7);
 assert.equal(rowsProjection.rows[0]['spec:battery life'], '2 hours');
 assert.equal(rowsProjection.rows[0]['spec:dpi'], '800 DPI');
 assert.equal(rowsProjection.rows[0]['spec:color'], 'Navy Blue');
-assert.deepEqual(rowsProjection.rows[0]._shopScout.normalizedAttributes['Color'], {
-  rawField: 'Colour',
-  raw: 'midnight blue',
-  normalized: 'Navy Blue',
-  confidence: 0.95,
-  rule: 'enum:color:navy-blue'
-});
+assert.equal(rowsProjection.rows[0]._shopScout.normalizedAttributes, undefined,
+  'grid projection no longer carries the retired normalized-attributes sidecar');
 assert.equal(rowsProjection.rows[1]['spec:battery life'], '90 minutes');
 assert.equal(rowsProjection.rows[1]['spec:power source'], 'Corded Electric');
 

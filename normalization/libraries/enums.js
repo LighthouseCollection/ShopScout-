@@ -6,10 +6,8 @@
    normalizer looks up incoming tokens (already lowercased,
    variant-prefix-stripped, unpunctuated) in these tables.
 
-   Seeded from libraries/defaultRules.js (the pre-v2 enums the
-   review tool was writing to _normalizedAttributes) and extended
-   for the fields Color / Material / Pattern the raw feeds
-   commonly produce.
+   Seeded from libraries/defaultRules.js and extended for the fields
+   Color / Material / Pattern the raw feeds commonly produce.
 
    Adding an alias: append one string to the array. Adding a new
    canonical value: add one entry. Zero other code changes.

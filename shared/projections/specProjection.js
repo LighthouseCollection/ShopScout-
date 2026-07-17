@@ -31,6 +31,14 @@
 
     const flattened = (Array.isArray(rows) ? rows : []).map(product => {
       const flat = Object.assign({}, product);
+      const normalizedByCanonical = Object.create(null);
+      if (product && product.specsNormalized && typeof product.specsNormalized === 'object') {
+        for (const [fieldName, envelope] of Object.entries(product.specsNormalized)) {
+          const key = canonKey(fieldName);
+          if (!key || !envelope || typeof envelope !== 'object') continue;
+          normalizedByCanonical[key] = envelope;
+        }
+      }
       const list = SH && SH.specListOf
         ? SH.specListOf(product)
         : (Array.isArray(product.specs) ? product.specs : []);
@@ -40,7 +48,12 @@
         const key = canonKey(spec.key);
         if (!key || seen.has(key)) continue;
         seen.add(key);
-        flat['spec:' + key] = spec.value == null ? '' : String(spec.value);
+        const normalized = normalizedByCanonical[key];
+        if (normalized && normalized.display != null && normalized.display !== '—') {
+          flat['spec:' + key] = Array.isArray(normalized.display) ? normalized.display.join(', ') : String(normalized.display);
+        } else {
+          flat['spec:' + key] = spec.value == null ? '' : String(spec.value);
+        }
       }
       return flat;
     });

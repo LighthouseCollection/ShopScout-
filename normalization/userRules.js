@@ -117,9 +117,6 @@
       }
     }
     BASE.userIgnored = mergeArray(BASE.userIgnored, normalized.ignored);
-    if (root.ShopScoutAttributeNormalization?.reloadRules) {
-      root.ShopScoutAttributeNormalization.reloadRules();
-    }
     return normalizeRuleSet(BASE);
   }
 

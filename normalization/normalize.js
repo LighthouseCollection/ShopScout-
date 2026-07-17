@@ -25,7 +25,7 @@
     return null;
   }
 
-  function normalizeField(fieldName, rawValue) {
+  function normalizeField(fieldName, rawValue, context) {
     const registry = root.ShopScoutRegistry;
     if (!registry || typeof registry.get !== 'function') {
       return {
@@ -57,7 +57,7 @@
         provenance: { method: 'no-normalizer', confidence: 0, warnings: ['missing_normalizer:' + config.type] },
       };
     }
-    return impl.normalize(rawValue, config);
+    return impl.normalize(rawValue, config, context || {});
   }
 
   Object.assign(NS, {

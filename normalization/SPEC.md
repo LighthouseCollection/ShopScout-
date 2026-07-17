@@ -1,10 +1,10 @@
 # Normalization spec — one pipeline, typed fields, `{raw, canonical}` values
 
-Status: **DRAFT — awaiting user sign-off**. No code changes until this is approved.
+Status: **Implemented in phased slices.** This file now records the v2 normalization architecture and remaining compatibility boundaries.
 
 ## Why
 
-Today, normalization runs in three parallel places (`SSCanonical.canonicalValue`, `ShopScoutAttributeNormalization`, `ShopScoutValues.prettify`) that don't converge. The UI reads the least-fixed one, so real defects reach the grid: `"Black&red"` stays concatenated, `"9 volts_of_direct_current"` passes through raw, `"23.6 inches"` sits in the same column as `"50 centimeters"`.
+The original implementation normalized values in three parallel places (`SSCanonical.canonicalValue`, `ShopScoutAttributeNormalization`, `ShopScoutValues.prettify`) that did not converge. The v2 path replaces that with one dispatcher and persisted `specsNormalized` envelopes so the grid, review queue, and prompts can read the same normalized value source.
 
 Rather than reconciling three tracks, the correct shape is **one pipeline** with three moving parts:
 
@@ -228,13 +228,13 @@ Total: ~5 focused commits. Each is revertible without touching the others.
 
 ## Phase 5 as shipped
 
-Phase 5 landed as a partial retirement:
+Phase 5 landed in follow-up slices:
 
 - ✅ **`ShopScoutValues.prettify` and friends** (`normalizeMeasurement`, `normalizeMetric`, `normalizeDimensions`) — removed from `shared/values/cellValues.js` exports; test file `tests/local-units.test.js` deleted. These had zero non-test callers so retirement is complete.
-- ⏸ **`ShopScoutAttributeNormalization`** — still called by `data/productRepo.js`, `grid-rebuild-codex/projections.js`, `normalization/review.js`, `normalization/userRules.js`. Retirement requires rewriting the review UI to read from `flat.specsNormalized` instead of `_normalizedAttributes`. Deferred to a follow-up: the v2 pipeline is the authoritative source for display; the attributes track now duplicates that work for the review tool only.
-- ⏸ **`SSCanonical.canonicalValue`** — still called via `content/keyCanonicalizer.normalizeValue` from `productSchema.assemble`. Retirement requires teaching keyCanonicalizer to short-circuit when v2 has already produced an envelope. Deferred; the canonicalValue string it produces is now shadowed everywhere by `.normalized.display`, so its only ongoing cost is ~50 bytes per stored spec entry.
+- ✅ **`SSCanonical.canonicalValue`** — removed from the public `SSCanonical` API. `productSchema.assemble` now mirrors v2 `.normalized.display` into the legacy `canonicalValue` spec-entry field only for compatibility.
+- ✅ **`ShopScoutAttributeNormalization` / `_normalizedAttributes`** — retired from runtime. ProductRepo writes v2 `specsNormalized`, the grid projects from v2 display values, and the normalization review queue reads `rawSpecs` + `specsNormalized` instead of the old sidecar.
 
-Both deferred retirements are pure code-hygiene follow-ups. Nothing about user-visible normalization behavior changes when they land.
+The remaining `canonicalValue` string property is a legacy data-field on spec entries, not the old public API. Removing that persisted compatibility field belongs to the broader ProductSpec consumer migration.
 
 ---
 

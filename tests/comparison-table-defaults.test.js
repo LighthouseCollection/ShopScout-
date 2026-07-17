@@ -63,16 +63,18 @@ assert.ok(cmpHtml.includes('src="shared/values/cellValues.js"'),
   'shared/values/cellValues.js is loaded for the new grid');
 assert.ok(cmpHtml.indexOf('src="normalization/libraries/defaultRules.js"') > -1,
   'normalization rule library is loaded on comparison page');
-assert.ok(cmpHtml.indexOf('src="normalization/libraries/defaultRules.js"') < cmpHtml.indexOf('src="normalization/attributes.js"'),
-  'normalization rule library loads before attribute normalization on comparison page');
+assert.ok(cmpHtml.indexOf('src="normalization/libraries/defaultRules.js"') < cmpHtml.indexOf('src="normalization/registry.js"'),
+  'normalization rule library loads before v2 normalization on comparison page');
 assert.ok(cmpHtml.indexOf('src="normalization/taxonomyBridge.js"') > -1,
   'normalization/taxonomyBridge.js is loaded on comparison page');
-assert.ok(cmpHtml.indexOf('src="normalization/taxonomyBridge.js"') < cmpHtml.indexOf('src="normalization/attributes.js"'),
-  'taxonomy bridge loads before attribute normalization on comparison page');
-assert.ok(cmpHtml.indexOf('src="normalization/attributes.js"') > -1,
-  'normalization/attributes.js is loaded on comparison page');
-assert.ok(cmpHtml.indexOf('src="normalization/attributes.js"') < cmpHtml.indexOf('src="data/productRepo.js"'),
-  'attribute normalization loads before productRepo on comparison page');
+assert.ok(cmpHtml.indexOf('src="normalization/taxonomyBridge.js"') < cmpHtml.indexOf('src="normalization/registry.js"'),
+  'taxonomy bridge loads before v2 normalization on comparison page');
+assert.ok(!cmpHtml.includes('src="normalization/attributes.js"'),
+  'comparison page no longer loads retired attribute normalization sidecar');
+assert.ok(cmpHtml.indexOf('src="normalization/normalize.js"') > -1,
+  'normalization/normalize.js is loaded on comparison page');
+assert.ok(cmpHtml.indexOf('src="normalization/normalize.js"') < cmpHtml.indexOf('src="data/productRepo.js"'),
+  'v2 normalization loads before productRepo on comparison page');
 assert.ok(cmpHtml.indexOf('src="normalization/matching.js"') > -1,
   'normalization/matching.js is loaded on comparison page');
 assert.ok(cmpHtml.indexOf('src="normalization/matching.js"') < cmpHtml.indexOf('src="data/productRepo.js"'),

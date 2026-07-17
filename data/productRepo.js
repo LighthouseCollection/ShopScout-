@@ -224,7 +224,7 @@
     const ts = now();
     const contextPatch = taxonomyContextPatch(p, detection);
     const productWithContext = Object.assign({}, p, contextPatch);
-    return Object.assign({}, p, contextPatch, normalizedAttributePatch(productWithContext), {
+    return Object.assign({}, p, contextPatch, normalizedSpecPatch(productWithContext), {
       id: p.id || uuid(),
       listId,
       capturedAt: p.capturedAt || ts,
@@ -233,26 +233,80 @@
     });
   }
 
-  function normalizedAttributePatch(product) {
-    const normalizer = root.ShopScoutAttributeNormalization;
-    if (!normalizer || typeof normalizer.normalizeProductAttributes !== 'function') return {};
-    const entries = normalizer.normalizeProductAttributes(product);
-    if (!entries.length) return {};
-    const byField = Object.create(null);
-    for (const entry of entries) {
-      if (!entry || !entry.field) continue;
-      const record = {
-        rawField: entry.rawField,
-        raw: entry.raw,
-        normalized: entry.normalized,
-        confidence: entry.confidence,
-        rule: entry.rule
-      };
-      if (entry.fieldRule) record.fieldRule = entry.fieldRule;
-      if (entry.fieldSource) record.fieldSource = entry.fieldSource;
-      byField[entry.field] = record;
+  function normalizeToken(value) {
+    return String(value || '')
+      .trim()
+      .toLowerCase()
+      .replace(/[_-]+/g, ' ')
+      .replace(/[^\p{L}\p{N}+#./ ]+/gu, '')
+      .replace(/\s+/g, ' ');
+  }
+
+  function fieldFromRules(rawField) {
+    const rules = root.ShopScoutNormalizationRules || {};
+    const key = normalizeToken(rawField);
+    const canonicalFields = rules.canonicalFields || {};
+    const fieldAliases = rules.fieldAliases || {};
+    for (const [ruleKey, canonical] of Object.entries(canonicalFields)) {
+      if (normalizeToken(ruleKey) === key) return String(canonical || rawField).trim();
+      for (const alias of (fieldAliases[ruleKey] || [])) {
+        if (normalizeToken(alias) === key) return String(canonical || rawField).trim();
+      }
     }
-    return { _normalizedAttributes: byField };
+    return '';
+  }
+
+  function normalizeSpecField(rawField, context) {
+    const raw = String(rawField == null ? '' : rawField).trim();
+    if (!raw) return { field: '', fieldRule: '', fieldSource: '' };
+    const rulesField = fieldFromRules(raw);
+    if (rulesField) return { field: rulesField, fieldRule: 'field-alias:' + normalizeToken(rulesField), fieldSource: 'rules' };
+    const taxonomy = root.ShopScoutTaxonomyNormalization;
+    if (taxonomy && typeof taxonomy.normalizeFieldWithTaxonomy === 'function') {
+      const mapped = taxonomy.normalizeFieldWithTaxonomy(raw, context);
+      if (mapped && mapped.field && mapped.source === 'shopify-taxonomy') {
+        return { field: mapped.field, fieldRule: mapped.rule || '', fieldSource: mapped.source || '' };
+      }
+    }
+    const canon = root.SSCanonical;
+    const canonical = canon && typeof canon.canonicalKey === 'function' ? canon.canonicalKey(raw) : raw;
+    return { field: canonical || raw, fieldRule: '', fieldSource: '' };
+  }
+
+  function normalizedSpecPatch(product) {
+    const normalizer = root.ShopScoutNormalize;
+    if (!normalizer || typeof normalizer.field !== 'function') return {};
+    const context = product?._normalizationContext || null;
+    const specsNormalized = Object.assign({}, product?.specsNormalized && typeof product.specsNormalized === 'object' ? product.specsNormalized : {});
+    const specs = Object.assign({}, product?.specs && typeof product.specs === 'object' ? product.specs : {});
+    const rawSpecs = Array.isArray(product?.rawSpecs) ? product.rawSpecs : [];
+    let changed = false;
+
+    for (const spec of rawSpecs) {
+      if (!spec || spec.key == null) continue;
+      const rawField = String(spec.key).trim();
+      const rawValue = spec.value == null ? '' : String(spec.value).trim();
+      if (!rawField || !rawValue) continue;
+      const mapped = normalizeSpecField(rawField, context);
+      if (!mapped.field) continue;
+      const envelope = normalizer.field(mapped.field, rawValue, context);
+      if (!envelope) continue;
+      if (mapped.fieldRule || mapped.fieldSource || rawField !== mapped.field) {
+        envelope.provenance = Object.assign({}, envelope.provenance || {}, {
+          rawField,
+          fieldRule: mapped.fieldRule,
+          fieldSource: mapped.fieldSource
+        });
+      }
+      specsNormalized[mapped.field] = envelope;
+      if (specs[mapped.field] == null) specs[mapped.field] = envelope.display != null
+        ? (Array.isArray(envelope.display) ? envelope.display.join(', ') : String(envelope.display))
+        : rawValue;
+      changed = true;
+    }
+
+    if (!changed) return {};
+    return { specs, specsNormalized };
   }
 
   function detectionVerticalId(detection) {
@@ -540,13 +594,13 @@
       for (let index = 0; index < rows.length; index++) {
         const product = rows[index];
         const contextPatch = taxonomyContextPatch(product, detectionAt(plan, index));
-        const patch = Object.assign({}, contextPatch, normalizedAttributePatch(Object.assign({}, product, contextPatch)));
+        const patch = Object.assign({}, contextPatch, normalizedSpecPatch(Object.assign({}, product, contextPatch)));
         if (!Object.keys(patch).length) continue;
-        const currentAttrs = JSON.stringify(product._normalizedAttributes || null);
-        const nextAttrs = JSON.stringify(patch._normalizedAttributes || null);
+        const currentSpecs = JSON.stringify(product.specsNormalized || null);
+        const nextSpecs = JSON.stringify(patch.specsNormalized || null);
         const currentCtx = JSON.stringify(product._normalizationContext || null);
         const nextCtx = JSON.stringify(patch._normalizationContext || null);
-        if (currentAttrs === nextAttrs && currentCtx === nextCtx) continue;
+        if (currentSpecs === nextSpecs && currentCtx === nextCtx) continue;
         await db.products.update(product.id, Object.assign({}, patch, { updatedAt: now() }));
         updated++;
       }

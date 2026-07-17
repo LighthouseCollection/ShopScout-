@@ -48,7 +48,60 @@
     return config.dropTokens.some(dt => dt.toLowerCase() === lower);
   }
 
-  function normalizeEnum(rawValue, config) {
+  function normalizeToken(value) {
+    return String(value || '')
+      .trim()
+      .toLowerCase()
+      .replace(/[_-]+/g, ' ')
+      .replace(/[^\p{L}\p{N}+#./ ]+/gu, '')
+      .replace(/\s+/g, ' ');
+  }
+
+  function slug(value) {
+    return normalizeToken(value).replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+  }
+
+  function rulesLookup(field, token) {
+    const rules = root.ShopScoutNormalizationRules || {};
+    const enums = rules.enums || {};
+    const table = enums[field];
+    if (!table) return null;
+    const userRules = root.ShopScoutUserNormalizationRules || {};
+    const exactAliasFields = new Set(rules.exactAliasFields || []);
+    const tokenKey = normalizeToken(token);
+    for (const canonical of Object.keys(table)) {
+      const defaultRule = 'enum:' + slug(field) + ':' + slug(canonical);
+      if (normalizeToken(canonical) === tokenKey) {
+        return { normalized: canonical, confidence: 1, rule: defaultRule };
+      }
+      for (const alias of table[canonical] || []) {
+        if (normalizeToken(alias) !== tokenKey) continue;
+        const userAlias = typeof userRules.isUserEnumAlias === 'function'
+          && userRules.isUserEnumAlias(field, canonical, alias);
+        return {
+          normalized: canonical,
+          confidence: alias === canonical || exactAliasFields.has(field) || userAlias ? 1 : 0.95,
+          rule: userAlias ? 'user-enum:' + slug(field) + ':' + slug(canonical) : defaultRule
+        };
+      }
+    }
+    return null;
+  }
+
+  function lookupEnumValue(field, token, context) {
+    const localHit = rulesLookup(field, token);
+    if (localHit) return localHit;
+    const packHit = root.ShopScoutGeneratedPacks && typeof root.ShopScoutGeneratedPacks.lookupEnum === 'function'
+      ? root.ShopScoutGeneratedPacks.lookupEnum(context?.vertical?.id, field, token)
+      : null;
+    if (packHit) return packHit;
+    const enums = root.ShopScoutEnums;
+    if (!enums || typeof enums.lookup !== 'function') return null;
+    const builtIn = enums.lookup(field, token);
+    return builtIn ? { normalized: builtIn, confidence: 1, rule: 'enum:' + slug(field) + ':' + slug(builtIn) } : null;
+  }
+
+  function normalizeEnum(rawValue, config, context) {
     if (rawValue == null || rawValue === '') {
       return {
         raw: rawValue == null ? null : '',
@@ -58,15 +111,6 @@
       };
     }
     const raw = String(rawValue);
-    const enums = root.ShopScoutEnums;
-    if (!enums || typeof enums.lookup !== 'function') {
-      return {
-        raw,
-        canonical: config.multi ? [] : null,
-        display: config.multi ? [] : '—',
-        provenance: { method: 'enum.no-tables', confidence: 0, warnings: ['enum_tables_missing'] },
-      };
-    }
 
     const tokens = config.multi && config.splitOn
       ? raw.split(config.splitOn).map(s => s.trim()).filter(Boolean)
@@ -75,17 +119,19 @@
     const canonical = [];
     const display = [];
     const warnings = [];
+    const rules = [];
     let hits = 0;
 
     for (const t of tokens) {
       const cleaned = cleanToken(t, config);
       if (!cleaned) continue;
       if (isDropped(cleaned, config)) continue;
-      const mapped = enums.lookup(config.enumKey, cleaned);
+      const mapped = lookupEnumValue(config.enumKey, cleaned, context || {});
       if (mapped) {
         hits += 1;
-        canonical.push(mapped);
-        display.push(mapped);
+        canonical.push(mapped.normalized);
+        display.push(mapped.normalized);
+        if (mapped.rule) rules.push(mapped.rule);
       } else {
         /* Pass through unmapped with a warning — don't drop data,
            surface it in review so we can decide to add an alias. */
@@ -113,6 +159,7 @@
       provenance: {
         method: 'enum.split-and-map',
         confidence: hits / total,
+        rules: [...new Set(rules)],
         warnings,
       },
     };
@@ -121,6 +168,7 @@
   Object.assign(NS, {
     version: 2,
     normalize: normalizeEnum,
+    _lookupEnumValue: lookupEnumValue,
     _cleanToken: cleanToken,
     _titleCase: titleCase,
   });

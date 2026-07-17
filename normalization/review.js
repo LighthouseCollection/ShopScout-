@@ -94,7 +94,7 @@
       || key === 'recommended use';
   }
 
-function splitReviewValues(field, raw, normalized) {
+  function splitReviewValues(field, raw, normalized) {
     if (!isListLikeFeatureField(field)) {
       return [{ field, rawField: '', raw, normalized }];
     }
@@ -112,15 +112,68 @@ function splitReviewValues(field, raw, normalized) {
     }));
   }
 
+  function normalizeSpecField(product, rawField) {
+    const raw = text(rawField);
+    if (!raw) return { field: '', fieldRule: '', fieldSource: '' };
+    const taxonomy = root.ShopScoutTaxonomyNormalization;
+    const context = product?._normalizationContext || null;
+    if (taxonomy && typeof taxonomy.normalizeFieldWithTaxonomy === 'function') {
+      const mapped = taxonomy.normalizeFieldWithTaxonomy(raw, context);
+      if (mapped && mapped.field && mapped.source === 'shopify-taxonomy') {
+        return { field: mapped.field, fieldRule: mapped.rule || '', fieldSource: mapped.source || '' };
+      }
+    }
+    const canon = root.SSCanonical;
+    const canonical = canon && typeof canon.canonicalKey === 'function' ? canon.canonicalKey(raw) : raw;
+    return { field: canonical || raw, fieldRule: '', fieldSource: '' };
+  }
+
+  function displayFromEnvelope(envelope, raw) {
+    if (envelope && envelope.display != null && envelope.display !== '—') {
+      return Array.isArray(envelope.display) ? envelope.display.join(', ') : String(envelope.display);
+    }
+    return text(raw);
+  }
+
+  function entryFromV2(product, rawSpec) {
+    if (!rawSpec || rawSpec.key == null) return null;
+    const rawField = text(rawSpec.key);
+    if (!rawField) return null;
+    const mapped = normalizeSpecField(product, rawField);
+    const field = text(mapped.field || rawField);
+    const envelope = product?.specsNormalized?.[field];
+    if (!envelope || typeof envelope !== 'object') return null;
+    const provenance = envelope.provenance || {};
+    const warnings = Array.isArray(provenance.warnings) ? provenance.warnings : [];
+    const unmapped = warnings.some(warning => String(warning || '').startsWith('unmapped:'));
+    return {
+      field,
+      rawField,
+      raw: rawSpec.value,
+      normalized: displayFromEnvelope(envelope, rawSpec.value),
+      confidence: Number(provenance.confidence) || 0,
+      rule: unmapped ? 'unmapped' : text((provenance.rules || [])[0] || provenance.method || ''),
+      fieldRule: text(provenance.fieldRule || mapped.fieldRule || ''),
+      fieldSource: text(provenance.fieldSource || mapped.fieldSource || ''),
+      _review: unmapped || Number(provenance.confidence) < REVIEW_CONFIDENCE_THRESHOLD
+    };
+  }
+
+  function v2Entries(product) {
+    const rawSpecs = Array.isArray(product?.rawSpecs) ? product.rawSpecs : [];
+    return rawSpecs.map(rawSpec => entryFromV2(product, rawSpec)).filter(Boolean);
+  }
+
   function collectNormalizationReviewItems(products) {
     const rows = Array.isArray(products) ? products : [];
     const out = [];
     rows.forEach((product, productIndex) => {
-      const attrs = product && product._normalizedAttributes;
-      if (!attrs || typeof attrs !== 'object') return;
-      for (const [field, entry] of Object.entries(attrs)) {
+      const attrs = v2Entries(product);
+      if (!attrs.length) return;
+      for (const entry of attrs) {
+        const field = entry.field;
         if (isIdentifierField(field) || isIdentifierField(entry?.rawField)) continue;
-        if (!needsReview(entry)) continue;
+        if (!entry._review && !needsReview(entry)) continue;
         const rawField = text(entry.rawField || field);
         const splitValues = splitReviewValues(field, entry.raw, entry.normalized);
         for (const value of splitValues) {

@@ -5,7 +5,12 @@ const vm = require('vm');
 
 const rulesSrc = fs.readFileSync(path.join(__dirname, '..', 'normalization', 'libraries', 'defaultRules.js'), 'utf8');
 const userRulesSrc = fs.readFileSync(path.join(__dirname, '..', 'normalization', 'userRules.js'), 'utf8');
-const attrSrc = fs.readFileSync(path.join(__dirname, '..', 'normalization', 'attributes.js'), 'utf8');
+const registrySrc = fs.readFileSync(path.join(__dirname, '..', 'normalization', 'registry.js'), 'utf8');
+const enumLibSrc = fs.readFileSync(path.join(__dirname, '..', 'normalization', 'libraries', 'enums.js'), 'utf8');
+const textNormalizerSrc = fs.readFileSync(path.join(__dirname, '..', 'normalization', 'normalizers', 'text.js'), 'utf8');
+const enumNormalizerSrc = fs.readFileSync(path.join(__dirname, '..', 'normalization', 'normalizers', 'enum.js'), 'utf8');
+const measurementNormalizerSrc = fs.readFileSync(path.join(__dirname, '..', 'normalization', 'normalizers', 'measurement.js'), 'utf8');
+const normalizeSrc = fs.readFileSync(path.join(__dirname, '..', 'normalization', 'normalize.js'), 'utf8');
 const reviewSrc = fs.readFileSync(path.join(__dirname, '..', 'normalization', 'review.js'), 'utf8');
 
 const ctx = { console };
@@ -13,6 +18,12 @@ ctx.globalThis = ctx;
 vm.createContext(ctx);
 vm.runInContext(rulesSrc, ctx, { filename: 'normalization/libraries/defaultRules.js' });
 vm.runInContext(userRulesSrc, ctx, { filename: 'normalization/userRules.js' });
+vm.runInContext(registrySrc, ctx, { filename: 'normalization/registry.js' });
+vm.runInContext(enumLibSrc, ctx, { filename: 'normalization/libraries/enums.js' });
+vm.runInContext(textNormalizerSrc, ctx, { filename: 'normalization/normalizers/text.js' });
+vm.runInContext(enumNormalizerSrc, ctx, { filename: 'normalization/normalizers/enum.js' });
+vm.runInContext(measurementNormalizerSrc, ctx, { filename: 'normalization/normalizers/measurement.js' });
+vm.runInContext(normalizeSrc, ctx, { filename: 'normalization/normalize.js' });
 
 const userRules = ctx.ShopScoutUserNormalizationRules;
 assert.ok(userRules, 'user rules module registers global API');
@@ -40,19 +51,26 @@ userRules.applyUserRulePatch(userRules.buildUserRulePatch({
   normalized: 'Bluetooth'
 }));
 
-vm.runInContext(attrSrc, ctx, { filename: 'normalization/attributes.js' });
-const A = ctx.ShopScoutAttributeNormalization;
+assert.deepStrictEqual(
+  JSON.parse(JSON.stringify(ctx.ShopScoutNormalize.field('Connectivity Technology', 'Bluetooth LE'))),
+  {
+    raw: 'Bluetooth LE',
+    canonical: ['Bluetooth'],
+    display: ['Bluetooth'],
+    provenance: {
+      method: 'enum.split-and-map',
+      confidence: 1,
+      rules: ['user-enum:connectivity-technology:bluetooth'],
+      warnings: []
+    }
+  },
+  'accepted user enum alias applies to future v2 normalization runs'
+);
 
 assert.deepStrictEqual(
-  JSON.parse(JSON.stringify(A.normalizeAttribute('Connectivity Tech', 'Bluetooth LE'))),
-  {
-    field: 'Connectivity Technology',
-    raw: 'Bluetooth LE',
-    normalized: 'Bluetooth',
-    confidence: 1,
-    rule: 'user-enum:connectivity-technology:bluetooth'
-  },
-  'accepted user alias applies to future normalization runs'
+  JSON.parse(JSON.stringify(ctx.ShopScoutNormalize.field('Color', 'midnight blue').display)),
+  ['Navy Blue'],
+  'default rule library feeds v2 enum normalization'
 );
 
 vm.runInContext(reviewSrc, ctx, { filename: 'normalization/review.js' });
@@ -70,13 +88,13 @@ const items = review.collectNormalizationReviewItems([
   {
     id: 'p1',
     title: 'Ignored supplier value',
-    _normalizedAttributes: {
+    rawSpecs: [{ key: 'Supplier Shade', value: 'marketing gray' }],
+    specsNormalized: {
       'Supplier Shade': {
-        rawField: 'Supplier Shade',
         raw: 'marketing gray',
-        normalized: 'marketing gray',
-        confidence: 0,
-        rule: 'unmapped'
+        canonical: 'marketing gray',
+        display: 'marketing gray',
+        provenance: { method: 'enum.split-and-map', confidence: 0, warnings: ['unmapped:marketing gray'] }
       }
     }
   }
