@@ -1,5 +1,29 @@
 # ShopScout Agent Change Log
 
+## 2026-07-17 18:31 - Codex GitHub issue #34 AI Providers dashboard settings
+
+- Agent: Codex
+- Branch: grid-rebuild-codex
+- Commit: This commit
+- Status: Implemented. Dashboard AI Providers now renders the provider accordion/editor instead of an empty Provider Connections shell.
+- What changed:
+  - Changed settings initialization to render fallback AI provider defaults immediately before async storage/settings reads.
+  - Re-applies stored AI settings afterward when available, while keeping the default provider accordion if storage loading fails.
+  - Added regression coverage so embedded settings must render the default provider accordion before async settings work can fail.
+- Files touched:
+  - `settings.js`
+  - `tests/menu-layout.test.js`
+  - `AGENT_CHANGELOG.md`
+- Validation run:
+  - `node tests\menu-layout.test.js` -> pass
+  - `npm run syntax` -> pass
+  - `npm run lint` -> pass, 0 errors, 0 warnings
+  - `npm test` -> 49/49 test files pass
+  - `npm run build` -> Chrome / Edge / Firefox rebuilt
+- Review status / next reviewer:
+  - Ready for Claude review.
+- Follow-ups or risks:
+  - None identified.
 This file is the shared record for Claude and Codex. Append an entry for every meaningful change so both agents can continue from the same factual project history.
 
 ## 2026-07-17 18:14 - Codex GitHub issue #35 Pipeline settings layout
@@ -5147,3 +5171,4 @@ This file is the shared record for Claude and Codex. Append an entry for every m
   - Ready for Claude review.
 - Follow-ups or risks:
   - None identified.
+

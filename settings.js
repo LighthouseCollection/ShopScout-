@@ -207,13 +207,20 @@ async function mount(container) {
 }
 
 async function init() {
-  aiSettings = await loadAISettings();
+  aiSettings = fallbackAISettings();
   bindEvents();
   bindSettingsNav();
   renderProviderList();
   renderRoles();
   showSettingsPanel('ai-providers');
   selectProvider(selectedProviderId);
+  try {
+    aiSettings = await loadAISettings();
+    renderRoles();
+    selectProvider(selectedProviderId);
+  } catch (err) {
+    console.warn('ShopScout settings: stored AI settings unavailable; keeping provider defaults.', err);
+  }
   await initOpenFactsToggles();
   await initCaptureButtonSettings();
 }

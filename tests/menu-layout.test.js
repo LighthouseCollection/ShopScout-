@@ -285,6 +285,10 @@ assert.ok(settingsJs.includes('showSettingsPanel(link.getAttribute(\'data-settin
 assert.ok(settingsJs.includes('clearTestResult()'), 'settings nav switching clears transient Saved/test messages');
 assert.ok(/setTrustedHtml\(container,\s*settingsShellHtml\(\)\);\s*bindSettingsNav\(container\);/.test(settingsJs),
   'settings mount binds left navigation before async settings initialization can fail');
+assert.ok(/async function init\(\)\s*{[\s\S]{0,160}aiSettings = fallbackAISettings\(\);[\s\S]{0,220}renderProviderList\(\);[\s\S]{0,220}selectProvider\(selectedProviderId\);/.test(settingsJs),
+  'embedded AI Providers renders the default provider accordion before async storage/settings work can fail');
+assert.ok(/try\s*{[\s\S]{0,80}aiSettings = await loadAISettings\(\);[\s\S]{0,140}selectProvider\(selectedProviderId\);[\s\S]{0,120}}\s*catch/.test(settingsJs),
+  'embedded AI Providers retries with stored settings but keeps the fallback provider accordion if loading fails');
 assert.ok(/rootEl\.addEventListener\('click'[\s\S]*closest\??\.\('\[data-settings-nav\]'\)/.test(settingsJs),
   'settings left navigation uses delegated click handling inside the mounted root');
 assert.ok(!settingsJs.includes('dashboard-settings-side'), 'embedded settings does not render a duplicate right-side settings pane');
