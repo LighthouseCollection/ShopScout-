@@ -134,6 +134,12 @@ function createAdapterHarness() {
   });
   assert.equal(typeof instance.openNativeFilter, 'function',
     'adapter exposes a native filter launcher for ribbon commands');
+  assert.equal(typeof instance.openNativeColumnMenu, 'function',
+    'adapter exposes a native column menu launcher for ribbon commands');
+  assert.equal(instance.openNativeColumnMenu('source'), true,
+    'native column menu launcher succeeds for a filterable column');
+  assert.deepEqual(harness.nativeMenuCalls, ['source'],
+    'native column menu launcher delegates to AG Grid showColumnMenu');
   assert.equal(instance.openNativeFilter('source'), true,
     'native filter launcher succeeds for a filterable column');
   assert.deepEqual(harness.nativeFilterCalls, ['source'],

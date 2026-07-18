@@ -1,5 +1,36 @@
 # ShopScout Agent Change Log
 
+## 2026-07-18 00:22 - Codex GitHub issue #31 native AG Grid column menu correction
+
+- Agent: Codex
+- Branch: grid-rebuild-codex
+- Commit: This commit
+- Status: Implemented. Corrected the prior #31 filter fix so the ribbon `Filters` command opens AG Grid's native column menu surface, matching the AG Grid example pattern, instead of opening only the native filter popup.
+- What changed:
+  - Added `openNativeColumnMenu()` to the AG Grid adapter using `gridApi.showColumnMenu(columnKey)` first.
+  - Kept `gridApi.showColumnFilter(columnKey)` as the fallback when the full AG Grid column menu API is unavailable.
+  - Updated the grid orchestrator so ribbon `Filters` launches the native column menu for the first real filterable field.
+  - Kept the ShopScout custom filter modal as fallback/test-only behavior when AG Grid native APIs are unavailable.
+  - Added regression coverage proving the command calls AG Grid's native column menu API, not the custom modal or product/model comparison columns.
+- Files touched:
+  - `grid-rebuild-codex/agGridAdapter.js`
+  - `grid-rebuild-codex/shopscoutGrid.js`
+  - `grid-rebuild-codex/tests/adapter-display.test.js`
+  - `grid-rebuild-codex/tests/controls.test.js`
+  - `AGENT_CHANGELOG.md`
+- Validation run:
+  - `node grid-rebuild-codex\tests\controls.test.js` -> pass
+  - `node grid-rebuild-codex\tests\adapter-display.test.js` -> pass
+  - `node grid-rebuild-codex\tests\wiring.test.js` -> pass
+  - `npm run syntax` -> pass
+  - `npm run lint` -> pass
+  - `npm test` -> 49/49 test files pass
+  - `npm run build` -> Chrome / Edge / Firefox rebuilt
+- Review status / next reviewer:
+  - Ready for Claude review after commit.
+- Follow-ups or risks:
+  - This uses AG Grid native APIs only. It does not recreate AG Grid's column menu in custom ShopScout controls.
+
 ## 2026-07-18 00:05 - Codex GitHub issue #31 native AG Grid filters
 
 - Agent: Codex

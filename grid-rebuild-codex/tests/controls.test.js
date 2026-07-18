@@ -187,6 +187,7 @@ function createHarness() {
   let latestProjection = null;
   let updateCount = 0;
   let modalConfig = null;
+  let nativeColumnMenuCalls = [];
   let nativeFilterCalls = [];
   let nativeClearFilterCalls = 0;
 
@@ -215,6 +216,10 @@ function createHarness() {
           update(nextProjection) {
             updateCount += 1;
             latestProjection = nextProjection;
+          },
+          openNativeColumnMenu(field) {
+            nativeColumnMenuCalls.push(field || '');
+            return true;
           },
           openNativeFilter(field) {
             nativeFilterCalls.push(field || '');
@@ -251,6 +256,7 @@ function createHarness() {
     getLatestProjection: () => latestProjection,
     getUpdateCount: () => updateCount,
     getModalConfig: () => modalConfig,
+    getNativeColumnMenuCalls: () => nativeColumnMenuCalls.slice(),
     getNativeFilterCalls: () => nativeFilterCalls.slice(),
     getNativeClearFilterCalls: () => nativeClearFilterCalls
   };
@@ -294,20 +300,20 @@ function createHarness() {
     await harness.ctx.ShopScoutGrid.render();
     await harness.ctx.ShopScoutGrid.setMode('matrix');
     harness.ctx.ShopScoutGrid.openFiltersModal();
-    assert.equal(harness.getNativeFilterCalls().length, 1,
-      'filters command opens an AG Grid native filter in Compare view');
-    assert.equal(String(harness.getNativeFilterCalls()[0]).startsWith('product:'), false,
-      'filters command opens native filtering for a metadata field, not a product/model column');
+    assert.equal(harness.getNativeColumnMenuCalls().length, 1,
+      'filters command opens an AG Grid native column menu in Compare view');
+    assert.equal(String(harness.getNativeColumnMenuCalls()[0]).startsWith('product:'), false,
+      'filters command opens the native column menu for a metadata field, not a product/model column');
     assert.equal(harness.getModalConfig(), null,
-      'filters command does not open the custom modal when AG Grid native filters are available');
+      'filters command does not open the custom modal when AG Grid native menus are available');
   }
 
   {
     const harness = createHarness();
     await harness.ctx.ShopScoutGrid.render();
     harness.ctx.ShopScoutGrid.openFiltersModal();
-    assert.deepEqual(harness.getNativeFilterCalls(), ['title'],
-      'filters command opens the native AG Grid filter for the first real product field');
+    assert.deepEqual(harness.getNativeColumnMenuCalls(), ['title'],
+      'filters command opens the native AG Grid column menu for the first real product field');
   }
 
   {

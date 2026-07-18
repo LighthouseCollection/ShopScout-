@@ -522,6 +522,10 @@
 
   function openFiltersModal() {
     const nativeField = firstFilterableField();
+    if (state.adapter && typeof state.adapter.openNativeColumnMenu === 'function') {
+      const opened = state.adapter.openNativeColumnMenu(nativeField);
+      if (opened) return;
+    }
     if (state.adapter && typeof state.adapter.openNativeFilter === 'function') {
       const opened = state.adapter.openNativeFilter(nativeField);
       if (opened) return;

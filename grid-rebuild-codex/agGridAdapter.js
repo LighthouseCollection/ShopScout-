@@ -907,6 +907,24 @@
       return column ? (column.colId || column.field) : '';
     }
 
+    function openNativeColumnMenu(preferredField) {
+      const field = firstNativeFilterColumn(preferredField);
+      if (!field) return false;
+      try {
+        if (typeof gridApi.showColumnMenu === 'function') {
+          gridApi.showColumnMenu(field);
+          return true;
+        }
+        if (typeof gridApi.showColumnFilter === 'function') {
+          gridApi.showColumnFilter(field);
+          return true;
+        }
+      } catch (err) {
+        console.warn('AG Grid native column menu open failed', err);
+      }
+      return false;
+    }
+
     function openNativeFilter(preferredField) {
       const field = firstNativeFilterColumn(preferredField);
       if (!field) return false;
@@ -915,10 +933,7 @@
           gridApi.showColumnFilter(field);
           return true;
         }
-        if (typeof gridApi.showColumnMenu === 'function') {
-          gridApi.showColumnMenu(field);
-          return true;
-        }
+        return openNativeColumnMenu(field);
       } catch (err) {
         console.warn('AG Grid native filter open failed', err);
       }
@@ -1052,6 +1067,7 @@
         gridApi.applyTransaction({ remove: removed });
         return true;
       },
+      openNativeColumnMenu,
       openNativeFilter,
       clearNativeFilters,
       flashCell(itemId, field) {
