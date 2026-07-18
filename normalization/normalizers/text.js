@@ -19,6 +19,43 @@
     return String(s).replace(/\s+/g, ' ').trim();
   }
 
+  const COMPACT_UNIT_RE = /(\d[\d,]*(?:\.\d+)?)\s*(mAh|Ah|Wh|kHz|MHz|GHz|DPI|PPI|FPS|GB|TB|MB|KB|mm|cm|in|ft|lbs?|kg|oz|psi|Nm|N·m|V|W)\b/gi;
+  const UNIT_DISPLAY = {
+    mah: 'mAh',
+    ah: 'Ah',
+    wh: 'Wh',
+    khz: 'kHz',
+    mhz: 'MHz',
+    ghz: 'GHz',
+    dpi: 'DPI',
+    ppi: 'PPI',
+    fps: 'FPS',
+    gb: 'GB',
+    tb: 'TB',
+    mb: 'MB',
+    kb: 'KB',
+    mm: 'mm',
+    cm: 'cm',
+    in: 'in',
+    ft: 'ft',
+    lb: 'lb',
+    lbs: 'lb',
+    kg: 'kg',
+    oz: 'oz',
+    psi: 'psi',
+    nm: 'Nm',
+    'n·m': 'N·m',
+    v: 'V',
+    w: 'W'
+  };
+
+  function normalizeCompactUnitSpacing(s) {
+    return String(s).replace(COMPACT_UNIT_RE, (_match, amount, unit) => {
+      const displayUnit = UNIT_DISPLAY[String(unit || '').toLowerCase()] || unit;
+      return `${amount} ${displayUnit}`;
+    });
+  }
+
   function unescape(s) {
     return String(s).replace(ENTITY, (_, name) => ENTITY_MAP[name] || _);
   }
@@ -36,11 +73,11 @@
     let cleaned;
     switch (config && config.clean) {
       case 'trimUnescape':
-        cleaned = trimClean(unescape(raw));
+        cleaned = trimClean(normalizeCompactUnitSpacing(unescape(raw)));
         break;
       case 'trim':
       default:
-        cleaned = trimClean(raw);
+        cleaned = trimClean(normalizeCompactUnitSpacing(raw));
         break;
     }
     if (!cleaned) {
@@ -59,5 +96,9 @@
     };
   }
 
-  Object.assign(NS, { version: 2, normalize: normalizeText });
+  Object.assign(NS, {
+    version: 2,
+    normalize: normalizeText,
+    normalizeCompactUnitSpacing
+  });
 })(typeof globalThis !== 'undefined' ? globalThis : this);

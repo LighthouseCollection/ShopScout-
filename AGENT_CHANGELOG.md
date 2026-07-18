@@ -2,6 +2,33 @@
 
 This file is the shared record for Claude and Codex. Append an entry for every meaningful change so both agents can continue from the same factual project history.
 
+## 2026-07-17 17:49 - Codex GitHub issue #39 compact unit spacing
+
+- Agent: Codex
+- Branch: grid-rebuild-codex
+- Commit: This commit
+- Status: Implemented. Normalized compact number/unit strings such as `8000mAh` into `8000 mAh`.
+- What changed:
+  - Added a v2 text-normalizer helper that inserts one display space between numbers and recognized unit abbreviations.
+  - Applied the helper to text fields, unregistered field passthrough, and enum fallback token cleanup.
+  - Preserved canonical unit casing for common units such as `mAh`, `Wh`, `GHz`, `DPI`, `GB`, `V`, and `W`.
+  - Added regression coverage for registered battery-capacity values, description text, and unregistered metadata values.
+- Files touched:
+  - `normalization/normalizers/text.js`
+  - `normalization/normalizers/enum.js`
+  - `normalization/normalize.js`
+  - `tests/normalize-v2.test.js`
+  - `AGENT_CHANGELOG.md`
+- Validation run:
+  - `node tests\normalize-v2.test.js` -> pass
+  - `npm run syntax` -> pass
+  - `npm run lint` -> pass, 0 errors, 0 warnings
+  - `npm test` -> 49/49 test files pass
+- Review status / next reviewer:
+  - Ready for Claude review.
+- Follow-ups or risks:
+  - Unit spacing is intentionally limited to recognized unit abbreviations so product identifiers and model numbers are not split accidentally.
+
 ## 2026-07-17 17:44 - Codex GitHub issue #41 display rounding toggles
 
 - Agent: Codex

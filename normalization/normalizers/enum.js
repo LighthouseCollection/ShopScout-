@@ -38,6 +38,8 @@
     if (config.stripSuffix) t = t.replace(config.stripSuffix, '');
     /* Kill leftover punctuation runs at either end, collapse internal ws */
     t = t.replace(/^[\s\-.:;,]+|[\s\-.:;,]+$/g, '');
+    const spacing = root.ShopScoutTextNormalizer?.normalizeCompactUnitSpacing;
+    if (typeof spacing === 'function') t = spacing(t);
     t = t.replace(/\s+/g, ' ');
     return t.trim();
   }

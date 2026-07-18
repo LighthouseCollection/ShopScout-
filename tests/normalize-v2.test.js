@@ -165,6 +165,11 @@ check('Battery Capacity "10000 mAh" -> 10000 mAh',
   { canonical: r.canonical, unit: r.unit },
   { canonical: 10000, unit: 'mAh' });
 
+r = N.field('Battery Capacity', '8000mAh');
+check('Battery Capacity "8000mAh" displays with one unit space',
+  { canonical: r.canonical, unit: r.unit, display: r.display },
+  { canonical: 8000, unit: 'mAh', display: '8000 mAh' });
+
 r = N.field('Battery Capacity', '1 Ah');
 check('Battery Capacity "1 Ah" -> 1000 mAh',
   { canonical: r.canonical, unit: r.unit },
@@ -182,6 +187,11 @@ check('Description text unescapes HTML entities',
   { canonical: r.canonical },
   { canonical: 'A & B < C' });
 
+r = N.field('Description', 'Battery 8000mAh with 65W charging');
+check('Description text inserts one space between numbers and compact units',
+  { canonical: r.canonical, display: r.display },
+  { canonical: 'Battery 8000 mAh with 65 W charging', display: 'Battery 8000 mAh with 65 W charging' });
+
 /* ---------------- Unregistered field ---------------- */
 
 r = N.field('SomeUnknownField', 'whatever');
@@ -189,6 +199,11 @@ assert.strictEqual(r.canonical, 'whatever', 'Unregistered field passes through r
 assert.ok(r.provenance.warnings.some(w => w.startsWith('unknown_field:')),
   'Unregistered field flags itself in provenance');
 passed += 2;
+
+r = N.field('SomeUnknownField', '8000mAh');
+check('Unregistered fields also normalize compact number/unit spacing',
+  { canonical: r.canonical, display: r.display },
+  { canonical: '8000 mAh', display: '8000 mAh' });
 
 /* ---------------- Field-name aliasing ---------------- */
 
