@@ -161,27 +161,27 @@
    Quick Capture Button (FAB) settings — hidden-hosts chip list
    ============================================================= */
 .hidden-hosts {
-  margin-top: 8px;
+  margin-top: 18px;
   border: 1px solid var(--rule);
-  border-radius: var(--radius);
-  padding: 10px 12px;
+  border-radius: var(--radius-sm);
+  padding: 20px 18px 14px;
   background: var(--paper);
 }
 .hidden-hosts[disabled] { opacity: 0.5; pointer-events: none; }
 .hidden-hosts legend {
   font-family: var(--font-mono);
   font-size: 10px;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.14em;
   text-transform: uppercase;
   color: var(--ink-3);
-  font-weight: 600;
-  padding: 0 6px;
+  font-weight: 800;
+  padding: 0 10px;
 }
 .hidden-hosts-list {
   display: flex;
   flex-wrap: wrap;
   gap: 6px;
-  margin-bottom: 10px;
+  margin: 0 0 16px;
   min-height: 24px;
   align-items: center;
 }
@@ -218,12 +218,14 @@
   color: var(--bad);
 }
 .hidden-hosts-add {
-  display: flex;
-  gap: 6px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 10px;
+  align-items: center;
 }
 .hidden-hosts-add input[type="text"] {
-  flex: 1;
-  height: 28px;
+  width: 100%;
+  height: 34px;
   padding: 0 10px;
   border: 1px solid var(--rule);
   border-radius: var(--radius);
@@ -237,14 +239,15 @@
   box-shadow: 0 0 0 2px rgba(11, 61, 79, 0.12);
 }
 .hidden-hosts-add .btn {
-  height: 28px;
-  padding: 0 12px;
+  min-width: 72px;
+  height: 34px;
+  padding: 0 14px;
   border: 1px solid var(--rule);
   background: var(--card);
   color: var(--ink-2);
   border-radius: var(--radius);
   font-size: 12px;
-  font-weight: 600;
+  font-weight: 700;
   cursor: pointer;
 }
 .hidden-hosts-add .btn:hover { background: var(--paper-2); color: var(--ink); }

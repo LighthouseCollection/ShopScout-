@@ -266,6 +266,12 @@ assert.ok(settingsJs.includes('Open*Facts Enrichment</strong>'), 'settings left 
 assert.ok(settingsJs.includes('data-settings-panel="ai-providers"'), 'embedded settings has a main AI Providers panel');
 assert.ok(settingsJs.includes('data-settings-panel="quick-capture"'), 'embedded settings has a main Quick Capture panel');
 assert.ok(settingsJs.includes('data-settings-panel="open-facts"'), 'embedded settings has a main Open*Facts panel');
+assert.ok(settingsJs.includes('const def = { enabled: true, hiddenHosts: [] }'),
+  'Quick Capture Button defaults active with no hidden hosts');
+assert.ok(css.includes('.dashboard-settings .hidden-hosts {'),
+  'embedded Quick Capture hidden-hosts fieldset uses dashboard card styling');
+assert.ok(css.includes('.dashboard-settings .hidden-hosts-add {'),
+  'embedded Quick Capture add-host controls use a dashboard form row');
 assert.ok(settingsJs.includes('openSetupGuideModal'), 'embedded settings opens the setup guide in a modal');
 assert.ok(settingsJs.includes('bindSettingsNav'), 'embedded settings binds left navigation to main content panels');
 assert.ok(settingsJs.includes('function currentSettingsRoot'), 'settings panel switching is scoped to the mounted settings root');

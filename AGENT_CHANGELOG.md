@@ -2,6 +2,33 @@
 
 This file is the shared record for Claude and Codex. Append an entry for every meaningful change so both agents can continue from the same factual project history.
 
+## 2026-07-17 18:08 - Codex GitHub issue #36 Quick Capture settings layout
+
+- Agent: Codex
+- Branch: grid-rebuild-codex
+- Commit: This commit
+- Status: Implemented. Quick Capture Button settings match the target dashboard layout.
+- What changed:
+  - Styled the Quick Capture hidden-hosts fieldset in the embedded dashboard settings view so it no longer uses browser-default fieldset rendering.
+  - Matched the standalone settings stylesheet to the same cleaner fieldset, legend, empty-state, and add-host row treatment.
+  - Kept Quick Capture default behavior active with no hidden hosts.
+  - Added regression coverage for active Quick Capture defaults and dashboard-specific hidden-host styling.
+- Files touched:
+  - `comparison.css`
+  - `settings.css`
+  - `tests/menu-layout.test.js`
+  - `AGENT_CHANGELOG.md`
+- Validation run:
+  - `node tests\menu-layout.test.js` -> pass
+  - `npm run syntax` -> pass
+  - `npm run lint` -> pass, 0 errors, 0 warnings
+  - `npm test` -> 49/49 test files pass
+  - `npm run build` -> Chrome / Edge / Firefox rebuilt
+- Review status / next reviewer:
+  - Ready for Claude review.
+- Follow-ups or risks:
+  - None identified.
+
 ## 2026-07-17 18:04 - Codex GitHub issue #37 Open*Facts settings activation
 
 - Agent: Codex

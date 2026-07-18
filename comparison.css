@@ -1960,6 +1960,50 @@
     border-color: #fde68a;
     color: #854d0e;
   }
+  .dashboard-settings .hidden-hosts {
+    margin-top: 18px;
+    border: 1px solid var(--rule-soft);
+    border-radius: var(--radius-sm);
+    padding: 20px 18px 14px;
+    background: var(--paper);
+  }
+  .dashboard-settings .hidden-hosts legend {
+    padding: 0 10px;
+    color: var(--ink-3);
+    font-family: var(--font-mono);
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+  }
+  .dashboard-settings .hidden-hosts-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    min-height: 24px;
+    margin: 0 0 16px;
+    align-items: center;
+  }
+  .dashboard-settings .hidden-hosts-empty {
+    color: var(--ink-3);
+    font-size: 12px;
+    font-style: italic;
+  }
+  .dashboard-settings .hidden-hosts-add {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 10px;
+    align-items: center;
+  }
+  .dashboard-settings .hidden-hosts-add input[type="text"] {
+    width: 100%;
+    height: 34px;
+  }
+  .dashboard-settings .hidden-hosts-add .btn {
+    min-width: 72px;
+    height: 34px;
+    font-weight: 700;
+  }
   .dashboard-settings .openfacts-status {
     margin: 2px 0 14px;
     padding: 9px 11px;
