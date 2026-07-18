@@ -2,6 +2,34 @@
 
 This file is the shared record for Claude and Codex. Append an entry for every meaningful change so both agents can continue from the same factual project history.
 
+## 2026-07-17 17:34 - Codex GitHub issue #42 header hide column menu
+
+- Agent: Codex
+- Branch: grid-rebuild-codex
+- Commit: This commit
+- Status: Implemented. Normal product columns can now be hidden from the AG Grid header menu.
+- What changed:
+  - Added a native AG Grid `Hide Column` item to normal column header menus.
+  - Routed the menu action through ShopScoutGrid state so the hidden column stays hidden after refresh/re-render, matching the Columns modal behavior.
+  - Added regression coverage for both the header menu item and the persisted projection update.
+- Files touched:
+  - `AGENT_CHANGELOG.md`
+  - `grid-rebuild-codex/agGridAdapter.js`
+  - `grid-rebuild-codex/shopscoutGrid.js`
+  - `grid-rebuild-codex/tests/controls.test.js`
+  - `grid-rebuild-codex/tests/wiring.test.js`
+- Validation run:
+  - `node grid-rebuild-codex\tests\wiring.test.js` -> pass
+  - `node grid-rebuild-codex\tests\controls.test.js` -> pass
+  - `npm run syntax` -> pass
+  - `npm run lint` -> pass, 0 errors, 0 warnings
+  - `npm test` -> 48/48 test files pass
+  - `npm run build` -> Chrome / Edge / Firefox rebuilt
+- Review status / next reviewer:
+  - Ready for Claude review.
+- Follow-ups or risks:
+  - None identified.
+
 ## 2026-07-17 17:26 - Codex GitHub issue #43 source logo border
 
 - Agent: Codex

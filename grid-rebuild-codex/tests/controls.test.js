@@ -342,6 +342,21 @@ function createHarness() {
   {
     const harness = createHarness();
     await harness.ctx.ShopScoutGrid.render();
+    assert.ok(harness.getLatestProjection().columns.some(column => column.id === 'brand'),
+      'Brand column is initially visible');
+    await harness.getOptions().onColumnVisibilityChange({ field: 'brand', visible: false });
+    assert.equal(harness.ctx.ShopScoutGrid.getState().columnVisibility.brand, false,
+      'header menu Hide Column marks the selected column hidden in grid state');
+    assert.equal(
+      harness.getLatestProjection().columns.some(column => column.id === 'brand'),
+      false,
+      'header menu Hide Column refreshes the visible projection'
+    );
+  }
+
+  {
+    const harness = createHarness();
+    await harness.ctx.ShopScoutGrid.render();
     harness.ctx.ShopScoutGrid.openFiltersModal();
     const body = harness.getModalConfig().body;
     const modalActions = harness.getModalConfig().actions || [];

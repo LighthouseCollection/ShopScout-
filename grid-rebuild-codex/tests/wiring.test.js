@@ -5,6 +5,7 @@ const { read } = require('../../tests/_helpers');
 
 const html = read('comparison.html');
 const gridCss = read('grid-rebuild-codex/grid.css');
+const adapterJs = read('grid-rebuild-codex/agGridAdapter.js');
 const buildScript = read('scripts/build-extension.ps1');
 const root = path.join(__dirname, '..', '..');
 
@@ -33,6 +34,8 @@ assert.ok(html.includes('data-ss-grid-group-field'),
   'View ribbon exposes grouping field picker');
 assert.ok(html.includes('data-ss-grid-command="open-columns"'),
   'View ribbon exposes columns chooser command');
+assert.ok(adapterJs.includes('getMainMenuItems') && adapterJs.includes("name: 'Hide Column'"),
+  'AG Grid header menu exposes a Hide Column action for normal columns');
 assert.ok(gridCss.includes('.ss-grid-header-thumb') && gridCss.includes('width: 100px'),
   'compare headers reserve a 100px-wide thumbnail area');
 assert.ok(!gridCss.includes('#eaeaea'),

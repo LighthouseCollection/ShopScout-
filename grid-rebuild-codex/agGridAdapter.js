@@ -659,6 +659,41 @@
     }
   }
 
+  function hideColumnFromHeaderMenu(params, opts, container) {
+    const column = params?.column;
+    const colId = column?.getColId?.() || column?.colId || params?.column?.colDef?.colId || '';
+    if (!colId) return;
+    if (typeof opts?.onColumnVisibilityChange === 'function') {
+      opts.onColumnVisibilityChange({ field: colId, visible: false });
+      return;
+    }
+    try {
+      params?.api?.applyColumnState?.({ state: [{ colId, hide: true }] });
+      setTimeout(() => {
+        autoSizeEverything(params?.api, container);
+        fitShellToContent(container);
+      }, 0);
+    } catch (err) {
+      console.warn('AG Grid hide-column menu action failed', err);
+    }
+  }
+
+  function mainMenuItemsWithHide(params, opts, container) {
+    const defaults = Array.isArray(params?.defaultItems) ? params.defaultItems.slice() : [];
+    const column = params?.column;
+    const colDef = column?.getColDef?.() || column?.colDef || {};
+    const colId = column?.getColId?.() || column?.colId || colDef.colId || '';
+    if (!colId || colDef.lockVisible) return defaults;
+    return [
+      ...defaults,
+      'separator',
+      {
+        name: 'Hide Column',
+        action: () => hideColumnFromHeaderMenu(params, opts, container)
+      }
+    ];
+  }
+
   function distributeLeftover(api, container) {
     if (!api || !container) return;
     const shell = container.closest?.('.ss-grid-shell');
@@ -780,6 +815,9 @@
           autoSizeEverything(gridApi, container);
           fitShellToContent(container);
         }, 0);
+      },
+      getMainMenuItems(params) {
+        return mainMenuItemsWithHide(params, opts, container);
       },
       onSortChanged(evt) {
         if (typeof opts.onSortChange !== 'function') return;

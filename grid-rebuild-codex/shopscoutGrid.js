@@ -792,6 +792,17 @@
     return true;
   }
 
+  async function setColumnVisible(field, visible) {
+    const id = String(field || '').trim();
+    if (!id) return;
+    const current = ensureStore().getState();
+    const nextVisibility = Object.assign({}, current.columnVisibility || {});
+    if (visible === false) nextVisibility[id] = false;
+    else delete nextVisibility[id];
+    ensureStore().dispatch({ columnVisibility: nextVisibility });
+    await refreshGridData();
+  }
+
   async function handleAction(action, row) {
     if (!row) return;
     const id = row._shopScout?.productId || row.id;
@@ -860,6 +871,9 @@
         },
         onColumnOrderChange(columnOrder) {
           ensureStore().dispatch({ columnOrder });
+        },
+        onColumnVisibilityChange(change) {
+          return setColumnVisible(change?.field, change?.visible !== false);
         },
         /* Column widths are not persisted — every load auto-sizes columns
            from content via columnWidthBounds. Resize handles still work
