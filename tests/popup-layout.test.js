@@ -39,8 +39,12 @@ assert.ok(html.includes('id="dashboardBtn"'), 'popup includes the dashboard shor
 assert.ok(html.includes('Open Comparison Dashboard'), 'dashboard shortcut is labeled Open Comparison Dashboard');
 assert.ok(html.includes('class="header-action-bar"'),
   'labeled dashboard button lives in a dedicated action bar below the header');
-assert.ok(html.indexOf('class="dashboard-open-btn"') > html.indexOf('id="settingsBtn"'),
-  'dashboard action bar renders immediately below the settings-bearing header');
+assert.ok(!html.includes('id="settingsBtn"'), 'popup side panel does not include the Settings gear');
+assert.ok(!html.includes('title="Settings"'), 'popup side panel does not include a Settings command');
+assert.ok(!js.includes("getElementById('settingsBtn')"), 'popup side panel does not bind a Settings command');
+assert.ok(!js.includes("chrome.runtime.getURL('settings.html')"), 'popup side panel does not open standalone settings');
+assert.ok(html.indexOf('class="dashboard-open-btn"') > html.indexOf('</header>'),
+  'dashboard action bar renders immediately below the header');
 assert.ok(!html.includes('AI Analyze'), 'popup gatherer does not render AI analysis controls');
 assert.ok(!html.includes('Auto AI'), 'popup gatherer does not render Auto AI');
 assert.ok(!html.includes('Manual AI'), 'popup gatherer does not render Manual AI');

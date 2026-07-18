@@ -1,5 +1,32 @@
 # ShopScout Agent Change Log
 
+## 2026-07-17 18:39 - Codex GitHub issue #33 remove popup settings shortcut
+
+- Agent: Codex
+- Branch: grid-rebuild-codex
+- Commit: This commit
+- Status: Implemented. The extension side panel no longer exposes the Settings gear or standalone settings launch action.
+- What changed:
+  - Removed the Settings gear button from `popup.html`.
+  - Removed the popup click handler that opened `settings.html`.
+  - Removed now-unused popup `.header-btn` styles.
+  - Added regression coverage that the side-panel popup does not render or bind a Settings command.
+- Files touched:
+  - `popup.html`
+  - `popup.js`
+  - `popup.css`
+  - `tests/popup-layout.test.js`
+  - `AGENT_CHANGELOG.md`
+- Validation run:
+  - `node tests\popup-layout.test.js` -> pass
+  - `npm run syntax` -> pass
+  - `npm run lint` -> pass, 0 errors, 0 warnings
+  - `npm test` -> 49/49 test files pass
+  - `npm run build` -> Chrome / Edge / Firefox rebuilt
+- Review status / next reviewer:
+  - Ready for Claude review.
+- Follow-ups or risks:
+  - Dashboard Settings and manifest `options_page` remain intact; only the extension side panel shortcut was removed.
 ## 2026-07-17 18:31 - Codex GitHub issue #34 AI Providers dashboard settings
 
 - Agent: Codex
@@ -5171,4 +5198,5 @@ This file is the shared record for Claude and Codex. Append an entry for every m
   - Ready for Claude review.
 - Follow-ups or risks:
   - None identified.
+
 
