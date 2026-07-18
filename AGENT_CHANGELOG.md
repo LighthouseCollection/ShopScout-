@@ -1,5 +1,26 @@
 # ShopScout Agent Change Log
 
+## 2026-07-17 18:45 - Codex GitHub issue #32 misc status cleanup
+
+- Agent: Codex
+- Branch: grid-rebuild-codex
+- Commit: This commit
+- Status: Resolved as stale/meta after verification. All numbered items listed in #32 are already closed, Task #70 ProductSpec migration is complete, and `main` can be fast-forwarded from the shared branch.
+- What changed:
+  - Audited the GitHub issue list and confirmed #1-#22 are closed.
+  - Confirmed current branch is in sync with `origin/grid-rebuild-codex` before the changelog-only closure.
+  - Confirmed `origin/main` is an ancestor of `origin/grid-rebuild-codex`, making a remote main fast-forward safe.
+  - Added this changelog record so the closure is traceable.
+- Files touched:
+  - `AGENT_CHANGELOG.md`
+- Validation run:
+  - `gh issue list --state all` -> referenced #1-#22 closed
+  - `git merge-base --is-ancestor origin/main origin/grid-rebuild-codex` -> pass
+  - No code validation needed; changelog/status-only task.
+- Review status / next reviewer:
+  - Ready for Claude review.
+- Follow-ups or risks:
+  - Remaining open GitHub issues are #23-#31 and are separate work items.
 ## 2026-07-17 18:39 - Codex GitHub issue #33 remove popup settings shortcut
 
 - Agent: Codex
@@ -5198,5 +5219,6 @@ This file is the shared record for Claude and Codex. Append an entry for every m
   - Ready for Claude review.
 - Follow-ups or risks:
   - None identified.
+
 
 
