@@ -1869,6 +1869,73 @@ function showKeyboardShortcuts() {
 /* applySortDirection was retired in Task 8 with the rest of the
    legacy sort plumbing. Tabulator column headers handle sort now. */
 
+async function listActiveProductsForBulkLinkOpen() {
+  const repo = globalThis.SSProductRepo;
+  if (repo && typeof repo.getActiveListId === 'function' && typeof repo.listProducts === 'function') {
+    const listId = await repo.getActiveListId();
+    if (listId) return repo.listProducts(listId);
+  }
+  return getProducts();
+}
+
+function safeProductLink(product) {
+  const url = sanitizeUrl(product?.url || product?.link || '', '');
+  if (!url || !/^https?:\/\//i.test(url)) return '';
+  return url;
+}
+
+async function openProductLinkInNewTab(url) {
+  if (chrome?.tabs && typeof chrome.tabs.create === 'function') {
+    const created = chrome.tabs.create({ url, active: false });
+    if (created && typeof created.then === 'function') await created;
+    return true;
+  }
+  const opened = window.open(url, '_blank', 'noopener');
+  return Boolean(opened);
+}
+
+async function confirmOpenManyProductLinks(count) {
+  const message = `This will open ${count} product link${count === 1 ? '' : 's'} in new tabs. Continue?`;
+  if (typeof globalThis.ShopScoutUI?.confirm === 'function') {
+    return globalThis.ShopScoutUI.confirm(message, {
+      title: `Open ${count} product links?`,
+      okLabel: 'Open Links'
+    });
+  }
+  toast.show('Open confirmation is unavailable. Product links were not opened.', 'error');
+  return false;
+}
+
+async function openAllProductLinks() {
+  const products = await listActiveProductsForBulkLinkOpen();
+  const links = Array.from(new Set((products || []).map(safeProductLink).filter(Boolean)));
+  if (!links.length) {
+    toast.show('No product links to open.', 'error');
+    return;
+  }
+
+  if (links.length > 5) {
+    const ok = await confirmOpenManyProductLinks(links.length);
+    if (!ok) return;
+  }
+
+  let opened = 0;
+  let failed = 0;
+  for (const url of links) {
+    try {
+      const ok = await openProductLinkInNewTab(url);
+      if (ok) opened++;
+      else failed++;
+    } catch (err) {
+      failed++;
+      console.warn('Could not open product link', err);
+    }
+  }
+
+  if (opened) toast.show(`Opened ${opened} product link${opened === 1 ? '' : 's'}.`);
+  if (failed) toast.show(`Could not open ${failed} product link${failed === 1 ? '' : 's'}.`, 'error');
+}
+
 function bindRibbonCommandEvents() {
   const shell = document.querySelector('.ribbon-shell');
   if (!shell) return;
@@ -1950,6 +2017,7 @@ function bindRibbonCommandEvents() {
     else if (command === 'normalization-review') openNormalizationReviewPage();
     else if (command === 'vertical-picker') openVerticalPickerPage();
     else if (command === 'normalization-rules') openNormalizationRulesPage();
+    else if (command === 'open-all-links') openAllProductLinks();
     else if (command === 'show-view-tab') activateRibbonTab('view');
     else if (command === 'show-help-tab') activateRibbonTab('about');
     else if (command === 'export') openExportPage();

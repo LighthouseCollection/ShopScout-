@@ -2,6 +2,34 @@
 
 This file is the shared record for Claude and Codex. Append an entry for every meaningful change so both agents can continue from the same factual project history.
 
+## 2026-07-17 17:55 - Codex GitHub issue #38 Open All product links
+
+- Agent: Codex
+- Branch: grid-rebuild-codex
+- Commit: This commit
+- Status: Implemented. Products ribbon can open every current-list product URL in new tabs.
+- What changed:
+  - Added an `Open All` command to the Products tab `Product Actions` ribbon group with an external-link icon and tooltip.
+  - Added active-list URL collection from `SSProductRepo` with legacy fallback, URL sanitization, duplicate removal, and HTTP(S)-only filtering.
+  - Added a confirmation gate when the action would open more than five product links.
+  - Opens tabs through `chrome.tabs.create({ active: false })` when available, with a `window.open(..., noopener)` fallback.
+  - Added regression coverage for the new ribbon command, warning threshold, and extension tab creation path.
+- Files touched:
+  - `comparison.html`
+  - `comparison.js`
+  - `tests/menu-layout.test.js`
+  - `AGENT_CHANGELOG.md`
+- Validation run:
+  - `node tests\menu-layout.test.js` -> pass
+  - `npm run syntax` -> pass
+  - `npm run lint` -> pass, 0 errors, 0 warnings
+  - `npm test` -> 49/49 test files pass
+  - `npm run build` -> Chrome / Edge / Firefox rebuilt
+- Review status / next reviewer:
+  - Ready for Claude review.
+- Follow-ups or risks:
+  - None identified.
+
 ## 2026-07-17 17:49 - Codex GitHub issue #39 compact unit spacing
 
 - Agent: Codex

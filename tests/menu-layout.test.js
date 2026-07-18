@@ -91,11 +91,15 @@ assertIncludes('<div class="rb-group-label">Product Actions</div>', 'Products ta
 assertIncludes('id="addUrlToggle"', 'Products tab exposes Add Product');
 assertIncludes('Delete Item(s)', 'Products tab exposes Delete Item(s) (formerly Delete Product(s))');
 assertIncludes('Rescan Products', 'Products tab exposes Rescan Products');
+assertIncludes('data-command="open-all-links"', 'Products tab exposes Open All product links');
 assertIncludes('data-command="duplicate-review"', 'Products tab exposes possible-duplicate review');
 assertIncludes('data-command="normalization-review"', 'Products tab exposes normalization review');
 assertIncludes('data-command="normalization-rules"', 'Products tab exposes user normalization rules');
 assertIncludes('data-command="vertical-picker"', 'Products tab exposes vertical pack picker');
 assert.ok(js.includes('openDuplicateReviewPage'), 'comparison script renders possible duplicate candidates in main content');
+assert.ok(js.includes('openAllProductLinks'), 'comparison script handles Open All product links');
+assert.ok(js.includes('links.length > 5'), 'Open All warns before opening more than five product links');
+assert.ok(js.includes('chrome.tabs.create'), 'Open All uses extension tab creation when available');
 assert.ok(js.includes('findDuplicateCandidates'), 'duplicate review uses the repo candidate detector');
 assert.ok(js.includes('data-duplicate-decision="not-duplicate"'), 'duplicate review can mark candidate groups as not duplicate');
 assert.ok(js.includes('data-duplicate-decision="same-product"'), 'duplicate review can mark candidate groups as same product');
