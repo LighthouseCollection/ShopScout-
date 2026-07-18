@@ -178,6 +178,9 @@ function settingsShellHtml() {
             <h3>Open*Facts Enrichment</h3>
             <p>Optional. When a product page has a GTIN/UPC/EAN, ShopScout can ask the open Open*Facts databases for richer structured data and merge missing fields into the captured product. No personal data is sent — only the barcode.</p>
           </div>
+          <div class="openfacts-status">
+            Active when a captured product includes a GTIN, UPC, EAN, or compatible barcode identifier.
+          </div>
           <label class="toggle-row">
             <input type="checkbox" id="openFactsEnabled">
             <span>Enable Open*Facts enrichment</span>
@@ -319,7 +322,7 @@ const OPEN_FACTS_KEY = 'shopscout_openfacts_enrich';
 const OPEN_FACTS_SOURCES = ['food', 'beauty', 'pet', 'products'];
 
 async function loadOpenFactsSettings() {
-  const def = { enabled: false, food: true, beauty: true, pet: true, products: true };
+  const def = { enabled: true, food: true, beauty: true, pet: true, products: true };
   const storage = extensionStorage();
   if (!storage || typeof storage.get !== 'function') return def;
   const stored = await storage.get(OPEN_FACTS_KEY);

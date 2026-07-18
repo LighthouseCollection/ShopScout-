@@ -1,8 +1,8 @@
 /* =============================================================
    ShopScout — Open*Facts GTIN enrichment
-   Opt-in lookup against the Open Food / Beauty / Pet / Products Facts
-   public APIs. Only runs when:
-     - the user has the corresponding toggle on in Settings
+   Setting-controlled lookup against the Open Food / Beauty / Pet /
+   Products Facts public APIs. Only runs when:
+     - enrichment and the corresponding source are enabled in Settings
      - the captured product has a GTIN/UPC/EAN
    Per-call timeout, returns extra spec entries that get merged into the
    record without overwriting anything the extractor already found.
@@ -10,6 +10,7 @@
 (function initOpenFactsEnrich(root) {
   const TIMEOUT_MS = 6000;
   const SETTINGS_KEY = 'shopscout_openfacts_enrich';
+  const DEFAULT_SETTINGS = { enabled: true, food: true, beauty: true, pet: true, products: true };
 
   /* Map of preference key -> API base URL. */
   const APIS = {
@@ -21,9 +22,9 @@
 
   async function getSettings() {
     const chrome = root.chrome || root.browser;
-    if (!chrome || !chrome.storage || !chrome.storage.local) return null;
+    if (!chrome || !chrome.storage || !chrome.storage.local) return Object.assign({}, DEFAULT_SETTINGS);
     const stored = await chrome.storage.local.get(SETTINGS_KEY);
-    return stored[SETTINGS_KEY] || null;
+    return Object.assign({}, DEFAULT_SETTINGS, stored[SETTINGS_KEY] || {});
   }
 
   async function setSettings(next) {

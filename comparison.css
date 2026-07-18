@@ -1960,6 +1960,39 @@
     border-color: #fde68a;
     color: #854d0e;
   }
+  .dashboard-settings .openfacts-status {
+    margin: 2px 0 14px;
+    padding: 9px 11px;
+    border: 1px solid var(--rule-soft);
+    border-radius: var(--radius-sm);
+    background: var(--paper-2);
+    color: var(--ink-3);
+    font-size: 12px;
+    line-height: 1.4;
+  }
+  .dashboard-settings .openfacts-sources {
+    margin-top: 18px;
+    border: 1px solid var(--rule-soft);
+    border-radius: var(--radius-sm);
+    padding: 20px 18px 14px;
+    background: var(--paper);
+  }
+  .dashboard-settings .openfacts-sources legend {
+    padding: 0 10px;
+    color: var(--ink-3);
+    font-family: var(--font-mono);
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+  }
+  .dashboard-settings .openfacts-sources .toggle-row {
+    padding: 7px 0;
+  }
+  .dashboard-settings .openfacts-sources[disabled] {
+    opacity: 0.55;
+    pointer-events: none;
+  }
   @media (max-width: 1180px) {
     .dashboard-settings-layout {
       grid-template-columns: 260px minmax(0, 1fr);

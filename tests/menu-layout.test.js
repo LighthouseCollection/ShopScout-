@@ -294,6 +294,14 @@ assert.ok(settingsJs.includes('Open Food Facts (groceries)'), 'embedded settings
 assert.ok(settingsJs.includes('Open Beauty Facts (cosmetics)'), 'embedded settings preserves Open Beauty Facts source label');
 assert.ok(settingsJs.includes('Open Pet Food Facts (pet food)'), 'embedded settings preserves Open Pet Facts source label');
 assert.ok(settingsJs.includes('Open Products Facts (everything else)'), 'embedded settings preserves Open Products Facts source label');
+assert.ok(settingsJs.includes('const def = { enabled: true, food: true, beauty: true, pet: true, products: true }'),
+  'Open*Facts enrichment defaults active with all sources selected');
+assert.ok(settingsJs.includes('class="openfacts-status"'),
+  'Open*Facts settings explains that enrichment is active only when barcode identifiers are available');
+assert.ok(css.includes('.dashboard-settings .openfacts-sources {'),
+  'embedded Open*Facts sources use dashboard card styling instead of browser-default fieldset styling');
+assert.ok(css.includes('.dashboard-settings .openfacts-sources legend'),
+  'embedded Open*Facts sources render a compact SOURCES legend');
 assert.ok(settingsJs.includes('aria-expanded="${expanded ? \'true\' : \'false\'}"'), 'provider list uses accordion expanded state');
 assert.ok(settingsJs.includes('data-provider-toggle'), 'provider list has explicit accordion toggle buttons');
 assert.ok(settingsJs.includes('provider-state-on'), 'provider cards render muted enabled state');

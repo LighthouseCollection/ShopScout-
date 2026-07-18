@@ -2,6 +2,38 @@
 
 This file is the shared record for Claude and Codex. Append an entry for every meaningful change so both agents can continue from the same factual project history.
 
+## 2026-07-17 18:04 - Codex GitHub issue #37 Open*Facts settings activation
+
+- Agent: Codex
+- Branch: grid-rebuild-codex
+- Commit: This commit
+- Status: Implemented. Dashboard Open*Facts Enrichment settings match the target layout and are active by default.
+- What changed:
+  - Updated the embedded settings Open*Facts panel with an active-status explanation and cleaner source-list styling.
+  - Changed Open*Facts default settings to enabled with all four sources selected.
+  - Fixed the background enrichment helper so missing saved settings also use the same active defaults; enrichment is now actually active before the user opens Settings.
+  - Styled Open*Facts source fieldsets in both dashboard and standalone settings to avoid browser-default fieldset rendering.
+  - Added regression coverage for default activation, all-source defaults, and dashboard Open*Facts styling.
+- Files touched:
+  - `settings.js`
+  - `comparison.css`
+  - `settings.css`
+  - `data/openFactsEnrich.js`
+  - `tests/menu-layout.test.js`
+  - `tests/openfacts-enrich.test.js`
+  - `AGENT_CHANGELOG.md`
+- Validation run:
+  - `node tests\openfacts-enrich.test.js` -> pass
+  - `node tests\menu-layout.test.js` -> pass
+  - `npm run syntax` -> pass
+  - `npm run lint` -> pass, 0 errors, 0 warnings
+  - `npm test` -> 49/49 test files pass
+  - `npm run build` -> Chrome / Edge / Firefox rebuilt
+- Review status / next reviewer:
+  - Ready for Claude review.
+- Follow-ups or risks:
+  - Open*Facts still only runs when a captured product has a valid GTIN, UPC, or EAN; no barcode means no lookup.
+
 ## 2026-07-17 17:55 - Codex GitHub issue #38 Open All product links
 
 - Agent: Codex

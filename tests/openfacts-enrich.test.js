@@ -87,6 +87,16 @@ vm.runInContext(fs.readFileSync(openFactsPath, 'utf8'), context, { filename: ope
   assert.strictEqual(record.specs.Quantity, '250 ml', 'OpenFacts does not overwrite existing captured specs');
   assert.strictEqual(record.specsNormalized, undefined, 'OpenFacts invalidates stale normalized sidecar when specs change');
 
+  delete storage.shopscout_openfacts_enrich;
+  const defaultSettings = await context.SSOpenFactsEnrich.getSettings();
+  for (const key of ['enabled', 'food', 'beauty', 'pet', 'products']) {
+    assert.strictEqual(defaultSettings[key], true, `OpenFacts default ${key} setting is active before settings are saved`);
+  }
+
+  const defaultRecord = { ean: '1234567890123', rawSpecs: [], specs: {} };
+  await context.SSOpenFactsEnrich.enrichByGtin(defaultRecord);
+  assert.strictEqual(defaultRecord.specs.Brand, 'Acme Foods', 'OpenFacts default settings are active before the settings page is opened');
+
   console.log('openfacts enrichment tests passed');
 })().catch(err => {
   console.error(err);

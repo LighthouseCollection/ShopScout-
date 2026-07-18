@@ -130,22 +130,32 @@
   accent-color: var(--primary);
 }
 .openfacts-sources {
-  margin-top: 8px;
+  margin-top: 18px;
   border: 1px solid var(--rule);
-  border-radius: var(--radius);
-  padding: 8px 12px 4px;
+  border-radius: var(--radius-sm);
+  padding: 20px 18px 14px;
   background: var(--paper);
 }
 .openfacts-sources legend {
   font-family: var(--font-mono);
   font-size: 10px;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.14em;
   text-transform: uppercase;
   color: var(--ink-3);
-  font-weight: 600;
-  padding: 0 6px;
+  font-weight: 800;
+  padding: 0 10px;
 }
 .openfacts-sources[disabled] { opacity: 0.5; pointer-events: none; }
+.openfacts-status {
+  margin: 2px 0 14px;
+  padding: 9px 11px;
+  border: 1px solid var(--rule);
+  border-radius: var(--radius-sm);
+  background: var(--paper-2);
+  color: var(--ink-3);
+  font-size: 12px;
+  line-height: 1.4;
+}
 
 /* =============================================================
    Quick Capture Button (FAB) settings — hidden-hosts chip list
