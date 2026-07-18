@@ -235,7 +235,7 @@ Phase 5 landed in follow-up slices:
 - ✅ **`ShopScoutAttributeNormalization` / `_normalizedAttributes`** — retired from runtime. ProductRepo writes v2 `specsNormalized`, the grid projects from v2 display values, and the normalization review queue reads `rawSpecs` + `specsNormalized` instead of the old sidecar.
 - ✅ **`content/productSchema.js` flat spec compatibility writes** — retired. `toLegacyFlatProduct()` now projects identity, price, media, identifiers, `_spec`, and `specsNormalized`; it no longer writes `flat.specs` or `flat.rawSpecs` for new captures.
 
-Read-only fallback support for already-saved old records remains in central access helpers so existing IndexedDB products can still render during migration. New writes should not create `canonicalValue` entries or `flat.specs` / `flat.rawSpecs` from the extraction projection.
+Read-only fallback support for already-saved `canonicalValue` records has also been removed. ProductSpec consumers now read `normalized.display`, `value`, or `rawValue`; old records that only stored `canonicalValue` need migration/re-capture to display that normalized label.
 
 ---
 

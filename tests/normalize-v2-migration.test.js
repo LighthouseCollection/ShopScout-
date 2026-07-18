@@ -89,7 +89,7 @@ const withSpec = {
   specs: { Color: 'Blue' },
   _spec: {
     specs: {
-      Voltage: { rawKey: 'Voltage', rawValue: '48 volts', canonicalValue: '48V' },
+      Voltage: { rawKey: 'Voltage', rawValue: '48 volts', value: '48V' },
     },
   },
 };

@@ -83,7 +83,7 @@ const productSpecOnly = [{
       Material: {
         rawKey: 'Material',
         rawValue: 'SS304',
-        canonicalValue: 'Stainless Steel 304',
+        value: 'Stainless Steel 304',
         source: 'manufacturer',
         confidence: 0.9
       }

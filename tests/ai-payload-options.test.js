@@ -93,7 +93,7 @@ const productSpecSummary = AI.productSummary([{
       Material: {
         rawKey: 'Material',
         rawValue: 'SS304',
-        canonicalValue: 'Stainless Steel 304',
+        value: 'Stainless Steel 304',
         confidence: 0.9,
         source: 'manufacturer'
       }

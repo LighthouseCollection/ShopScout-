@@ -476,15 +476,13 @@
     const entry = specEntryFromProduct(product, field, scope);
     /* v2 normalization envelope wins when present -- .display is
        the already-formatted pill text ("9 V", "60 cm", ["Black","Red"]).
-       Only fall through to raw/canonicalValue when we don't have one. */
+       Only fall through to raw/value when we don't have one. */
     const normalized = entry && typeof entry === 'object' ? entry.normalized : null;
     const fromEntry = entry && typeof entry === 'object'
-      ? (entry.raw ?? entry.rawValue ?? entry.value ?? entry.canonicalValue)
+      ? (entry.raw ?? entry.rawValue ?? entry.value)
       : (entry ?? productRow?.[field]);
     const raw = fromEntry == null ? '' : String(fromEntry);
-    const correctedValue = entry && typeof entry === 'object' && entry.canonicalValue != null
-      ? entry.canonicalValue
-      : entry && typeof entry === 'object' && entry.display != null && String(entry.display) !== raw
+    const correctedValue = entry && typeof entry === 'object' && entry.display != null && String(entry.display) !== raw
         ? entry.display
         : correctionFor(product, field);
     const corrected = correctedValue != null && String(correctedValue) !== raw

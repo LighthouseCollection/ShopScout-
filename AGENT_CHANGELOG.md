@@ -2,6 +2,50 @@
 
 This file is the shared record for Claude and Codex. Append an entry for every meaningful change so both agents can continue from the same factual project history.
 
+## 2026-07-17 17:17 - Codex remove old canonicalValue read fallback
+
+- Agent: Codex
+- Branch: grid-rebuild-codex
+- Commit: Pending
+- Status: Implemented. Removed support for old saved ProductSpec records that only exposed `canonicalValue`.
+- What changed:
+  - Removed `canonicalValue` read fallbacks from `shared/productSpecAccess.js`, `content/productSchema.js`, `utils.js`, `data/specHeuristic.js`, `comparison/productDetailView.js`, and grid projections.
+  - Updated ProductSpec access, projection, editing, AI payload, canonical, cleanup-helper, and migration fixtures to use `value` instead of `canonicalValue`.
+  - Updated `normalization/SPEC.md` to state that old `canonicalValue`-only records now require migration or re-capture.
+- Files touched:
+  - `AGENT_CHANGELOG.md`
+  - `comparison/productDetailView.js`
+  - `content/productSchema.js`
+  - `data/specHeuristic.js`
+  - `grid-rebuild-codex/projections.js`
+  - `grid-rebuild-codex/tests/editing.test.js`
+  - `grid-rebuild-codex/tests/projections.test.js`
+  - `normalization/SPEC.md`
+  - `shared/productSpecAccess.js`
+  - `tests/ai-payload-options.test.js`
+  - `tests/canonical.test.js`
+  - `tests/cleanup-helpers.test.js`
+  - `tests/normalize-v2-migration.test.js`
+  - `tests/product-spec-access.test.js`
+  - `tests/utils.test.js`
+  - `utils.js`
+- Validation run:
+  - `node tests\product-spec-access.test.js` -> pass
+  - `node tests\cleanup-helpers.test.js` -> pass
+  - `node grid-rebuild-codex\tests\projections.test.js` -> pass
+  - `node grid-rebuild-codex\tests\editing.test.js` -> pass
+  - `node tests\utils.test.js` -> pass
+  - `node tests\canonical.test.js` -> pass
+  - `npm run syntax` -> pass
+  - `npm run lint` -> pass, 0 errors, 0 warnings
+  - `npm run typecheck` -> pass
+  - `npm test` -> 48/48 test files pass
+  - `npm run build` -> Chrome / Edge / Firefox rebuilt
+- Review status / next reviewer:
+  - Ready for Claude review after validation and commit.
+- Follow-ups or risks:
+  - Existing local products that only contain `_spec.*.canonicalValue` without `value`, `rawValue`, or `specsNormalized` will no longer display that normalized label. This matches the requested removal of old saved-record support.
+
 ## 2026-07-17 16:56 - Codex final ProductSpec compatibility cleanup
 
 - Agent: Codex

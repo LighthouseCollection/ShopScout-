@@ -52,7 +52,7 @@
 
   function entryValue(entry) {
     if (entry && typeof entry === 'object') {
-      return entry.rawValue ?? entry.value ?? entry.canonicalValue ?? '';
+      return entry.rawValue ?? entry.value ?? '';
     }
     return entry;
   }
@@ -61,7 +61,6 @@
     const fromEnvelope = displayFromEnvelope(envelope);
     if (fromEnvelope) return fromEnvelope;
     if (entry && typeof entry === 'object' && entry.value != null) return String(entry.value);
-    if (entry && typeof entry === 'object' && entry.canonicalValue != null) return String(entry.canonicalValue);
     return text(raw);
   }
 

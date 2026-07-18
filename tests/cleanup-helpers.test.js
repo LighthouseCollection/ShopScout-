@@ -64,7 +64,7 @@ const unwrapWrappedValue = new Function(`
   function unwrapWrappedValue(v) {
     if (v == null) return '';
     if (typeof v === 'object') {
-      return v.value || v.canonicalValue || v.rawValue || '';
+      return v.value || v.rawValue || '';
     }
     const s = String(v);
     return s === '[object Object]' ? '' : s;
@@ -73,8 +73,8 @@ const unwrapWrappedValue = new Function(`
 `)();
 
 assert.strictEqual(unwrapWrappedValue({ value: '4.5' }), '4.5', 'wrapper.value');
-assert.strictEqual(unwrapWrappedValue({ canonicalValue: '5 lb' }), '5 lb', 'wrapper.canonicalValue');
 assert.strictEqual(unwrapWrappedValue({ rawValue: 'raw' }), 'raw', 'wrapper.rawValue');
+assert.strictEqual(unwrapWrappedValue({ canonicalValue: '5 lb' }), '', 'legacy wrapper.canonicalValue is ignored');
 assert.strictEqual(unwrapWrappedValue({}), '', 'empty wrapper');
 assert.strictEqual(unwrapWrappedValue('plain'), 'plain', 'plain string passthrough');
 assert.strictEqual(unwrapWrappedValue('[object Object]'), '', 'corrupt stored string → empty');

@@ -403,8 +403,7 @@ function collectAllSpecRows(p) {
     for (const [k, v] of Object.entries(p.specs)) push(k, v);
   }
   /* Prefer the v2 normalized display when present (e.g. "9 V" instead of
-     "9 volts_of_direct_current"). Falls back to legacy canonicalValue / rawValue
-     for products captured before Phase 2 landed. */
+     "9 volts_of_direct_current"). Falls back to ProductSpec value / rawValue. */
   function displayFromEntry(entry) {
     if (!entry) return '';
     if (entry.normalized && entry.normalized.display != null && entry.normalized.display !== '—') {
@@ -412,7 +411,7 @@ function collectAllSpecRows(p) {
         ? entry.normalized.display.join(', ')
         : String(entry.normalized.display);
     }
-    return entry.canonicalValue || entry.rawValue || '';
+    return entry.value || entry.rawValue || '';
   }
   if (p._spec && p._spec.specs) {
     for (const [k, entry] of Object.entries(p._spec.specs)) {

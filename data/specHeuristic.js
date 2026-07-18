@@ -184,12 +184,12 @@
     }
     if (product._spec && product._spec.specs) {
       for (const [k, entry] of Object.entries(product._spec.specs)) {
-        out.push({ key: entry.rawKey || k, value: entry.canonicalValue || entry.rawValue });
+        out.push({ key: entry.rawKey || k, value: entry.value || entry.rawValue });
       }
     }
     if (product._spec && product._spec.itemDetails) {
       for (const [k, entry] of Object.entries(product._spec.itemDetails)) {
-        out.push({ key: entry.rawKey || k, value: entry.canonicalValue || entry.rawValue });
+        out.push({ key: entry.rawKey || k, value: entry.value || entry.rawValue });
       }
     }
     return out;

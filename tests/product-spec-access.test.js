@@ -64,7 +64,7 @@ const product = {
       'Battery Life': {
         rawKey: 'Battery Life',
         rawValue: '2 hrs',
-        canonicalValue: '2 hours',
+        value: '2 hours',
         confidence: 0.82,
         source: 'official'
       }
@@ -73,7 +73,7 @@ const product = {
       Material: {
         rawKey: 'Material',
         rawValue: 'SS304',
-        canonicalValue: 'Stainless Steel 304',
+        value: 'Stainless Steel 304',
         confidence: 0.9,
         source: 'manufacturer'
       }
@@ -97,7 +97,7 @@ assert.strictEqual(color.source, 'listing', 'source survives from raw spec');
 
 const battery = access.specEntry(product, 'Battery Life', { root: ctx });
 assert.strictEqual(battery.raw, '2 hrs', 'ProductSpec rawValue is available for matched rawSpec');
-assert.strictEqual(battery.display, '2 hours', 'ProductSpec canonicalValue is used when no v2 envelope exists');
+assert.strictEqual(battery.display, '2 hours', 'ProductSpec value is used when no v2 envelope exists');
 assert.strictEqual(battery.confidence, 0.82, 'ProductSpec confidence is preserved');
 assert.deepStrictEqual(plain(battery.sources), ['official'], 'ProductSpec source is normalized to sources array');
 
@@ -107,7 +107,7 @@ assert.strictEqual(voltage.display, '9 V', 'specsNormalized display is attached 
 
 const material = access.specEntry(product, 'Material', { root: ctx });
 assert.strictEqual(material.raw, 'SS304', 'ProductSpec-only itemDetails are exposed');
-assert.strictEqual(material.display, 'Stainless Steel 304', 'ProductSpec-only canonicalValue is displayed');
+assert.strictEqual(material.display, 'Stainless Steel 304', 'ProductSpec-only value is displayed');
 
 assert.strictEqual(access.specDisplayValue(product, 'Colour', { root: ctx }), 'Navy Blue',
   'specDisplayValue resolves aliases through canonical field keys');

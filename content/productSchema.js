@@ -446,7 +446,7 @@
      "[object Object]" string from corrupt legacy captures. */
   function unwrap(v) {
     if (v == null) return '';
-    if (typeof v === 'object') return v.value || v.canonicalValue || v.rawValue || '';
+    if (typeof v === 'object') return v.value || v.rawValue || '';
     const s = String(v);
     if (s === '[object Object]') return '';
     return s;

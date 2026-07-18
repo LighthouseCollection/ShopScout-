@@ -49,9 +49,9 @@
       if (!canonicalField || !values || typeof values !== 'object') continue;
       out.enums[canonicalField] = out.enums[canonicalField] || {};
       for (const [canonical, aliases] of Object.entries(values)) {
-        const canonicalValue = String(canonical || '').trim();
-        if (!canonicalValue) continue;
-        out.enums[canonicalField][canonicalValue] = uniqueArray(aliases);
+        const canonicalLabel = String(canonical || '').trim();
+        if (!canonicalLabel) continue;
+        out.enums[canonicalField][canonicalLabel] = uniqueArray(aliases);
       }
     }
     out.ignored = uniqueArray(input.ignored || []);

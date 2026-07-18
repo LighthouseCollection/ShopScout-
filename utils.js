@@ -541,14 +541,14 @@ window.SS = (() => {
      wrapper objects instead of plain strings — so reading them naively yields
      `[object Object]` in the UI. This helper:
        1. returns '' for null / undefined / empty
-       2. pulls `.value` / `.canonicalValue` / `.rawValue` from objects (in order)
+       2. pulls `.value` / `.rawValue` from objects (in order)
        3. coerces the literal string "[object Object]" back to '' so corrupt
           legacy data still renders as an em-dash instead of garbage
      Used by every display formatter and by toLegacyFlatProduct. */
   function unwrapWrappedValue(v) {
     if (v == null) return '';
     if (typeof v === 'object') {
-      return v.value || v.canonicalValue || v.rawValue || '';
+      return v.value || v.rawValue || '';
     }
     const s = String(v);
     return s === '[object Object]' ? '' : s;

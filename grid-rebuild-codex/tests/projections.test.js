@@ -60,7 +60,7 @@ const products = [
       specs: {
         'battery life': {
           rawValue: '2 hrs',
-          canonicalValue: '2 hours',
+          value: '2 hours',
           confidence: 0.82,
           source: 'official'
         }

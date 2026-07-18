@@ -137,7 +137,7 @@ const productSpecNormalizedSpecs = SS.normalizeProductSpecs({
       Material: {
         rawKey: 'Material',
         rawValue: 'SS304',
-        canonicalValue: 'Stainless Steel 304',
+        value: 'Stainless Steel 304',
         confidence: 0.9,
         source: 'manufacturer'
       }
@@ -160,7 +160,7 @@ const productSpecOnlyProduct = {
       Material: {
         rawKey: 'Material',
         rawValue: 'SS304',
-        canonicalValue: 'Stainless Steel 304',
+        value: 'Stainless Steel 304',
         source: 'manufacturer',
         confidence: 0.9
       }
