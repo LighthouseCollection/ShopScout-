@@ -1311,13 +1311,13 @@
    ============================================================== */
 .rb-office-ribbon .rb-group[data-group-id="review"]:not([data-group-size]),
 .rb-office-ribbon .rb-group[data-group-id="review"][data-group-size="large"] {
-  min-width: 300px;                          /* enough for "Duplicates" + "Categorize" full width */
+  min-width: 330px;                          /* enough for commands + display toggles */
 }
 .rb-office-ribbon .rb-group[data-group-id="review"]:not([data-group-size]) > .rb-group-content,
 .rb-office-ribbon .rb-group[data-group-id="review"][data-group-size="large"] > .rb-group-content {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  grid-template-rows: auto auto;
+  grid-template-rows: auto auto auto;
   gap: 4px 8px;
   align-items: stretch;
   padding: 4px;
@@ -1362,6 +1362,18 @@
   line-height: 1.15;
   font-weight: 400;
   max-height: none;
+}
+
+.rb-office-ribbon .rb-group[data-group-id="review"]:not([data-group-size]) .rb-review-toggle,
+.rb-office-ribbon .rb-group[data-group-id="review"][data-group-size="large"] .rb-review-toggle {
+  min-height: 28px;
+  background: #fff;
+}
+
+.rb-office-ribbon .rb-group[data-group-id="review"]:not([data-group-size]) .rb-review-toggle.active,
+.rb-office-ribbon .rb-group[data-group-id="review"][data-group-size="large"] .rb-review-toggle.active {
+  background: #dbeafe;
+  border-color: #93c5fd;
 }
 
 /* ==============================================================

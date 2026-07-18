@@ -34,8 +34,14 @@ assert.ok(html.includes('data-ss-grid-group-field'),
   'View ribbon exposes grouping field picker');
 assert.ok(html.includes('data-ss-grid-command="open-columns"'),
   'View ribbon exposes columns chooser command');
+assert.ok(html.includes('data-ss-grid-command="toggle-price-display"'),
+  'Products Review & Rules group exposes the rounded/actual price display toggle');
+assert.ok(html.includes('data-ss-grid-command="toggle-measurement-display"'),
+  'Products Review & Rules group exposes the rounded/actual measurement display toggle');
 assert.ok(adapterJs.includes('getMainMenuItems') && adapterJs.includes("name: 'Hide Column'"),
   'AG Grid header menu exposes a Hide Column action for normal columns');
+assert.ok(adapterJs.includes('formatMeasurementText') && adapterJs.includes('measurementDisplayMode'),
+  'AG Grid adapter can render rounded measurements from display-mode state');
 assert.ok(gridCss.includes('.ss-grid-header-thumb') && gridCss.includes('width: 100px'),
   'compare headers reserve a 100px-wide thumbnail area');
 assert.ok(!gridCss.includes('#eaeaea'),

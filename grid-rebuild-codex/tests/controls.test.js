@@ -122,7 +122,7 @@ function makeElementFactory() {
 
   ['productGrid', 'ssGridHost', 'ssGridStatus', 'productSearchInput', 'productSearchScope', 'sortSelect', 'groupSelect']
     .forEach(id => {
-      const el = makeElement(id === 'sortSelect' || id === 'groupSelect' || id === 'productSearchScope' ? 'select' : 'div', id);
+    const el = makeElement(id === 'sortSelect' || id === 'groupSelect' || id === 'productSearchScope' ? 'select' : 'div', id);
       el.ownerDocument = document;
       document.elements.set(id, el);
     });
@@ -289,6 +289,24 @@ function createHarness() {
     assert.ok(filterValues.includes('source'), 'filter field options include Source in Compare view');
     assert.equal(filterValues.some(value => String(value).startsWith('product:')), false,
       'filter field options list metadata fields, not product/model columns, in Compare view');
+  }
+
+  {
+    const ctx = {};
+    vm.createContext(ctx);
+    vm.runInContext(fs.readFileSync(path.join(rootDir, 'grid-rebuild-codex/state.js'), 'utf8'), ctx, { filename: 'state.js' });
+    const state = ctx.ShopScoutGridCodexState.deserialize({
+      priceDisplayMode: 'actual',
+      measurementDisplayMode: 'actual'
+    });
+    assert.equal(state.priceDisplayMode, 'actual', 'grid state preserves actual price display mode');
+    assert.equal(state.measurementDisplayMode, 'actual', 'grid state preserves actual measurement display mode');
+    const fallback = ctx.ShopScoutGridCodexState.deserialize({
+      priceDisplayMode: 'nonsense',
+      measurementDisplayMode: 'nonsense'
+    });
+    assert.equal(fallback.priceDisplayMode, 'rounded', 'invalid price display mode falls back to rounded');
+    assert.equal(fallback.measurementDisplayMode, 'actual', 'invalid measurement display mode falls back to actual');
   }
 
   {

@@ -38,6 +38,10 @@
   }
   function textValue(value) { return value == null ? '' : String(value); }
 
+  function viewStateForParams(params) {
+    return params?.context?.viewState || {};
+  }
+
   const GENERIC_SOURCE_LABELS = new Set(['','generic','source','store','retailer','website','unknown']);
   const RETAILER_HOSTS = [
     { match: 'amazon.',    label: 'Amazon' },
@@ -187,9 +191,42 @@
   function renderPrice(params) {
     const text = textValue(params.value).trim();
     if (!text) return '<span class="ss-grid-empty">-</span>';
+    if (viewStateForParams(params).priceDisplayMode === 'actual') {
+      return `<span class="ss-grid-price">${esc(text)}</span>`;
+    }
     const formatted = formatPriceText(text);
     if (!formatted) return `<span class="ss-grid-price">${esc(text)}</span>`;
     return `<span class="ss-grid-price" title="${escAttr(text)}">${esc(formatted)}</span>`;
+  }
+
+  const DIMENSION_FIELD_RE = /\b(dimension|length|width|height|depth|diameter|thickness|size)\b/i;
+  const DIMENSION_UNIT_RE = /(-?\d+(?:\.\d+)?)\s*("|'|inches?|inch|in|cm|mm|meters?|metres?|m|feet|foot|ft)(?=\b|[^A-Za-z]|$)/gi;
+
+  function shouldRoundMeasurement(field, text) {
+    const key = String(field || '').replace(/^spec:/, '');
+    DIMENSION_UNIT_RE.lastIndex = 0;
+    if (DIMENSION_FIELD_RE.test(key)) return DIMENSION_UNIT_RE.test(text);
+    DIMENSION_UNIT_RE.lastIndex = 0;
+    return /(?:^|\s|[x×])\d+(?:\.\d+)?\s*(?:"|'|inches?|inch|in|cm|mm|meters?|metres?|feet|foot|ft)(?=\b|[^A-Za-z]|$)/i.test(text)
+      && /\b(?:l|w|h|length|width|height|depth|diameter|thick(?:ness)?)\b|[x×]/i.test(text);
+  }
+
+  function roundHalfStep(value) {
+    return Math.round(value * 2) / 2;
+  }
+
+  function formatRoundedDimensionNumber(value) {
+    const number = Number(value);
+    if (!Number.isFinite(number)) return value;
+    return roundHalfStep(number).toFixed(1);
+  }
+
+  function formatMeasurementText(value, field) {
+    const text = textValue(value).trim();
+    if (!text || !shouldRoundMeasurement(field, text)) return '';
+    DIMENSION_UNIT_RE.lastIndex = 0;
+    const next = text.replace(DIMENSION_UNIT_RE, (_match, amount, unit) => `${formatRoundedDimensionNumber(amount)}${unit}`);
+    return next !== text ? next : '';
   }
 
   /* Build a URL that jumps directly to the reviews section of the
@@ -284,8 +321,13 @@
     const field = params.colDef?.field || params.colDef?.colId || '';
     const value = params.value;
     if (value == null || (typeof value === 'string' && !value.trim())) return '<span class="ss-grid-empty">-</span>';
-    const text = textValue(value).trim();
+    const rawText = textValue(value).trim();
+    const rounded = viewStateForParams(params).measurementDisplayMode === 'rounded'
+      ? formatMeasurementText(rawText, field)
+      : '';
+    const text = rounded || rawText;
     const pills = pillsHtml(text, type, field);
+    if (rounded) return `<span title="${escAttr(rawText)}">${pills || esc(text)}</span>`;
     return pills || esc(text);
   }
 
@@ -307,7 +349,11 @@
       return pills || esc(text);
     }
     if (value.missing) return '<span class="ss-grid-missing">Missing</span>';
-    const shown = textValue(value.value || value.corrected || value.raw).trim();
+    const rawShown = textValue(value.value || value.corrected || value.raw).trim();
+    const roundedShown = viewStateForParams(params).measurementDisplayMode === 'rounded'
+      ? formatMeasurementText(rawShown, value.field)
+      : '';
+    const shown = roundedShown || rawShown;
     const raw = textValue(value.raw).trim();
     const corrected = textValue(value.corrected).trim();
     const field = String(value.field || '').replace(/^spec:/, '');
@@ -328,7 +374,8 @@
     const shownHtml = shown
       ? (pillsHtml(shown, 'matrixCell', value.field) || esc(shown))
       : '<span class="ss-grid-empty">-</span>';
-    return `<span class="ss-grid-matrix-cell"><span>${shownHtml}</span>${confidence}</span>`;
+    const title = roundedShown ? ` title="${escAttr(rawShown)}"` : '';
+    return `<span class="ss-grid-matrix-cell"${title}><span>${shownHtml}</span>${confidence}</span>`;
   }
 
   /* Attribute column cell — the leftmost column in Compare view, whose
@@ -740,6 +787,7 @@
     }
 
     const opts = options || {};
+    const displayState = () => opts.viewState || projection?.viewState || {};
     /* Single AG Grid theme class: quartz. Everything under
        .ag-theme-quartz in grid.css is our narrow override layer
        (shell fit, functional cell alignment, custom cell
@@ -755,6 +803,7 @@
     const gridOptions = {
       columnDefs,
       rowData,
+      context: { viewState: displayState() },
       /* AG Grid v33+ ships two theming systems in parallel: the
          new JS-based Theming API and the legacy CSS-class theming
          we've been using (ag-theme-shopscout + vendor/ag-grid.min
@@ -928,6 +977,8 @@
     return {
       grid: gridApi,
       update(nextProjection) {
+        opts.viewState = nextProjection?.viewState || opts.viewState || {};
+        gridApi.setGridOption('context', { viewState: opts.viewState });
         const nextColumnDefs = toAgColumns(nextProjection.columns);
         gridApi.setGridOption('columnDefs', nextColumnDefs);
         const nextRows = (nextProjection.rows || []).map(r => Object.assign({}, r));

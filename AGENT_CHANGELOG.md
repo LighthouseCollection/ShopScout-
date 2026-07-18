@@ -2,6 +2,42 @@
 
 This file is the shared record for Claude and Codex. Append an entry for every meaningful change so both agents can continue from the same factual project history.
 
+## 2026-07-17 17:44 - Codex GitHub issue #41 display rounding toggles
+
+- Agent: Codex
+- Branch: grid-rebuild-codex
+- Commit: This commit
+- Status: Implemented. Products ribbon now exposes actual/rounded display toggles for prices and measurements.
+- What changed:
+  - Added grid state fields for `priceDisplayMode` and `measurementDisplayMode`.
+  - Added two Review & Rules ribbon toggles: `Prices: Rounded/Actual` and `Measurements: Actual/Rounded`.
+  - Routed display mode state into AG Grid render context so the renderer changes actual cell output.
+  - Preserved the existing rounded-price behavior by default while allowing exact captured prices on demand.
+  - Added rounded dimensional measurement display for dimension-like values/fields, rounding to the nearest half step and preserving exact captured values in tooltips.
+  - Limited measurement rounding to dimensional units/fields so voltage, wattage, ratings, model numbers, and other technical identifiers are not rounded accidentally.
+  - Added renderer and wiring regression tests for the display toggles.
+- Files touched:
+  - `comparison.html`
+  - `ribbon/ribbon.css`
+  - `grid-rebuild-codex/state.js`
+  - `grid-rebuild-codex/shopscoutGrid.js`
+  - `grid-rebuild-codex/agGridAdapter.js`
+  - `grid-rebuild-codex/tests/adapter-display.test.js`
+  - `grid-rebuild-codex/tests/controls.test.js`
+  - `grid-rebuild-codex/tests/wiring.test.js`
+  - `AGENT_CHANGELOG.md`
+- Validation run:
+  - `node grid-rebuild-codex\tests\adapter-display.test.js` -> pass
+  - `node grid-rebuild-codex\tests\wiring.test.js` -> pass
+  - `node grid-rebuild-codex\tests\controls.test.js` -> pass
+  - `npm run syntax` -> pass
+  - `npm run lint` -> pass, 0 errors, 0 warnings
+  - `npm test` -> 49/49 test files pass
+- Review status / next reviewer:
+  - Ready for Claude review.
+- Follow-ups or risks:
+  - Visual review should confirm the expanded Review & Rules group still collapses cleanly at narrow widths.
+
 ## 2026-07-17 17:34 - Codex GitHub issue #42 header hide column menu
 
 - Agent: Codex

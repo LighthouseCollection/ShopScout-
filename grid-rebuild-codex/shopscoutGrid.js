@@ -171,13 +171,17 @@
     const viewState = ensureStore().getState();
     const specKeys = selectedSpecKeys(products);
     if (viewState.mode === 'matrix') {
-      return projections.buildComparisonMatrixProjection(products, {
+      const projection = projections.buildComparisonMatrixProjection(products, {
         visibleSpecKeys: specKeys,
         matrixMode: viewState.matrixMode,
         viewState
       });
+      projection.viewState = viewState;
+      return projection;
     }
-    return projections.buildProductsRowsProjection(products, { visibleSpecKeys: specKeys, viewState });
+    const projection = projections.buildProductsRowsProjection(products, { visibleSpecKeys: specKeys, viewState });
+    projection.viewState = viewState;
+    return projection;
   }
 
   function usableColumns(projection) {
@@ -255,6 +259,20 @@
     root.document?.querySelectorAll('[data-ss-grid-command="width-full"]').forEach(btn => {
       btn.classList.toggle('active', widthMode === 'full');
       btn.setAttribute('aria-pressed', widthMode === 'full' ? 'true' : 'false');
+    });
+    root.document?.querySelectorAll('[data-ss-grid-command="toggle-price-display"]').forEach(button => {
+      const rounded = viewState.priceDisplayMode !== 'actual';
+      button.classList.toggle('active', rounded);
+      button.setAttribute('aria-pressed', rounded ? 'true' : 'false');
+      const label = button.querySelector?.('[data-ss-price-display-label]');
+      if (label) label.textContent = `Prices: ${rounded ? 'Rounded' : 'Actual'}`;
+    });
+    root.document?.querySelectorAll('[data-ss-grid-command="toggle-measurement-display"]').forEach(button => {
+      const rounded = viewState.measurementDisplayMode === 'rounded';
+      button.classList.toggle('active', rounded);
+      button.setAttribute('aria-pressed', rounded ? 'true' : 'false');
+      const label = button.querySelector?.('[data-ss-measurement-display-label]');
+      if (label) label.textContent = `Measurements: ${rounded ? 'Rounded' : 'Actual'}`;
     });
   }
 
@@ -380,6 +398,14 @@
         columnOrder: [],
         pinnedColumns: []
       });
+      render();
+    } else if (command === 'toggle-price-display') {
+      const current = ensureStore().getState().priceDisplayMode;
+      ensureStore().dispatch({ priceDisplayMode: current === 'actual' ? 'rounded' : 'actual' });
+      render();
+    } else if (command === 'toggle-measurement-display') {
+      const current = ensureStore().getState().measurementDisplayMode;
+      ensureStore().dispatch({ measurementDisplayMode: current === 'rounded' ? 'actual' : 'rounded' });
       render();
     }
   }
@@ -865,6 +891,7 @@
       }
       state.adapter?.destroy?.();
       state.adapter = adapterFactory.create(host, projection, {
+        viewState: store.getState(),
         onSortChange(sort) {
           ensureStore().dispatch({ sort });
           return refreshGridData();
