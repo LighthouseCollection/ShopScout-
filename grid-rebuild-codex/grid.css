@@ -289,7 +289,6 @@ a.ss-grid-logo-token:focus,
 a.ss-grid-logo-token:active,
 a.ss-grid-logo-token:visited {
   text-decoration: none;
-  border-bottom: 0;
   box-shadow: none;
 }
 

@@ -52,6 +52,8 @@ assert.ok(/\.ag-cell\.ss-grid-cell-attribute[\s\S]{0,220}justify-content:\s*flex
   'Buying Factor column keeps left-alignment inside quartz');
 assert.ok(/\.ss-grid-logo-token[\s\S]{0,320}text-decoration:\s*none/.test(gridCss),
   'source and brand logo tokens suppress link underlines');
+assert.ok(!/a\.ss-grid-logo-token[\s\S]{0,180}border-bottom:\s*0/.test(gridCss),
+  'source link logo tokens keep their full pill border including the bottom edge');
 assert.ok(/\.ss-grid-logo-token[\s\S]{0,360}max-width:\s*100%/.test(gridCss),
   'source and brand text tokens honor their auto-sized column width without a hardcoded pixel cap');
 assert.ok(!gridCss.includes('.ss-grid-logo-img'),

@@ -2,11 +2,35 @@
 
 This file is the shared record for Claude and Codex. Append an entry for every meaningful change so both agents can continue from the same factual project history.
 
+## 2026-07-17 17:26 - Codex GitHub issue #43 source logo border
+
+- Agent: Codex
+- Branch: grid-rebuild-codex
+- Commit: This commit
+- Status: Implemented. Fixed source icon/logo pill border styling.
+- What changed:
+  - Removed the anchor-specific `border-bottom: 0` override from source/brand logo token links so source pills keep their full border, including the bottom edge.
+  - Added regression coverage in the SlickGrid wiring test to prevent source logo links from losing the bottom border again.
+- Files touched:
+  - `grid-rebuild-codex/grid.css`
+  - `grid-rebuild-codex/tests/wiring.test.js`
+  - `AGENT_CHANGELOG.md`
+- Validation run:
+  - `node grid-rebuild-codex\tests\wiring.test.js` -> pass
+  - `npm run syntax` -> pass
+  - `npm run lint` -> pass
+  - `npm test` -> 48/48 test files pass
+  - `npm run build` -> Chrome / Edge / Firefox rebuilt
+- Review status / next reviewer:
+  - Ready for Claude review.
+- Follow-ups or risks:
+  - None identified.
+
 ## 2026-07-17 17:17 - Codex remove old canonicalValue read fallback
 
 - Agent: Codex
 - Branch: grid-rebuild-codex
-- Commit: Pending
+- Commit: b85b11d
 - Status: Implemented. Removed support for old saved ProductSpec records that only exposed `canonicalValue`.
 - What changed:
   - Removed `canonicalValue` read fallbacks from `shared/productSpecAccess.js`, `content/productSchema.js`, `utils.js`, `data/specHeuristic.js`, `comparison/productDetailView.js`, and grid projections.
