@@ -149,7 +149,7 @@ function settingsShellHtml() {
             <h3>Pipeline Roles</h3>
             <p>Choose which provider handles each stage. Auto uses your enabled providers.</p>
           </div>
-          <div id="roleRows"></div>
+          <div id="roleRows" class="dashboard-role-rows"></div>
         </section>
 
         <section class="dashboard-settings-card dashboard-settings-panel" id="captureButtonCard" data-settings-panel="quick-capture" hidden>

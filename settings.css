@@ -74,9 +74,10 @@
   .status.on { background:var(--success-light); color:var(--success); }
   .status.warn { background:#fffbeb; color:#b45309; }
   .role-panel { margin-top:16px; padding-top:14px; border-top:1px solid var(--border); }
-  .role-row { margin-bottom:9px; }
-  .role-row label { display:block; font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.5px; color:var(--muted); margin-bottom:3px; }
-  .role-row select { width:100%; padding:7px 8px; border:1px solid var(--border); border-radius:var(--radius-sm); background:var(--surface); font-size:12px; }
+  .dashboard-role-rows { display:grid; gap:10px; max-width:none; }
+  .role-row { display:grid; grid-template-columns:1fr; gap:6px; align-items:stretch; margin-bottom:12px; }
+  .role-row label { display:block; font-size:10px; font-weight:800; text-transform:uppercase; letter-spacing:.1em; color:var(--muted); margin-bottom:0; }
+  .role-row select { width:100%; min-height:34px; padding:7px 9px; border:1px solid var(--border); border-radius:var(--radius-sm); background:var(--surface); font-size:13px; }
 
   .panel { padding:18px; overflow:auto; }
   .setup-card { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:16px; }

@@ -266,6 +266,12 @@ assert.ok(settingsJs.includes('Open*Facts Enrichment</strong>'), 'settings left 
 assert.ok(settingsJs.includes('data-settings-panel="ai-providers"'), 'embedded settings has a main AI Providers panel');
 assert.ok(settingsJs.includes('data-settings-panel="quick-capture"'), 'embedded settings has a main Quick Capture panel');
 assert.ok(settingsJs.includes('data-settings-panel="open-facts"'), 'embedded settings has a main Open*Facts panel');
+assert.ok(settingsJs.includes('<div id="roleRows" class="dashboard-role-rows"></div>'),
+  'Pipeline Roles panel renders the role selector stack');
+assert.ok(css.includes('.dashboard-settings .dashboard-role-rows {'),
+  'embedded Pipeline Roles use dashboard role-row layout styling');
+assert.ok(css.includes('.dashboard-settings .role-row select,'),
+  'embedded Pipeline Roles selects span the settings content width');
 assert.ok(settingsJs.includes('const def = { enabled: true, hiddenHosts: [] }'),
   'Quick Capture Button defaults active with no hidden hosts');
 assert.ok(css.includes('.dashboard-settings .hidden-hosts {'),

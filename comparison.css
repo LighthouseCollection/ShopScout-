@@ -1820,7 +1820,16 @@
     font-weight: 600;
   }
   .dashboard-settings .role-row {
-    margin-bottom: 9px;
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 6px;
+    align-items: stretch;
+    margin-bottom: 12px;
+  }
+  .dashboard-settings .dashboard-role-rows {
+    display: grid;
+    gap: 10px;
+    max-width: none;
   }
   .dashboard-settings .role-row label,
   .dashboard-settings .field label {
@@ -1829,8 +1838,8 @@
     color: var(--ink-3);
     font-family: var(--font-mono);
     font-size: 10px;
-    font-weight: 700;
-    letter-spacing: 0.08em;
+    font-weight: 800;
+    letter-spacing: 0.1em;
     text-transform: uppercase;
   }
   .dashboard-settings .role-row select,

@@ -2,6 +2,34 @@
 
 This file is the shared record for Claude and Codex. Append an entry for every meaningful change so both agents can continue from the same factual project history.
 
+## 2026-07-17 18:14 - Codex GitHub issue #35 Pipeline settings layout
+
+- Agent: Codex
+- Branch: grid-rebuild-codex
+- Commit: This commit
+- Status: Implemented. Pipeline Roles settings render as a full-width selector stack.
+- What changed:
+  - Added a `dashboard-role-rows` role selector stack wrapper to the shared settings shell.
+  - Updated embedded dashboard Pipeline Roles CSS so each stage label sits above a full-width select, matching the target screenshot.
+  - Matched standalone settings Pipeline Roles styling to the embedded dashboard layout.
+  - Added regression coverage for the role selector stack and full-width selector styling.
+- Files touched:
+  - `settings.js`
+  - `comparison.css`
+  - `settings.css`
+  - `tests/menu-layout.test.js`
+  - `AGENT_CHANGELOG.md`
+- Validation run:
+  - `node tests\menu-layout.test.js` -> pass
+  - `npm run syntax` -> pass
+  - `npm run lint` -> pass, 0 errors, 0 warnings
+  - `npm test` -> 49/49 test files pass
+  - `npm run build` -> Chrome / Edge / Firefox rebuilt
+- Review status / next reviewer:
+  - Ready for Claude review.
+- Follow-ups or risks:
+  - None identified.
+
 ## 2026-07-17 18:08 - Codex GitHub issue #36 Quick Capture settings layout
 
 - Agent: Codex
