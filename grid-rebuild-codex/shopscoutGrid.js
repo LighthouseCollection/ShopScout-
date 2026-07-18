@@ -2,8 +2,8 @@
    ShopScout — Codex grid orchestrator
 
    Registers globalThis.ShopScoutGrid for comparison.js renderAll().
-   The orchestrator owns data loading and app callbacks; SlickGrid is
-   contained inside slickGridAdapter.js.
+   The orchestrator owns data loading and app callbacks; AG Grid is
+   contained inside agGridAdapter.js.
    ============================================================= */
 (function initShopScoutGrid(root) {
   const NS = (root.ShopScoutGrid = root.ShopScoutGrid || {});
@@ -200,6 +200,14 @@
     return groupableColumns(projection);
   }
 
+  function firstFilterableField() {
+    const columns = filterableColumns(state.lastProjection);
+    const preferred = ensureStore().getState().sort?.[0]?.field || currentSortField();
+    const selected = preferred && columns.find(column => (column.field || column.id) === preferred);
+    const column = selected || columns[0];
+    return column ? (column.field || column.id) : '';
+  }
+
   function optionSignature(columns, placeholder) {
     return JSON.stringify({
       placeholder: placeholder || 'None',
@@ -374,8 +382,7 @@
     } else if (command === 'open-filters') {
       openFiltersModal();
     } else if (command === 'clear-filters') {
-      ensureStore().dispatch({ filters: [] });
-      render();
+      clearFilters();
     } else if (command === 'open-columns') {
       openColumnsModal();
     } else if (command === 'reset-columns') {
@@ -408,6 +415,14 @@
       ensureStore().dispatch({ measurementDisplayMode: current === 'rounded' ? 'actual' : 'rounded' });
       render();
     }
+  }
+
+  function clearFilters() {
+    if (state.adapter && typeof state.adapter.clearNativeFilters === 'function') {
+      state.adapter.clearNativeFilters();
+    }
+    ensureStore().dispatch({ filters: [] });
+    return render();
   }
 
   function fieldLabel(field) {
@@ -506,6 +521,15 @@
   }
 
   function openFiltersModal() {
+    const nativeField = firstFilterableField();
+    if (state.adapter && typeof state.adapter.openNativeFilter === 'function') {
+      const opened = state.adapter.openNativeFilter(nativeField);
+      if (opened) return;
+    }
+    openCustomFiltersModal();
+  }
+
+  function openCustomFiltersModal() {
     const ui = root.ShopScoutUI;
     const dom = ui?.dom;
     if (!ui?.modal || !dom) {
@@ -958,7 +982,12 @@
       return render();
     },
     openFiltersModal,
+    openCustomFiltersModalForTests: openCustomFiltersModal,
+    clearFiltersForTests: clearFilters,
     openColumnsModal,
+    _debugAdapterForTests() {
+      return state.adapter;
+    },
     updateRow,
     deleteRow
   });

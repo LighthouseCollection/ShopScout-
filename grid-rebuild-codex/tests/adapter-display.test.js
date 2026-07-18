@@ -7,6 +7,10 @@ const rootDir = path.join(__dirname, '..', '..');
 
 function createAdapterHarness() {
   let gridOptions = null;
+  const nativeFilterCalls = [];
+  const nativeMenuCalls = [];
+  let clearedNativeFilters = 0;
+  let nativeFilterChanged = 0;
   const container = {
     classList: { add() {}, toggle() {} },
     style: {},
@@ -38,7 +42,13 @@ function createAdapterHarness() {
           setGridOption() {},
           getColumnState() { return []; },
           autoSizeAllColumns() {},
-          applyColumnState() {}
+          applyColumnState() {},
+          showColumnFilter(field) { nativeFilterCalls.push(field); },
+          showColumnMenu(field) { nativeMenuCalls.push(field); },
+          setFilterModel(model) {
+            if (model == null) clearedNativeFilters += 1;
+          },
+          onFilterChanged() { nativeFilterChanged += 1; }
         };
       }
     },
@@ -59,15 +69,19 @@ function createAdapterHarness() {
     ctx,
     container,
     create(projection, options) {
-      ctx.ShopScoutAgGridAdapter.create(container, projection, options || {});
-      return gridOptions;
-    }
+      const instance = ctx.ShopScoutAgGridAdapter.create(container, projection, options || {});
+      return { gridOptions, instance };
+    },
+    nativeFilterCalls,
+    nativeMenuCalls,
+    getClearedNativeFilters: () => clearedNativeFilters,
+    getNativeFilterChanged: () => nativeFilterChanged
   };
 }
 
 {
   const harness = createAdapterHarness();
-  const options = harness.create({
+  const { gridOptions: options } = harness.create({
     mode: 'productsRows',
     columns: [{ id: 'newPrice', field: 'newPrice', name: 'Price', type: 'price' }],
     rows: [{ id: 'p1', newPrice: '$19.49' }]
@@ -79,7 +93,7 @@ function createAdapterHarness() {
 
 {
   const harness = createAdapterHarness();
-  const options = harness.create({
+  const { gridOptions: options } = harness.create({
     mode: 'productsRows',
     columns: [{ id: 'newPrice', field: 'newPrice', name: 'Price', type: 'price' }],
     rows: [{ id: 'p1', newPrice: '$19.49' }]
@@ -90,7 +104,7 @@ function createAdapterHarness() {
 
 {
   const harness = createAdapterHarness();
-  const options = harness.create({
+  const { gridOptions: options } = harness.create({
     mode: 'productsRows',
     columns: [{ id: 'spec:dimensions', field: 'spec:dimensions', name: 'Dimensions', type: 'spec' }],
     rows: [{ id: 'p1', 'spec:dimensions': '2.8"L x 2.4"W x 6.8"H' }]
@@ -105,6 +119,31 @@ function createAdapterHarness() {
     'rounded measurement mode rounds inch dimensions to nearest half step');
   assert.ok(html.includes('title="2.8&quot;L x 2.4&quot;W x 6.8&quot;H"'),
     'rounded measurement keeps exact dimensions in the tooltip');
+}
+
+{
+  const harness = createAdapterHarness();
+  const { instance } = harness.create({
+    mode: 'productsRows',
+    columns: [
+      { id: 'select', field: '_selected', name: '', type: 'selection' },
+      { id: 'brand', field: 'brand', name: 'Brand', type: 'text' },
+      { id: 'source', field: 'source', name: 'Source', type: 'source' }
+    ],
+    rows: [{ id: 'p1', brand: 'Qnap', source: 'Amazon' }]
+  });
+  assert.equal(typeof instance.openNativeFilter, 'function',
+    'adapter exposes a native filter launcher for ribbon commands');
+  assert.equal(instance.openNativeFilter('source'), true,
+    'native filter launcher succeeds for a filterable column');
+  assert.deepEqual(harness.nativeFilterCalls, ['source'],
+    'native filter launcher delegates to AG Grid showColumnFilter');
+  assert.equal(instance.clearNativeFilters(), true,
+    'adapter exposes a native filter clearer for ribbon reset commands');
+  assert.equal(harness.getClearedNativeFilters(), 1,
+    'native filter clearer delegates to AG Grid setFilterModel(null)');
+  assert.equal(harness.getNativeFilterChanged(), 1,
+    'native filter clearer notifies AG Grid after clearing the model');
 }
 
 console.log('adapter-display.test.js: all assertions passed');

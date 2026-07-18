@@ -187,6 +187,8 @@ function createHarness() {
   let latestProjection = null;
   let updateCount = 0;
   let modalConfig = null;
+  let nativeFilterCalls = [];
+  let nativeClearFilterCalls = 0;
 
   const ctx = {
     console,
@@ -214,6 +216,14 @@ function createHarness() {
             updateCount += 1;
             latestProjection = nextProjection;
           },
+          openNativeFilter(field) {
+            nativeFilterCalls.push(field || '');
+            return true;
+          },
+          clearNativeFilters() {
+            nativeClearFilterCalls += 1;
+            return true;
+          },
           destroy() {}
         };
       }
@@ -240,7 +250,9 @@ function createHarness() {
     getCreatedProjection: () => createdProjection,
     getLatestProjection: () => latestProjection,
     getUpdateCount: () => updateCount,
-    getModalConfig: () => modalConfig
+    getModalConfig: () => modalConfig,
+    getNativeFilterCalls: () => nativeFilterCalls.slice(),
+    getNativeClearFilterCalls: () => nativeClearFilterCalls
   };
 }
 
@@ -282,6 +294,39 @@ function createHarness() {
     await harness.ctx.ShopScoutGrid.render();
     await harness.ctx.ShopScoutGrid.setMode('matrix');
     harness.ctx.ShopScoutGrid.openFiltersModal();
+    assert.equal(harness.getNativeFilterCalls().length, 1,
+      'filters command opens an AG Grid native filter in Compare view');
+    assert.equal(String(harness.getNativeFilterCalls()[0]).startsWith('product:'), false,
+      'filters command opens native filtering for a metadata field, not a product/model column');
+    assert.equal(harness.getModalConfig(), null,
+      'filters command does not open the custom modal when AG Grid native filters are available');
+  }
+
+  {
+    const harness = createHarness();
+    await harness.ctx.ShopScoutGrid.render();
+    harness.ctx.ShopScoutGrid.openFiltersModal();
+    assert.deepEqual(harness.getNativeFilterCalls(), ['title'],
+      'filters command opens the native AG Grid filter for the first real product field');
+  }
+
+  {
+    const harness = createHarness();
+    await harness.ctx.ShopScoutGrid.render();
+    harness.ctx.ShopScoutGrid.setFilters([{ field: 'brand', op: 'contains', value: 'Qnap' }]);
+    harness.ctx.ShopScoutGrid.clearFiltersForTests();
+    assert.equal(harness.getNativeClearFilterCalls(), 1,
+      'clear filters command clears AG Grid native filter model');
+    assert.deepEqual(harness.ctx.ShopScoutGrid.getState().filters, [],
+      'clear filters command also clears ShopScout fallback filter state');
+  }
+
+  {
+    const harness = createHarness();
+    await harness.ctx.ShopScoutGrid.render();
+    const originalAdapter = harness.ctx.ShopScoutGrid._debugAdapterForTests?.();
+    if (originalAdapter) originalAdapter.openNativeFilter = () => false;
+    harness.ctx.ShopScoutGrid.openCustomFiltersModalForTests();
     const body = harness.getModalConfig().body;
     const fieldSelect = findAll(body, node => node.tagName === 'SELECT')[0];
     const filterValues = (fieldSelect.children || []).map(option => option.value);
@@ -375,7 +420,7 @@ function createHarness() {
   {
     const harness = createHarness();
     await harness.ctx.ShopScoutGrid.render();
-    harness.ctx.ShopScoutGrid.openFiltersModal();
+    harness.ctx.ShopScoutGrid.openCustomFiltersModalForTests();
     const body = harness.getModalConfig().body;
     const modalActions = harness.getModalConfig().actions || [];
     assert.ok(modalActions.some(action => action.label === 'Cancel'),

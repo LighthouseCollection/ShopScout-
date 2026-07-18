@@ -798,10 +798,10 @@
     container.style.width = '100%';
 
     const rowData = (projection.rows || []).map(row => Object.assign({}, row));
-    const columnDefs = toAgColumns(projection.columns);
+    let currentColumnDefs = toAgColumns(projection.columns);
 
     const gridOptions = {
-      columnDefs,
+      columnDefs: currentColumnDefs,
       rowData,
       context: { viewState: displayState() },
       /* AG Grid v33+ ships two theming systems in parallel: the
@@ -897,6 +897,47 @@
 
     const gridApi = ag.createGrid(container, gridOptions);
 
+    function firstNativeFilterColumn(preferredField) {
+      const preferred = preferredField && currentColumnDefs.find(col => {
+        const colId = col?.colId || col?.field;
+        return colId === preferredField && col.filter !== false;
+      });
+      if (preferred) return preferred.colId || preferred.field;
+      const column = currentColumnDefs.find(col => col && col.filter !== false && (col.colId || col.field));
+      return column ? (column.colId || column.field) : '';
+    }
+
+    function openNativeFilter(preferredField) {
+      const field = firstNativeFilterColumn(preferredField);
+      if (!field) return false;
+      try {
+        if (typeof gridApi.showColumnFilter === 'function') {
+          gridApi.showColumnFilter(field);
+          return true;
+        }
+        if (typeof gridApi.showColumnMenu === 'function') {
+          gridApi.showColumnMenu(field);
+          return true;
+        }
+      } catch (err) {
+        console.warn('AG Grid native filter open failed', err);
+      }
+      return false;
+    }
+
+    function clearNativeFilters() {
+      try {
+        if (typeof gridApi.setFilterModel === 'function') {
+          gridApi.setFilterModel(null);
+          if (typeof gridApi.onFilterChanged === 'function') gridApi.onFilterChanged();
+          return true;
+        }
+      } catch (err) {
+        console.warn('AG Grid native filter clear failed', err);
+      }
+      return false;
+    }
+
     /* Click delegation for [data-ss-grid-action], [data-my-rating-star],
        and .ss-grid-select inside the grid. AG Grid's onCellClicked
        would work but this preserves the exact contract
@@ -980,6 +1021,7 @@
         opts.viewState = nextProjection?.viewState || opts.viewState || {};
         gridApi.setGridOption('context', { viewState: opts.viewState });
         const nextColumnDefs = toAgColumns(nextProjection.columns);
+        currentColumnDefs = nextColumnDefs;
         gridApi.setGridOption('columnDefs', nextColumnDefs);
         const nextRows = (nextProjection.rows || []).map(r => Object.assign({}, r));
         gridApi.setGridOption('rowData', nextRows);
@@ -1010,6 +1052,8 @@
         gridApi.applyTransaction({ remove: removed });
         return true;
       },
+      openNativeFilter,
+      clearNativeFilters,
       flashCell(itemId, field) {
         if (!itemId || !field) return;
         const node = gridApi.getRowNode?.(itemId);

@@ -1,5 +1,36 @@
 # ShopScout Agent Change Log
 
+## 2026-07-18 00:05 - Codex GitHub issue #31 native AG Grid filters
+
+- Agent: Codex
+- Branch: grid-rebuild-codex
+- Commit: This commit
+- Status: Implemented. The Products Table View filter command now uses AG Grid's native column filter/menu APIs instead of making the custom ShopScout filter modal the primary control.
+- What changed:
+  - Added `openNativeFilter()` to the AG Grid adapter using `gridApi.showColumnFilter(columnKey)` with `showColumnMenu(columnKey)` fallback.
+  - Added `clearNativeFilters()` to clear AG Grid's native filter model through `gridApi.setFilterModel(null)` and notify with `onFilterChanged()`.
+  - Changed the grid orchestrator so the ribbon `Filters` command opens the native AG Grid filter for the selected/first filterable metadata field.
+  - Kept the previous ShopScout filter modal only as a fallback/test path when native AG Grid APIs are unavailable.
+  - Updated regression tests so filter commands prove native AG Grid routing and native clear behavior.
+- Files touched:
+  - `grid-rebuild-codex/agGridAdapter.js`
+  - `grid-rebuild-codex/shopscoutGrid.js`
+  - `grid-rebuild-codex/tests/adapter-display.test.js`
+  - `grid-rebuild-codex/tests/controls.test.js`
+  - `AGENT_CHANGELOG.md`
+- Validation run:
+  - `node grid-rebuild-codex\tests\controls.test.js` -> pass
+  - `node grid-rebuild-codex\tests\adapter-display.test.js` -> pass
+  - `node grid-rebuild-codex\tests\wiring.test.js` -> pass
+  - `npm run syntax` -> pass
+  - `npm run lint` -> pass
+  - `npm test` -> 49/49 test files pass
+  - `npm run build` -> Chrome / Edge / Firefox rebuilt
+- Review status / next reviewer:
+  - Ready for Claude review.
+- Follow-ups or risks:
+  - AG Grid's built-in text/number filters are now the primary filter surface. More advanced set-filter style multi-select operators would require AG Grid Enterprise or a separate approved design; no custom clone was added in this fix.
+
 ## 2026-07-17 18:45 - Codex GitHub issue #32 misc status cleanup
 
 - Agent: Codex
