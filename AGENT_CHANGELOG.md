@@ -1,5 +1,27 @@
 # ShopScout Agent Change Log
 
+## 2026-07-19 00:12 - Codex stack normalization toggles
+
+- Agent: Codex
+- Branch: grid-rebuild-codex
+- Commit: This commit
+- Status: Implemented. Stacked the Products ribbon `Prices` and `Measurements` normalization toggles vertically and removed the outer pill frame around each toggle while preserving the actual switch track.
+- What changed:
+  - Made the Products ribbon Normalization group stack its toggle controls vertically.
+  - Removed the surrounding rounded border/background/shadow from each toggle button.
+  - Kept the internal switch track and thumb styling so the on/off control remains visible.
+  - Updated ribbon layout tests to lock the vertical stack and no-outer-frame behavior.
+- Files touched:
+  - `ribbon/ribbon.css`
+  - `tests/menu-layout.test.js`
+  - `AGENT_CHANGELOG.md`
+- Validation run:
+  - `node tests\menu-layout.test.js` -> pass
+- Review status / next reviewer:
+  - Ready for Claude review after commit.
+- Follow-ups or risks:
+  - Manual AI pasted-result-to-table update remains unimplemented; only its design was discussed before the crash.
+
 ## 2026-07-18 17:45 - Codex remove product delete confirmations
 
 - Agent: Codex

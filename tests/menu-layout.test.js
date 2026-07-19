@@ -173,8 +173,14 @@ assertIncludes('class="rb-group-content" data-collapsed-label="Organize"', 'Orga
 assertIncludes('class="rb-group-content" data-collapsed-label="Normalization"', 'Normalization popup button label is readable from group content');
 assertIncludes('class="rb-toggle-switch"', 'Products ribbon uses switch-style toggles');
 assertIncludes('class="rb-toggle-track"', 'Products ribbon toggle has a visual track');
-assert.ok(/\.rb-office-ribbon\s+\.rb-toggle-switch[\s\S]{0,220}border:\s*1px solid var\(--rule,\s*#d1d5db\)/.test(ribbonCss),
-  'ribbon toggle switches use the shared border token');
+assert.ok(/\.rb-office-ribbon\s+\.rb-group\[data-group-id="review"\]\s+>\s+\.rb-group-content\s*{[\s\S]{0,180}flex-direction:\s*column;/.test(ribbonCss),
+  'Normalization toggles stack vertically in the ribbon group');
+assert.ok(/\.rb-office-ribbon\s+\.rb-toggle-switch\s*{[\s\S]{0,260}border:\s*0;/.test(ribbonCss),
+  'ribbon toggle switches remove the outer pill frame');
+assert.ok(/\.rb-office-ribbon\s+\.rb-toggle-switch\s*{[\s\S]{0,320}box-shadow:\s*none;/.test(ribbonCss),
+  'ribbon toggle switches remove the outer pill shadow');
+assert.ok(/\.rb-office-ribbon\s+\.rb-toggle-track[\s\S]{0,220}border:\s*1px solid var\(--rule,\s*#d1d5db\)/.test(ribbonCss),
+  'only the switch track keeps the shared border token');
 assert.ok(/\.rb-office-ribbon\s+\.rb-group\s*{[\s\S]{0,180}flex:\s*0 0 auto;/.test(ribbonCss),
   'Office ribbon groups do not flex-shrink into internal overlap');
 assert.ok(/\.rb-office-ribbon\s+\.rb-group\[data-group-id="list"\]\s+>\s+\.rb-group-content\s*{[\s\S]{0,400}display:\s*flex;[\s\S]{0,300}flex:\s*1;[\s\S]{0,200}align-items:\s*center;[\s\S]{0,200}justify-content:\s*center;/.test(ribbonCss),

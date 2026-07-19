@@ -821,26 +821,32 @@
   white-space: nowrap;
 }
 
+.rb-office-ribbon .rb-group[data-group-id="review"] > .rb-group-content {
+  flex-direction: column;
+  align-items: stretch;
+  justify-content: center;
+  gap: 2px;
+}
+
 .rb-office-ribbon .rb-toggle-switch {
   display: inline-flex;
   align-items: center;
   justify-content: space-between;
   gap: 8px;
-  min-width: 132px;
-  height: 34px;
-  padding: 4px 7px 4px 8px;
-  border: 1px solid var(--rule, #d1d5db);
-  border-radius: 18px;
-  background: var(--paper, #fff);
+  min-width: 122px;
+  height: 28px;
+  padding: 1px 4px;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
   color: var(--ink, #0f1419);
   cursor: pointer;
-  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.08);
+  box-shadow: none;
 }
 
 .rb-office-ribbon .rb-toggle-switch:hover,
 .rb-office-ribbon .rb-toggle-switch:focus-visible {
-  background: var(--rbn-hover-bg);
-  border-color: var(--rbn-hover-border);
+  background: transparent;
 }
 
 .rb-office-ribbon .rb-toggle-switch:focus-visible {
