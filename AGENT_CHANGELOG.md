@@ -1,5 +1,26 @@
 # ShopScout Agent Change Log
 
+## 2026-07-19 00:52 - Codex fix normalization toggle CSS override
+
+- Agent: Codex
+- Branch: grid-rebuild-codex
+- Commit: This commit
+- Status: Implemented. Fixed the later Products ribbon Normalization CSS block that was overriding the vertical toggle layout back into a two-column grid.
+- What changed:
+  - Replaced the stale Normalization group grid override with a flex column layout.
+  - Reduced the Normalization group minimum width now that only the Prices and Measurements toggles remain there.
+  - Added regression coverage to prevent the group from being forced back into the old two-column grid.
+- Files touched:
+  - `ribbon/ribbon.css`
+  - `tests/menu-layout.test.js`
+  - `AGENT_CHANGELOG.md`
+- Validation run:
+  - `node tests\menu-layout.test.js` -> pass
+- Review status / next reviewer:
+  - Ready for Claude review after commit.
+- Follow-ups or risks:
+  - User must reload the unpacked extension/dashboard after rebuilding to see the CSS change in Chrome/Edge.
+
 ## 2026-07-19 00:31 - Codex manual AI paste-back table auto-apply
 
 - Agent: Codex

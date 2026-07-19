@@ -175,6 +175,8 @@ assertIncludes('class="rb-toggle-switch"', 'Products ribbon uses switch-style to
 assertIncludes('class="rb-toggle-track"', 'Products ribbon toggle has a visual track');
 assert.ok(/\.rb-office-ribbon\s+\.rb-group\[data-group-id="review"\]\s+>\s+\.rb-group-content\s*{[\s\S]{0,180}flex-direction:\s*column;/.test(ribbonCss),
   'Normalization toggles stack vertically in the ribbon group');
+assert.ok(!/\.rb-office-ribbon\s+\.rb-group\[data-group-id="review"\][^{]*>\s*\.rb-group-content\s*{[\s\S]{0,220}grid-template-columns:\s*1fr\s+1fr;/.test(ribbonCss),
+  'Normalization group must not be forced back into the old two-column grid');
 assert.ok(/\.rb-office-ribbon\s+\.rb-toggle-switch\s*{[\s\S]{0,260}border:\s*0;/.test(ribbonCss),
   'ribbon toggle switches remove the outer pill frame');
 assert.ok(/\.rb-office-ribbon\s+\.rb-toggle-switch\s*{[\s\S]{0,320}box-shadow:\s*none;/.test(ribbonCss),

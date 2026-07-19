@@ -1419,16 +1419,16 @@
    ============================================================== */
 .rb-office-ribbon .rb-group[data-group-id="review"]:not([data-group-size]),
 .rb-office-ribbon .rb-group[data-group-id="review"][data-group-size="large"] {
-  min-width: 330px;                          /* enough for commands + display toggles */
+  min-width: 150px;
 }
 .rb-office-ribbon .rb-group[data-group-id="review"]:not([data-group-size]) > .rb-group-content,
 .rb-office-ribbon .rb-group[data-group-id="review"][data-group-size="large"] > .rb-group-content {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  grid-template-rows: auto auto auto;
-  gap: 4px 8px;
+  display: flex;
+  flex-direction: column;
   align-items: stretch;
-  padding: 4px;
+  justify-content: center;
+  gap: 2px;
+  padding: 4px 6px;
 }
 
 .rb-office-ribbon .rb-group[data-group-id="review"]:not([data-group-size]) .rb-btn-lg,
