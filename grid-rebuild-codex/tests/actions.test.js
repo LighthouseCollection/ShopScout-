@@ -19,7 +19,7 @@ function makeElement(id) {
   };
 }
 
-function createContext(confirmResult) {
+function createContext() {
   const elements = new Map([
     ['productGrid', makeElement('productGrid')],
     ['ssGridHost', makeElement('ssGridHost')],
@@ -29,7 +29,6 @@ function createContext(confirmResult) {
   ]);
   let capturedOptions = null;
   let deleteCalls = 0;
-  const confirmCalls = [];
   const ctx = {
     console,
     globalThis: null,
@@ -87,12 +86,7 @@ function createContext(confirmResult) {
         };
       }
     },
-    ShopScoutUI: {
-      async confirm(message, options) {
-        confirmCalls.push({ message, options });
-        return confirmResult;
-      }
-    },
+    ShopScoutUI: {},
     async deleteProductById(item) {
       deleteCalls += 1;
       ctx.lastDeletedItem = item;
@@ -108,13 +102,12 @@ function createContext(confirmResult) {
   return {
     ctx,
     getOptions: () => capturedOptions,
-    getDeleteCalls: () => deleteCalls,
-    getConfirmCalls: () => confirmCalls
+    getDeleteCalls: () => deleteCalls
   };
 }
 
-async function renderAndDelete(confirmResult) {
-  const harness = createContext(confirmResult);
+async function renderAndDelete() {
+  const harness = createContext();
   await harness.ctx.ShopScoutGrid.render();
   const actionOptions = harness.getOptions();
   assert.equal(typeof actionOptions.onAction, 'function', 'grid exposes row action callback');
@@ -131,19 +124,10 @@ async function renderAndDelete(confirmResult) {
 }
 
 (async () => {
-  const canceled = await renderAndDelete(false);
-  assert.equal(canceled.getDeleteCalls(), 0,
-    'canceling the row delete confirmation prevents product deletion');
-  assert.equal(canceled.getConfirmCalls().length, 1,
-    'row delete asks for confirmation before deleting');
-  assert.match(canceled.getConfirmCalls()[0].message, /Delete product/i);
-
-  const confirmed = await renderAndDelete(true);
-  assert.equal(confirmed.getConfirmCalls().length, 1,
-    'confirmed row delete asks exactly once');
-  assert.equal(confirmed.getDeleteCalls(), 1,
-    'confirmed row delete calls the app delete callback');
-  assert.deepEqual(confirmed.ctx.lastDeletedItem, {
+  const deleted = await renderAndDelete();
+  assert.equal(deleted.getDeleteCalls(), 1,
+    'row delete calls the app delete callback without confirmation');
+  assert.deepEqual(deleted.ctx.lastDeletedItem, {
     id: 'p1',
     url: 'https://example.test/p1'
   });

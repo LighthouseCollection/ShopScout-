@@ -1,5 +1,34 @@
 # ShopScout Agent Change Log
 
+## 2026-07-18 17:45 - Codex remove product delete confirmations
+
+- Agent: Codex
+- Branch: grid-rebuild-codex
+- Commit: This commit
+- Status: Implemented. Removed product delete confirmation prompts from row delete actions and selected-products delete actions.
+- What changed:
+  - Grid row delete now calls the product delete callback directly without requiring `ShopScoutUI.confirm`.
+  - Dashboard selected-products delete now removes selected products directly after the user clicks the delete action.
+  - List deletion and bulk open-link confirmation remain unchanged because they are separate workflows.
+  - Updated delete behavior tests to assert direct product deletion without confirmation.
+- Files touched:
+  - `comparison.js`
+  - `grid-rebuild-codex/shopscoutGrid.js`
+  - `grid-rebuild-codex/tests/actions.test.js`
+  - `tests/delete-safety.test.js`
+  - `AGENT_CHANGELOG.md`
+- Validation run:
+  - `node grid-rebuild-codex\tests\actions.test.js` -> pass
+  - `node tests\delete-safety.test.js` -> pass
+  - `npm run syntax` -> pass
+  - `npm run lint` -> pass
+  - `npm test` -> 49/49 test files pass
+  - `npm run build` -> Chrome / Edge / Firefox rebuilt
+- Review status / next reviewer:
+  - Ready for Claude review after commit.
+- Follow-ups or risks:
+  - Product deletes are now immediate. If undo is desired later, it should be implemented as a recoverable delete/undo workflow instead of a blocking confirmation.
+
 ## 2026-07-18 17:32 - Codex normalization settings relocation + ribbon toggle cleanup
 
 - Agent: Codex

@@ -2880,15 +2880,6 @@ async function deleteSelectedProducts() {
   const products = await getProducts();
   const indexes = getSelectedProductIndexes(products);
   if (!indexes.length) { toast.show('No selected products', 'error'); return; }
-  if (typeof globalThis.ShopScoutUI?.confirm !== 'function') {
-    toast.show('Delete confirmation is unavailable. Products were not deleted.', 'error');
-    return;
-  }
-  const proceed = await globalThis.ShopScoutUI.confirm(
-    `Delete ${indexes.length} selected product(s)? This cannot be undone.`,
-    { title: 'Delete selected products?', okLabel: 'Delete', kind: 'danger' }
-  );
-  if (!proceed) return;
   for (const idx of indexes.slice().sort((a, b) => b - a)) {
     selectedProductIds.delete(productSelectionKey(products[idx], idx));
     products.splice(idx, 1);
