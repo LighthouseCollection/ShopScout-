@@ -132,7 +132,7 @@
     });
     const remaining = await db.product_lists.orderBy('createdAt').first();
     if (remaining) await setActiveListId(remaining.id);
-    else await ensureDefaultList();
+    else await setActiveListId(null);
   }
 
   async function getActiveListId() {

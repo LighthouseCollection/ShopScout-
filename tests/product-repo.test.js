@@ -550,5 +550,14 @@ async function seedProducts(repo, listId) {
     assert.ok(!rules.ignored.includes(ignore.reviewKey), 'delete rule removes ignored review key');
   });
 
+  await withRepo(async (repo, db) => {
+    const listId = await repo.ensureDefaultList();
+    await repo.addProduct(listId, { title: 'Only product', source: 'amazon' });
+    await repo.deleteList(listId);
+    assert.strictEqual(await db.product_lists.count(), 0, 'deleting the final list leaves no product lists');
+    assert.strictEqual(await db.products.count(), 0, 'deleting the final list removes its products');
+    assert.strictEqual(await repo.getActiveListId(), null, 'deleting the final list clears the active list id');
+  });
+
   console.log('product-repo.test.js: Dexie/fake-indexeddb assertions passed');
 })().catch(err => { console.error(err); process.exit(1); });

@@ -30,30 +30,22 @@ window.SS = (() => {
     const repo = globalThis.SSProductRepo;
     let activeListId = await repo.getActiveListId();
     let active = lists.find(list => list.id === activeListId) || lists[0] || null;
-    if (!active) {
-      const id = await repo.ensureDefaultList();
-      const refreshed = await repo.listLists();
-      active = refreshed.find(list => list.id === id) || refreshed[0] || null;
-    }
     if (active && active.id !== activeListId) await repo.setActiveListId(active.id);
+    if (!active && activeListId !== null) await repo.setActiveListId(null);
     return active;
   }
 
   async function getDataFromProductRepo() {
     const repo = globalThis.SSProductRepo;
-    await repo.ensureDefaultList();
     let lists = await repo.listLists();
     const active = await normalizeRepoActiveList(lists);
     lists = await repo.listLists();
-    const snapshot = { lists: {}, activeList: active?.name || 'My Products' };
+    const snapshot = { lists: {}, activeList: active?.name || '' };
     snapshot.aiRuns = await loadAIAnalysisRuns();
     for (const list of lists) {
       snapshot.lists[list.name] = await repo.listProducts(list.id);
     }
-    if (!Object.keys(snapshot.lists).length) {
-      snapshot.lists['My Products'] = [];
-      snapshot.activeList = 'My Products';
-    } else if (!snapshot.lists[snapshot.activeList]) {
+    if (Object.keys(snapshot.lists).length && !snapshot.lists[snapshot.activeList]) {
       snapshot.activeList = Object.keys(snapshot.lists)[0];
     }
     return snapshot;
@@ -64,12 +56,14 @@ window.SS = (() => {
     const legacy = data && typeof data === 'object' ? data : {};
     const incomingLists = legacy.lists && typeof legacy.lists === 'object' ? legacy.lists : {};
     let names = Object.keys(incomingLists);
-    if (!names.length) {
-      names = ['My Products'];
-      incomingLists['My Products'] = [];
-    }
-    await repo.ensureDefaultList();
     let existing = await repo.listLists();
+    if (!names.length) {
+      for (const list of existing) {
+        await repo.deleteList(list.id);
+      }
+      await repo.setActiveListId(null);
+      return;
+    }
     const byName = new Map(existing.map(list => [list.name, list]));
     const desiredNames = new Set(names);
     for (const name of names) {
@@ -215,8 +209,8 @@ window.SS = (() => {
 
   /* Idempotent bootstrap — call once per page on load.
      Imports any prior chrome.storage.local data into IndexedDB on old
-     installs, then ensures the repo has an active list. New writes no longer
-     rebuild IndexedDB from chrome.storage.local. */
+     installs and runs backfills. New writes no longer rebuild IndexedDB
+     from chrome.storage.local. */
   async function bootstrapDataLayer() {
     const migrate = globalThis.SSMigrate;
     if (migrate && migrate.migrateOnce) {
@@ -231,10 +225,6 @@ window.SS = (() => {
     if (migrate && migrate.normalizeV2Once) {
       try { await migrate.normalizeV2Once(); }
       catch (err) { console.warn('SSMigrate.normalizeV2Once failed', err); }
-    }
-    if (productRepoAvailable()) {
-      try { await globalThis.SSProductRepo.ensureDefaultList(); }
-      catch (err) { console.warn('SS.bootstrapDataLayer: productRepo init failed', err); }
     }
   }
 

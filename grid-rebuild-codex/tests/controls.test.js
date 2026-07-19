@@ -368,7 +368,7 @@ function createHarness() {
       measurementDisplayMode: 'nonsense'
     });
     assert.equal(fallback.priceDisplayMode, 'rounded', 'invalid price display mode falls back to rounded');
-    assert.equal(fallback.measurementDisplayMode, 'actual', 'invalid measurement display mode falls back to actual');
+    assert.equal(fallback.measurementDisplayMode, 'rounded', 'invalid measurement display mode falls back to rounded');
   }
 
   {

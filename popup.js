@@ -364,8 +364,10 @@ async function saveListModal() {
 
 async function deleteList() {
   const data = await getData();
-  const keys = Object.keys(data.lists);
-  if (keys.length <= 1) { toast.show('Cannot delete the last list', 'error'); return; }
+  if (!data.activeList || !data.lists?.[data.activeList]) {
+    toast.show('No list selected', 'error');
+    return;
+  }
   const ok = await ShopScoutUI.confirm(
     `Delete "${data.activeList}" and all its products?`,
     { title: 'Delete list', okLabel: 'Delete', kind: 'danger' }
@@ -374,7 +376,7 @@ async function deleteList() {
   const progress = startProgress('Deleting list');
   progress.setTask(1, 3, 'Deleting list...');
   delete data.lists[data.activeList];
-  data.activeList = Object.keys(data.lists)[0];
+  data.activeList = Object.keys(data.lists)[0] || '';
   progress.setTask(2, 3, 'Saving changes...');
   await saveData(data);
   progress.setTask(3, 3, 'Refreshing lists...');

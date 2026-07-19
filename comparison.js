@@ -3407,10 +3407,13 @@ async function saveListModal() {
 
 async function deleteList() {
   const data = await getData();
-  if (Object.keys(data.lists).length <= 1) { toast.show('Cannot delete the last list', 'error'); return; }
+  if (!data.activeList || !data.lists?.[data.activeList]) {
+    toast.show('No list selected', 'error');
+    return;
+  }
   const removedName = data.activeList;
   delete data.lists[data.activeList];
-  data.activeList = Object.keys(data.lists)[0];
+  data.activeList = Object.keys(data.lists)[0] || '';
   await saveData(data);
   await renderListSelector();
   await renderAll();

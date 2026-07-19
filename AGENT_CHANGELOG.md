@@ -1,5 +1,43 @@
 # ShopScout Agent Change Log
 
+## 2026-07-19 07:48 - Codex set rounded display defaults and allow deleting final list
+
+- Agent: Codex
+- Branch: grid-rebuild-codex
+- Commit: This commit
+- Status: Implemented. Set the Products ribbon normalization display defaults to rounded prices and rounded measurements, and removed the final-list deletion block so users can delete the last list and see an empty/no-grid state.
+- What changed:
+  - Changed grid view-state defaults so `priceDisplayMode` and `measurementDisplayMode` both default to `rounded`.
+  - Updated the initial Products ribbon toggle markup so both Prices and Measurements render as `Rounded` and pressed on first load.
+  - Removed the dashboard and popup guards that blocked deleting the last product list.
+  - Changed productRepo deletion so deleting the final list clears `activeListId` instead of recreating `My Products`.
+  - Changed repo-backed `SS.getData()` / `SS.saveData()` paths to preserve an empty list collection instead of auto-creating a default list.
+  - Removed bootstrap's unconditional `ensureDefaultList()` call so a deliberately empty account stays empty across reloads.
+  - Added regression coverage for final-list deletion.
+- Files touched:
+  - `comparison.html`
+  - `comparison.js`
+  - `popup.js`
+  - `utils.js`
+  - `data/productRepo.js`
+  - `grid-rebuild-codex/state.js`
+  - `grid-rebuild-codex/tests/controls.test.js`
+  - `tests/product-repo.test.js`
+  - `AGENT_CHANGELOG.md`
+- Validation run:
+  - `node grid-rebuild-codex\tests\controls.test.js` -> pass
+  - `node tests\menu-layout.test.js` -> pass
+  - `node tests\product-repo.test.js` -> pass
+  - `node tests\write-through.test.js` -> pass
+  - `npm run syntax` -> pass
+  - `npm run lint` -> pass
+  - `npm test` -> 50/50 test files pass
+  - `npm run build` -> Chrome / Edge / Firefox rebuilt
+- Review status / next reviewer:
+  - Ready for Claude review after commit.
+- Follow-ups or risks:
+  - With zero lists, capture/add flows may need a later UX decision: either require the user to create a list first or auto-create a list at capture time.
+
 ## 2026-07-19 02:40 - Codex remove unavailable AG Grid ColumnMenu hook
 
 - Agent: Codex
