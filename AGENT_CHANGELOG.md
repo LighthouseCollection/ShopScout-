@@ -1,5 +1,34 @@
 # ShopScout Agent Change Log
 
+## 2026-07-19 02:40 - Codex remove unavailable AG Grid ColumnMenu hook
+
+- Agent: Codex
+- Branch: grid-rebuild-codex
+- Commit: This commit
+- Status: Implemented. Fixed AG Grid error #200 by removing the `getMainMenuItems` option that requires the unavailable `ColumnMenu` module in the Community UMD build.
+- What changed:
+  - Removed the AG Grid `getMainMenuItems` hook and the custom header-menu hide-column injector.
+  - Kept column visibility through the existing ShopScout Columns workflow instead of the unavailable AG Grid ColumnMenu path.
+  - Made the native column-menu launcher fall back to `showColumnFilter()` when `showColumnMenu()` exists but throws because ColumnMenu is unavailable.
+  - Added regression coverage so the adapter does not re-register `getMainMenuItems`.
+- Files touched:
+  - `grid-rebuild-codex/agGridAdapter.js`
+  - `grid-rebuild-codex/tests/wiring.test.js`
+  - `grid-rebuild-codex/tests/adapter-display.test.js`
+  - `AGENT_CHANGELOG.md`
+- Validation run:
+  - `node grid-rebuild-codex\tests\wiring.test.js` -> pass
+  - `node grid-rebuild-codex\tests\adapter-display.test.js` -> pass
+  - `node grid-rebuild-codex\tests\controls.test.js` -> pass
+  - `npm run syntax` -> pass
+  - `npm run lint` -> pass
+  - `npm test` -> 50/50 test files pass
+  - `npm run build` -> Chrome / Edge / Firefox rebuilt
+- Review status / next reviewer:
+  - Ready for Claude review after commit.
+- Follow-ups or risks:
+  - Header-menu custom "Hide Column" is intentionally removed from the AG Grid menu path; users should use the existing Columns modal for hide/remove actions.
+
 ## 2026-07-19 00:52 - Codex fix normalization toggle CSS override
 
 - Agent: Codex

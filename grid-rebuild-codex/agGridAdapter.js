@@ -706,41 +706,6 @@
     }
   }
 
-  function hideColumnFromHeaderMenu(params, opts, container) {
-    const column = params?.column;
-    const colId = column?.getColId?.() || column?.colId || params?.column?.colDef?.colId || '';
-    if (!colId) return;
-    if (typeof opts?.onColumnVisibilityChange === 'function') {
-      opts.onColumnVisibilityChange({ field: colId, visible: false });
-      return;
-    }
-    try {
-      params?.api?.applyColumnState?.({ state: [{ colId, hide: true }] });
-      setTimeout(() => {
-        autoSizeEverything(params?.api, container);
-        fitShellToContent(container);
-      }, 0);
-    } catch (err) {
-      console.warn('AG Grid hide-column menu action failed', err);
-    }
-  }
-
-  function mainMenuItemsWithHide(params, opts, container) {
-    const defaults = Array.isArray(params?.defaultItems) ? params.defaultItems.slice() : [];
-    const column = params?.column;
-    const colDef = column?.getColDef?.() || column?.colDef || {};
-    const colId = column?.getColId?.() || column?.colId || colDef.colId || '';
-    if (!colId || colDef.lockVisible) return defaults;
-    return [
-      ...defaults,
-      'separator',
-      {
-        name: 'Hide Column',
-        action: () => hideColumnFromHeaderMenu(params, opts, container)
-      }
-    ];
-  }
-
   function distributeLeftover(api, container) {
     if (!api || !container) return;
     const shell = container.closest?.('.ss-grid-shell');
@@ -865,9 +830,6 @@
           fitShellToContent(container);
         }, 0);
       },
-      getMainMenuItems(params) {
-        return mainMenuItemsWithHide(params, opts, container);
-      },
       onSortChanged(evt) {
         if (typeof opts.onSortChange !== 'function') return;
         const sort = [];
@@ -910,11 +872,15 @@
     function openNativeColumnMenu(preferredField) {
       const field = firstNativeFilterColumn(preferredField);
       if (!field) return false;
-      try {
-        if (typeof gridApi.showColumnMenu === 'function') {
+      if (typeof gridApi.showColumnMenu === 'function') {
+        try {
           gridApi.showColumnMenu(field);
           return true;
+        } catch (err) {
+          console.warn('AG Grid native column menu open failed', err);
         }
+      }
+      try {
         if (typeof gridApi.showColumnFilter === 'function') {
           gridApi.showColumnFilter(field);
           return true;

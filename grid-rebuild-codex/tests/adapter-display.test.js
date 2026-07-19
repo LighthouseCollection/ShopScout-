@@ -96,6 +96,24 @@ function createAdapterHarness() {
   };
 }
 
+function createAdapterHarnessWithThrowingColumnMenu() {
+  const harness = createAdapterHarness();
+  harness.ctx.agGrid.createGrid = function createGrid(_container, options) {
+    let nativeFilterCalls = harness.nativeFilterCalls;
+    return {
+      setGridOption() {},
+      getColumnState() { return []; },
+      autoSizeAllColumns() {},
+      applyColumnState() {},
+      showColumnFilter(field) { nativeFilterCalls.push(field); },
+      showColumnMenu() { throw new Error('ColumnMenu module is not registered'); },
+      setFilterModel() {},
+      onFilterChanged() {}
+    };
+  };
+  return harness;
+}
+
 {
   const harness = createAdapterHarness();
   const { gridOptions: options } = harness.create({
@@ -167,6 +185,22 @@ function createAdapterHarness() {
     'native filter clearer delegates to AG Grid setFilterModel(null)');
   assert.equal(harness.getNativeFilterChanged(), 1,
     'native filter clearer notifies AG Grid after clearing the model');
+}
+
+{
+  const harness = createAdapterHarnessWithThrowingColumnMenu();
+  const { instance } = harness.create({
+    mode: 'productsRows',
+    columns: [
+      { id: 'brand', field: 'brand', name: 'Brand', type: 'text' },
+      { id: 'source', field: 'source', name: 'Source', type: 'source' }
+    ],
+    rows: [{ id: 'p1', brand: 'Qnap', source: 'Amazon' }]
+  });
+  assert.equal(instance.openNativeColumnMenu('source'), true,
+    'native column menu launcher falls back to the column filter when ColumnMenu is unavailable');
+  assert.deepEqual(harness.nativeFilterCalls, ['source'],
+    'ColumnMenu failure falls back to AG Grid showColumnFilter');
 }
 
 {
