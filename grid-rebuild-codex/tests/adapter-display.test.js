@@ -11,10 +11,14 @@ function createAdapterHarness() {
   const nativeMenuCalls = [];
   let clearedNativeFilters = 0;
   let nativeFilterChanged = 0;
+  const listeners = {};
   const container = {
     classList: { add() {}, toggle() {} },
     style: {},
-    addEventListener() {},
+    addEventListener(type, handler) { listeners[type] = handler; },
+    removeEventListener(type, handler) {
+      if (listeners[type] === handler) delete listeners[type];
+    },
     closest() { return { clientWidth: 1000, style: {} }; },
     querySelectorAll() { return []; }
   };
@@ -71,6 +75,19 @@ function createAdapterHarness() {
     create(projection, options) {
       const instance = ctx.ShopScoutAgGridAdapter.create(container, projection, options || {});
       return { gridOptions, instance };
+    },
+    dispatchContainerClick(target) {
+      const event = {
+        target,
+        defaultPrevented: false,
+        stopped: false,
+        immediateStopped: false,
+        preventDefault() { this.defaultPrevented = true; },
+        stopPropagation() { this.stopped = true; },
+        stopImmediatePropagation() { this.immediateStopped = true; this.stopped = true; }
+      };
+      if (listeners.click) listeners.click(event);
+      return event;
     },
     nativeFilterCalls,
     nativeMenuCalls,
@@ -150,6 +167,43 @@ function createAdapterHarness() {
     'native filter clearer delegates to AG Grid setFilterModel(null)');
   assert.equal(harness.getNativeFilterChanged(), 1,
     'native filter clearer notifies AG Grid after clearing the model');
+}
+
+{
+  const harness = createAdapterHarness();
+  let openedField = '';
+  harness.create({
+    mode: 'productsRows',
+    columns: [
+      { id: 'brand', field: 'brand', name: 'Brand', type: 'text' },
+      { id: 'source', field: 'source', name: 'Source', type: 'source' }
+    ],
+    rows: [{ id: 'p1', brand: 'Qnap', source: 'Amazon' }]
+  }, {
+    onOpenFiltersModal(field) { openedField = field; }
+  });
+  const headerCell = {
+    getAttribute(name) {
+      return name === 'col-id' ? 'brand' : '';
+    }
+  };
+  const filterButton = {
+    closest(selector) {
+      return String(selector).includes('.ag-header-cell') ? headerCell : null;
+    }
+  };
+  const target = {
+    closest(selector) {
+      return String(selector).includes('.ag-header-cell-filter-button') ? filterButton : null;
+    }
+  };
+  const event = harness.dispatchContainerClick(target);
+  assert.equal(openedField, 'brand',
+    'AG Grid header filter icon delegates to the ShopScout filter modal callback for that column');
+  assert.equal(event.defaultPrevented, true,
+    'ShopScout filter modal routing prevents the native header icon action');
+  assert.equal(event.immediateStopped, true,
+    'ShopScout filter modal routing stops AG Grid from also opening its native popup');
 }
 
 console.log('adapter-display.test.js: all assertions passed');

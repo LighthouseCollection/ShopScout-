@@ -97,7 +97,7 @@
            "Products Table View" tabs. Five logical groups, L->R:
              1. List           (list picker + inline New/Rename/Delete)
              2. Product Actions (Add, Rescan smart-split, Delete split)
-             3. Review & Rules  (Duplicates, Normalize, Verticals, Rules)
+             3. Normalization    (Prices, Measurements)
              4. View            (Products / Compare / Columns)
              5. Organize        (Sort, Filter, Group, Reset dropdown)
            Fit/Full width toggle is removed — full-page is now the
@@ -238,38 +238,26 @@
 
       <div class="rb-divider" aria-hidden="true"></div>
 
-      <!-- 5. Review & Rules — moved to the end of the tab per user
-           preference. Renders as a 2×2 grid with icon-left + text-right
-           for each button (see .rb-office-ribbon .rb-group[data-group-id="review"]
-           in ribbon.css section 19c). -->
-      <div class="rb-group" data-group-id="review" data-collapsed-label="Review" aria-label="Review and rules">
-        <div class="rb-group-content" data-collapsed-label="Review">
-          <button class="rb-btn-lg" type="button" data-command="duplicate-review" title="Review possible duplicate products">
-            <span class="rb-icon-lg"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="8" height="8" rx="1.5"/><rect x="13" y="12" width="8" height="8" rx="1.5"/><path d="M11 8h3a4 4 0 0 1 4 4"/><path d="M13 16h-3a4 4 0 0 1-4-4"/></svg></span>
-            <span class="rb-btn-lg-label">Duplicates</span>
+      <!-- 5. Normalization — quick display toggles only. Full review,
+           rules, and categorization workflows live under Settings. -->
+      <div class="rb-group" data-group-id="review" data-collapsed-label="Normalization" aria-label="Normalization">
+        <div class="rb-group-content" data-collapsed-label="Normalization">
+          <button class="rb-toggle-switch" type="button" data-ss-grid-command="toggle-price-display" title="Toggle price display between rounded whole dollars and exact captured prices" aria-pressed="false">
+            <span class="rb-toggle-copy">
+              <span class="rb-toggle-title">Prices</span>
+              <span class="rb-toggle-state" data-ss-price-display-label>Rounded</span>
+            </span>
+            <span class="rb-toggle-track" aria-hidden="true"><span class="rb-toggle-thumb"></span></span>
           </button>
-          <button class="rb-btn-lg" type="button" data-command="normalization-review" title="Review unmapped or low-confidence normalized attributes">
-            <span class="rb-icon-lg"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16v16H4Z"/><path d="M8 8h8"/><path d="M8 12h5"/><path d="M8 16h8"/><path d="m15 11 2 2 4-4"/></svg></span>
-            <span class="rb-btn-lg-label">Normalize</span>
-          </button>
-          <button class="rb-btn-lg" type="button" data-command="vertical-picker" title="Choose the product vertical used for generated normalization packs">
-            <span class="rb-icon-lg"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h7v7H4Z"/><path d="M13 4h7v7h-7Z"/><path d="M4 13h7v7H4Z"/><path d="M13 13h7v7h-7Z"/></svg></span>
-            <span class="rb-btn-lg-label">Categorize</span>
-          </button>
-          <button class="rb-btn-lg" type="button" data-command="normalization-rules" title="Edit or delete user-approved normalization rules">
-            <span class="rb-icon-lg"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16"/><path d="M4 12h10"/><path d="M4 17h7"/><path d="M17 14l3 3-3 3"/><path d="M14 17h6"/></svg></span>
-            <span class="rb-btn-lg-label">User Rules</span>
-          </button>
-          <button class="rb-btn-lg rb-review-toggle" type="button" data-ss-grid-command="toggle-price-display" title="Toggle price display between rounded whole dollars and exact captured prices">
-            <span class="rb-icon-lg"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7H14a3.5 3.5 0 0 1 0 7H6"/></svg></span>
-            <span class="rb-btn-lg-label" data-ss-price-display-label>Prices: Rounded</span>
-          </button>
-          <button class="rb-btn-lg rb-review-toggle" type="button" data-ss-grid-command="toggle-measurement-display" title="Toggle measurement display between exact captured values and rounded comparison values">
-            <span class="rb-icon-lg"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 17h16"/><path d="M7 17V7"/><path d="M17 17V7"/><path d="M7 7h10"/><path d="M9 10h2"/><path d="M13 10h2"/></svg></span>
-            <span class="rb-btn-lg-label" data-ss-measurement-display-label>Measurements: Actual</span>
+          <button class="rb-toggle-switch" type="button" data-ss-grid-command="toggle-measurement-display" title="Toggle measurement display between exact captured values and rounded comparison values" aria-pressed="true">
+            <span class="rb-toggle-copy">
+              <span class="rb-toggle-title">Measurements</span>
+              <span class="rb-toggle-state" data-ss-measurement-display-label>Actual</span>
+            </span>
+            <span class="rb-toggle-track" aria-hidden="true"><span class="rb-toggle-thumb"></span></span>
           </button>
         </div>
-        <div class="rb-group-label">Review &amp; Rules</div>
+        <div class="rb-group-label">Normalization</div>
       </div>
     </div>
 
@@ -315,17 +303,11 @@
       <div class="rb-divider" aria-hidden="true"></div>
 
       <div class="rb-group" aria-label="AI Results">
-        <div class="rb-group-content">
-          <button class="rb-btn-lg" id="aiAnalysisPageBtn" title="Open the latest AI analysis results">
-            <span class="rb-icon-lg"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="m7 14 4-4 4 4 5-5"/></svg></span>
-            <span class="rb-btn-lg-label">View<br>Results</span>
-          </button>
-          <div class="rb-stack">
-            <button class="rb-btn-sm" data-command="ai-results"><span class="rb-btn-sm-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></span><span class="rb-btn-sm-label">History</span></button>
-            <button class="rb-btn-sm" data-command="ai-results"><span class="rb-btn-sm-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="8" height="8" rx="1"/><rect x="13" y="3" width="8" height="8" rx="1"/><rect x="3" y="13" width="8" height="8" rx="1"/><rect x="13" y="13" width="8" height="8" rx="1"/></svg></span><span class="rb-btn-sm-label">Compare runs</span></button>
-            <button class="rb-btn-sm" data-command="paste-ai-result"><span class="rb-btn-sm-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M5 21h14"/></svg></span><span class="rb-btn-sm-label">Paste result</span></button>
-            <button class="rb-btn-sm" data-command="export"><span class="rb-btn-sm-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M7 10l5 5 5-5"/><path d="M12 15V3"/></svg></span><span class="rb-btn-sm-label">Export</span></button>
-          </div>
+        <div class="rb-group-content rb-results-grid" role="group" aria-label="AI result commands">
+          <button class="rb-btn-sm" id="aiAnalysisPageBtn" title="Open the latest AI analysis results"><span class="rb-btn-sm-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></span><span class="rb-btn-sm-label">History</span></button>
+          <button class="rb-btn-sm" data-command="ai-results" title="Compare saved AI runs"><span class="rb-btn-sm-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="8" height="8" rx="1"/><rect x="13" y="3" width="8" height="8" rx="1"/><rect x="3" y="13" width="8" height="8" rx="1"/><rect x="13" y="13" width="8" height="8" rx="1"/></svg></span><span class="rb-btn-sm-label">Compare runs</span></button>
+          <button class="rb-btn-sm" data-command="paste-ai-result" title="Paste manual AI results back into ShopScout"><span class="rb-btn-sm-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M5 21h14"/></svg></span><span class="rb-btn-sm-label">Paste result</span></button>
+          <button class="rb-btn-sm" data-command="export" title="Export AI analysis or collected product data"><span class="rb-btn-sm-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M7 10l5 5 5-5"/><path d="M12 15V3"/></svg></span><span class="rb-btn-sm-label">Export</span></button>
         </div>
         <div class="rb-group-label">AI Results</div>
       </div>

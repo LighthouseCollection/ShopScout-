@@ -1871,7 +1871,8 @@
     flex: 1;
   }
   .dashboard-settings .actions,
-  .dashboard-settings .guide-actions {
+  .dashboard-settings .guide-actions,
+  .dashboard-settings .settings-action-row {
     display: flex;
     justify-content: flex-end;
     gap: 8px;

@@ -37,6 +37,18 @@ function settingsNavHtml() {
       <strong>Open*Facts Enrichment</strong>
       <span>Use GTIN/UPC/EAN enrichment from open product databases.</span>
     </a>
+    <a href="#normalizeCard" data-settings-nav="normalize">
+      <strong>Normalize</strong>
+      <span>Review unmapped or low-confidence normalized attributes.</span>
+    </a>
+    <a href="#userRulesCard" data-settings-nav="user-rules">
+      <strong>User Rules</strong>
+      <span>Edit or delete user-approved normalization mappings.</span>
+    </a>
+    <a href="#categorizeCard" data-settings-nav="categorize">
+      <strong>Categorize</strong>
+      <span>Choose the product vertical used for normalization packs.</span>
+    </a>
   </nav>`;
 }
 
@@ -192,6 +204,36 @@ function settingsShellHtml() {
             <label class="toggle-row"><input type="checkbox" id="openFactsPet"> <span>Open Pet Food Facts (pet food)</span></label>
             <label class="toggle-row"><input type="checkbox" id="openFactsProducts"> <span>Open Products Facts (everything else)</span></label>
           </fieldset>
+        </section>
+
+        <section class="dashboard-settings-card dashboard-settings-panel" id="normalizeCard" data-settings-panel="normalize" hidden>
+          <div class="dashboard-settings-section-head">
+            <h3>Normalize</h3>
+            <p>Open the deterministic normalization review queue for unmapped values, low-confidence mappings, and values that need user approval.</p>
+          </div>
+          <div class="settings-action-row">
+            <button class="dashboard-primary-action" type="button" data-settings-dashboard-action="normalization-review">Open Normalize Review</button>
+          </div>
+        </section>
+
+        <section class="dashboard-settings-card dashboard-settings-panel" id="userRulesCard" data-settings-panel="user-rules" hidden>
+          <div class="dashboard-settings-section-head">
+            <h3>User Rules</h3>
+            <p>Manage the approved aliases and ignored normalization items saved for this list.</p>
+          </div>
+          <div class="settings-action-row">
+            <button class="dashboard-primary-action" type="button" data-settings-dashboard-action="normalization-rules">Open User Rules</button>
+          </div>
+        </section>
+
+        <section class="dashboard-settings-card dashboard-settings-panel" id="categorizeCard" data-settings-panel="categorize" hidden>
+          <div class="dashboard-settings-section-head">
+            <h3>Categorize</h3>
+            <p>Choose or override the product vertical used for generated normalization packs and category-aware comparisons.</p>
+          </div>
+          <div class="settings-action-row">
+            <button class="dashboard-primary-action" type="button" data-settings-dashboard-action="vertical-picker">Open Categorize</button>
+          </div>
         </section>
       </main>
     </div>
@@ -551,10 +593,31 @@ function bindSettingsNav(root = currentSettingsRoot()) {
   if (rootEl.dataset) rootEl.dataset.settingsNavBound = '1';
   rootEl.addEventListener('click', event => {
     const link = event.target.closest?.('[data-settings-nav]');
-    if (!link || !rootEl.contains(link)) return;
+    if (link && rootEl.contains(link)) {
+      event.preventDefault();
+      showSettingsPanel(link.getAttribute('data-settings-nav'), rootEl);
+      return;
+    }
+
+    const action = event.target.closest?.('[data-settings-dashboard-action]');
+    if (!action || !rootEl.contains(action)) return;
     event.preventDefault();
-    showSettingsPanel(link.getAttribute('data-settings-nav'), rootEl);
+    openDashboardSettingsAction(action.getAttribute('data-settings-dashboard-action'));
   });
+}
+
+function openDashboardSettingsAction(command) {
+  const handlers = {
+    'normalization-review': globalThis.openNormalizationReviewPage,
+    'normalization-rules': globalThis.openNormalizationRulesPage,
+    'vertical-picker': globalThis.openVerticalPickerPage
+  };
+  const handler = handlers[command];
+  if (typeof handler === 'function') {
+    handler();
+    return;
+  }
+  globalThis.ShopScoutUI?.toast?.error?.('This dashboard action is available from the comparison dashboard.');
 }
 
 function showSettingsPanel(panelId, rootEl = currentSettingsRoot()) {

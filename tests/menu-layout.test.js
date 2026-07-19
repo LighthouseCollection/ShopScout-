@@ -92,10 +92,10 @@ assertIncludes('id="addUrlToggle"', 'Products tab exposes Add Product');
 assertIncludes('Delete Item(s)', 'Products tab exposes Delete Item(s) (formerly Delete Product(s))');
 assertIncludes('Rescan Products', 'Products tab exposes Rescan Products');
 assertIncludes('data-command="open-all-links"', 'Products tab exposes Open All product links');
-assertIncludes('data-command="duplicate-review"', 'Products tab exposes possible-duplicate review');
-assertIncludes('data-command="normalization-review"', 'Products tab exposes normalization review');
-assertIncludes('data-command="normalization-rules"', 'Products tab exposes user normalization rules');
-assertIncludes('data-command="vertical-picker"', 'Products tab exposes vertical pack picker');
+assertNotIncludes('data-command="duplicate-review"', 'Products tab no longer exposes non-working possible-duplicate review');
+assertNotIncludes('data-command="normalization-review"', 'Products tab moves normalization review into Settings');
+assertNotIncludes('data-command="normalization-rules"', 'Products tab moves user normalization rules into Settings');
+assertNotIncludes('data-command="vertical-picker"', 'Products tab moves categorization into Settings');
 assert.ok(js.includes('openDuplicateReviewPage'), 'comparison script renders possible duplicate candidates in main content');
 assert.ok(js.includes('openAllProductLinks'), 'comparison script handles Open All product links');
 assert.ok(js.includes('links.length > 5'), 'Open All warns before opening more than five product links');
@@ -125,6 +125,12 @@ assert.ok(js.includes("startProgress('Updating vertical pack')"),
   'vertical picker uses the centered progress overlay while rebuilding normalization');
 assert.ok(/\.vertical-picker-grid[\s\S]{0,220}grid-template-columns:\s*repeat\(auto-fit,\s*minmax\(220px,\s*1fr\)\)/.test(css),
   'vertical picker uses a responsive grid of vertical choices');
+assert.ok(settingsJs.includes('data-settings-nav="normalize"'), 'Settings left menu includes Normalize');
+assert.ok(settingsJs.includes('data-settings-nav="user-rules"'), 'Settings left menu includes User Rules');
+assert.ok(settingsJs.includes('data-settings-nav="categorize"'), 'Settings left menu includes Categorize');
+assert.ok(settingsJs.includes('data-settings-dashboard-action="normalization-review"'), 'Settings Normalize item opens normalization review');
+assert.ok(settingsJs.includes('data-settings-dashboard-action="normalization-rules"'), 'Settings User Rules item opens user rules');
+assert.ok(settingsJs.includes('data-settings-dashboard-action="vertical-picker"'), 'Settings Categorize item opens vertical picker');
 assertNotIncludes('data-command="cancel-run"', 'Cancel Scan is removed from the ribbon (per UX cleanup)');
 assertNotIncludes('data-command="keyboard-shortcuts"', 'Keyboard Shortcuts button is removed from the About group');
 
@@ -141,6 +147,13 @@ assertIncludes('<div class="rb-group-label">AI Results</div>', 'Analyze tab keep
 assertIncludes('<div class="rb-group-label">Settings</div>', 'Analyze tab includes Settings group');
 assertNotIncludes('data-stage-option="finalRecommendation"', 'Analyze ribbon no longer owns stage option checkboxes');
 assertNotIncludes('data-stage-option="secondOpinion"', 'Second opinion stage selection stays inside the AI modal only');
+assertIncludes('class="rb-group-content rb-results-grid"', 'AI Results commands use a dedicated 2x2 ribbon grid');
+assertIncludes('id="aiAnalysisPageBtn"', 'AI Results grid keeps the History button wired to the latest-results action');
+assertIncludes('<span class="rb-btn-sm-label">History</span>', 'AI Results grid includes History command');
+assertIncludes('<span class="rb-btn-sm-label">Compare runs</span>', 'AI Results grid includes Compare runs command');
+assertIncludes('<span class="rb-btn-sm-label">Paste result</span>', 'AI Results grid includes Paste result command');
+assertIncludes('<span class="rb-btn-sm-label">Export</span>', 'AI Results grid includes Export command');
+assertNotIncludes('class="rb-btn-lg" id="aiAnalysisPageBtn"', 'AI Results group no longer uses a large primary View Results button');
 
 /* Products Table View tab was merged into Products in the Phase 5
    cleanup — every grid control now lives in the single Products tab
@@ -149,15 +162,19 @@ assertNotIncludes('class="ribbon-pane" data-pane="view"', 'old View ribbon pane 
 assertNotIncludes('data-list-mirror="view"',              'old View list-mirror is gone');
 assertIncludes('<div class="rb-group-label">View</div>',      'merged Products tab exposes View group');
 assertIncludes('<div class="rb-group-label">Organize</div>',  'merged Products tab exposes Organize group');
-assertIncludes('<div class="rb-group-label">Review &amp; Rules</div>', 'merged Products tab exposes Review & Rules group');
+assertIncludes('<div class="rb-group-label">Normalization</div>', 'merged Products tab exposes Normalization group');
 assertIncludes('data-group-id="list" data-collapsed-label="List"', 'Products List group has a collapsed popup label');
 assertIncludes('class="rb-stack rb-list-actions"', 'Products List actions render in a dedicated vertical action stack');
 assertIncludes('data-group-id="actions" data-collapsed-label="Products"', 'Products Actions group has a collapsed popup label');
 assertIncludes('data-group-id="view" data-collapsed-label="View"', 'Products View group has a collapsed popup label');
 assertIncludes('data-group-id="organize" data-collapsed-label="Organize"', 'Products Organize group has a collapsed popup label');
-assertIncludes('data-group-id="review" data-collapsed-label="Review"', 'Products Review group has a collapsed popup label');
+assertIncludes('data-group-id="review" data-collapsed-label="Normalization"', 'Products Normalization group has a collapsed popup label');
 assertIncludes('class="rb-group-content" data-collapsed-label="Organize"', 'Organize popup button label is readable from group content');
-assertIncludes('class="rb-group-content" data-collapsed-label="Review"', 'Review popup button label is readable from group content');
+assertIncludes('class="rb-group-content" data-collapsed-label="Normalization"', 'Normalization popup button label is readable from group content');
+assertIncludes('class="rb-toggle-switch"', 'Products ribbon uses switch-style toggles');
+assertIncludes('class="rb-toggle-track"', 'Products ribbon toggle has a visual track');
+assert.ok(/\.rb-office-ribbon\s+\.rb-toggle-switch[\s\S]{0,220}border:\s*1px solid var\(--rule,\s*#d1d5db\)/.test(ribbonCss),
+  'ribbon toggle switches use the shared border token');
 assert.ok(/\.rb-office-ribbon\s+\.rb-group\s*{[\s\S]{0,180}flex:\s*0 0 auto;/.test(ribbonCss),
   'Office ribbon groups do not flex-shrink into internal overlap');
 assert.ok(/\.rb-office-ribbon\s+\.rb-group\[data-group-id="list"\]\s+>\s+\.rb-group-content\s*{[\s\S]{0,400}display:\s*flex;[\s\S]{0,300}flex:\s*1;[\s\S]{0,200}align-items:\s*center;[\s\S]{0,200}justify-content:\s*center;/.test(ribbonCss),

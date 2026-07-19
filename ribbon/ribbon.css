@@ -799,6 +799,108 @@
   gap: 1px;
 }
 
+.rb-office-ribbon .rb-results-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(92px, 1fr));
+  grid-auto-rows: 24px;
+  gap: 4px 6px;
+  align-content: center;
+  align-items: stretch;
+}
+
+.rb-office-ribbon .rb-results-grid .rb-btn-sm {
+  width: 100%;
+  min-width: 0;
+  justify-content: flex-start;
+}
+
+.rb-office-ribbon .rb-results-grid .rb-btn-sm-label {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.rb-office-ribbon .rb-toggle-switch {
+  display: inline-flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  min-width: 132px;
+  height: 34px;
+  padding: 4px 7px 4px 8px;
+  border: 1px solid var(--rule, #d1d5db);
+  border-radius: 18px;
+  background: var(--paper, #fff);
+  color: var(--ink, #0f1419);
+  cursor: pointer;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.08);
+}
+
+.rb-office-ribbon .rb-toggle-switch:hover,
+.rb-office-ribbon .rb-toggle-switch:focus-visible {
+  background: var(--rbn-hover-bg);
+  border-color: var(--rbn-hover-border);
+}
+
+.rb-office-ribbon .rb-toggle-switch:focus-visible {
+  outline: 2px solid var(--rbn-focus-outline);
+  outline-offset: 1px;
+}
+
+.rb-office-ribbon .rb-toggle-copy {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  min-width: 0;
+  line-height: 1.1;
+}
+
+.rb-office-ribbon .rb-toggle-title {
+  color: var(--ink, #0f1419);
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.rb-office-ribbon .rb-toggle-state {
+  color: var(--ink-3, #5a6470);
+  font-size: 10px;
+  font-weight: 400;
+}
+
+.rb-office-ribbon .rb-toggle-track {
+  position: relative;
+  width: 34px;
+  height: 18px;
+  flex: 0 0 34px;
+  border: 1px solid var(--rule, #d1d5db);
+  border-radius: 999px;
+  background: #dbe3ea;
+  transition: background 120ms ease, border-color 120ms ease;
+}
+
+.rb-office-ribbon .rb-toggle-thumb {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 12px;
+  height: 12px;
+  border-radius: 999px;
+  background: #fff;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.35);
+  transition: transform 120ms ease;
+}
+
+.rb-office-ribbon .rb-toggle-switch.is-on .rb-toggle-track {
+  border-color: var(--primary, #0b4a5c);
+  background: var(--primary, #0b4a5c);
+}
+
+.rb-office-ribbon .rb-toggle-switch.is-on .rb-toggle-thumb {
+  transform: translateX(16px);
+}
+
 /* Unified LABEL styling — applies to every mini-label anywhere in
    the ribbon (PRODUCT LIST, SORT BY, GROUP BY, ...). Same font,
    size, weight, casing, colour, and — critically — same height,

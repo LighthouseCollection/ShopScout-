@@ -953,12 +953,31 @@
       return false;
     }
 
+    function stopGridHeaderAction(event) {
+      event.preventDefault?.();
+      if (typeof event.stopImmediatePropagation === 'function') event.stopImmediatePropagation();
+      else event.stopPropagation?.();
+    }
+
+    function fieldFromHeaderFilterButton(filterButton) {
+      const headerCell = filterButton?.closest?.('.ag-header-cell');
+      return headerCell?.getAttribute?.('col-id')
+        || headerCell?.getAttribute?.('data-col-id')
+        || '';
+    }
+
     /* Click delegation for [data-ss-grid-action], [data-my-rating-star],
        and .ss-grid-select inside the grid. AG Grid's onCellClicked
        would work but this preserves the exact contract
        shopscoutGrid.js expects. */
     const containerClick = event => {
       const target = event.target;
+      const filterButton = target?.closest?.('.ag-header-cell-filter-button, [data-ref="eFilterButton"], [ref="eFilterButton"]');
+      if (filterButton && typeof opts.onOpenFiltersModal === 'function') {
+        stopGridHeaderAction(event);
+        opts.onOpenFiltersModal(fieldFromHeaderFilterButton(filterButton));
+        return;
+      }
       /* My Rating star click — interactive per-star rating. The
          renderer emits data-my-rating-star="N" (the value to commit
          if this star is clicked; N is 0 when the same star that's

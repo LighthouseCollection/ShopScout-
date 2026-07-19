@@ -271,16 +271,18 @@
     root.document?.querySelectorAll('[data-ss-grid-command="toggle-price-display"]').forEach(button => {
       const rounded = viewState.priceDisplayMode !== 'actual';
       button.classList.toggle('active', rounded);
+      button.classList.toggle('is-on', rounded);
       button.setAttribute('aria-pressed', rounded ? 'true' : 'false');
       const label = button.querySelector?.('[data-ss-price-display-label]');
-      if (label) label.textContent = `Prices: ${rounded ? 'Rounded' : 'Actual'}`;
+      if (label) label.textContent = rounded ? 'Rounded' : 'Actual';
     });
     root.document?.querySelectorAll('[data-ss-grid-command="toggle-measurement-display"]').forEach(button => {
       const rounded = viewState.measurementDisplayMode === 'rounded';
       button.classList.toggle('active', rounded);
+      button.classList.toggle('is-on', rounded);
       button.setAttribute('aria-pressed', rounded ? 'true' : 'false');
       const label = button.querySelector?.('[data-ss-measurement-display-label]');
-      if (label) label.textContent = `Measurements: ${rounded ? 'Rounded' : 'Actual'}`;
+      if (label) label.textContent = rounded ? 'Rounded' : 'Actual';
     });
   }
 
@@ -521,15 +523,6 @@
   }
 
   function openFiltersModal() {
-    const nativeField = firstFilterableField();
-    if (state.adapter && typeof state.adapter.openNativeColumnMenu === 'function') {
-      const opened = state.adapter.openNativeColumnMenu(nativeField);
-      if (opened) return;
-    }
-    if (state.adapter && typeof state.adapter.openNativeFilter === 'function') {
-      const opened = state.adapter.openNativeFilter(nativeField);
-      if (opened) return;
-    }
     openCustomFiltersModal();
   }
 
@@ -929,6 +922,9 @@
         },
         onColumnVisibilityChange(change) {
           return setColumnVisible(change?.field, change?.visible !== false);
+        },
+        onOpenFiltersModal() {
+          openCustomFiltersModal();
         },
         /* Column widths are not persisted — every load auto-sizes columns
            from content via columnWidthBounds. Resize handles still work

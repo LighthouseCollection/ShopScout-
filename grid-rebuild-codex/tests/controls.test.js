@@ -300,20 +300,31 @@ function createHarness() {
     await harness.ctx.ShopScoutGrid.render();
     await harness.ctx.ShopScoutGrid.setMode('matrix');
     harness.ctx.ShopScoutGrid.openFiltersModal();
-    assert.equal(harness.getNativeColumnMenuCalls().length, 1,
-      'filters command opens an AG Grid native column menu in Compare view');
-    assert.equal(String(harness.getNativeColumnMenuCalls()[0]).startsWith('product:'), false,
-      'filters command opens the native column menu for a metadata field, not a product/model column');
-    assert.equal(harness.getModalConfig(), null,
-      'filters command does not open the custom modal when AG Grid native menus are available');
+    assert.equal(harness.getNativeColumnMenuCalls().length, 0,
+      'filters command does not open the AG Grid native column menu in Compare view');
+    assert.equal(harness.getNativeFilterCalls().length, 0,
+      'filters command does not open the AG Grid native filter popup in Compare view');
+    assert.ok(harness.getModalConfig(),
+      'filters command opens the ShopScout filter modal in Compare view');
+    const body = harness.getModalConfig().body;
+    const fieldSelect = findAll(body, node => node.tagName === 'SELECT')[0];
+    const filterValues = (fieldSelect.children || []).map(option => option.value);
+    assert.ok(filterValues.includes('brand'), 'ShopScout filter modal includes Brand in Compare view');
+    assert.ok(filterValues.includes('source'), 'ShopScout filter modal includes Source in Compare view');
+    assert.equal(filterValues.some(value => String(value).startsWith('product:')), false,
+      'ShopScout filter modal lists metadata fields, not product/model columns, in Compare view');
   }
 
   {
     const harness = createHarness();
     await harness.ctx.ShopScoutGrid.render();
     harness.ctx.ShopScoutGrid.openFiltersModal();
-    assert.deepEqual(harness.getNativeColumnMenuCalls(), ['title'],
-      'filters command opens the native AG Grid column menu for the first real product field');
+    assert.deepEqual(harness.getNativeColumnMenuCalls(), [],
+      'filters command does not open the native AG Grid column menu for product rows');
+    assert.deepEqual(harness.getNativeFilterCalls(), [],
+      'filters command does not open the native AG Grid filter popup for product rows');
+    assert.ok(harness.getModalConfig(),
+      'filters command opens the ShopScout filter modal for product rows');
   }
 
   {

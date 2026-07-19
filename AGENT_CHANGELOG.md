@@ -1,5 +1,73 @@
 # ShopScout Agent Change Log
 
+## 2026-07-18 17:32 - Codex normalization settings relocation + ribbon toggle cleanup
+
+- Agent: Codex
+- Branch: grid-rebuild-codex
+- Commit: This commit
+- Status: Implemented. Moved Normalize, User Rules, and Categorize workflows out of the Products ribbon and into the Settings left navigation, removed the non-working Duplicates ribbon command, renamed the Products ribbon group to Normalization, and converted Prices / Measurements into switch-style toggles.
+- What changed:
+  - Removed `Duplicates`, `Normalize`, `Categorize`, and `User Rules` command buttons from the Products ribbon.
+  - Kept duplicate protection as an add-product behavior and left the duplicate review page code untouched for now.
+  - Added Settings left-menu items for `Normalize`, `User Rules`, and `Categorize`, each with a focused panel and dashboard action button that opens the existing main-content workflow.
+  - Renamed the Products ribbon group from `Review & Rules` to `Normalization`.
+  - Restyled `Prices` and `Measurements` as compact on/off switch controls while preserving the existing grid commands.
+  - Used CSS switch styling based on the attached visual reference; no third-party image asset from the zip was embedded.
+- Files touched:
+  - `comparison.html`
+  - `comparison.css`
+  - `settings.js`
+  - `ribbon/ribbon.css`
+  - `grid-rebuild-codex/shopscoutGrid.js`
+  - `tests/menu-layout.test.js`
+  - `AGENT_CHANGELOG.md`
+- Validation run:
+  - `node tests\menu-layout.test.js` -> pass
+  - `node grid-rebuild-codex\tests\controls.test.js` -> pass
+  - `node grid-rebuild-codex\tests\adapter-display.test.js` -> pass
+  - `npm run syntax` -> pass
+  - `npm run lint` -> pass
+  - `npm test` -> 49/49 test files pass
+  - `npm run build` -> Chrome / Edge / Firefox rebuilt
+- Review status / next reviewer:
+  - Ready for Claude review after commit.
+- Follow-ups or risks:
+  - Settings actions depend on the comparison dashboard page being loaded. The standalone settings page still shows the panels, but those dashboard navigation actions are only useful inside the comparison dashboard context.
+
+## 2026-07-18 17:06 - Codex column filter modal routing + AI Results 2x2 ribbon layout
+
+- Agent: Codex
+- Branch: grid-rebuild-codex
+- Commit: This commit
+- Status: Implemented. Corrected the latest column-filter interaction so both the ribbon `Filters` command and AG Grid header filter icon open ShopScout's existing filter modal, and changed the Analyze ribbon `AI Results` group to a compact 2x2 command layout.
+- What changed:
+  - Changed `ShopScoutGrid.openFiltersModal()` back to the ShopScout filter modal instead of the AG Grid native column menu.
+  - Added an AG Grid adapter header-filter-icon click delegate that opens the same ShopScout filter modal and suppresses the native AG Grid popup for that click.
+  - Reworked the Analyze ribbon `AI Results` group into four equal small commands: `History`, `Compare runs`, `Paste result`, and `Export`.
+  - Added scoped ribbon CSS for the 2x2 AI Results command grid without changing other ribbon stacks.
+  - Updated regression coverage for the modal routing and new ribbon layout.
+- Files touched:
+  - `comparison.html`
+  - `ribbon/ribbon.css`
+  - `grid-rebuild-codex/agGridAdapter.js`
+  - `grid-rebuild-codex/shopscoutGrid.js`
+  - `grid-rebuild-codex/tests/adapter-display.test.js`
+  - `grid-rebuild-codex/tests/controls.test.js`
+  - `tests/menu-layout.test.js`
+  - `AGENT_CHANGELOG.md`
+- Validation run:
+  - `node grid-rebuild-codex\tests\controls.test.js` -> pass
+  - `node grid-rebuild-codex\tests\adapter-display.test.js` -> pass
+  - `node tests\menu-layout.test.js` -> pass
+  - `npm run syntax` -> pass
+  - `npm run lint` -> pass
+  - `npm test` -> 49/49 test files pass
+  - `npm run build` -> Chrome / Edge / Firefox rebuilt
+- Review status / next reviewer:
+  - Ready for Claude review after commit.
+- Follow-ups or risks:
+  - This intentionally does not clone AG Grid Enterprise menu behavior. It uses AG Grid's header filter icon as the trigger and ShopScout's existing filter modal as the approved filter surface.
+
 ## 2026-07-18 00:22 - Codex GitHub issue #31 native AG Grid column menu correction
 
 - Agent: Codex
