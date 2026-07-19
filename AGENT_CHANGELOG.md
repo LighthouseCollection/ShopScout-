@@ -1,5 +1,37 @@
 # ShopScout Agent Change Log
 
+## 2026-07-19 00:31 - Codex manual AI paste-back table auto-apply
+
+- Agent: Codex
+- Branch: grid-rebuild-codex
+- Commit: This commit
+- Status: Implemented. Manual AI pasted reports can now include a parseable `ShopScout Table Updates` markdown table, and ShopScout auto-applies safe parsed corrections directly to the active product table.
+- What changed:
+  - Added a shared manual AI result parser for the exact paste-back markdown table format.
+  - Updated the manual AI prompt to require a final `ShopScout Table Updates` section with stable columns for Product #, Field, current value, recommended value, update type, confidence, and reason.
+  - Changed the paste-result save flow to parse pasted reports, auto-apply safe non-identifier corrections to ProductSpec/spec fields, save provenance on each changed product, and refresh the main product table when updates are applied.
+  - Saved manual AI runs now record parsed/applied/skipped table-update counts.
+  - Identifier-like fields such as ASIN, UPC, GTIN, SKU, MPN, and model number are skipped by the auto-apply path to avoid identity corruption from free-form pasted text.
+- Files touched:
+  - `comparison.html`
+  - `comparison.js`
+  - `shared/manualAiResultParser.js`
+  - `tests/manual-ai-result-parser.test.js`
+  - `tests/manual-ai-engine.test.js`
+  - `AGENT_CHANGELOG.md`
+- Validation run:
+  - `node tests\manual-ai-result-parser.test.js` -> pass
+  - `node tests\manual-ai-engine.test.js` -> pass
+  - `node tests\comparison-table-defaults.test.js` -> pass
+  - `npm run syntax` -> pass
+  - `npm run lint` -> pass
+  - `npm test` -> 50/50 test files pass
+  - `npm run build` -> Chrome / Edge / Firefox rebuilt
+- Review status / next reviewer:
+  - Ready for Claude review after commit.
+- Follow-ups or risks:
+  - Parser intentionally consumes only the explicit `ShopScout Table Updates` table. Older pasted reports without that section are still saved as AI results but do not update the table.
+
 ## 2026-07-19 00:12 - Codex stack normalization toggles
 
 - Agent: Codex

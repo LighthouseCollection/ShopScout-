@@ -1221,6 +1221,17 @@ function closeManualResultPasteModal() {
   closeModal('manualResultPasteModal');
 }
 
+function applyManualAiTableUpdates(products, text, runId) {
+  const parser = globalThis.ShopScoutManualAIResultParser;
+  if (!parser || typeof parser.parseTableUpdates !== 'function' || typeof parser.applyTableUpdatesToProducts !== 'function') {
+    return { products, updates: [], applied: [], skipped: [] };
+  }
+  const updates = parser.parseTableUpdates(text);
+  if (!updates.length) return { products, updates, applied: [], skipped: [] };
+  const result = parser.applyTableUpdatesToProducts(products, updates, { sourceRunId: runId });
+  return Object.assign({ updates }, result);
+}
+
 async function saveManualResultPasteResult() {
   const textarea = document.getElementById('manualResultPasteText');
   const text = String(textarea?.value || '').trim();
@@ -1232,6 +1243,8 @@ async function saveManualResultPasteResult() {
   const activeList = data?.activeList || document.getElementById('listSelect')?.value || 'My Products';
   const products = Array.isArray(data?.lists?.[activeList]) ? data.lists[activeList] : [];
   const createdAt = new Date().toISOString();
+  const runId = `manual-${Date.now()}`;
+  const updateResult = applyManualAiTableUpdates(products, text, runId);
   const stage = globalThis.ShopScoutAI?.createEvidenceEvent
     ? ShopScoutAI.createEvidenceEvent({
       providerId: 'manual-ai',
@@ -1258,10 +1271,10 @@ async function saveManualResultPasteResult() {
       error: ''
     };
   const run = {
-    id: `manual-${Date.now()}`,
+    id: runId,
     listName: activeList,
-    productIndexes: products.map((_, index) => index),
-    productUrls: products.map(product => product?.url || ''),
+    productIndexes: updateResult.products.map((_, index) => index),
+    productUrls: updateResult.products.map(product => product?.url || ''),
     analysisOptions: collectAiOptionsFromSectionsForProducts(normalizeAiSections(), products),
     promptOptions: { payloadMode: 'manual-paste' },
     startedAt: createdAt,
@@ -1269,14 +1282,30 @@ async function saveManualResultPasteResult() {
     status: 'completed',
     source: 'manual-ai',
     note: 'manual AI pasted result',
+    manualTableUpdates: {
+      parsed: updateResult.updates.length,
+      applied: updateResult.applied.length,
+      skipped: updateResult.skipped.length,
+      skippedProtected: updateResult.skipped.filter(item => item.reasonSkipped === 'protected-identifier').length
+    },
     stages: [stage]
   };
+  if (updateResult.applied.length || updateResult.skipped.length) {
+    data.lists[activeList] = updateResult.products;
+  }
   const runs = Array.isArray(data.aiRuns) ? data.aiRuns.filter(item => item?.id !== run.id) : [];
   data.aiRuns = [run, ...runs].slice(0, 30);
   await saveData(data);
   closeManualResultPasteModal();
-  toast.show('Manual AI result saved');
-  renderAiResultsPage(run, buildRunProductList(data, run));
+  const appliedText = updateResult.applied.length
+    ? ` and applied ${updateResult.applied.length} table update${updateResult.applied.length === 1 ? '' : 's'}`
+    : '';
+  const skippedText = updateResult.skipped.length
+    ? ` (${updateResult.skipped.length} protected/skipped)`
+    : '';
+  toast.show(`Manual AI result saved${appliedText}${skippedText}`);
+  if (updateResult.applied.length) restoreProductListChrome();
+  else renderAiResultsPage(run, buildRunProductList(data, run));
 }
 
 async function openManualAiModal() {
@@ -2374,6 +2403,21 @@ function buildManualHybridPrompt(products, analysisOptions, promptOptions) {
     `3. Discrepancies & Fact-Checks: Consolidate all missing specs, corrected data, and verification checks here using the required arrow syntax.\n` +
     `4. Claims, Value & Reviews: Analyze major marketing claims, price-to-value ratio, and overall user review consensus.\n` +
     `5. Final Verdict: Clear, use-case driven recommendations (e.g., "Best for X", "Best Value").\n\n` +
+    `# ShopScout paste-back update table\n` +
+    `At the end of the report, include a section titled exactly: ShopScout Table Updates.\n` +
+    `Only include rows where ShopScout should update the main product table.\n` +
+    `Use this exact markdown table:\n` +
+    `| Product # | Product name | Field | Current/listed value | Recommended value | Update type | Confidence | Reason |\n` +
+    `|---|---|---|---|---|---|---|---|\n` +
+    `Rules for ShopScout Table Updates:\n` +
+    `- Product # must match the Product # from the provided facts.\n` +
+    `- Field must match one of the provided captured fields/spec names when possible.\n` +
+    `- If the field is missing from ShopScout, write Field as: New field: [field name].\n` +
+    `- Update type must be one of: Correct value, Normalize value, Mark invalid, Add missing field, Move value to better field.\n` +
+    `- Confidence must be High, Medium, or Low.\n` +
+    `- Include table rows for values that should directly correct or normalize ShopScout's main table.\n` +
+    `- Do not include identifiers such as ASIN, UPC, GTIN, EAN, SKU, MPN, or model number unless the provided data is clearly contradictory.\n` +
+    `- Do not put commentary inside this table; put commentary in the readable report sections above.\n\n` +
     `# Product facts\n${formatManualProductFacts(payload)}\n\n` +
     `Return a concise, readable report with tables first, explanations after, and confidence/verification status for important claims.`;
 }
