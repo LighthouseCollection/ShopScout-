@@ -1,5 +1,35 @@
 # ShopScout Agent Change Log
 
+## 2026-07-20 12:48 - Codex verify third-party normalization coverage and load js-quantities in popup
+
+- Agent: Codex
+- Branch: grid-rebuild-codex
+- Commit: This commit
+- Status: Implemented. Confirmed unit normalization is backed by third-party `js-quantities` and fixed the popup load path so capture-side normalization does not fall back to custom-only behavior.
+- What changed:
+  - Added `vendor/quantities.min.js` to `popup.html` before `normalization/normalizers/measurement.js`.
+  - Added popup layout coverage proving `js-quantities` loads before measurement normalization.
+  - Updated `vendor/README.md` and `vendor/VERSIONS.txt` to reflect current vendored libraries: Dexie, js-quantities, AG Grid Community, Shopify taxonomy, and Google taxonomy.
+- Files touched:
+  - `popup.html`
+  - `tests/popup-layout.test.js`
+  - `vendor/README.md`
+  - `vendor/VERSIONS.txt`
+  - `AGENT_CHANGELOG.md`
+- Validation run:
+  - `node tests\popup-layout.test.js` -> pass
+  - `node tests\normalize-v2.test.js` -> pass
+  - `node tests\normalize-v2-wiring.test.js` -> pass
+  - `npm run syntax` -> pass
+  - `npm run lint` -> pass, 0 warnings
+  - `npm test` -> 52/52 test files pass
+  - `npm run typecheck` -> pass
+  - `npm run build` -> Chrome / Edge / Firefox rebuilt
+- Review status / next reviewer:
+  - Ready for Claude review after validation and commit.
+- Follow-ups or risks:
+  - Unit conversion uses the third-party `js-quantities` engine; ShopScout still keeps a small custom synonym-cleaning wrapper because retailer strings contain messy tokens like `volts_of_direct_current`.
+
 ## 2026-07-20 12:30 - Codex real ESCI generator and identity alias libraries
 
 - Agent: Codex
