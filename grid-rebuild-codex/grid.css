@@ -98,7 +98,6 @@
    every ag-cell so short content sits in the middle regardless of
    row height. */
 .ss-grid-host.ag-theme-quartz .ag-cell {
-  position: relative;
   display: flex;
   align-items: center;
   overflow: hidden;
@@ -106,26 +105,20 @@
 
 /* AG Grid does not expose an out-of-the-box "short vertical gridline"
    toggle. Keep the real AG Grid cells/headers and draw scoped inset
-   separators so vertical rules do not visually collide with row rules. */
+   separators so vertical rules do not visually collide with row rules.
+   Do not change .ag-cell positioning: AG Grid owns cell layout and
+   overriding position can make rendered cells disappear or stack. */
 .ss-grid-host.ag-theme-quartz .ag-cell,
 .ss-grid-host.ag-theme-quartz .ag-header-cell {
-  position: relative;
   border-right-color: transparent;
+  background-image: linear-gradient(var(--rule, #d1d5db), var(--rule, #d1d5db));
+  background-repeat: no-repeat;
+  background-position: right center;
+  background-size: 1px calc(100% - 20px);
 }
-.ss-grid-host.ag-theme-quartz .ag-cell::after,
-.ss-grid-host.ag-theme-quartz .ag-header-cell::after {
-  content: "";
-  position: absolute;
-  right: 0;
-  top: 10px;
-  bottom: 10px;
-  width: 1px;
-  background: var(--rule, #d1d5db);
-  pointer-events: none;
-}
-.ss-grid-host.ag-theme-quartz .ag-cell-last-left-pinned::after,
-.ss-grid-host.ag-theme-quartz .ag-header-cell.ag-header-cell-last-left-pinned::after {
-  display: none;
+.ss-grid-host.ag-theme-quartz .ag-cell-last-left-pinned,
+.ss-grid-host.ag-theme-quartz .ag-header-cell.ag-header-cell-last-left-pinned {
+  background-image: none;
 }
 
 /* Name / Buying Factor left-align (rest of the grid stays centered). */

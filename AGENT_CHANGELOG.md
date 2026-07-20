@@ -1,5 +1,31 @@
 # ShopScout Agent Change Log
 
+## 2026-07-20 15:51 - Codex repair AG Grid cell rendering after inset separator CSS
+
+- Agent: Codex
+- Branch: grid-rebuild-codex
+- Commit: Uncommitted
+- Status: Implemented. Fixed the blank grid rendering regression caused by overriding AG Grid cell positioning while styling inset vertical separators.
+- What changed:
+  - Removed the `position: relative` override from `.ag-cell` so AG Grid keeps control of virtualized cell layout.
+  - Replaced pseudo-element separator lines with a non-positioning `background-image` separator on AG Grid cells and headers.
+  - Preserved pill overflow clipping from the prior review/rating-column fix.
+- Files touched:
+  - `grid-rebuild-codex/grid.css`
+  - `AGENT_CHANGELOG.md`
+- Validation run:
+  - `node grid-rebuild-codex\tests\projections.test.js` -> pass
+  - `node grid-rebuild-codex\tests\adapter-display.test.js` -> pass
+  - `npm run lint` -> pass, 0 warnings
+  - `npm test` -> 52/52 test files pass
+  - `npm run syntax` -> pass
+  - `npm run typecheck` -> pass
+  - `npm run build` -> Chrome / Edge / Firefox rebuilt
+- Review status / next reviewer:
+  - Ready for Claude review after commit.
+- Follow-ups or risks:
+  - The shortened vertical separator remains an AG Grid theme CSS treatment because AG Grid does not expose this exact separator-gap behavior as a native option.
+
 ## 2026-07-20 13:06 - Codex fix rating/review duplicate columns and grid pill overflow
 
 - Agent: Codex
