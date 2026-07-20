@@ -111,6 +111,15 @@ assert.strictEqual(
   JSON.stringify(['Cordless Tire Inflator (×1)', 'Extension Hose Coupling (×1)', 'Quick Connector (×1)', 'USB Charging Cord (×1)']),
   'quantity-bearing included items are normalized and sorted as one pill per item'
 );
+{
+  const compatibleDevices = 'iPhone 17 Pro Max/17 Pro/Air/17/16 Pro Max/16 Pro/16 Plus/16, Mac Mini M4/M4 Pro, MacBook Pro M4/M4 Pro/M4 Max, MacBook Air 2024, Galaxy S26/S25/S24 Ultra, iPad Pro 2024, iPad Air 2024, XPS 17/15/13, Dell, HP Chromebook x360, Surface Book 3/2, Samsung Tablet';
+  const pills = V.splitToPills(compatibleDevices);
+  assert.ok(Array.isArray(pills), 'long comma-separated tech spec values split into pills');
+  assert.ok(pills.includes('MacBook Air 2024'), 'long tech spec split preserves individual device values');
+  assert.ok(pills.includes('HP Chromebook x360'), 'long tech spec split keeps later comma-separated values');
+  assert.ok(pills.includes('Surface Book 3/2'), 'long tech spec split keeps slash-containing values as one pill');
+  assert.ok(pills.length >= 10, 'long tech spec split creates one pill per comma-separated item');
+}
 assert.strictEqual(V.splitToPills('Lithium Ion'), null, 'single value → no split');
 assert.strictEqual(V.splitToPills('15.5 x 10.25 x 2 inches'), null, 'dimensions never split');
 assert.strictEqual(V.splitToPills('Wi-Fi 6/6E'), null, 'slash never splits');

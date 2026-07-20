@@ -1419,15 +1419,15 @@
    ============================================================== */
 .rb-office-ribbon .rb-group[data-group-id="review"]:not([data-group-size]),
 .rb-office-ribbon .rb-group[data-group-id="review"][data-group-size="large"] {
-  min-width: 150px;
+  min-width: 142px;
 }
 .rb-office-ribbon .rb-group[data-group-id="review"]:not([data-group-size]) > .rb-group-content,
 .rb-office-ribbon .rb-group[data-group-id="review"][data-group-size="large"] > .rb-group-content {
   display: flex;
-  flex-direction: column;
-  align-items: stretch;
+  flex-direction: row;
+  align-items: center;
   justify-content: center;
-  gap: 2px;
+  gap: 4px;
   padding: 4px 6px;
 }
 
@@ -1472,29 +1472,34 @@
   max-height: none;
 }
 
-.rb-office-ribbon .rb-group[data-group-id="review"] .rb-price-menu {
+.rb-office-ribbon .rb-group[data-group-id="review"] .rb-price-menu,
+.rb-office-ribbon .rb-group[data-group-id="review"] .rb-measurement-menu {
   align-self: center;
 }
 
-.rb-office-ribbon .rb-group[data-group-id="review"] .rb-price-menu-trigger.rb-btn-lg {
+.rb-office-ribbon .rb-group[data-group-id="review"] .rb-price-menu-trigger.rb-btn-lg,
+.rb-office-ribbon .rb-group[data-group-id="review"] .rb-measurement-menu-trigger.rb-btn-lg {
   flex-direction: column;
   align-items: center;
   justify-content: center;
   gap: 4px;
-  min-width: 60px;
-  min-height: 58px;
+  min-width: 62px;
+  height: 68px;
+  min-height: 68px;
   padding: 4px 8px 3px;
   text-align: center;
 }
 
-.rb-office-ribbon .rb-group[data-group-id="review"] .rb-price-menu-trigger.rb-btn-lg .rb-icon-lg {
-  width: 28px;
-  height: 28px;
-  margin: 0 0 1px;
-  flex: 0 0 28px;
+.rb-office-ribbon .rb-group[data-group-id="review"] .rb-price-menu-trigger.rb-btn-lg .rb-icon-lg,
+.rb-office-ribbon .rb-group[data-group-id="review"] .rb-measurement-menu-trigger.rb-btn-lg .rb-icon-lg {
+  width: var(--rbn-icon-large-96, 32px);
+  height: var(--rbn-icon-large-96, 32px);
+  margin: 0 0 2px;
+  flex: 0 0 var(--rbn-icon-large-96, 32px);
 }
 
-.rb-office-ribbon .rb-group[data-group-id="review"] .rb-price-menu-trigger.rb-btn-lg .rb-btn-lg-label {
+.rb-office-ribbon .rb-group[data-group-id="review"] .rb-price-menu-trigger.rb-btn-lg .rb-btn-lg-label,
+.rb-office-ribbon .rb-group[data-group-id="review"] .rb-measurement-menu-trigger.rb-btn-lg .rb-btn-lg-label {
   text-align: center !important;
 }
 

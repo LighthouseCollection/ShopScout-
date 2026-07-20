@@ -277,13 +277,14 @@
     root.document?.querySelectorAll('[data-ss-price-display-check]').forEach(check => {
       check.textContent = check.dataset.ssPriceDisplayCheck === priceDisplayMode ? '✓' : '';
     });
-    root.document?.querySelectorAll('[data-ss-grid-command="toggle-measurement-display"]').forEach(button => {
-      const rounded = viewState.measurementDisplayMode === 'rounded';
-      button.classList.toggle('active', rounded);
-      button.classList.toggle('is-on', rounded);
-      button.setAttribute('aria-pressed', rounded ? 'true' : 'false');
-      const label = button.querySelector?.('[data-ss-measurement-display-label]');
-      if (label) label.textContent = rounded ? 'Rounded' : 'Actual';
+    const measurementDisplayMode = viewState.measurementDisplayMode === 'actual' ? 'actual' : 'rounded';
+    root.document?.querySelectorAll('[data-ss-measurement-display-option]').forEach(button => {
+      const active = button.dataset.ssMeasurementDisplayOption === measurementDisplayMode;
+      button.classList.toggle('active', active);
+      button.setAttribute('aria-pressed', active ? 'true' : 'false');
+    });
+    root.document?.querySelectorAll('[data-ss-measurement-display-check]').forEach(check => {
+      check.textContent = check.dataset.ssMeasurementDisplayCheck === measurementDisplayMode ? '✓' : '';
     });
   }
 
@@ -338,6 +339,14 @@
         : 'nearest5';
       ensureStore().dispatch({ priceDisplayMode: mode });
       priceButton.closest?.('details')?.removeAttribute('open');
+      render();
+    });
+    root.document?.addEventListener('click', event => {
+      const measurementButton = event.target?.closest?.('[data-ss-measurement-display-option]');
+      if (!measurementButton || measurementButton.disabled) return;
+      const mode = measurementButton.dataset.ssMeasurementDisplayOption === 'actual' ? 'actual' : 'rounded';
+      ensureStore().dispatch({ measurementDisplayMode: mode });
+      measurementButton.closest?.('details')?.removeAttribute('open');
       render();
     });
     root.document?.addEventListener('change', event => {
@@ -862,11 +871,38 @@
     await refreshGridData();
   }
 
+  function safeProductUrl(row) {
+    const raw = row?._shopScout?.url || row?.url || row?.link || '';
+    const sanitize = root.SS && typeof root.SS.sanitizeUrl === 'function'
+      ? root.SS.sanitizeUrl
+      : null;
+    const url = sanitize ? sanitize(raw, '') : String(raw || '').trim();
+    return /^https?:\/\//i.test(url) ? url : '';
+  }
+
+  async function openProductUrl(row) {
+    const url = safeProductUrl(row);
+    if (!url) return false;
+    const tabs = root.chrome?.tabs;
+    if (tabs && typeof tabs.create === 'function') {
+      const created = tabs.create({ url, active: true });
+      if (created && typeof created.then === 'function') await created;
+      return true;
+    }
+    const opener = typeof root.open === 'function'
+      ? root.open
+      : root.window && typeof root.window.open === 'function'
+        ? root.window.open.bind(root.window)
+        : null;
+    if (!opener) return false;
+    return Boolean(opener(url, '_blank', 'noopener'));
+  }
+
   async function handleAction(action, row) {
     if (!row) return;
     const id = row._shopScout?.productId || row.id;
-    if (action === 'open' && typeof root.openProductDetailById === 'function') {
-      await root.openProductDetailById({ id, url: row._shopScout?.url || row.url });
+    if (action === 'open') {
+      await openProductUrl(row);
     }
     if (action === 'rescan' && typeof root.rescanProductById === 'function') {
       await root.rescanProductById({ id, url: row._shopScout?.url || row.url });

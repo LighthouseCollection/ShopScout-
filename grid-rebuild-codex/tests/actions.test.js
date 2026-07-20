@@ -29,6 +29,8 @@ function createContext() {
   ]);
   let capturedOptions = null;
   let deleteCalls = 0;
+  let detailCalls = 0;
+  const openedUrls = [];
   const ctx = {
     console,
     globalThis: null,
@@ -87,6 +89,14 @@ function createContext() {
       }
     },
     ShopScoutUI: {},
+    open(url, target, features) {
+      openedUrls.push({ url, target, features });
+      return { closed: false };
+    },
+    async openProductDetailById(item) {
+      detailCalls += 1;
+      ctx.lastOpenedDetailItem = item;
+    },
     async deleteProductById(item) {
       deleteCalls += 1;
       ctx.lastDeletedItem = item;
@@ -102,7 +112,9 @@ function createContext() {
   return {
     ctx,
     getOptions: () => capturedOptions,
-    getDeleteCalls: () => deleteCalls
+    getDeleteCalls: () => deleteCalls,
+    getDetailCalls: () => detailCalls,
+    getOpenedUrls: () => openedUrls.slice()
   };
 }
 
@@ -124,6 +136,26 @@ async function renderAndDelete() {
 }
 
 (async () => {
+  const opened = createContext();
+  await opened.ctx.ShopScoutGrid.render();
+  const openOptions = opened.getOptions();
+  await openOptions.onAction('open', {
+    id: 'p1',
+    title: 'Pocket camera',
+    url: 'https://example.test/p1',
+    _shopScout: {
+      productId: 'p1',
+      url: 'https://example.test/p1'
+    }
+  });
+  assert.equal(opened.getDetailCalls(), 0,
+    'row open action should not open the internal product detail view');
+  assert.deepEqual(opened.getOpenedUrls(), [{
+    url: 'https://example.test/p1',
+    target: '_blank',
+    features: 'noopener'
+  }], 'row open action opens the product URL in a new tab/window');
+
   const deleted = await renderAndDelete();
   assert.equal(deleted.getDeleteCalls(), 1,
     'row delete calls the app delete callback without confirmation');

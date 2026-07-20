@@ -36,8 +36,8 @@ assert.ok(html.includes('data-ss-grid-command="open-columns"'),
   'View ribbon exposes columns chooser command');
 assert.ok(html.includes('data-ss-price-display-option="nearest5"') && html.includes('Rounded to nearest $5'),
   'Products Normalization group exposes the price display menu with nearest-$5 rounding');
-assert.ok(html.includes('data-ss-grid-command="toggle-measurement-display"'),
-  'Products Review & Rules group exposes the rounded/actual measurement display toggle');
+assert.ok(html.includes('data-ss-measurement-display-option="rounded"') && html.includes('data-ss-measurement-display-option="actual"'),
+  'Products Normalization group exposes the measurement display menu with rounded/actual options');
 assert.ok(!adapterJs.includes('getMainMenuItems'),
   'AG Grid adapter does not register getMainMenuItems because the UMD Community build does not include ColumnMenu');
 assert.ok(adapterJs.includes('openNativeFilter') && read('grid-rebuild-codex/shopscoutGrid.js').includes('openColumnsModal'),

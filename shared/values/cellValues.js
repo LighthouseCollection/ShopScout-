@@ -134,7 +134,7 @@
   function normalizePillPart(raw) {
     const text = String(raw || '').trim();
     if (!text) return '';
-    const quantity = text.match(/^(.*?)\s*(?:x|×|\*)\s*(\d+)\s*$/i);
+    const quantity = text.match(/^(.*?)(?:\s+x\s+|(?:×|\*)\s*)(\d+)\s*$/i);
     if (!quantity) return text;
     const item = quantity[1].trim();
     const count = quantity[2].trim();
@@ -148,11 +148,11 @@
     if (!s) return null;
     if (/\d\s*(x|×)\s*\d/i.test(s)) return null;
     if (/^[-+]?\d+(?:[.,]\d+)?\s*[a-z%°"]+/i.test(s)) return null;
-    if (s.length > 200) return null;
+    if (s.length > 2000) return null;
     const parts = s.split(/\s*(?:,|·|•|;)\s*/).map(normalizePillPart).filter(Boolean);
     if (parts.length < 2) return null;
     for (const p of parts) {
-      if (p.length === 0 || p.length > 52) return null;
+      if (p.length === 0 || p.length > 120) return null;
       if (/\.\S/.test(p)) return null;
     }
     parts.sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base' }));

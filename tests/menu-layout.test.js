@@ -173,18 +173,14 @@ assertIncludes('class="rb-group-content" data-collapsed-label="Organize"', 'Orga
 assertIncludes('class="rb-group-content" data-collapsed-label="Normalization"', 'Normalization popup button label is readable from group content');
 assertIncludes('class="toolbar-menu rb-price-menu"', 'Normalization group uses a ribbon price menu');
 assertIncludes('data-ss-price-display-option="nearest5"', 'price display menu includes nearest-$5 rounding');
-assertIncludes('class="rb-toggle-switch"', 'Products ribbon uses switch-style toggles');
-assertIncludes('class="rb-toggle-track"', 'Products ribbon toggle has a visual track');
-assert.ok(/\.rb-office-ribbon\s+\.rb-group\[data-group-id="review"\]\s+>\s+\.rb-group-content\s*{[\s\S]{0,180}flex-direction:\s*column;/.test(ribbonCss),
-  'Normalization toggles stack vertically in the ribbon group');
+assertIncludes('class="toolbar-menu rb-measurement-menu"', 'Normalization group uses a ribbon measurement menu');
+assertIncludes('data-ss-measurement-display-option="rounded"', 'measurement display menu includes rounded option');
+assert.ok(/\.rb-office-ribbon\s+\.rb-group\[data-group-id="review"\][^{]*>\s+\.rb-group-content\s*{[\s\S]{0,220}flex-direction:\s*row;/.test(ribbonCss),
+  'Normalization controls render as side-by-side icon dropdown commands');
 assert.ok(!/\.rb-office-ribbon\s+\.rb-group\[data-group-id="review"\][^{]*>\s*\.rb-group-content\s*{[\s\S]{0,220}grid-template-columns:\s*1fr\s+1fr;/.test(ribbonCss),
   'Normalization group must not be forced back into the old two-column grid');
-assert.ok(/\.rb-office-ribbon\s+\.rb-toggle-switch\s*{[\s\S]{0,260}border:\s*0;/.test(ribbonCss),
-  'ribbon toggle switches remove the outer pill frame');
-assert.ok(/\.rb-office-ribbon\s+\.rb-toggle-switch\s*{[\s\S]{0,320}box-shadow:\s*none;/.test(ribbonCss),
-  'ribbon toggle switches remove the outer pill shadow');
-assert.ok(/\.rb-office-ribbon\s+\.rb-toggle-track[\s\S]{0,220}border:\s*1px solid var\(--rule,\s*#d1d5db\)/.test(ribbonCss),
-  'only the switch track keeps the shared border token');
+assert.ok(/\.rb-office-ribbon\s+\.rb-group\[data-group-id="review"\]\s+\.rb-price-menu-trigger\.rb-btn-lg[\s\S]{0,220}height:\s*68px;/.test(ribbonCss),
+  'price menu uses the same large ribbon button height as other icon commands');
 assert.ok(/\.rb-office-ribbon\s+\.rb-group\s*{[\s\S]{0,180}flex:\s*0 0 auto;/.test(ribbonCss),
   'Office ribbon groups do not flex-shrink into internal overlap');
 assert.ok(/\.rb-office-ribbon\s+\.rb-group\[data-group-id="list"\]\s+>\s+\.rb-group-content\s*{[\s\S]{0,400}display:\s*flex;[\s\S]{0,300}flex:\s*1;[\s\S]{0,200}align-items:\s*center;[\s\S]{0,200}justify-content:\s*center;/.test(ribbonCss),

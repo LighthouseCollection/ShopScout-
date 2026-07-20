@@ -59,6 +59,9 @@ function makeElementFactory() {
           this.dataset[key] = String(value ?? '');
         }
       },
+      removeAttribute(name) {
+        delete this.attrs[name];
+      },
       appendChild(child) {
         if (!child) return child;
         this.children.push(child);
@@ -83,6 +86,15 @@ function makeElementFactory() {
       dispatch(type) {
         const event = { target: this, currentTarget: this, preventDefault() {}, stopPropagation() {} };
         return Promise.all((this.listeners[type] || []).map(handler => handler(event)));
+      },
+      closest(selector) {
+        if (selector && selector.startsWith('[data-') && selector.endsWith(']')) {
+          const dataName = selector.slice(6, -1);
+          const key = dataName.replace(/-([a-z])/g, (_m, c) => c.toUpperCase());
+          if (Object.prototype.hasOwnProperty.call(this.dataset, key)) return this;
+        }
+        if (selector === 'details' && this.tagName === 'DETAILS') return this;
+        return null;
       }
     };
     el.classList = makeClassList(el);
@@ -258,7 +270,11 @@ function createHarness() {
     getModalConfig: () => modalConfig,
     getNativeColumnMenuCalls: () => nativeColumnMenuCalls.slice(),
     getNativeFilterCalls: () => nativeFilterCalls.slice(),
-    getNativeClearFilterCalls: () => nativeClearFilterCalls
+    getNativeClearFilterCalls: () => nativeClearFilterCalls,
+    clickDocument(target) {
+      const event = { target, preventDefault() {}, stopPropagation() {} };
+      return Promise.all((document.listeners.click || []).map(handler => handler(event)));
+    }
   };
 }
 
@@ -373,6 +389,21 @@ function createHarness() {
     });
     assert.equal(fallback.priceDisplayMode, 'nearest5', 'invalid price display mode falls back to nearest-5 default');
     assert.equal(fallback.measurementDisplayMode, 'rounded', 'invalid measurement display mode falls back to rounded');
+  }
+
+  {
+    const harness = createHarness();
+    await harness.ctx.ShopScoutGrid.render();
+    const priceButton = harness.document.createElement('button');
+    priceButton.setAttribute('data-ss-price-display-option', 'actual');
+    await harness.clickDocument(priceButton);
+    assert.equal(harness.ctx.ShopScoutGrid.getState().priceDisplayMode, 'actual',
+      'price display menu updates grid state');
+    const measurementButton = harness.document.createElement('button');
+    measurementButton.setAttribute('data-ss-measurement-display-option', 'actual');
+    await harness.clickDocument(measurementButton);
+    assert.equal(harness.ctx.ShopScoutGrid.getState().measurementDisplayMode, 'actual',
+      'measurement display menu updates grid state');
   }
 
   {

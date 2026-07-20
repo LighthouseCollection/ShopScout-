@@ -1,10 +1,53 @@
 # ShopScout Agent Change Log
 
-## 2026-07-20 16:14 - Codex convert price display selector to ribbon icon menu
+## 2026-07-20 16:22 - Codex split long tech specs into pills and add measurement ribbon menu
 
 - Agent: Codex
 - Branch: grid-rebuild-codex
 - Commit: This commit
+- Status: Implemented. Fixed long comma-separated technical specification values so each item renders as an individual pill, and converted Measurements to the same Office-style icon dropdown pattern as Prices.
+- What changed:
+  - Changed `splitToPills` to split long comma-separated spec values before applying length guards.
+  - Increased safe individual pill length so long compatibility names remain visible as separate pills.
+  - Fixed quantity parsing so model names such as `Chromebook x360` are not rewritten as quantity counts.
+  - Added renderer coverage proving long compatible-device specs emit multiple pills.
+  - Replaced the Measurements toggle with a ruler-icon dropdown offering Actual and Rounded.
+  - Updated the Prices icon to a consistent large ribbon size and clearer dollar-document icon.
+  - Fixed the grid row action arrow so it opens the product URL in a new tab/window instead of routing to the internal product detail view.
+- Files touched:
+  - `comparison.html`
+  - `ribbon/ribbon.css`
+  - `shared/values/cellValues.js`
+  - `grid-rebuild-codex/shopscoutGrid.js`
+  - `grid-rebuild-codex/tests/adapter-display.test.js`
+  - `grid-rebuild-codex/tests/actions.test.js`
+  - `grid-rebuild-codex/tests/controls.test.js`
+  - `grid-rebuild-codex/tests/wiring.test.js`
+  - `tests/cleanup-helpers.test.js`
+  - `tests/menu-layout.test.js`
+  - `AGENT_CHANGELOG.md`
+- Validation run:
+  - `node tests\cleanup-helpers.test.js` -> pass
+  - `node grid-rebuild-codex\tests\adapter-display.test.js` -> pass
+  - `node grid-rebuild-codex\tests\actions.test.js` -> pass
+  - `node grid-rebuild-codex\tests\controls.test.js` -> pass
+  - `node grid-rebuild-codex\tests\wiring.test.js` -> pass
+  - `node tests\menu-layout.test.js` -> pass
+  - `npm run syntax` -> pass
+  - `npm run lint` -> pass, 0 warnings
+  - `npm test` -> 52/52 test files pass
+  - `npm run typecheck` -> pass
+  - `npm run build` -> Chrome / Edge / Firefox rebuilt
+- Review status / next reviewer:
+  - Ready for Claude review.
+- Follow-ups or risks:
+  - Build output version is based on the previous commit because the build ran before this commit was created; rerun `npm run build` after this commit if the dist version tag must include this hash.
+
+## 2026-07-20 16:14 - Codex convert price display selector to ribbon icon menu
+
+- Agent: Codex
+- Branch: grid-rebuild-codex
+- Commit: 55e8e3c
 - Status: Implemented. Replaced the standard price display select box with an Office-style ribbon icon dropdown menu while preserving the three price modes and nearest-$5 default.
 - What changed:
   - Replaced the Products > Normalization price `<select>` with a large icon menu button.

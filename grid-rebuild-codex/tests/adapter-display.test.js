@@ -68,6 +68,7 @@ function createAdapterHarness() {
   };
   ctx.globalThis = ctx;
   vm.createContext(ctx);
+  vm.runInContext(fs.readFileSync(path.join(rootDir, 'shared/values/cellValues.js'), 'utf8'), ctx, { filename: 'cellValues.js' });
   vm.runInContext(fs.readFileSync(path.join(rootDir, 'grid-rebuild-codex/agGridAdapter.js'), 'utf8'), ctx, { filename: 'agGridAdapter.js' });
   return {
     ctx,
@@ -149,6 +150,26 @@ function createAdapterHarnessWithThrowingColumnMenu() {
   }, { viewState: { priceDisplayMode: 'actual' } });
   const html = options.columnDefs[0].cellRenderer({ value: '$19.49', data: { id: 'p1' }, colDef: options.columnDefs[0], context: options.context });
   assert.ok(html.includes('$19.49'), 'actual price mode preserves cents');
+}
+
+{
+  const compatibleDevices = 'iPhone 17 Pro Max/17 Pro/Air/17/16 Pro Max/16 Pro/16 Plus/16, Mac Mini M4/M4 Pro, MacBook Pro M4/M4 Pro/M4 Max, MacBook Air 2024, Galaxy S26/S25/S24 Ultra, iPad Pro 2024, iPad Air 2024, XPS 17/15/13, Dell, HP Chromebook x360, Surface Book 3/2, Samsung Tablet';
+  const harness = createAdapterHarness();
+  const { gridOptions: options } = harness.create({
+    mode: 'productsRows',
+    columns: [{ id: 'spec:compatible devices', field: 'spec:compatible devices', name: 'Compatible Devices', type: 'spec' }],
+    rows: [{ id: 'p1', 'spec:compatible devices': compatibleDevices }]
+  });
+  const html = options.columnDefs[0].cellRenderer({
+    value: compatibleDevices,
+    data: { id: 'p1' },
+    colDef: options.columnDefs[0],
+    context: options.context
+  });
+  const pillCount = (html.match(/ss-grid-value-pill/g) || []).length;
+  assert.ok(pillCount >= 10, 'long comma-separated tech specs render as individual pills');
+  assert.ok(html.includes('MacBook Air 2024'), 'tech spec renderer includes individual comma-separated values');
+  assert.ok(html.includes('Samsung Tablet'), 'tech spec renderer includes the final comma-separated value');
 }
 
 {

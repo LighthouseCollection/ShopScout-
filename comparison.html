@@ -244,7 +244,7 @@
         <div class="rb-group-content" data-collapsed-label="Normalization">
           <details class="toolbar-menu rb-price-menu">
             <summary class="rb-btn-lg rb-price-menu-trigger split-down" data-menu="true" title="Choose how product prices appear in the grid">
-              <span class="rb-icon-lg"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M7 3h8l4 4v14H7z"/><path d="M15 3v5h5"/><path d="M10 14h6"/><path d="M10 18h6"/><path d="M4 8h4"/><path d="M4 12h4"/><path d="M4 16h4"/><path d="M12 10v8"/><path d="M10.5 11.5c.35-.45.85-.7 1.5-.7 1 0 1.8.55 1.8 1.3 0 .78-.65 1.12-1.8 1.38-1.2.27-1.9.66-1.9 1.47 0 .78.78 1.35 1.9 1.35.78 0 1.4-.27 1.8-.78"/></svg></span>
+              <span class="rb-icon-lg"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3h9l4 4v14H6z"/><path d="M15 3v5h5"/><path d="M12 10v8"/><path d="M15 12a2.25 2.25 0 0 0-2.1-1.2h-1.1c-.95 0-1.8.56-1.8 1.35 0 .83.7 1.16 2 1.45 1.3.29 2 .64 2 1.45 0 .82-.83 1.35-1.9 1.35H12a2.6 2.6 0 0 1-2.2-1.05"/></svg></span>
               <span class="rb-btn-lg-label">Prices</span>
             </summary>
             <div class="toolbar-menu-panel">
@@ -262,13 +262,22 @@
               </button>
             </div>
           </details>
-          <button class="rb-toggle-switch" type="button" data-ss-grid-command="toggle-measurement-display" title="Toggle measurement display between exact captured values and rounded comparison values" aria-pressed="true">
-            <span class="rb-toggle-copy">
-              <span class="rb-toggle-title">Measurements</span>
-              <span class="rb-toggle-state" data-ss-measurement-display-label>Rounded</span>
-            </span>
-            <span class="rb-toggle-track" aria-hidden="true"><span class="rb-toggle-thumb"></span></span>
-          </button>
+          <details class="toolbar-menu rb-measurement-menu">
+            <summary class="rb-btn-lg rb-measurement-menu-trigger split-down" data-menu="true" title="Choose how product measurements appear in the grid">
+              <span class="rb-icon-lg"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 17 17 4l3 3L7 20z"/><path d="m7 14 2 2"/><path d="m10 11 2 2"/><path d="m13 8 2 2"/><path d="m16 5 2 2"/></svg></span>
+              <span class="rb-btn-lg-label">Measurements</span>
+            </summary>
+            <div class="toolbar-menu-panel">
+              <button class="menu-item" type="button" data-ss-measurement-display-option="actual">
+                <span class="rb-menu-check" data-ss-measurement-display-check="actual" aria-hidden="true"></span>
+                <span>Actual</span>
+              </button>
+              <button class="menu-item" type="button" data-ss-measurement-display-option="rounded">
+                <span class="rb-menu-check" data-ss-measurement-display-check="rounded" aria-hidden="true"></span>
+                <span>Rounded</span>
+              </button>
+            </div>
+          </details>
         </div>
         <div class="rb-group-label">Normalization</div>
       </div>
