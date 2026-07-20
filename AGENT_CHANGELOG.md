@@ -1,10 +1,47 @@
 # ShopScout Agent Change Log
 
-## 2026-07-20 16:22 - Codex split long tech specs into pills and add measurement ribbon menu
+## 2026-07-20 16:45 - Codex redesign manual AI options modal with left navigation
 
 - Agent: Codex
 - Branch: grid-rebuild-codex
 - Commit: This commit
+- Status: Implemented. Replaced the cramped manual/AI options accordion with a Settings-style left menu and separate content panes for payload, analysis sections, product fields, and paste-back behavior.
+- What changed:
+  - Replaced the AI options accordion with a left navigation modal layout.
+  - Reduced Data to Send to two choices: Compact and Full.
+  - Made the Compact and Full payload cards equal height.
+  - Added Full payload support to the AI provider payload builder, including fuller captured descriptions, bullets, expanded specs, and raw fallback data.
+  - Kept Product Data Included as a separate pane with core and individual metadata/spec field selection.
+  - Added a Paste AI Result Back pane with Yes/No control for including ShopScout table-update instructions in the manual prompt.
+  - Hid the inline paste-back textbox when the user chooses readable report only.
+  - Kept the Analyze ribbon Paste result command as the actual paste-back entry point.
+- Files touched:
+  - `comparison.html`
+  - `comparison.css`
+  - `comparison.js`
+  - `ai-providers.js`
+  - `tests/ai-analysis-options.test.js`
+  - `tests/ai-payload-options.test.js`
+  - `AGENT_CHANGELOG.md`
+- Validation run:
+  - `node tests\ai-analysis-options.test.js` -> pass
+  - `node tests\ai-payload-options.test.js` -> pass
+  - `node tests\manual-ai-engine.test.js` -> pass
+  - `npm run syntax` -> pass
+  - `npm run lint` -> pass
+  - `npm test` -> pass, 52/52 test files
+  - `npm run typecheck` -> pass
+  - `npm run build` -> pass, chrome/edge/firefox packages rebuilt
+- Review status / next reviewer:
+  - Ready for Claude review.
+- Follow-ups or risks:
+  - None known.
+
+## 2026-07-20 16:22 - Codex split long tech specs into pills and add measurement ribbon menu
+
+- Agent: Codex
+- Branch: grid-rebuild-codex
+- Commit: 3322662
 - Status: Implemented. Fixed long comma-separated technical specification values so each item renders as an individual pill, and converted Measurements to the same Office-style icon dropdown pattern as Prices.
 - What changed:
   - Changed `splitToPills` to split long comma-separated spec values before applying length guards.

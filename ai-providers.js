@@ -390,14 +390,9 @@
       description: 'Send compact captured facts plus product URLs. Do not send raw page text.'
     },
     {
-      id: 'estimate',
-      label: 'Compact + estimate',
-      description: 'Use compact data and show the estimated payload size before sending.'
-    },
-    {
-      id: 'fallback',
-      label: 'Compact + raw fallback',
-      description: 'Use compact facts first, with capped raw excerpts only if facts are insufficient.'
+      id: 'full',
+      label: 'Full',
+      description: 'Send full captured product data, including raw captured descriptions, bullets, and expanded specs.'
     }
   ];
 
@@ -424,7 +419,8 @@
     return {
       payloadMode: validMode,
       includedFields: normalizeIncludedFields(input?.includedFields),
-      reportSections: input?.reportSections && typeof input.reportSections === 'object' ? { ...input.reportSections } : {}
+      reportSections: input?.reportSections && typeof input.reportSections === 'object' ? { ...input.reportSections } : {},
+      pasteBackInstructions: input?.pasteBackInstructions !== false
     };
   }
 
@@ -1058,6 +1054,7 @@
     if (Array.isArray(summary.bullets) && summary.bullets.length && wantsField(wanted, 'core:bullets')) {
       filtered.bullets = summary.bullets;
     }
+    if (summary.description && wantsField(wanted, 'core:description')) filtered.description = summary.description;
     if (summary.rawFallback) filtered.rawFallback = summary.rawFallback;
     Object.keys(filtered).forEach(key => {
       const value = filtered[key];
@@ -1070,12 +1067,13 @@
 
   function productSummary(products, promptOptions = {}) {
     const options = normalizePromptOptions(promptOptions);
+    const full = options.payloadMode === 'full';
     return (products || []).map((product, index) => {
       const summary = {
         id: index + 1,
         payloadMode: options.payloadMode,
-        name: compactText(product.productName || product.structuredProductName || product.title || `Product ${index + 1}`, 220),
-        listingTitle: compactText(product.listingTitle || product.title || '', 260),
+        name: compactText(product.productName || product.structuredProductName || product.title || `Product ${index + 1}`, full ? 500 : 220),
+        listingTitle: compactText(product.listingTitle || product.title || '', full ? 800 : 260),
         brand: compactText(product.brand, 100),
         manufacturer: compactText(product.manufacturer, 100),
         modelName: compactText(product.modelName, 120),
@@ -1088,6 +1086,7 @@
         category: compactText(product.category, 180),
         rating: compactText(product.rating, 40),
         reviewCount: compactText(product.reviewCount, 40),
+        description: full ? compactText(product.description, 2200) : '',
         identifiers: {
           asin: compactText(product.asin, 50),
           sku: compactText(product.sku, 80),
@@ -1095,17 +1094,23 @@
           mpn: compactText(product.mpn, 80),
           gtin: compactText(product.gtin, 80)
         },
-        specs: compactSpecs(product, 18, options.includedFields),
-        normalizedSpecs: normalizeProductSpecs(product, 18),
-        bullets: compactBullets(product, 3)
+        specs: compactSpecs(product, full ? 120 : 18, options.includedFields),
+        normalizedSpecs: normalizeProductSpecs(product, full ? 120 : 18),
+        bullets: compactBullets(product, full ? 30 : 3)
       };
       Object.keys(summary.identifiers).forEach(key => {
         if (!summary.identifiers[key]) delete summary.identifiers[key];
       });
       if (!Object.keys(summary.identifiers).length) delete summary.identifiers;
-      if (options.payloadMode === 'fallback') {
+      if (full) {
         summary.rawFallback = fallbackExcerpt(product, options.includedFields);
       }
+      Object.keys(summary).forEach(key => {
+        const value = summary[key];
+        if (value === '' || value == null) delete summary[key];
+        else if (Array.isArray(value) && !value.length) delete summary[key];
+        else if (typeof value === 'object' && !Array.isArray(value) && !Object.keys(value).length) delete summary[key];
+      });
       return filterProductSummaryFields(summary, options.includedFields);
     });
   }
@@ -1138,11 +1143,8 @@
     text += `Use the locally normalized spec ledger as the starting point for equivalent specification names and simple units; verify it, correct it, and add missing category-important specs only when reliable evidence supports the change.\n`;
     text += `Retrieve/search only for missing, contradictory, or official manufacturer verification data. Prefer official manufacturer pages, manuals, spec sheets, warranty pages, certification pages, and authoritative retailers.\n`;
     text += `Do not scrape or summarize marketplace page boilerplate unless compact facts are insufficient for the selected checks.\n`;
-    if (options.payloadMode === 'fallback') {
-      text += `Capped raw fallback excerpts may be present. Use them only when compact facts and source URLs are insufficient, and ignore boilerplate or duplicated marketing text.\n`;
-    }
-    if (options.payloadMode === 'estimate') {
-      text += `This run used the compact hybrid payload with a local token estimate shown to the user before sending.\n`;
+    if (options.payloadMode === 'full') {
+      text += `This run uses the full captured payload. Extract hard facts from raw descriptions and bullets, but ignore boilerplate, ads, navigation text, review widgets, and repeated marketing copy.\n`;
     }
     return `${text}\n`;
   }

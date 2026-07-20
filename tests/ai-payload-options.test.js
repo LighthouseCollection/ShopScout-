@@ -121,10 +121,11 @@ assert.strictEqual(fieldFilteredSummary.price, compactSummary.price, 'field-filt
 assert.ok(!Object.prototype.hasOwnProperty.call(fieldFilteredSummary, 'source'), 'field-filtered summary omits unselected source');
 assert.strictEqual(fieldFilteredSummary.specs.map(spec => spec.key).join('|'), 'Input Voltage', 'field-filtered summary sends only selected specs');
 
-const fallbackSummary = AI.productSummary([junkProduct], { payloadMode: 'fallback' })[0];
-assert.ok(fallbackSummary.rawFallback, 'fallback summary includes raw fallback container');
-assert.ok(fallbackSummary.rawFallback.descriptionExcerpt.length <= 700, 'fallback description is capped');
-assert.ok(fallbackSummary.rawFallback.bullets.length <= 5, 'fallback bullets are capped');
+const fullSummary = AI.productSummary([junkProduct], { payloadMode: 'full' })[0];
+assert.ok(fullSummary.rawFallback, 'full summary includes raw fallback container');
+assert.ok(fullSummary.rawFallback.descriptionExcerpt.length <= 700, 'full fallback description is capped');
+assert.ok(fullSummary.rawFallback.bullets.length <= 5, 'full fallback bullets are capped');
+assert.ok(fullSummary.description, 'full summary includes fuller captured description when available');
 
 const estimate = AI.estimatePromptPayload([junkProduct], { payloadMode: 'compact' });
 assert.ok(estimate.charCount > 0, 'payload estimate returns character count');
@@ -140,8 +141,9 @@ assert.ok(!prompt.includes(junkProduct.description.slice(0, 80)), 'prompt omits 
 const comparisonHtml = fs.readFileSync(path.join(__dirname, '..', 'comparison.html'), 'utf8');
 const comparisonJs = fs.readFileSync(path.join(__dirname, '..', 'comparison.js'), 'utf8');
 assert.ok(comparisonHtml.includes('data-payload-mode="compact"'), 'UI exposes compact hybrid payload mode');
-assert.ok(comparisonHtml.includes('data-payload-mode="estimate"'), 'UI exposes hybrid with token estimate mode');
-assert.ok(comparisonHtml.includes('data-payload-mode="fallback"'), 'UI exposes compact plus raw fallback mode');
+assert.ok(comparisonHtml.includes('data-payload-mode="full"'), 'UI exposes full raw payload mode');
+assert.ok(!comparisonHtml.includes('data-payload-mode="estimate"'), 'UI removes hybrid with token estimate mode');
+assert.ok(!comparisonHtml.includes('data-payload-mode="fallback"'), 'UI removes compact plus raw fallback mode');
 assert.ok(comparisonJs.includes('collectPromptPayloadOptionsFromModal'), 'comparison script collects prompt payload options');
 assert.ok(comparisonJs.includes('updatePromptPayloadEstimate'), 'comparison script updates prompt payload estimate');
 assert.ok(comparisonJs.includes('promptOptions'), 'comparison script sends prompt options to the AI pipeline');

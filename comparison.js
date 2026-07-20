@@ -69,7 +69,9 @@ const AI_CORE_FIELD_DEFINITIONS = [
   { id: 'core:url', label: 'URL' },
   { id: 'core:identifiers', label: 'Identifiers' },
   { id: 'core:category', label: 'Category' },
-  { id: 'core:seller', label: 'Seller' }
+  { id: 'core:seller', label: 'Seller' },
+  { id: 'core:bullets', label: 'Feature bullets' },
+  { id: 'core:description', label: 'Description' }
 ];
 
 
@@ -2141,10 +2143,12 @@ function buildManualPromptPayloadInstructions(promptOptions) {
     ? ShopScoutAI.normalizePromptOptions(promptOptions)
     : { payloadMode: promptOptions?.payloadMode || 'compact' };
   let text = `Prompt payload mode: ${options.payloadMode}.\n`;
-  text += `Use compact captured facts first. Use product URLs only as source references. Retrieve/search only for missing, contradictory, or official manufacturer verification data.\n`;
-  if (options.payloadMode === 'fallback') {
-    text += `If capped raw fallback excerpts are present, use them only when compact facts are insufficient and ignore boilerplate.\n`;
+  if (options.payloadMode === 'full') {
+    text += `Use the full captured product data that ShopScout includes, including raw captured descriptions, bullets, and expanded specs when selected. Use product URLs only as source references.\n`;
+  } else {
+    text += `Use compact captured facts first. Use product URLs only as source references.\n`;
   }
+  text += `Retrieve/search only for missing, contradictory, or official manufacturer verification data.\n`;
   return text;
 }
 
@@ -2380,6 +2384,23 @@ function buildManualHybridPrompt(products, analysisOptions, promptOptions) {
   const payload = globalThis.ShopScoutAI?.productSummary
     ? ShopScoutAI.productSummary(products, options)
     : (products || []).map((product, index) => ({ id: index + 1, name: product.title || `Product ${index + 1}`, url: product.url || '', price: product.newPrice || '', source: product.source || '' }));
+  const pasteBackInstructions = options.pasteBackInstructions !== false
+    ? `# ShopScout paste-back update table\n` +
+      `At the end of the report, include a section titled exactly: ShopScout Table Updates.\n` +
+      `Only include rows where ShopScout should update the main product table.\n` +
+      `Use this exact markdown table:\n` +
+      `| Product # | Product name | Field | Current/listed value | Recommended value | Update type | Confidence | Reason |\n` +
+      `|---|---|---|---|---|---|---|---|\n` +
+      `Rules for ShopScout Table Updates:\n` +
+      `- Product # must match the Product # from the provided facts.\n` +
+      `- Field must match one of the provided captured fields/spec names when possible.\n` +
+      `- If the field is missing from ShopScout, write Field as: New field: [field name].\n` +
+      `- Update type must be one of: Correct value, Normalize value, Mark invalid, Add missing field, Move value to better field.\n` +
+      `- Confidence must be High, Medium, or Low.\n` +
+      `- Include table rows for values that should directly correct or normalize ShopScout's main table.\n` +
+      `- Do not include identifiers such as ASIN, UPC, GTIN, EAN, SKU, MPN, or model number unless the provided data is clearly contradictory.\n` +
+      `- Do not put commentary inside this table; put commentary in the readable report sections above.\n\n`
+    : '';
   return `You are a product comparison, verification, and buying-decision analyst for ShopScout.\n\n` +
     `# Output rules\n` +
     `Do not return JSON. Do not include a JSON object, JSON schema, code block, or raw structured data block in your answer.\n` +
@@ -2403,21 +2424,7 @@ function buildManualHybridPrompt(products, analysisOptions, promptOptions) {
     `3. Discrepancies & Fact-Checks: Consolidate all missing specs, corrected data, and verification checks here using the required arrow syntax.\n` +
     `4. Claims, Value & Reviews: Analyze major marketing claims, price-to-value ratio, and overall user review consensus.\n` +
     `5. Final Verdict: Clear, use-case driven recommendations (e.g., "Best for X", "Best Value").\n\n` +
-    `# ShopScout paste-back update table\n` +
-    `At the end of the report, include a section titled exactly: ShopScout Table Updates.\n` +
-    `Only include rows where ShopScout should update the main product table.\n` +
-    `Use this exact markdown table:\n` +
-    `| Product # | Product name | Field | Current/listed value | Recommended value | Update type | Confidence | Reason |\n` +
-    `|---|---|---|---|---|---|---|---|\n` +
-    `Rules for ShopScout Table Updates:\n` +
-    `- Product # must match the Product # from the provided facts.\n` +
-    `- Field must match one of the provided captured fields/spec names when possible.\n` +
-    `- If the field is missing from ShopScout, write Field as: New field: [field name].\n` +
-    `- Update type must be one of: Correct value, Normalize value, Mark invalid, Add missing field, Move value to better field.\n` +
-    `- Confidence must be High, Medium, or Low.\n` +
-    `- Include table rows for values that should directly correct or normalize ShopScout's main table.\n` +
-    `- Do not include identifiers such as ASIN, UPC, GTIN, EAN, SKU, MPN, or model number unless the provided data is clearly contradictory.\n` +
-    `- Do not put commentary inside this table; put commentary in the readable report sections above.\n\n` +
+    pasteBackInstructions +
     `# Product facts\n${formatManualProductFacts(payload)}\n\n` +
     `Return a concise, readable report with tables first, explanations after, and confidence/verification status for important claims.`;
 }
@@ -2439,14 +2446,23 @@ function payloadModeInputs() {
   return [...document.querySelectorAll('#aiOptionsModal [data-payload-mode]')];
 }
 
+function pasteBackModeInputs() {
+  return [...document.querySelectorAll('#aiOptionsModal [data-ai-paste-back-option]')];
+}
+
+function wantsPasteBackInstructionsFromModal() {
+  const selected = pasteBackModeInputs().find(input => input.checked);
+  return (selected?.value || selected?.dataset.aiPasteBackOption || 'yes') !== 'no';
+}
+
 function collectPromptPayloadOptionsFromModal() {
   const selected = payloadModeInputs().find(input => input.checked);
   const payloadMode = selected?.value || selected?.dataset.payloadMode || 'compact';
   const includedFields = collectAiFieldSelectionFromModal();
   const reportSections = collectAiSectionsFromModal();
   return globalThis.ShopScoutAI?.normalizePromptOptions
-    ? ShopScoutAI.normalizePromptOptions({ payloadMode, includedFields, reportSections })
-    : { payloadMode, includedFields, reportSections };
+    ? ShopScoutAI.normalizePromptOptions({ payloadMode, includedFields, reportSections, pasteBackInstructions: wantsPasteBackInstructionsFromModal() })
+    : { payloadMode, includedFields, reportSections, pasteBackInstructions: wantsPasteBackInstructionsFromModal() };
 }
 
 function collectAiOptionsFromModal(products = []) {
@@ -2510,8 +2526,8 @@ async function updatePromptPayloadEstimate() {
   }
   if (globalThis.ShopScoutAI?.estimatePromptPayload) {
     const estimate = ShopScoutAI.estimatePromptPayload(products, options);
-    const modeText = options.payloadMode === 'fallback'
-      ? 'Compact facts plus capped fallback excerpts'
+    const modeText = options.payloadMode === 'full'
+      ? 'Full captured product data'
       : 'Compact facts plus product URLs';
     const fieldCount = collectAiFieldSelectionFromModal().length;
     el.textContent = `${modeText}: ${fieldCount} selected field${fieldCount === 1 ? '' : 's'}, about ${estimate.estimatedTokens.toLocaleString()} input tokens (${estimate.charCount.toLocaleString()} characters) before stage instructions.`;
@@ -2542,7 +2558,8 @@ async function openAiOptionsModal(productIndexes, providerId = 'auto', runMode =
   if (runBtn) runBtn.textContent = runMode === 'manual' ? 'Create Prompt' : 'Run Analysis';
   updateAiOptionsStatus();
   await updatePromptPayloadEstimate();
-  collapseAiAccordionSections();
+  setAiOptionsTab('payload');
+  updateInlinePasteBackVisibility();
   document.getElementById('aiOptionsModal')?.classList.add('active');
 }
 
@@ -2551,36 +2568,39 @@ function closeAiOptionsModal() {
   pendingAiRunOptions = null;
 }
 
-function setAiAccordionSectionExpanded(section, active) {
-  const target = section?.closest?.('[data-ai-accordion-section]') || section;
-  if (!target) return;
-  target.classList.toggle('active', active);
-  target.querySelector('[data-ai-accordion-trigger]')?.setAttribute('aria-expanded', active ? 'true' : 'false');
-}
-
-function toggleAiAccordionSection(section) {
-  const target = section?.closest?.('[data-ai-accordion-section]') || section;
-  if (!target) return;
-  setAiAccordionSectionExpanded(target, !target.classList.contains('active'));
-}
-
-function collapseAiAccordionSections() {
-  document.querySelectorAll('#aiOptionsModal [data-ai-accordion-section]').forEach(item => {
-    setAiAccordionSectionExpanded(item, false);
+function setAiOptionsTab(tabId) {
+  const id = String(tabId || 'payload');
+  document.querySelectorAll('#aiOptionsModal [data-ai-options-tab]').forEach(button => {
+    const active = button.dataset.aiOptionsTab === id;
+    button.classList.toggle('active', active);
+    button.setAttribute('aria-selected', active ? 'true' : 'false');
   });
+  document.querySelectorAll('#aiOptionsModal [data-ai-options-pane]').forEach(pane => {
+    pane.classList.toggle('active', pane.dataset.aiOptionsPane === id);
+  });
+}
+
+function updateInlinePasteBackVisibility() {
+  const textarea = document.getElementById('manualResultInlinePasteText');
+  if (!textarea) return;
+  textarea.hidden = !wantsPasteBackInstructionsFromModal();
 }
 
 function bindAiOptionsEvents() {
   const modal = document.getElementById('aiOptionsModal');
   if (!modal) return;
-  modal.querySelectorAll('[data-ai-accordion-trigger]').forEach(trigger => {
-    trigger.addEventListener('click', () => toggleAiAccordionSection(trigger));
+  modal.querySelectorAll('[data-ai-options-tab]').forEach(button => {
+    button.addEventListener('click', () => setAiOptionsTab(button.dataset.aiOptionsTab || 'payload'));
   });
   aiOptionInputs().forEach(input => input.addEventListener('change', () => {
     updateAiOptionsStatus();
     updatePromptPayloadEstimate();
   }));
   payloadModeInputs().forEach(input => input.addEventListener('change', updatePromptPayloadEstimate));
+  pasteBackModeInputs().forEach(input => input.addEventListener('change', () => {
+    updateInlinePasteBackVisibility();
+    updatePromptPayloadEstimate();
+  }));
   document.getElementById('aiFieldsCore')?.addEventListener('click', () => setAiFieldSelection('core'));
   document.getElementById('aiFieldsAll')?.addEventListener('click', () => setAiFieldSelection('all'));
   document.getElementById('aiOptionsClose')?.addEventListener('click', closeAiOptionsModal);
