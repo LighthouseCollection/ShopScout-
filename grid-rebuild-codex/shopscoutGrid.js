@@ -268,8 +268,14 @@
       btn.classList.toggle('active', widthMode === 'full');
       btn.setAttribute('aria-pressed', widthMode === 'full' ? 'true' : 'false');
     });
-    root.document?.querySelectorAll('[data-ss-price-display-mode]').forEach(select => {
-      select.value = viewState.priceDisplayMode || 'nearest5';
+    const priceDisplayMode = viewState.priceDisplayMode || 'nearest5';
+    root.document?.querySelectorAll('[data-ss-price-display-option]').forEach(button => {
+      const active = button.dataset.ssPriceDisplayOption === priceDisplayMode;
+      button.classList.toggle('active', active);
+      button.setAttribute('aria-pressed', active ? 'true' : 'false');
+    });
+    root.document?.querySelectorAll('[data-ss-price-display-check]').forEach(check => {
+      check.textContent = check.dataset.ssPriceDisplayCheck === priceDisplayMode ? '✓' : '';
     });
     root.document?.querySelectorAll('[data-ss-grid-command="toggle-measurement-display"]').forEach(button => {
       const rounded = viewState.measurementDisplayMode === 'rounded';
@@ -324,6 +330,16 @@
       event.preventDefault();
       handleGridCommand(command);
     });
+    root.document?.addEventListener('click', event => {
+      const priceButton = event.target?.closest?.('[data-ss-price-display-option]');
+      if (!priceButton || priceButton.disabled) return;
+      const mode = ['actual', 'rounded', 'nearest5'].includes(priceButton.dataset.ssPriceDisplayOption)
+        ? priceButton.dataset.ssPriceDisplayOption
+        : 'nearest5';
+      ensureStore().dispatch({ priceDisplayMode: mode });
+      priceButton.closest?.('details')?.removeAttribute('open');
+      render();
+    });
     root.document?.addEventListener('change', event => {
       const sortSelect = event.target?.closest?.('[data-ss-grid-sort-field]');
       if (sortSelect) {
@@ -338,12 +354,6 @@
         ensureStore().dispatch({ group: groupSelect.value || null });
         render();
         return;
-      }
-      const priceSelect = event.target?.closest?.('[data-ss-price-display-mode]');
-      if (priceSelect) {
-        const mode = ['actual', 'rounded', 'nearest5'].includes(priceSelect.value) ? priceSelect.value : 'nearest5';
-        ensureStore().dispatch({ priceDisplayMode: mode });
-        render();
       }
     });
     const searchInput = root.document?.getElementById('productSearchInput');

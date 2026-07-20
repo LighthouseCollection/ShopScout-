@@ -34,8 +34,8 @@ assert.ok(html.includes('data-ss-grid-group-field'),
   'View ribbon exposes grouping field picker');
 assert.ok(html.includes('data-ss-grid-command="open-columns"'),
   'View ribbon exposes columns chooser command');
-assert.ok(html.includes('data-ss-price-display-mode') && html.includes('Rounded to nearest $5'),
-  'Products Normalization group exposes the price display dropdown with nearest-$5 rounding');
+assert.ok(html.includes('data-ss-price-display-option="nearest5"') && html.includes('Rounded to nearest $5'),
+  'Products Normalization group exposes the price display menu with nearest-$5 rounding');
 assert.ok(html.includes('data-ss-grid-command="toggle-measurement-display"'),
   'Products Review & Rules group exposes the rounded/actual measurement display toggle');
 assert.ok(!adapterJs.includes('getMainMenuItems'),

@@ -1472,6 +1472,45 @@
   max-height: none;
 }
 
+.rb-office-ribbon .rb-group[data-group-id="review"] .rb-price-menu {
+  align-self: center;
+}
+
+.rb-office-ribbon .rb-group[data-group-id="review"] .rb-price-menu-trigger.rb-btn-lg {
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  min-width: 60px;
+  min-height: 58px;
+  padding: 4px 8px 3px;
+  text-align: center;
+}
+
+.rb-office-ribbon .rb-group[data-group-id="review"] .rb-price-menu-trigger.rb-btn-lg .rb-icon-lg {
+  width: 28px;
+  height: 28px;
+  margin: 0 0 1px;
+  flex: 0 0 28px;
+}
+
+.rb-office-ribbon .rb-group[data-group-id="review"] .rb-price-menu-trigger.rb-btn-lg .rb-btn-lg-label {
+  text-align: center !important;
+}
+
+.rb-office-ribbon .rb-menu-check {
+  width: 14px;
+  flex: 0 0 14px;
+  color: var(--primary, #0b5cab);
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.rb-office-ribbon .menu-item.active {
+  background: var(--rbn-hover-bg);
+}
+
 .rb-office-ribbon .rb-group[data-group-id="review"]:not([data-group-size]) .rb-review-toggle,
 .rb-office-ribbon .rb-group[data-group-id="review"][data-group-size="large"] .rb-review-toggle {
   min-height: 28px;

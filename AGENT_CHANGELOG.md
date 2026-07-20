@@ -1,10 +1,43 @@
 # ShopScout Agent Change Log
 
-## 2026-07-20 16:08 - Codex add price display dropdown with nearest-five default
+## 2026-07-20 16:14 - Codex convert price display selector to ribbon icon menu
 
 - Agent: Codex
 - Branch: grid-rebuild-codex
 - Commit: This commit
+- Status: Implemented. Replaced the standard price display select box with an Office-style ribbon icon dropdown menu while preserving the three price modes and nearest-$5 default.
+- What changed:
+  - Replaced the Products > Normalization price `<select>` with a large icon menu button.
+  - Added menu options for Actual, Rounded, and Rounded to nearest $5.
+  - Added active/checkmark state for the currently selected price display mode.
+  - Reused the existing `toolbar-menu` ribbon dropdown pattern instead of introducing a new custom popup.
+  - Kept the existing grid price formatting and persisted `priceDisplayMode` behavior from the prior commit.
+- Files touched:
+  - `comparison.html`
+  - `ribbon/ribbon.css`
+  - `grid-rebuild-codex/shopscoutGrid.js`
+  - `grid-rebuild-codex/tests/wiring.test.js`
+  - `tests/menu-layout.test.js`
+  - `AGENT_CHANGELOG.md`
+- Validation run:
+  - `node grid-rebuild-codex\tests\wiring.test.js` -> pass
+  - `node tests\menu-layout.test.js` -> pass
+  - `node grid-rebuild-codex\tests\controls.test.js` -> pass
+  - `npm run syntax` -> pass
+  - `npm run lint` -> pass, 0 warnings
+  - `npm test` -> 52/52 test files pass
+  - `npm run typecheck` -> pass
+  - `npm run build` -> Chrome / Edge / Firefox rebuilt
+- Review status / next reviewer:
+  - Ready for Claude review.
+- Follow-ups or risks:
+  - Build output version is based on the previous commit because the build ran before this commit was created; rerun `npm run build` after this commit if the dist version tag must include this hash.
+
+## 2026-07-20 16:08 - Codex add price display dropdown with nearest-five default
+
+- Agent: Codex
+- Branch: grid-rebuild-codex
+- Commit: c2d79ed
 - Status: Implemented. Replaced the binary price rounded/actual toggle with a three-mode price display dropdown and made nearest-$5 rounding the default.
 - What changed:
   - Added `priceDisplayMode: nearest5` as the default grid state and persisted view-state option.
@@ -41,7 +74,7 @@
 
 - Agent: Codex
 - Branch: grid-rebuild-codex
-- Commit: Uncommitted
+- Commit: e22df31
 - Status: Implemented. Fixed the blank grid rendering regression caused by overriding AG Grid cell positioning while styling inset vertical separators.
 - What changed:
   - Removed the `position: relative` override from `.ag-cell` so AG Grid keeps control of virtualized cell layout.
