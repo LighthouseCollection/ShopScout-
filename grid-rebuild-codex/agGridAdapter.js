@@ -43,36 +43,6 @@
   }
 
   const GENERIC_SOURCE_LABELS = new Set(['','generic','source','store','retailer','website','unknown']);
-  const RETAILER_HOSTS = [
-    { match: 'amazon.',    label: 'Amazon' },
-    { match: 'walmart.',   label: 'Walmart' },
-    { match: 'target.',    label: 'Target' },
-    { match: 'bestbuy.',   label: 'Best Buy' },
-    { match: 'newegg.',    label: 'Newegg' },
-    { match: 'ebay.',      label: 'eBay' },
-    { match: 'alibaba.',   label: 'Alibaba' },
-    { match: 'aliexpress.',label: 'AliExpress' },
-    { match: 'etsy.',      label: 'Etsy' },
-    { match: 'costco.',    label: 'Costco' },
-    { match: 'homedepot.', label: 'The Home Depot' },
-    { match: 'lowes.',     label: "Lowe's" },
-    { match: 'wayfair.',   label: 'Wayfair' },
-    { match: 'shein.',     label: 'SHEIN' },
-    { match: 'temu.',      label: 'Temu' }
-  ];
-  function hostRetailer(urlValue) {
-    const url = safeUrl(urlValue);
-    if (!url) return null;
-    let host = '';
-    try { host = new URL(url).hostname.toLowerCase().replace(/^www\./, ''); }
-    catch { return null; }
-    const known = RETAILER_HOSTS.find(r => host.includes(r.match));
-    if (known) return known;
-    const parts = host.split('.').filter(Boolean);
-    const base = parts.length > 1 ? parts[parts.length - 2] : parts[0];
-    if (!base) return null;
-    return { label: base.replace(/[-_]+/g, ' ').replace(/\b\w/g, c => c.toUpperCase()) };
-  }
   function usefulSourceLabel(value) {
     const t = textValue(value).trim();
     if (!t || GENERIC_SOURCE_LABELS.has(t.toLowerCase())) return '';
@@ -80,9 +50,11 @@
   }
   function sourceInfo(value, row) {
     const url = safeUrl(row?.url);
-    const retailer = hostRetailer(url);
-    const label = retailer?.label || usefulSourceLabel(value || row?.source) || 'Source';
-    return { label, url };
+    const aliases = root.ShopScoutIdentityAliases;
+    const label = aliases && typeof aliases.canonicalRetailerFromSource === 'function'
+      ? aliases.canonicalRetailerFromSource(usefulSourceLabel(value || row?.source), url)
+      : usefulSourceLabel(value || row?.source);
+    return { label: label || 'Source', url };
   }
 
   /* --- Pill rendering (same semantic palette as before) --------- */
@@ -159,7 +131,11 @@
   }
 
   function renderBrand(params) {
-    const label = textValue(params.value).trim();
+    const aliases = root.ShopScoutIdentityAliases;
+    const raw = textValue(params.value).trim();
+    const label = aliases && typeof aliases.canonicalBrand === 'function'
+      ? aliases.canonicalBrand(raw)
+      : raw;
     if (!label) return '<span class="ss-grid-empty">-</span>';
     return `<span class="ss-grid-logo-token ss-grid-brand-logo" title="${escAttr(label)}">${esc(label)}</span>`;
   }

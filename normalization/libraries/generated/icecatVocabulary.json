@@ -27,7 +27,7 @@
     ],
     "sourceBytes": 1297496280,
     "sourceSha256": "14e288850674c81b17ae58b8a76edbdeb957474a7cc86743946ca904c675362e",
-    "generatedAt": "2026-07-20T18:04:51Z",
+    "generatedAt": "2026-07-20T19:25:04Z",
     "generator": "scripts/build-normalization-libraries/build-icecat-vocabulary.js",
     "generatorVersion": 1,
     "note": "Generated from observed English Open Icecat product XML ProductFeature values linked to Feature IDs. Identifier, numeric/unit, boolean, and long free-text fields are filtered out before emission."

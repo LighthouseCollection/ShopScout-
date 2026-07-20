@@ -70,11 +70,79 @@
     }
   };
 
+  const brandAliases = {
+    HP: ['hp', 'hewlett packard', 'hewlett-packard', 'hewlett packard enterprise'],
+    MSI: ['msi', 'micro-star international', 'micro star international'],
+    Lenovo: ['lenovo', 'lenovo group'],
+    Logitech: ['logitech', 'logi'],
+    Microsoft: ['microsoft', 'msft'],
+    Apple: ['apple', 'apple computer'],
+    Samsung: ['samsung', 'samsung electronics'],
+    Sony: ['sony', 'sony corporation'],
+    Dell: ['dell', 'dell technologies'],
+    Acer: ['acer'],
+    ASUS: ['asus', 'asustek', 'asustek computer'],
+    Canon: ['canon'],
+    Nikon: ['nikon'],
+    Brother: ['brother', 'brother industries'],
+    QNAP: ['qnap'],
+    Synology: ['synology'],
+    Dremel: ['dremel'],
+    Anker: ['anker', 'anker innovations'],
+    Belkin: ['belkin'],
+    UGREEN: ['ugreen']
+  };
+
+  const retailerAliases = {
+    Amazon: ['amazon', 'amzn', 'amzn marketplace', 'amazon marketplace'],
+    Walmart: ['walmart', 'wal-mart', 'walmart marketplace'],
+    Target: ['target'],
+    'Best Buy': ['best buy', 'bestbuy'],
+    Newegg: ['newegg', 'new egg'],
+    eBay: ['ebay', 'e-bay'],
+    Alibaba: ['alibaba', 'alibaba.com'],
+    AliExpress: ['aliexpress', 'ali express'],
+    Etsy: ['etsy'],
+    Costco: ['costco'],
+    'The Home Depot': ['home depot', 'the home depot', 'homedepot'],
+    "Lowe's": ['lowes', "lowe's", 'lowe s'],
+    Wayfair: ['wayfair'],
+    SHEIN: ['shein'],
+    Temu: ['temu'],
+    Nordstrom: ['nordstrom'],
+    'B&H Photo': ['b&h', 'b and h', 'bh photo', 'b&h photo'],
+    Adorama: ['adorama']
+  };
+
+  const retailerHostAliases = {
+    'amazon.': 'Amazon',
+    'walmart.': 'Walmart',
+    'target.': 'Target',
+    'bestbuy.': 'Best Buy',
+    'newegg.': 'Newegg',
+    'ebay.': 'eBay',
+    'alibaba.': 'Alibaba',
+    'aliexpress.': 'AliExpress',
+    'etsy.': 'Etsy',
+    'costco.': 'Costco',
+    'homedepot.': 'The Home Depot',
+    'lowes.': "Lowe's",
+    'wayfair.': 'Wayfair',
+    'shein.': 'SHEIN',
+    'temu.': 'Temu',
+    'nordstrom.': 'Nordstrom',
+    'bhphotovideo.': 'B&H Photo',
+    'adorama.': 'Adorama'
+  };
+
   Object.assign(NS, {
     version: 1,
     fieldAliases,
     canonicalFields,
     enums,
+    brandAliases,
+    retailerAliases,
+    retailerHostAliases,
     exactAliasFields: ['Size', 'Material', 'Connector Type']
   });
 })(globalThis);

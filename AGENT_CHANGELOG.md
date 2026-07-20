@@ -1,5 +1,61 @@
 # ShopScout Agent Change Log
 
+## 2026-07-20 12:30 - Codex real ESCI generator and identity alias libraries
+
+- Agent: Codex
+- Branch: grid-rebuild-codex
+- Commit: Uncommitted
+- Status: Implemented. Prior commit `958f9a6` was pushed to origin first; this change adds the real ESCI parquet generator path and stronger brand/retailer alias normalization.
+- What changed:
+  - Added `hyparquet` as a dev dependency and replaced the ESCI fixture-only validator with a real parquet-capable generator for `data-sources/esci/shopping_queries_dataset_examples.parquet`.
+  - Kept portable fallback behavior: if the local ESCI parquet corpus is absent, `build-all` validates/preserves the checked-in fixture and records that state in `BUILD_MANIFEST.json`.
+  - Added `buildFromRows()` so ESCI pair generation is unit-testable without the full corpus.
+  - Added robust brand aliases and retailer/source aliases to the default normalization rules.
+  - Added `ShopScoutIdentityAliases` and wired it into duplicate matching plus grid source/brand display.
+  - Added popup/dashboard script-order tests so identity aliases load after default rules and before matching.
+  - Changed `build-all` to validate cached Icecat vocabulary by default; full corpus rebuild remains available with `SHOPSCOUT_REBUILD_ICECAT_VOCABULARY=1`.
+- Files touched:
+  - `package.json`
+  - `package-lock.json`
+  - `comparison.html`
+  - `popup.html`
+  - `grid-rebuild-codex/agGridAdapter.js`
+  - `normalization/matching.js`
+  - `normalization/libraries/defaultRules.js`
+  - `normalization/libraries/identityAliases.js`
+  - `normalization/libraries/generated/BUILD_MANIFEST.json`
+  - `normalization/libraries/generated/icecatVocabulary.json`
+  - `normalization/libraries/generated/icecat_category_to_vertical.json`
+  - `normalization/libraries/generated/schemaOrgProperties.json`
+  - `normalization/libraries/generated/verticals-index.json`
+  - `scripts/build-normalization-libraries/build-all.js`
+  - `scripts/build-normalization-libraries/build-esci-substitutes.js`
+  - `tests/esci-generator.test.js`
+  - `tests/identity-aliases.test.js`
+  - `tests/comparison-table-defaults.test.js`
+  - `tests/generated-libraries.test.js`
+  - `tests/popup-layout.test.js`
+- Validation run:
+  - `node tests\esci-generator.test.js` -> pass
+  - `node tests\identity-aliases.test.js` -> pass
+  - `node tests\comparison-table-defaults.test.js` -> pass
+  - `node tests\popup-layout.test.js` -> pass
+  - `node scripts\build-normalization-libraries\build-all.js` -> pass, ESCI fixture preserved because local parquet corpus is absent
+  - `node scripts\build-normalization-libraries\build-vertical-packs.js` -> pass
+  - `node tests\generated-libraries.test.js` -> pass
+  - `node tests\dedupe-candidates.test.js` -> pass
+  - `npm run syntax` -> pass
+  - `npm run lint` -> pass, 0 warnings
+  - `npm test` -> 52/52 test files pass
+  - `npm run typecheck` -> pass
+  - `npm run build` -> Chrome / Edge / Firefox rebuilt
+- Review status / next reviewer:
+  - Ready for Claude review.
+- Follow-ups or risks:
+  - Real ESCI output still requires the corpus file at `data-sources/esci/shopping_queries_dataset_examples.parquet`; run `node scripts\build-normalization-libraries\build-esci-substitutes.js --require-source` after placing it locally.
+  - No all-in-one third-party e-commerce normalizer is incorporated; ShopScout composes Shopify taxonomy, Schema.org, Open Icecat, Amazon ESCI, deterministic rules, and user-approved rules.
+  - Unit normalization remains ShopScout's deterministic implementation; evaluate a focused unit library only if current unit coverage becomes a blocker.
+
 ## 2026-07-20 11:59 - Codex make Icecat vocabulary generator real
 
 - Agent: Codex

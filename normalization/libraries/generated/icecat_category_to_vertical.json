@@ -8,7 +8,7 @@
     "icecatSourceBytes": 48092503,
     "shopifySourceFile": "vendor/shopify-taxonomy/taxonomy.json",
     "shopifyVersion": "2026-05",
-    "generatedAt": "2026-07-20T18:04:52Z",
+    "generatedAt": "2026-07-20T19:27:35Z",
     "generator": "scripts/build-normalization-libraries/build-vertical-mapping.js",
     "generatorVersion": 1,
     "note": "Deterministic keyword-based mapping. Rules ordered by specificity in VERTICAL_RULES; earlier matches win. Categories that match no rule are omitted. Runtime should fall back to bundled defaults when an Icecat category id is not present in this mapping."

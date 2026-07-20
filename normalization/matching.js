@@ -141,7 +141,12 @@
   }
 
   function brandOf(product) {
-    return normalizeText(product && (product.brand || product.manufacturer || product.maker));
+    const raw = product && (product.brand || product.manufacturer || product.maker);
+    const aliases = root.ShopScoutIdentityAliases;
+    const canonical = aliases && typeof aliases.canonicalBrand === 'function'
+      ? aliases.canonicalBrand(raw)
+      : raw;
+    return normalizeText(canonical);
   }
 
   function candidateIdentifierValues(product) {

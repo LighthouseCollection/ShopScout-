@@ -9,7 +9,7 @@
     "sourceFile": "data-sources/icecat/schema-org/schemaorg-current-https-properties.csv",
     "sourceBytes": 512192,
     "sourceSha256": "3a6319bd496d2d3dc276e3a8af9b0ff6415993e7d1f6b466072fcbdec1e0d257",
-    "generatedAt": "2026-07-20T18:04:39Z",
+    "generatedAt": "2026-07-20T19:27:35Z",
     "generator": "scripts/build-normalization-libraries/build-schema-org-properties.js",
     "generatorVersion": 1,
     "note": "Filtered to Schema.org properties whose domainIncludes intersects {Product, Offer}, plus a small allowlisted subset of Thing/Intangible/PhysicalObject properties (name, description, image, url, alternateName) that are genuinely useful as comparable product attributes per SCHEMA.md v1 amended by Codex. Identifier properties such as ASIN, GTIN, SKU, MPN, model, serialNumber, productID, UPC/EAN/ISBN are intentionally excluded because they belong in the identifier model, not attribute normalization."

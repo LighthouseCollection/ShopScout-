@@ -1,131 +1,250 @@
 #!/usr/bin/env node
 /* =============================================================
-   Generator: esciSubstitutes.json  (STUB, real parquet parse deferred)
+   Generator: esciSubstitutes.json
 
-   Target source:
+   Source:
      data-sources/esci/shopping_queries_dataset_examples.parquet
 
    Purpose:
-     Extract product-id pairs labeled Substitute (esci_label = 'S')
-     in Amazon's ESCI dataset. Each pair goes to the output with
-     canonical ordering (a < b) and a queryCount aggregating how
-     many distinct queries share that substitute label.
+     Extract product-id pairs labeled Substitute (S) in Amazon's
+     Shopping Queries Dataset (ESCI). Runtime uses these as additive
+     duplicate/comparison signals, never as automatic merge authority.
 
-   Why stub:
-     Node has no built-in parquet reader. Adding a parquet-wasm or
-     hyparquet dependency for a Track A minimum-viable slice
-     doubles the extension's dev-dep surface for one file. The
-     real generator will land when Codex's Track A runtime
-     integration is proven against the fixture and we validate
-     the shape end-to-end.
-
-   Implementation sketch for the real generator (follow-up):
-     1. Read shopping_queries_dataset_examples.parquet
-        (~700 MB in parquet; use hyparquet or parquet-wasm; stream row groups).
-     2. Filter to rows where esci_label === 'S' AND product_locale === 'us'.
-     3. Group by query_id -> Set of product_id. For each pair (a, b)
-        within a query's substitute set, canonicalize (a < b) and
-        aggregate queryCount.
-     4. Emit `substitutePairs` sorted by (a, b).
-     5. Cap the emitted pairs (top N by queryCount) if size exceeds
-        the SCHEMA.md 20 MB flag.
-
-   For now this stub verifies the fixture on disk conforms to
-   SCHEMA.md v1. Exits 0 on valid; exits 1 on schema violation.
+   Default behavior:
+     - If the parquet source exists, build real output.
+     - If it does not exist, validate the current fixture so ordinary
+       build-all runs remain portable on machines without the corpus.
    ============================================================= */
 'use strict';
 
 const fs = require('fs');
+const path = require('path');
 const {
-  outputPath
+  outputPath,
+  serializeJson,
+  sourcePath,
+  fileBytes,
+  sha256OfFileSync,
+  writeGeneratedFile,
+  nowIso
 } = require('./lib');
 
 const GENERATOR_NAME =
   'scripts/build-normalization-libraries/build-esci-substitutes.js';
-const GENERATOR_VERSION = 0; // stub
-
+const GENERATOR_VERSION = 1;
 const OUTPUT_NAME = 'esciSubstitutes.json';
+const SOURCE_REL = '..\\esci\\shopping_queries_dataset_examples.parquet';
+const SOURCE_DISPLAY = 'data-sources/esci/shopping_queries_dataset_examples.parquet';
 
-function validate() {
-  const abs = outputPath(OUTPUT_NAME);
-  if (!fs.existsSync(abs)) {
-    throw new Error(
-      `${OUTPUT_NAME} does not exist. Ship a fixture at ${abs} matching ` +
-      'SCHEMA.md v1 or run a real generator (not implemented yet).'
-    );
-  }
-  const raw = fs.readFileSync(abs, 'utf8');
-  const data = JSON.parse(raw);
+function sourceAbsPath() {
+  return path.resolve(sourcePath(SOURCE_REL));
+}
 
-  if (data.version !== 1) {
-    throw new Error(`${OUTPUT_NAME}: unsupported version ${data.version}`);
+function normalizeLabel(value) {
+  const text = String(value == null ? '' : value).trim().toLowerCase();
+  if (text === 's' || text === 'substitute') return 'S';
+  return text.toUpperCase();
+}
+
+function normalizeLocale(value) {
+  return String(value == null ? '' : value).trim().toLowerCase();
+}
+
+function normalizeId(value) {
+  return String(value == null ? '' : value)
+    .trim()
+    .toUpperCase()
+    .replace(/[^A-Z0-9]/g, '');
+}
+
+function rowValue(row, names) {
+  for (const name of names) {
+    if (row && row[name] != null && row[name] !== '') return row[name];
   }
-  if (!data.source || typeof data.source !== 'object') {
-    throw new Error(`${OUTPUT_NAME}: missing source block`);
+  return '';
+}
+
+function buildFromRows(rows, options) {
+  const opts = options || {};
+  const locale = normalizeLocale(opts.locale || 'us');
+  const queryProducts = new Map();
+  let inputRowCount = 0;
+
+  for (const row of rows || []) {
+    inputRowCount += 1;
+    if (normalizeLocale(rowValue(row, ['product_locale', 'locale'])) !== locale) continue;
+    if (normalizeLabel(rowValue(row, ['esci_label', 'label'])) !== 'S') continue;
+    const queryId = String(rowValue(row, ['query_id', 'queryId', 'query'])).trim();
+    const productId = normalizeId(rowValue(row, ['product_id', 'productId', 'asin']));
+    if (!queryId || !productId) continue;
+    if (!queryProducts.has(queryId)) queryProducts.set(queryId, new Set());
+    queryProducts.get(queryId).add(productId);
   }
+
+  const pairCounts = new Map();
+  for (const products of queryProducts.values()) {
+    const ids = Array.from(products).sort();
+    if (ids.length < 2) continue;
+    for (let i = 0; i < ids.length - 1; i += 1) {
+      for (let j = i + 1; j < ids.length; j += 1) {
+        const key = ids[i] + '|' + ids[j];
+        pairCounts.set(key, (pairCounts.get(key) || 0) + 1);
+      }
+    }
+  }
+
+  const substitutePairs = Array.from(pairCounts.entries())
+    .map(([key, queryCount]) => {
+      const [a, b] = key.split('|');
+      return { a, b, queryCount };
+    })
+    .sort((left, right) => left.a.localeCompare(right.a) || left.b.localeCompare(right.b));
+
+  return {
+    inputRowCount,
+    queryCount: Array.from(queryProducts.values()).filter(set => set.size >= 2).length,
+    substitutePairs
+  };
+}
+
+async function readParquetRows(absPath) {
+  const { asyncBufferFromFile, parquetReadObjects } = await import('hyparquet');
+  const file = await asyncBufferFromFile(absPath);
+  return parquetReadObjects({
+    file,
+    columns: ['query_id', 'product_id', 'product_locale', 'esci_label']
+  });
+}
+
+function validatePayload(data, fileName) {
+  const name = fileName || OUTPUT_NAME;
+  if (data.version !== 1) throw new Error(`${name}: unsupported version ${data.version}`);
+  if (!data.source || typeof data.source !== 'object') throw new Error(`${name}: missing source block`);
   if (data.source.license !== 'Apache-2.0') {
-    throw new Error(
-      `${OUTPUT_NAME}: source.license must be Apache-2.0 (got ${data.source.license})`
-    );
+    throw new Error(`${name}: source.license must be Apache-2.0 (got ${data.source.license})`);
   }
-  if (!Array.isArray(data.substitutePairs)) {
-    throw new Error(`${OUTPUT_NAME}: substitutePairs must be an array`);
-  }
+  if (!Array.isArray(data.substitutePairs)) throw new Error(`${name}: substitutePairs must be an array`);
 
-  // Invariant checks per SCHEMA.md.
   const seen = new Set();
   let priorA = '';
   let priorB = '';
   for (const pair of data.substitutePairs) {
     if (typeof pair.a !== 'string' || typeof pair.b !== 'string') {
-      throw new Error(`${OUTPUT_NAME}: pair.a and pair.b must be strings`);
+      throw new Error(`${name}: pair.a and pair.b must be strings`);
     }
-    if (pair.a >= pair.b) {
-      throw new Error(
-        `${OUTPUT_NAME}: pair not canonicalized (a < b required): ${pair.a}, ${pair.b}`
-      );
-    }
+    if (pair.a >= pair.b) throw new Error(`${name}: pair not canonicalized: ${pair.a}, ${pair.b}`);
     const key = pair.a + '|' + pair.b;
-    if (seen.has(key)) {
-      throw new Error(`${OUTPUT_NAME}: duplicate pair ${key}`);
-    }
+    if (seen.has(key)) throw new Error(`${name}: duplicate pair ${key}`);
     seen.add(key);
     if (pair.a < priorA || (pair.a === priorA && pair.b < priorB)) {
-      throw new Error(`${OUTPUT_NAME}: pairs not sorted by (a, b)`);
+      throw new Error(`${name}: pairs not sorted by (a, b)`);
     }
     priorA = pair.a;
     priorB = pair.b;
     if (typeof pair.queryCount !== 'number' || pair.queryCount < 1) {
-      throw new Error(`${OUTPUT_NAME}: queryCount must be >= 1 for ${key}`);
+      throw new Error(`${name}: queryCount must be >= 1 for ${key}`);
     }
   }
+}
 
+async function build(options) {
+  const opts = options || {};
+  const abs = opts.source || sourceAbsPath();
+  if (!fs.existsSync(abs)) {
+    if (opts.requireSource) {
+      throw new Error(`${SOURCE_DISPLAY} is missing. Download Amazon ESCI parquet corpus before rebuilding.`);
+    }
+    return validate();
+  }
+
+  const rows = opts.rows || await readParquetRows(abs);
+  const result = buildFromRows(rows, { locale: opts.locale || 'us' });
+  const sourceBytes = fileBytes(abs);
+  const payload = {
+    $schema: 'shopscout://normalization-libraries/esciSubstitutes/v1',
+    version: 1,
+    source: {
+      vocabulary: 'Amazon Shopping Queries Dataset (ESCI)',
+      release: '2022-12',
+      url: 'https://github.com/amazon-science/esci-data',
+      license: 'Apache-2.0',
+      sourceFile: SOURCE_DISPLAY,
+      sourceBytes,
+      sourceSha256: sha256OfFileSync(abs),
+      generatedAt: nowIso(),
+      generator: GENERATOR_NAME,
+      generatorVersion: GENERATOR_VERSION,
+      locale: opts.locale || 'us',
+      inputRowCount: result.inputRowCount,
+      queryCount: result.queryCount
+    },
+    substitutePairs: result.substitutePairs
+  };
+
+  validatePayload(payload);
+  const content = serializeJson(payload);
+  writeGeneratedFile(OUTPUT_NAME, content);
+  return {
+    outputName: OUTPUT_NAME,
+    outputBytes: Buffer.byteLength(content, 'utf8'),
+    substitutePairCount: payload.substitutePairs.length,
+    sourceFiles: [{
+      path: SOURCE_DISPLAY,
+      bytes: sourceBytes,
+      sha256: payload.source.sourceSha256
+    }],
+    inputRowCount: result.inputRowCount,
+    queryCount: result.queryCount,
+    isFixture: false
+  };
+}
+
+function validate() {
+  const abs = outputPath(OUTPUT_NAME);
+  if (!fs.existsSync(abs)) {
+    throw new Error(`${OUTPUT_NAME} does not exist. Run this generator after placing ${SOURCE_DISPLAY}.`);
+  }
+  const raw = fs.readFileSync(abs, 'utf8');
+  const data = JSON.parse(raw);
+  validatePayload(data);
   return {
     outputName: OUTPUT_NAME,
     outputBytes: Buffer.byteLength(raw, 'utf8'),
     substitutePairCount: data.substitutePairs.length,
+    sourceFiles: data.source.sourceSha256 ? [{
+      path: data.source.sourceFile || SOURCE_DISPLAY,
+      bytes: data.source.sourceBytes || 0,
+      sha256: data.source.sourceSha256
+    }] : [],
+    inputRowCount: data.source.inputRowCount || 0,
+    queryCount: data.source.queryCount || 0,
     isFixture: data.source.generator !== GENERATOR_NAME
   };
 }
 
 if (require.main === module) {
-  try {
-    const summary = validate();
+  build({ requireSource: process.argv.includes('--require-source') }).then(summary => {
     if (summary.isFixture) {
       process.stdout.write(
-        `${OUTPUT_NAME}: fixture preserved (stub — real parquet parser TBD). ` +
+        `${OUTPUT_NAME}: fixture preserved because ${SOURCE_DISPLAY} is missing. ` +
         `Validated: ${summary.substitutePairCount} pairs, ${summary.outputBytes} bytes\n`
       );
     } else {
       process.stdout.write(
-        `${OUTPUT_NAME}: validated real generator output. ` +
-        `${summary.substitutePairCount} pairs, ${summary.outputBytes} bytes\n`
+        `${OUTPUT_NAME}: generated ${summary.substitutePairCount} pairs from ` +
+        `${summary.inputRowCount} rows and ${summary.queryCount} substitute query groups\n`
       );
     }
-  } catch (err) {
+  }).catch(err => {
     process.stderr.write(`build-esci-substitutes failed: ${err.message}\n`);
     process.exit(1);
-  }
+  });
 }
 
-module.exports = { validate, GENERATOR_NAME, GENERATOR_VERSION };
+module.exports = {
+  build,
+  buildFromRows,
+  validate,
+  GENERATOR_NAME,
+  GENERATOR_VERSION
+};

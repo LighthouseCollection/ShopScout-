@@ -242,6 +242,15 @@ const manifestKeys = new Set(Object.keys(manifest.outputs));
 for (const key of REQUIRED_MANIFEST_KEYS) {
   assert.ok(manifestKeys.has(key), 'manifest key present: ' + key);
 }
+assert.ok(
+  manifest.outputs['esciSubstitutes.json'].generatorVersion >= 1,
+  'manifest records the real ESCI parquet generator version'
+);
+assert.strictEqual(
+  typeof manifest.outputs['esciSubstitutes.json'].isStub,
+  'boolean',
+  'manifest records whether esciSubstitutes.json is fixture fallback or real output'
+);
 assert.notStrictEqual(
   manifest.outputs['icecatVocabulary.json'].isStub,
   true,

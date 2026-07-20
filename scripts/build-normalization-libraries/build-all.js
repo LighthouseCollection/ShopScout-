@@ -56,17 +56,21 @@ async function main() {
   );
 
   process.stdout.write('=== icecatVocabulary.json ===\n');
-  const v = icecatVocabulary.build();
+  const forceVocabularyRebuild = process.env.SHOPSCOUT_REBUILD_ICECAT_VOCABULARY === '1';
+  const v = forceVocabularyRebuild
+    ? icecatVocabulary.build()
+    : icecatVocabulary.validate();
   process.stdout.write(
-    `  wrote ${v.outputName}: ${v.featureCount} features, ` +
-    `${v.vocabularyEntryCount} entries from ${v.productFileCount} product XML files, ` +
+    `  ${forceVocabularyRebuild ? 'wrote' : 'validated cached'} ${v.outputName}: ${v.featureCount} features, ` +
+    `${v.vocabularyEntryCount} entries` +
+    `${forceVocabularyRebuild ? ' from ' + v.productFileCount + ' product XML files' : ''}, ` +
     `${v.outputBytes} bytes\n`
   );
 
-  process.stdout.write('=== esciSubstitutes.json (stub) ===\n');
-  const e = esciSubstitutes.validate();
+  process.stdout.write('=== esciSubstitutes.json ===\n');
+  const e = await esciSubstitutes.build();
   process.stdout.write(
-    `  ${e.isFixture ? 'fixture preserved' : 'validated'}: ${e.substitutePairCount} pairs, ` +
+    `  ${e.isFixture ? 'fixture preserved' : 'generated'}: ${e.substitutePairCount} pairs, ` +
     `${e.outputBytes} bytes\n`
   );
 
@@ -130,11 +134,16 @@ async function main() {
       'esciSubstitutes.json': {
         generator: esciSubstitutes.GENERATOR_NAME,
         generatorVersion: esciSubstitutes.GENERATOR_VERSION,
-        isStub: true,
+        isStub: Boolean(e.isFixture),
+        sourceFiles: e.sourceFiles,
         outputBytes: esciFp.outputBytes,
         outputSha256: esciFp.outputSha256,
         substitutePairCount: e.substitutePairCount,
-        note: 'Stub — real parquet parsing deferred. Current output is a Track A minimum-viable fixture illustrating the v1 shape. Real generator will read data-sources/esci/shopping_queries_dataset_examples.parquet when a parquet dependency is approved (hyparquet or parquet-wasm).'
+        inputRowCount: e.inputRowCount,
+        queryCount: e.queryCount,
+        note: e.isFixture
+          ? 'Fixture preserved because data-sources/esci/shopping_queries_dataset_examples.parquet is not present. Place the Amazon ESCI parquet corpus locally and rerun this generator with --require-source to force real output.'
+          : 'Generated from Amazon ESCI parquet. Substitute pairs are additive duplicate/comparison signals only; they are not automatic merge authority.'
       },
       'icecat_category_to_vertical.json': {
         generator: verticalMapping.GENERATOR_NAME,

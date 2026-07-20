@@ -3,7 +3,7 @@
   "version": 1,
   "buildTool": "shopscout-build-normalization-libraries",
   "buildToolVersion": 1,
-  "generatedAt": "2026-07-20T18:58:24Z",
+  "generatedAt": "2026-07-20T19:28:09Z",
   "sourceCorpus": {
     "root": "data-sources/icecat/",
     "junctionTarget": "D:\\icecat-data\\",
@@ -21,7 +21,7 @@
         }
       ],
       "outputBytes": 45001,
-      "outputSha256": "d687b141284d574a33b4674a166506b2a0d8caf58885c8e20529ecae6beb1ced",
+      "outputSha256": "7710e54bd9b337c2c948cf662100e3c45feff7f81c7164d62477d3c9b123482d",
       "rowCount": 87
     },
     "icecatVocabulary.json": {
@@ -47,11 +47,9 @@
         }
       ],
       "outputBytes": 1330781,
-      "outputSha256": "302355f19e1dac35562ae10ebcb338223aeb7d3a17a84cacb21e806bffe68759",
+      "outputSha256": "1ecc400c56b2fc290afb68996b46f1a9174bd66b11060bfc539025f4618e69c0",
       "featureCount": 1042,
       "vocabularyEntryCount": 12408,
-      "scannedProductFileCount": 17422,
-      "scannedFeatureCount": 1499,
       "note": "Generated from observed Open Icecat EN product feature values. Product XML usage supplies the practical feature-to-value link; identifiers, numeric/unit measurements, booleans, and long free-text fields are filtered out."
     },
     "icecatCategoryFeatures.json": {
@@ -71,18 +69,27 @@
     },
     "esciSubstitutes.json": {
       "generator": "scripts/build-normalization-libraries/build-esci-substitutes.js",
-      "generatorVersion": 0,
+      "generatorVersion": 1,
       "isStub": true,
+      "sourceFiles": [
+        {
+          "path": "data-sources/esci/shopping_queries_dataset_examples.parquet",
+          "bytes": 0,
+          "sha256": "0000000000000000000000000000000000000000000000000000000000000000"
+        }
+      ],
       "outputBytes": 1517,
       "outputSha256": "ea37fe054aba4b8fc89d3ba9ae8375c0e77423105c9b018832de60aefb4b38e7",
       "substitutePairCount": 5,
-      "note": "Stub — real parquet parsing deferred. Current output is a Track A minimum-viable fixture illustrating the v1 shape. Real generator will read data-sources/esci/shopping_queries_dataset_examples.parquet when a parquet dependency is approved (hyparquet or parquet-wasm)."
+      "inputRowCount": 0,
+      "queryCount": 0,
+      "note": "Fixture preserved because data-sources/esci/shopping_queries_dataset_examples.parquet is not present. Place the Amazon ESCI parquet corpus locally and rerun this generator with --require-source to force real output."
     },
     "icecat_category_to_vertical.json": {
       "generator": "scripts/build-normalization-libraries/build-vertical-mapping.js",
       "generatorVersion": 1,
       "outputBytes": 70951,
-      "outputSha256": "a2e058cbd8ade0774b5c67942a07af6dbae3fff819b4727dbe4a09ba04ee5239",
+      "outputSha256": "c5e9546587b2670f2ad6c1d9628e911f1653cb9a82934ef515561dd1bc686aef",
       "totalCategories": 6808,
       "totalMapped": 2437,
       "unclassified": 4371,
@@ -90,11 +97,11 @@
       "note": "Bundled — enables runtime auto-detection of a product's vertical without fetching any pack. Unmapped Icecat category ids fall through to bundled defaults (fail-safe)."
     },
     "verticals-index.json": {
-      "file": "verticals-index.json",
       "generator": "scripts/build-normalization-libraries/build-vertical-mapping.js",
       "generatorVersion": 1,
       "outputBytes": 8067,
-      "outputSha256": "def020f42bd0811ce6f2ca26b76288cb4d4e2ea948414bb34377f0068e73565b"
+      "outputSha256": "24caa57c28287c780dcc1b6503efa2d34554799a797d04319dcab6fbea027dc8",
+      "note": "Bundled — lists all vertical packs by id + display name + release pack URL/sha256/size."
     }
   }
 }

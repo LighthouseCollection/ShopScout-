@@ -11,6 +11,12 @@ assert.ok(html.indexOf('src="normalization/libraries/defaultRules.js"') > -1,
   'popup loads the normalization rule library for captured products');
 assert.ok(html.indexOf('src="normalization/libraries/defaultRules.js"') < html.indexOf('src="normalization/registry.js"'),
   'normalization rule library loads before v2 normalization in the popup');
+assert.ok(html.indexOf('src="normalization/libraries/identityAliases.js"') > -1,
+  'popup loads identity aliases for brand/retailer canonicalization');
+assert.ok(html.indexOf('src="normalization/libraries/defaultRules.js"') < html.indexOf('src="normalization/libraries/identityAliases.js"'),
+  'identity aliases load after default rules in the popup');
+assert.ok(html.indexOf('src="normalization/libraries/identityAliases.js"') < html.indexOf('src="normalization/matching.js"'),
+  'identity aliases load before duplicate matching in the popup');
 assert.ok(html.indexOf('src="normalization/taxonomyBridge.js"') > -1,
   'popup loads taxonomy bridge for captured products');
 assert.ok(html.indexOf('src="normalization/taxonomyBridge.js"') < html.indexOf('src="normalization/registry.js"'),

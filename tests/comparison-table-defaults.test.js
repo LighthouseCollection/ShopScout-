@@ -65,6 +65,12 @@ assert.ok(cmpHtml.indexOf('src="normalization/libraries/defaultRules.js"') > -1,
   'normalization rule library is loaded on comparison page');
 assert.ok(cmpHtml.indexOf('src="normalization/libraries/defaultRules.js"') < cmpHtml.indexOf('src="normalization/registry.js"'),
   'normalization rule library loads before v2 normalization on comparison page');
+assert.ok(cmpHtml.indexOf('src="normalization/libraries/identityAliases.js"') > -1,
+  'identity alias helper is loaded on comparison page');
+assert.ok(cmpHtml.indexOf('src="normalization/libraries/defaultRules.js"') < cmpHtml.indexOf('src="normalization/libraries/identityAliases.js"'),
+  'identity aliases load after default rules on comparison page');
+assert.ok(cmpHtml.indexOf('src="normalization/libraries/identityAliases.js"') < cmpHtml.indexOf('src="normalization/matching.js"'),
+  'identity aliases load before duplicate matching on comparison page');
 assert.ok(cmpHtml.indexOf('src="normalization/taxonomyBridge.js"') > -1,
   'normalization/taxonomyBridge.js is loaded on comparison page');
 assert.ok(cmpHtml.indexOf('src="normalization/taxonomyBridge.js"') < cmpHtml.indexOf('src="normalization/registry.js"'),
