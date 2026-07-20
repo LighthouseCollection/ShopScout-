@@ -98,8 +98,34 @@
    every ag-cell so short content sits in the middle regardless of
    row height. */
 .ss-grid-host.ag-theme-quartz .ag-cell {
+  position: relative;
   display: flex;
   align-items: center;
+  overflow: hidden;
+}
+
+/* AG Grid does not expose an out-of-the-box "short vertical gridline"
+   toggle. Keep the real AG Grid cells/headers and draw scoped inset
+   separators so vertical rules do not visually collide with row rules. */
+.ss-grid-host.ag-theme-quartz .ag-cell,
+.ss-grid-host.ag-theme-quartz .ag-header-cell {
+  position: relative;
+  border-right-color: transparent;
+}
+.ss-grid-host.ag-theme-quartz .ag-cell::after,
+.ss-grid-host.ag-theme-quartz .ag-header-cell::after {
+  content: "";
+  position: absolute;
+  right: 0;
+  top: 10px;
+  bottom: 10px;
+  width: 1px;
+  background: var(--rule, #d1d5db);
+  pointer-events: none;
+}
+.ss-grid-host.ag-theme-quartz .ag-cell-last-left-pinned::after,
+.ss-grid-host.ag-theme-quartz .ag-header-cell.ag-header-cell-last-left-pinned::after {
+  display: none;
 }
 
 /* Name / Buying Factor left-align (rest of the grid stays centered). */
@@ -496,12 +522,16 @@ a.ss-grid-rating-link:hover .ss-grid-stars {
   gap: 4px;
   flex-wrap: wrap;
   min-width: 0;
+  max-width: 100%;
+  overflow: hidden;
+  line-height: 1.35;
 }
 
 .ss-grid-value-pill {
   display: inline-flex;
   align-items: center;
   gap: 3px;
+  min-width: 0;
   max-width: 100%;
   padding: 2px;
   border: 1px solid var(--rule-soft, #d1d5db);
@@ -512,9 +542,11 @@ a.ss-grid-rating-link:hover .ss-grid-stars {
   font-weight: 500;
   line-height: 1.5;
   /* Pills never break their content onto two lines — the column
-     auto-sizes to fit the widest pill so wrapping should never be
-     needed, and when it happens it looks broken. */
+   auto-sizes to fit the widest pill so wrapping should never be
+   needed, and when it happens it looks broken. */
   white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 /* Semantic pill palette — outline (darker) + filled interior (lighter).

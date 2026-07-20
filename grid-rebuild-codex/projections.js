@@ -60,6 +60,18 @@
     availability: 'Availability'
   };
 
+  const RATING_REVIEW_SPEC_KEYS = new Set([
+    'customer reviews',
+    'customer review',
+    'customer ratings',
+    'customer rating',
+    'reviews',
+    'review count',
+    'ratings',
+    'rating count',
+    'average rating'
+  ]);
+
   const BASIC_MATRIX_FIELDS = [
     'brand',
     'source',
@@ -332,9 +344,10 @@
   function normalizeVisibleSpecFields(visibleSpecKeys, rows, scope) {
     if (Array.isArray(visibleSpecKeys) && visibleSpecKeys.length) {
       return [...new Set(visibleSpecKeys.map(key => canonicalField(key, scope)).filter(Boolean))]
-        .filter(key => key.startsWith('spec:'));
+        .filter(key => key.startsWith('spec:') && !RATING_REVIEW_SPEC_KEYS.has(key.slice(5)));
     }
-    return discoverSpecFields(rows);
+    return discoverSpecFields(rows)
+      .filter(key => !RATING_REVIEW_SPEC_KEYS.has(key.slice(5)));
   }
 
   function makeRow(product, flattened, idx) {

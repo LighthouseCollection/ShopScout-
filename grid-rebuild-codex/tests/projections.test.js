@@ -69,7 +69,8 @@ const products = [
     rawSpecs: [
       { key: 'Battery Life', value: '2 hours' },
       { key: 'Dots per inch', value: '800 DPI' },
-      { key: 'Colour', value: 'midnight blue' }
+      { key: 'Colour', value: 'midnight blue' },
+      { key: 'Customer Reviews', value: '4.7 out of 5 stars (120)' }
     ],
     specsNormalized: {
       Color: {
@@ -133,7 +134,7 @@ assert.equal(typeof projections.buildComparisonMatrixProjection, 'function',
   'products-as-columns matrix projection is exposed');
 
 const rowsProjection = projections.buildProductsRowsProjection(products, {
-  visibleSpecKeys: ['battery life', 'dpi', 'Color', 'Power Source']
+  visibleSpecKeys: ['battery life', 'dpi', 'Color', 'Power Source', 'Customer Reviews']
 });
 
 assert.equal(rowsProjection.mode, 'productsRows');
@@ -158,6 +159,10 @@ assert.ok(rowsProjection.columns.some(column => column.id === 'spec:dpi'),
   'abbreviation-equivalent spec column is canonicalized');
 assert.ok(rowsProjection.columns.some(column => column.id === 'spec:color'),
   'attribute-normalized spec field aliases are exposed under canonical field names');
+assert.ok(!rowsProjection.columns.some(column => column.id === 'spec:customer reviews'),
+  'Customer Reviews is not emitted as a duplicate spec column because Rating owns rating + review-count display');
+assert.ok(!rowsProjection.allColumns.some(column => column.id === 'spec:customer reviews'),
+  'Customer Reviews is also removed from allColumns so it cannot reappear through column visibility controls');
 assert.ok(
   !rowsProjection.columns.some(column => column.id === 'actions'),
   'standalone actions column has been removed — actions render under the thumbnail in the image cell'

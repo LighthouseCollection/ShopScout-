@@ -1,5 +1,34 @@
 # ShopScout Agent Change Log
 
+## 2026-07-20 13:06 - Codex fix rating/review duplicate columns and grid pill overflow
+
+- Agent: Codex
+- Branch: grid-rebuild-codex
+- Commit: Uncommitted
+- Status: Implemented. Removed duplicate `Customer Reviews` dynamic spec columns from the products grid and tightened AG Grid cell styling so pill content cannot overlap neighboring columns.
+- What changed:
+  - Reserved review/rating aliases such as `Customer Reviews`, `Review Count`, and `Average Rating` from dynamic spec-column generation because the fixed `Rating` column owns marketplace rating plus review-count display.
+  - Added regression coverage proving `Customer Reviews` is excluded from both visible columns and all column-visibility controls.
+  - Scoped AG Grid theme CSS so cells clip overflowing content, pills ellipsize inside their own cell, and vertical separators render as inset lines instead of touching row borders.
+- Files touched:
+  - `grid-rebuild-codex/projections.js`
+  - `grid-rebuild-codex/grid.css`
+  - `grid-rebuild-codex/tests/projections.test.js`
+  - `AGENT_CHANGELOG.md`
+- Validation run:
+  - `node grid-rebuild-codex\tests\projections.test.js` -> pass
+  - `node grid-rebuild-codex\tests\adapter-display.test.js` -> pass
+  - `node grid-rebuild-codex\tests\wiring.test.js` -> pass
+  - `npm run syntax` -> pass
+  - `npm run lint` -> pass, 0 warnings
+  - `npm test` -> 52/52 test files pass
+  - `npm run typecheck` -> pass
+  - `npm run build` -> Chrome / Edge / Firefox rebuilt
+- Review status / next reviewer:
+  - Ready for Claude review after commit.
+- Follow-ups or risks:
+  - AG Grid Community does not provide an out-of-the-box option for shortened vertical separators; this is implemented as scoped AG Grid theme CSS, not a replacement table control.
+
 ## 2026-07-20 12:48 - Codex verify third-party normalization coverage and load js-quantities in popup
 
 - Agent: Codex
