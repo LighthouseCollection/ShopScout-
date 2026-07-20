@@ -1,5 +1,45 @@
 # ShopScout Agent Change Log
 
+## 2026-07-20 11:59 - Codex make Icecat vocabulary generator real
+
+- Agent: Codex
+- Branch: grid-rebuild-codex
+- Commit: This commit
+- Status: Implemented. Replaced the placeholder Icecat vocabulary fixture path with a real offline generator that scans the local Open Icecat EN product corpus and emits a generated categorical vocabulary library for runtime normalization.
+- What changed:
+  - Rebuilt `build-icecat-vocabulary.js` to scan `data-sources/icecat/products/EN/*.xml` and extract observed feature names, values, aliases, confidence, and source provenance.
+  - Generated `icecatVocabulary.json` from 17,422 EN product XML files: 1,042 features and 12,408 entries.
+  - Added filtering so identifiers, booleans, measurements, long free-text values, and unsplit multi-value strings do not pollute enum aliases.
+  - Updated `build-all.js` so vocabulary generation is real by default, while the huge Icecat category-feature file is validated from the cached generated JSON unless `SHOPSCOUT_REBUILD_CATEGORY_FEATURES=1` is explicitly set.
+  - Rebuilt vertical pack metadata and generated-library manifest fingerprints after the new vocabulary output.
+  - Added generated-library regression coverage so the vocabulary cannot silently revert to a stub or emit dirty multi-value aliases.
+- Files touched:
+  - `normalization/libraries/generated/BUILD_MANIFEST.json`
+  - `normalization/libraries/generated/icecatVocabulary.json`
+  - `normalization/libraries/generated/icecat_category_to_vertical.json`
+  - `normalization/libraries/generated/schemaOrgProperties.json`
+  - `normalization/libraries/generated/verticals-index.json`
+  - `scripts/build-normalization-libraries/README.md`
+  - `scripts/build-normalization-libraries/build-all.js`
+  - `scripts/build-normalization-libraries/build-icecat-category-features.js`
+  - `scripts/build-normalization-libraries/build-icecat-vocabulary.js`
+  - `tests/generated-libraries.test.js`
+  - `AGENT_CHANGELOG.md`
+- Validation run:
+  - `node tests\generated-libraries.test.js` -> pass
+  - `node tests\generated-packs.test.js` -> pass
+  - `npm run syntax` -> pass
+  - `npm run lint` -> pass
+  - `npm test` -> 50/50 test files pass
+  - `npm run typecheck` -> pass
+  - `npm run build` -> Chrome / Edge / Firefox rebuilt
+- Review status / next reviewer:
+  - Ready for Claude review after commit.
+- Follow-ups or risks:
+  - Real ESCI parquet generation remains separate and is still not implemented.
+  - Full Icecat category-feature regeneration is intentionally opt-in because the raw source is 1.5 GB compressed and can crash Node/V8 on ordinary runs; default `build-all` now validates the cached generated category-feature file instead.
+  - Generated vertical packs under `dist/packs` are rebuilt locally but remain gitignored; publish/update the data release when ready.
+
 ## 2026-07-19 07:48 - Codex set rounded display defaults and allow deleting final list
 
 - Agent: Codex

@@ -2,10 +2,10 @@
 /* =============================================================
    Orchestrator for all normalization-library generators.
 
-   Runs each generator in sequence. When a generator writes real
-   output it returns row counts + source fingerprints; when the
-   vocabulary stub runs it only validates the on-disk file. The
-   final BUILD_MANIFEST.json is assembled from those summaries.
+   Runs each generator in sequence. Each real-output generator returns
+   row counts + source fingerprints. Stub-only generators still validate
+   their on-disk fixture. The final BUILD_MANIFEST.json is assembled
+   from those summaries.
 
    Exits non-zero if any individual generator throws.
    ============================================================= */
@@ -46,17 +46,21 @@ async function main() {
   );
 
   process.stdout.write('=== icecatCategoryFeatures.json ===\n');
-  const c = await icecatCategoryFeatures.build();
+  const forceCategoryRebuild = process.env.SHOPSCOUT_REBUILD_CATEGORY_FEATURES === '1';
+  const c = forceCategoryRebuild
+    ? await icecatCategoryFeatures.build()
+    : icecatCategoryFeatures.validate();
   process.stdout.write(
-    `  wrote ${c.outputName}: ${c.categoryCount} categories, ` +
+    `  ${forceCategoryRebuild ? 'wrote' : 'validated cached'} ${c.outputName}: ${c.categoryCount} categories, ` +
     `${c.featureAssociationCount} feature associations, ${c.outputBytes} bytes\n`
   );
 
-  process.stdout.write('=== icecatVocabulary.json (stub) ===\n');
-  const v = icecatVocabulary.validate();
+  process.stdout.write('=== icecatVocabulary.json ===\n');
+  const v = icecatVocabulary.build();
   process.stdout.write(
-    `  ${v.isFixture ? 'fixture preserved' : 'validated'}: ${v.featureCount} features, ` +
-    `${v.vocabularyEntryCount} entries, ${v.outputBytes} bytes\n`
+    `  wrote ${v.outputName}: ${v.featureCount} features, ` +
+    `${v.vocabularyEntryCount} entries from ${v.productFileCount} product XML files, ` +
+    `${v.outputBytes} bytes\n`
   );
 
   process.stdout.write('=== esciSubstitutes.json (stub) ===\n');
@@ -105,12 +109,14 @@ async function main() {
       'icecatVocabulary.json': {
         generator: icecatVocabulary.GENERATOR_NAME,
         generatorVersion: icecatVocabulary.GENERATOR_VERSION,
-        isStub: true,
+        sourceFiles: v.sourceFiles,
         outputBytes: vocabFp.outputBytes,
         outputSha256: vocabFp.outputSha256,
         featureCount: v.featureCount,
         vocabularyEntryCount: v.vocabularyEntryCount,
-        note: 'Stub — real generation deferred until per-feature vocabulary linkage is implemented. Current output is the hand-authored fixture from Phase 1a (source.generator = manual-fixture-for-codex-unblock).'
+        scannedProductFileCount: v.productFileCount,
+        scannedFeatureCount: v.scannedFeatureCount,
+        note: 'Generated from observed Open Icecat EN product feature values. Product XML usage supplies the practical feature-to-value link; identifiers, numeric/unit measurements, booleans, and long free-text fields are filtered out.'
       },
       'icecatCategoryFeatures.json': {
         generator: icecatCategoryFeatures.GENERATOR_NAME,

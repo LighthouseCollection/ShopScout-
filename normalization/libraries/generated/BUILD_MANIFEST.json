@@ -3,7 +3,7 @@
   "version": 1,
   "buildTool": "shopscout-build-normalization-libraries",
   "buildToolVersion": 1,
-  "generatedAt": "2026-07-08T04:41:06Z",
+  "generatedAt": "2026-07-20T18:58:24Z",
   "sourceCorpus": {
     "root": "data-sources/icecat/",
     "junctionTarget": "D:\\icecat-data\\",
@@ -21,18 +21,38 @@
         }
       ],
       "outputBytes": 45001,
-      "outputSha256": "814a7b7b04fc26238188c4f9d48ad57fc5f5bfc63e936d0e2b3a872d05ebaa12",
+      "outputSha256": "d687b141284d574a33b4674a166506b2a0d8caf58885c8e20529ecae6beb1ced",
       "rowCount": 87
     },
     "icecatVocabulary.json": {
       "generator": "scripts/build-normalization-libraries/build-icecat-vocabulary.js",
-      "generatorVersion": 0,
-      "isStub": true,
-      "outputBytes": 3871,
-      "outputSha256": "4ddea7ce4bb23b1faabd7be324c26314c11e1a1dea32266ed3d95e0737cd7e1f",
-      "featureCount": 4,
-      "vocabularyEntryCount": 16,
-      "note": "Stub — real generation deferred until per-feature vocabulary linkage is implemented. Current output is the hand-authored fixture from Phase 1a (source.generator = manual-fixture-for-codex-unblock)."
+      "generatorVersion": 1,
+      "sourceFiles": [
+        {
+          "path": "products/EN/*.xml",
+          "bytes": 1297496280,
+          "count": 17422
+        },
+        {
+          "path": "refs/FeatureValuesVocabularyList.xml.gz",
+          "bytes": 46496359,
+          "sha256": "326a7d3000796fdd9db8509ddc2e92cf3bb3e4c2b0b694ad1571f141363d17df",
+          "note": "Fingerprint retained for Icecat controlled-value corpus context; product XML usage supplies the feature-to-value link."
+        },
+        {
+          "path": "refs/FeaturesList.xml.gz",
+          "bytes": 62622949,
+          "sha256": "837ab207df31d6fc3cbba8a58dc3c1af5fec6a65fcec365b7e6866993d5c38d3",
+          "note": "Fingerprint retained for feature catalog context; product XML embeds English feature names used by this generator."
+        }
+      ],
+      "outputBytes": 1330781,
+      "outputSha256": "302355f19e1dac35562ae10ebcb338223aeb7d3a17a84cacb21e806bffe68759",
+      "featureCount": 1042,
+      "vocabularyEntryCount": 12408,
+      "scannedProductFileCount": 17422,
+      "scannedFeatureCount": 1499,
+      "note": "Generated from observed Open Icecat EN product feature values. Product XML usage supplies the practical feature-to-value link; identifiers, numeric/unit measurements, booleans, and long free-text fields are filtered out."
     },
     "icecatCategoryFeatures.json": {
       "generator": "scripts/build-normalization-libraries/build-icecat-category-features.js",
@@ -44,8 +64,8 @@
           "sha256": "65c64c29911b52fff1ed920a686fb649598782eb8da634d0395840239642a0fe"
         }
       ],
-      "outputBytes": 45409390,
-      "outputSha256": "bcb444f8183b400aeaf7f407ead006b59a6a1dac3a7aed084012af03a1a9b3d4",
+      "outputBytes": 48092503,
+      "outputSha256": "27dca5917de9be1bf8b35b059f1e375ff3768c71036f593ab0a6a767cfdfa1f0",
       "categoryCount": 6808,
       "featureAssociationCount": 852686
     },
@@ -53,28 +73,28 @@
       "generator": "scripts/build-normalization-libraries/build-esci-substitutes.js",
       "generatorVersion": 0,
       "isStub": true,
-      "outputBytes": 1492,
-      "outputSha256": "d3a3b879c0c4808ed0e9712d7554cac74939dba874ee0d22c6d4787d884f4976",
+      "outputBytes": 1517,
+      "outputSha256": "ea37fe054aba4b8fc89d3ba9ae8375c0e77423105c9b018832de60aefb4b38e7",
       "substitutePairCount": 5,
       "note": "Stub — real parquet parsing deferred. Current output is a Track A minimum-viable fixture illustrating the v1 shape. Real generator will read data-sources/esci/shopping_queries_dataset_examples.parquet when a parquet dependency is approved (hyparquet or parquet-wasm)."
     },
     "icecat_category_to_vertical.json": {
       "generator": "scripts/build-normalization-libraries/build-vertical-mapping.js",
       "generatorVersion": 1,
-      "outputBytes": 69781,
-      "outputSha256": "d1dd4f42a1ef519db6a449c57b9287b43daf086c2c6c27133bfe83697040ade8",
+      "outputBytes": 70951,
+      "outputSha256": "a2e058cbd8ade0774b5c67942a07af6dbae3fff819b4727dbe4a09ba04ee5239",
       "totalCategories": 6808,
-      "totalMapped": 2386,
-      "unclassified": 4422,
+      "totalMapped": 2437,
+      "unclassified": 4371,
       "verticals": 21,
       "note": "Bundled — enables runtime auto-detection of a product's vertical without fetching any pack. Unmapped Icecat category ids fall through to bundled defaults (fail-safe)."
     },
     "verticals-index.json": {
+      "file": "verticals-index.json",
       "generator": "scripts/build-normalization-libraries/build-vertical-mapping.js",
       "generatorVersion": 1,
-      "outputBytes": 4529,
-      "outputSha256": "4eb14163b124a25642aa025c2c3137b25ee26da697529e84ea0c196a34fcf21a",
-      "note": "Bundled — lists all vertical packs by id + display name + pack URL/sha256/size. packUrl/packBytes/packSha256 are placeholder-null until the pack splitter (future commit) runs."
+      "outputBytes": 8067,
+      "outputSha256": "def020f42bd0811ce6f2ca26b76288cb4d4e2ea948414bb34377f0068e73565b"
     }
   }
 }

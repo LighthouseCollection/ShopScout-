@@ -14,7 +14,8 @@ described in
 - The corpus mounted at `data-sources/icecat/`:
   - `data-sources/icecat/schema-org/schemaorg-current-https-properties.csv`
   - `data-sources/icecat/refs/CategoryFeaturesList.xml.gz`
-  - `data-sources/icecat/refs/FeatureValuesVocabularyList.xml.gz` (deferred)
+  - `data-sources/icecat/refs/FeatureValuesVocabularyList.xml.gz`
+  - `data-sources/icecat/products/EN/*.xml`
 
 ## Usage
 
@@ -23,12 +24,21 @@ described in
 node scripts/build-normalization-libraries/build-all.js
 ```
 
+`build-all.js` validates the already-generated `icecatCategoryFeatures.json`
+by default because rebuilding it streams a 1.5 GB gzip source. To force that
+heavy rebuild explicitly:
+
+```bash
+$env:SHOPSCOUT_REBUILD_CATEGORY_FEATURES = '1'
+node scripts/build-normalization-libraries/build-all.js
+```
+
 Individual generators:
 
 ```bash
 node scripts/build-normalization-libraries/build-schema-org-properties.js
 node scripts/build-normalization-libraries/build-icecat-category-features.js
-node scripts/build-normalization-libraries/build-icecat-vocabulary.js   # currently a stub
+node scripts/build-normalization-libraries/build-icecat-vocabulary.js
 ```
 
 Each generator:
@@ -46,8 +56,8 @@ Each generator:
 | Generator | Real / stub | Output | Notes |
 |---|---|---|---|
 | `build-schema-org-properties.js` | Real | 87 properties, ~45 KB | Filter: `domainIncludes` ⊇ {Product, Offer} plus a small supertype allowlist (`name`, `description`, `image`, `url`, `alternateName`). Identifier properties (ASIN, GTIN, SKU, MPN, model, serialNumber, productID, UPC/EAN/ISBN) are explicitly excluded — they belong in the identifier/matching model, not attribute normalization. |
-| `build-icecat-category-features.js` | Real (MVP) | ~thousands of categories | Streams the 1.5 GB gzip. Emits path, displayName, matchTerms (heuristic from path), and feature id list per category. |
-| `build-icecat-vocabulary.js` | Stub | Preserves fixture | Real generation requires cross-referencing FeaturesList + FeatureValuesVocabularyList + product XMLs to link vocabulary values to specific features. Deferred as follow-up. |
+| `build-icecat-category-features.js` | Real (MVP) | ~thousands of categories | Streams the 1.5 GB gzip when run directly or when `SHOPSCOUT_REBUILD_CATEGORY_FEATURES=1`. `build-all.js` validates the cached generated file by default. Emits path, displayName, matchTerms (heuristic from path), and feature id list per category. |
+| `build-icecat-vocabulary.js` | Real | 1,120 features, ~13K vocabulary entries | Scans observed EN product XML `ProductFeature` values and links each value to its Icecat feature id/name. Filters identifiers, booleans, numeric/unit measurements, and long free-text fields so only categorical enum vocabularies are emitted. |
 | `build-esci-substitutes.js` | Stub (Track A) | Preserves fixture | Real generation requires parsing the 700 MB Amazon ESCI dataset (parquet). Adds a substitute-pair scoring signal to `normalization/matching.js`. Fixture is a small illustrative set; runtime is fail-safe. |
 
 ## Fail-safe
