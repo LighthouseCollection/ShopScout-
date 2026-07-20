@@ -153,24 +153,36 @@
      format as "$20" / "$1,299". Accurate (Math.round, not $5 or
      $10 bucketing) but drops cents so prices are easy to compare
      at a glance. Tooltip preserves the exact original text. */
-  function formatPriceText(value) {
+  function priceAmount(value) {
     const text = textValue(value).trim();
-    if (!text) return '';
-    if (/[–—-]\s*\$?\d/.test(text) || /\b(to|from|more options)\b/i.test(text)) return '';
+    if (!text || /[–—-]\s*\$?\d/.test(text) || /\b(to|from|more options)\b/i.test(text)) return null;
     const match = text.match(/^\s*\$?\s*([0-9][0-9,]*(?:\.[0-9]{1,2})?)\s*$/);
-    if (!match) return '';
+    if (!match) return null;
     const amount = Number(match[1].replace(/,/g, ''));
+    return Number.isFinite(amount) ? amount : null;
+  }
+
+  function formatWholeDollarPrice(amount) {
+    return `$${amount.toLocaleString('en-US', { maximumFractionDigits: 0 })}`;
+  }
+
+  function formatPriceText(value, mode) {
+    const amount = priceAmount(value);
     if (!Number.isFinite(amount)) return '';
+    if (mode === 'nearest5') {
+      return formatWholeDollarPrice(Math.round(amount / 5) * 5);
+    }
     const rounded = Math.round(amount);
-    return `$${rounded.toLocaleString('en-US', { maximumFractionDigits: 0 })}`;
+    return formatWholeDollarPrice(rounded);
   }
   function renderPrice(params) {
     const text = textValue(params.value).trim();
     if (!text) return '<span class="ss-grid-empty">-</span>';
-    if (viewStateForParams(params).priceDisplayMode === 'actual') {
+    const mode = viewStateForParams(params).priceDisplayMode || 'nearest5';
+    if (mode === 'actual') {
       return `<span class="ss-grid-price">${esc(text)}</span>`;
     }
-    const formatted = formatPriceText(text);
+    const formatted = formatPriceText(text, mode);
     if (!formatted) return `<span class="ss-grid-price">${esc(text)}</span>`;
     return `<span class="ss-grid-price" title="${escAttr(text)}">${esc(formatted)}</span>`;
   }

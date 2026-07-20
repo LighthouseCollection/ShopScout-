@@ -268,13 +268,8 @@
       btn.classList.toggle('active', widthMode === 'full');
       btn.setAttribute('aria-pressed', widthMode === 'full' ? 'true' : 'false');
     });
-    root.document?.querySelectorAll('[data-ss-grid-command="toggle-price-display"]').forEach(button => {
-      const rounded = viewState.priceDisplayMode !== 'actual';
-      button.classList.toggle('active', rounded);
-      button.classList.toggle('is-on', rounded);
-      button.setAttribute('aria-pressed', rounded ? 'true' : 'false');
-      const label = button.querySelector?.('[data-ss-price-display-label]');
-      if (label) label.textContent = rounded ? 'Rounded' : 'Actual';
+    root.document?.querySelectorAll('[data-ss-price-display-mode]').forEach(select => {
+      select.value = viewState.priceDisplayMode || 'nearest5';
     });
     root.document?.querySelectorAll('[data-ss-grid-command="toggle-measurement-display"]').forEach(button => {
       const rounded = viewState.measurementDisplayMode === 'rounded';
@@ -341,6 +336,13 @@
       const groupSelect = event.target?.closest?.('[data-ss-grid-group-field]');
       if (groupSelect) {
         ensureStore().dispatch({ group: groupSelect.value || null });
+        render();
+        return;
+      }
+      const priceSelect = event.target?.closest?.('[data-ss-price-display-mode]');
+      if (priceSelect) {
+        const mode = ['actual', 'rounded', 'nearest5'].includes(priceSelect.value) ? priceSelect.value : 'nearest5';
+        ensureStore().dispatch({ priceDisplayMode: mode });
         render();
       }
     });
@@ -410,7 +412,7 @@
       render();
     } else if (command === 'toggle-price-display') {
       const current = ensureStore().getState().priceDisplayMode;
-      ensureStore().dispatch({ priceDisplayMode: current === 'actual' ? 'rounded' : 'actual' });
+      ensureStore().dispatch({ priceDisplayMode: current === 'actual' ? 'nearest5' : 'actual' });
       render();
     } else if (command === 'toggle-measurement-display') {
       const current = ensureStore().getState().measurementDisplayMode;

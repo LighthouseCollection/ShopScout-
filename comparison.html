@@ -242,13 +242,14 @@
            rules, and categorization workflows live under Settings. -->
       <div class="rb-group" data-group-id="review" data-collapsed-label="Normalization" aria-label="Normalization">
         <div class="rb-group-content" data-collapsed-label="Normalization">
-          <button class="rb-toggle-switch" type="button" data-ss-grid-command="toggle-price-display" title="Toggle price display between rounded whole dollars and exact captured prices" aria-pressed="true">
-            <span class="rb-toggle-copy">
-              <span class="rb-toggle-title">Prices</span>
-              <span class="rb-toggle-state" data-ss-price-display-label>Rounded</span>
-            </span>
-            <span class="rb-toggle-track" aria-hidden="true"><span class="rb-toggle-thumb"></span></span>
-          </button>
+          <div class="rb-stack rb-stack--normalization">
+            <label class="rb-mini-label" for="priceDisplayMode">Prices</label>
+            <select id="priceDisplayMode" class="rb-select rb-select--wide" data-ss-price-display-mode title="Choose how product prices appear in the grid">
+              <option value="actual">Actual</option>
+              <option value="rounded">Rounded</option>
+              <option value="nearest5">Rounded to nearest $5</option>
+            </select>
+          </div>
           <button class="rb-toggle-switch" type="button" data-ss-grid-command="toggle-measurement-display" title="Toggle measurement display between exact captured values and rounded comparison values" aria-pressed="true">
             <span class="rb-toggle-copy">
               <span class="rb-toggle-title">Measurements</span>

@@ -363,11 +363,15 @@ function createHarness() {
     });
     assert.equal(state.priceDisplayMode, 'actual', 'grid state preserves actual price display mode');
     assert.equal(state.measurementDisplayMode, 'actual', 'grid state preserves actual measurement display mode');
+    const nearest = ctx.ShopScoutGridCodexState.deserialize({
+      priceDisplayMode: 'nearest5'
+    });
+    assert.equal(nearest.priceDisplayMode, 'nearest5', 'grid state preserves nearest-5 price display mode');
     const fallback = ctx.ShopScoutGridCodexState.deserialize({
       priceDisplayMode: 'nonsense',
       measurementDisplayMode: 'nonsense'
     });
-    assert.equal(fallback.priceDisplayMode, 'rounded', 'invalid price display mode falls back to rounded');
+    assert.equal(fallback.priceDisplayMode, 'nearest5', 'invalid price display mode falls back to nearest-5 default');
     assert.equal(fallback.measurementDisplayMode, 'rounded', 'invalid measurement display mode falls back to rounded');
   }
 

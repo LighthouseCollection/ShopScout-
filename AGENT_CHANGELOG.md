@@ -1,5 +1,42 @@
 # ShopScout Agent Change Log
 
+## 2026-07-20 16:08 - Codex add price display dropdown with nearest-five default
+
+- Agent: Codex
+- Branch: grid-rebuild-codex
+- Commit: This commit
+- Status: Implemented. Replaced the binary price rounded/actual toggle with a three-mode price display dropdown and made nearest-$5 rounding the default.
+- What changed:
+  - Added `priceDisplayMode: nearest5` as the default grid state and persisted view-state option.
+  - Added grid price formatting modes: Actual, Rounded to nearest dollar, and Rounded to nearest $5.
+  - Replaced the Products > Normalization price toggle with a dropdown.
+  - Kept the old `toggle-price-display` command as a backward-compatible Actual / nearest-$5 switch.
+  - Added tests for nearest-$5 formatting and dropdown wiring.
+- Files touched:
+  - `comparison.html`
+  - `grid-rebuild-codex/agGridAdapter.js`
+  - `grid-rebuild-codex/shopscoutGrid.js`
+  - `grid-rebuild-codex/state.js`
+  - `grid-rebuild-codex/tests/adapter-display.test.js`
+  - `grid-rebuild-codex/tests/controls.test.js`
+  - `grid-rebuild-codex/tests/wiring.test.js`
+  - `tests/menu-layout.test.js`
+  - `AGENT_CHANGELOG.md`
+- Validation run:
+  - `node grid-rebuild-codex\tests\adapter-display.test.js` -> pass
+  - `node grid-rebuild-codex\tests\controls.test.js` -> pass
+  - `node tests\menu-layout.test.js` -> pass
+  - `node grid-rebuild-codex\tests\wiring.test.js` -> pass
+  - `npm run syntax` -> pass
+  - `npm run lint` -> pass, 0 warnings
+  - `npm test` -> 52/52 test files pass
+  - `npm run typecheck` -> pass
+  - `npm run build` -> Chrome / Edge / Firefox rebuilt
+- Review status / next reviewer:
+  - Ready for Claude review.
+- Follow-ups or risks:
+  - Existing saved views with `rounded` continue to show nearest whole-dollar prices; new or invalid view state defaults to nearest $5.
+
 ## 2026-07-20 15:51 - Codex repair AG Grid cell rendering after inset separator CSS
 
 - Agent: Codex

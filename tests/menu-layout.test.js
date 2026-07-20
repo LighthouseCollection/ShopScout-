@@ -171,6 +171,8 @@ assertIncludes('data-group-id="organize" data-collapsed-label="Organize"', 'Prod
 assertIncludes('data-group-id="review" data-collapsed-label="Normalization"', 'Products Normalization group has a collapsed popup label');
 assertIncludes('class="rb-group-content" data-collapsed-label="Organize"', 'Organize popup button label is readable from group content');
 assertIncludes('class="rb-group-content" data-collapsed-label="Normalization"', 'Normalization popup button label is readable from group content');
+assertIncludes('data-ss-price-display-mode', 'Normalization group uses a price display dropdown');
+assertIncludes('<option value="nearest5">Rounded to nearest $5</option>', 'price display dropdown includes nearest-$5 rounding');
 assertIncludes('class="rb-toggle-switch"', 'Products ribbon uses switch-style toggles');
 assertIncludes('class="rb-toggle-track"', 'Products ribbon toggle has a visual track');
 assert.ok(/\.rb-office-ribbon\s+\.rb-group\[data-group-id="review"\]\s+>\s+\.rb-group-content\s*{[\s\S]{0,180}flex-direction:\s*column;/.test(ribbonCss),

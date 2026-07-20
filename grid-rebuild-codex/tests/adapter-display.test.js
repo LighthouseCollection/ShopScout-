@@ -131,6 +131,20 @@ function createAdapterHarnessWithThrowingColumnMenu() {
   const { gridOptions: options } = harness.create({
     mode: 'productsRows',
     columns: [{ id: 'newPrice', field: 'newPrice', name: 'Price', type: 'price' }],
+    rows: [{ id: 'p1', newPrice: '$12' }, { id: 'p2', newPrice: '$14' }]
+  }, { viewState: { priceDisplayMode: 'nearest5' } });
+  const twelve = options.columnDefs[0].cellRenderer({ value: '$12', data: { id: 'p1' }, colDef: options.columnDefs[0], context: options.context });
+  const fourteen = options.columnDefs[0].cellRenderer({ value: '$14', data: { id: 'p2' }, colDef: options.columnDefs[0], context: options.context });
+  assert.ok(twelve.includes('$10'), 'nearest-5 price mode rounds $12 down to $10');
+  assert.ok(fourteen.includes('$15'), 'nearest-5 price mode rounds $14 up to $15');
+  assert.ok(twelve.includes('title="$12"'), 'nearest-5 price keeps exact value in the tooltip');
+}
+
+{
+  const harness = createAdapterHarness();
+  const { gridOptions: options } = harness.create({
+    mode: 'productsRows',
+    columns: [{ id: 'newPrice', field: 'newPrice', name: 'Price', type: 'price' }],
     rows: [{ id: 'p1', newPrice: '$19.49' }]
   }, { viewState: { priceDisplayMode: 'actual' } });
   const html = options.columnDefs[0].cellRenderer({ value: '$19.49', data: { id: 'p1' }, colDef: options.columnDefs[0], context: options.context });
