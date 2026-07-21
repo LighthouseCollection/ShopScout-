@@ -481,6 +481,27 @@ function createHarness() {
   {
     const harness = createHarness();
     await harness.ctx.ShopScoutGrid.render();
+    harness.ctx.ShopScoutGrid.openFreezeModal();
+    const body = harness.getModalConfig().body;
+    const brandPin = findAll(body, node => node.tagName === 'INPUT' && node.dataset.pinColumn === 'brand')[0];
+    assert.ok(brandPin, 'freeze modal renders a Brand pinned-column switch');
+    brandPin.checked = true;
+    await brandPin.dispatch('change');
+    assert.deepEqual(harness.ctx.ShopScoutGrid.getState().pinnedColumns, ['brand'],
+      'freeze modal stores pinned columns in grid state');
+    const topRow = findAll(body, node => node.tagName === 'INPUT' && node.dataset.pinTopRow === 'p1')[0];
+    assert.ok(topRow, 'freeze modal renders product rows that can be pinned to the top');
+    topRow.checked = true;
+    await topRow.dispatch('change');
+    assert.deepEqual(harness.ctx.ShopScoutGrid.getState().pinnedTopProductIds, ['p1'],
+      'freeze modal stores pinned top product ids in grid state');
+    assert.ok(harness.getUpdateCount() > 0,
+      'freeze modal updates refresh the grid immediately');
+  }
+
+  {
+    const harness = createHarness();
+    await harness.ctx.ShopScoutGrid.render();
     harness.ctx.ShopScoutGrid.openCustomFiltersModalForTests();
     const body = harness.getModalConfig().body;
     const modalActions = harness.getModalConfig().actions || [];

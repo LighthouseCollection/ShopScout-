@@ -1,3 +1,38 @@
+## 2026-07-21 02:11 - Codex freeze columns and rows (#28)
+
+- Agent: Codex
+- Branch: grid-rebuild-codex
+- Commit: This commit
+- Status: Implemented. Products Table View now exposes AG Grid-native frozen columns and pinned top rows.
+- What changed:
+  - Added a View > Freeze ribbon command for freezing optional columns and pinning product rows.
+  - Persisted `pinnedTopProductIds` in grid state beside existing `pinnedColumns`.
+  - Mapped user-pinned columns to AG Grid `pinned: 'left'` without locking them as immovable system columns.
+  - Mapped pinned product IDs to AG Grid `pinnedTopRowData` and removed those rows from normal `rowData` to avoid duplicate visible rows.
+  - Added a themed Freeze modal with switch controls for columns and product rows.
+  - Updated adapter row lookup paths so detail, rating, selection, and row actions still work for pinned rows.
+  - Added regression tests for state persistence, adapter pinned-row/column config, modal behavior, ribbon wiring, and modal scrolling.
+- Files touched:
+  - comparison.html
+  - grid-rebuild-codex/agGridAdapter.js
+  - grid-rebuild-codex/grid.css
+  - grid-rebuild-codex/shopscoutGrid.js
+  - grid-rebuild-codex/state.js
+  - grid-rebuild-codex/tests/adapter-display.test.js
+  - grid-rebuild-codex/tests/controls.test.js
+  - grid-rebuild-codex/tests/state.test.js
+  - grid-rebuild-codex/tests/wiring.test.js
+  - AGENT_CHANGELOG.md
+- Validation run:
+  - node grid-rebuild-codex\tests\state.test.js -> pass
+  - node grid-rebuild-codex\tests\adapter-display.test.js -> pass
+  - node grid-rebuild-codex\tests\controls.test.js -> pass
+  - node grid-rebuild-codex\tests\wiring.test.js -> pass
+- Review status / next reviewer:
+  - Ready for Claude review.
+- Follow-ups or risks:
+  - Visual review should confirm the Freeze modal density is acceptable on smaller dashboard widths.
+
 ## 2026-07-21 02:02 - Codex columns modal redesign (#25)
 
 - Agent: Codex

@@ -24,6 +24,7 @@
       removedColumns: [],
       columnOrder: [],
       pinnedColumns: [],
+      pinnedTopProductIds: [],
       savedViewId: null
     };
   }
@@ -64,6 +65,7 @@
       removedColumns: asArray(input.removedColumns).map(String).filter(Boolean),
       columnOrder: asArray(input.columnOrder).map(String).filter(Boolean),
       pinnedColumns: asArray(input.pinnedColumns).map(String).filter(Boolean),
+      pinnedTopProductIds: asArray(input.pinnedTopProductIds).map(String).filter(Boolean),
       savedViewId: input.savedViewId ? String(input.savedViewId) : base.savedViewId
     };
   }

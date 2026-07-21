@@ -166,6 +166,28 @@ function createAdapterHarnessWithThrowingColumnMenu() {
 }
 
 {
+  const harness = createAdapterHarness();
+  const { gridOptions: options } = harness.create({
+    mode: 'productsRows',
+    columns: [
+      { id: 'title', field: 'title', name: 'Name', type: 'title' },
+      { id: 'brand', field: 'brand', name: 'Brand', type: 'text', pinned: true },
+      { id: 'source', field: 'source', name: 'Source', type: 'source' }
+    ],
+    rows: [
+      { id: 'p1', title: 'Pinned', brand: 'Qnap', source: 'Amazon' },
+      { id: 'p2', title: 'Regular', brand: 'Synology', source: 'Newegg' }
+    ]
+  }, { viewState: { pinnedTopProductIds: ['p1'] } });
+  const brandDef = options.columnDefs.find(col => col.colId === 'brand');
+  assert.equal(brandDef.pinned, 'left', 'user-pinned columns map to AG Grid pinned left column defs');
+  assert.deepEqual(options.pinnedTopRowData.map(row => row.id), ['p1'],
+    'pinned top product ids map to AG Grid pinnedTopRowData');
+  assert.deepEqual(options.rowData.map(row => row.id), ['p2'],
+    'pinned top rows are removed from normal rowData to avoid duplicate visible rows');
+}
+
+{
   const compatibleDevices = 'iPhone 17 Pro Max/17 Pro/Air/17/16 Pro Max/16 Pro/16 Plus/16, Mac Mini M4/M4 Pro, MacBook Pro M4/M4 Pro/M4 Max, MacBook Air 2024, Galaxy S26/S25/S24 Ultra, iPad Pro 2024, iPad Air 2024, XPS 17/15/13, Dell, HP Chromebook x360, Surface Book 3/2, Samsung Tablet';
   const harness = createAdapterHarness();
   const { gridOptions: options } = harness.create({

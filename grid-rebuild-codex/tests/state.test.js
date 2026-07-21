@@ -51,7 +51,8 @@ const restored = state.deserialize({
   matrixMode: 'garbage',
   sort: [{ field: 'rating', dir: 'up' }],
   columnVisibility: { source: false },
-  pinnedColumns: ['title']
+  pinnedColumns: ['title'],
+  pinnedTopProductIds: new Set(['p1', 'p2'])
 });
 
 assert.equal(restored.mode, 'rows', 'invalid mode falls back safely');
@@ -59,5 +60,6 @@ assert.equal(restored.matrixMode, 'basic', 'invalid matrix mode falls back safel
 assert.equal(restored.sort[0].dir, 'asc', 'invalid sort direction normalizes');
 assert.equal(restored.columnVisibility.source, false);
 assert.deepEqual(restored.pinnedColumns, ['title']);
+assert.deepEqual(restored.pinnedTopProductIds, ['p1', 'p2']);
 
 console.log('grid-codex-state.test.js: all assertions passed');

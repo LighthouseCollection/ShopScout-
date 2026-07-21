@@ -34,6 +34,8 @@ assert.ok(html.includes('data-ss-grid-group-field'),
   'View ribbon exposes grouping field picker');
 assert.ok(html.includes('data-ss-grid-command="open-columns"'),
   'View ribbon exposes columns chooser command');
+assert.ok(html.includes('data-ss-grid-command="open-freeze"'),
+  'View ribbon exposes freeze columns / rows command');
 assert.ok(html.includes('data-ss-price-display-option="nearest5"') && html.includes('Rounded to nearest $5'),
   'Products Normalization group exposes the price display menu with nearest-$5 rounding');
 assert.ok(html.includes('data-ss-measurement-display-option="rounded"') && html.includes('data-ss-measurement-display-option="actual"'),
@@ -93,6 +95,8 @@ assert.ok(/\.ss-grid-column-group[\s\S]{0,220}break-inside:\s*avoid/.test(gridCs
   'columns modal keeps each alphabet group intact inside a masonry column');
 assert.ok(/\.ss-grid-switch-track[\s\S]{0,260}border-radius:\s*999px/.test(gridCss),
   'columns modal hide controls use a switch-style track');
+assert.ok(/\.ss-grid-freeze-list[\s\S]{0,220}overflow-y:\s*auto/.test(gridCss),
+  'freeze modal has a vertically scrollable row picker');
 assert.ok(/\.ss-grid-column-letter[\s\S]{0,180}letter-spacing:\s*0\.08em/.test(gridCss),
   'columns modal has alphabet letter headers for grouped fields');
 assert.ok(/\.ss-grid-group-title[\s\S]{0,160}font-weight:\s*700/.test(gridCss),

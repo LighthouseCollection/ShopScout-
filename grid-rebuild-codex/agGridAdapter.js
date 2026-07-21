@@ -685,7 +685,8 @@
   function toAgColumns(columns) {
     return (columns || []).map(column => {
       const field = column.field || column.id;
-      const isPinnedLeft = PINNED_LEFT_COLUMN_IDS.has(column.id);
+      const systemPinnedLeft = PINNED_LEFT_COLUMN_IDS.has(column.id);
+      const isPinnedLeft = systemPinnedLeft || column.pinned === true;
       const isMatrixCell = column.type === 'matrixCell';
       /* Prefer explicit column.minWidth from projections.js over the
          type-based fallback in columnMinWidth. Matrix product columns
@@ -711,7 +712,7 @@
         },
         sortable: !['selection','image','actions','matrixCell','attribute','normalizationActions','userRuleActions'].includes(column.type),
         resizable: true,
-        suppressMovable: column.type === 'selection' || column.type === 'image' || isPinnedLeft,
+        suppressMovable: column.type === 'selection' || column.type === 'image' || systemPinnedLeft,
         minWidth,
         hide: !!column.defaultHidden,
         /* My Rating handles its own click delegation on each star, so
@@ -735,7 +736,7 @@
         cellClass: cellClassForColumn(column),
         headerClass: 'ss-grid-header',
         pinned: isPinnedLeft ? 'left' : undefined,
-        lockPinned: isPinnedLeft || undefined
+        lockPinned: systemPinnedLeft || undefined
       };
       if (column.type === 'selection') {
         colDef.checkboxSelection = true;
@@ -761,6 +762,25 @@
       if (column.width) colDef.width = column.width;
       return colDef;
     });
+  }
+
+  function pinnedTopIdSet(viewState) {
+    return new Set((Array.isArray(viewState?.pinnedTopProductIds) ? viewState.pinnedTopProductIds : [])
+      .map(String)
+      .filter(Boolean));
+  }
+
+  function splitPinnedRows(rows, viewState) {
+    const pinnedIds = pinnedTopIdSet(viewState);
+    const pinnedTopRowData = [];
+    const rowData = [];
+    for (const row of rows || []) {
+      const copy = Object.assign({}, row);
+      const id = String(copy.id ?? copy._id ?? '');
+      if (id && pinnedIds.has(id)) pinnedTopRowData.push(copy);
+      else rowData.push(copy);
+    }
+    return { rowData, pinnedTopRowData };
   }
 
   /* Auto-size every column to fit MAX(header text, widest cell content).
@@ -877,7 +897,10 @@
     container.classList.toggle('ss-grid-is-matrix', projection?.mode === 'comparisonMatrix');
     container.style.width = '100%';
 
-    const rowData = (projection.rows || []).map(row => Object.assign({}, row));
+    const splitRows = splitPinnedRows(projection.rows || [], displayState());
+    const rowData = splitRows.rowData;
+    const pinnedTopRowData = splitRows.pinnedTopRowData;
+    let currentRows = pinnedTopRowData.concat(rowData);
     let currentColumnDefs = toAgColumns(projection.columns);
     let gridApi = null;
     let resizeObserver = null;
@@ -902,6 +925,7 @@
     const gridOptions = {
       columnDefs: currentColumnDefs,
       rowData,
+      pinnedTopRowData,
       context: { viewState: displayState() },
       /* AG Grid v33+ ships two theming systems in parallel: the
          new JS-based Theming API and the legacy CSS-class theming
@@ -1000,7 +1024,7 @@
       onSelectionChanged(evt) {
         const selected = typeof evt.api?.getSelectedRows === 'function' ? evt.api.getSelectedRows() : [];
         const selectedIds = new Set(selected.map(row => String(row?.id ?? row?._id)));
-        for (const row of rowData) row._selected = selectedIds.has(String(row?.id ?? row?._id));
+        for (const row of currentRows) row._selected = selectedIds.has(String(row?.id ?? row?._id));
         if (typeof opts.onSelectionChange !== 'function') return;
         opts.onSelectionChange(selected);
       }
@@ -1110,7 +1134,7 @@
         event.preventDefault();
         event.stopImmediatePropagation();
         const productId = detailBtn.dataset.ssGridDetail;
-        const row = rowData.find(r => String(r.id ?? r._id) === String(productId));
+        const row = currentRows.find(r => String(r.id ?? r._id) === String(productId));
         if (typeof opts.onProductDetail === 'function') {
           opts.onProductDetail(row || { id: productId, _shopScout: { productId } });
         }
@@ -1127,7 +1151,7 @@
         const cellEl = starEl.closest('[row-id]') || starEl.closest('.ag-row');
         const rowId = cellEl?.getAttribute?.('row-id');
         const row = rowId != null
-          ? rowData.find(r => String(r.id ?? r._id) === String(rowId))
+          ? currentRows.find(r => String(r.id ?? r._id) === String(rowId))
           : null;
         if (!row) return;
         const nextValue = Number(starEl.dataset.myRatingStar);
@@ -1151,7 +1175,7 @@
         const cellEl = actionBtn.closest('[row-id]') || actionBtn.closest('.ag-row');
         const rowId = cellEl?.getAttribute?.('row-id');
         const row = rowId != null
-          ? rowData.find(r => String(r.id ?? r._id) === String(rowId))
+          ? currentRows.find(r => String(r.id ?? r._id) === String(rowId))
           : null;
         if (typeof opts.onAction === 'function') opts.onAction(actionBtn.dataset.ssGridAction, row);
         return;
@@ -1178,10 +1202,10 @@
       if (checkbox) {
         event.stopImmediatePropagation();
         const rowId = checkbox.dataset.rowId;
-        const row = rowData.find(r => String(r.id ?? r._id) === String(rowId));
+        const row = currentRows.find(r => String(r.id ?? r._id) === String(rowId));
         if (row) row._selected = checkbox.checked;
         if (typeof opts.onSelectionChange === 'function') {
-          opts.onSelectionChange(rowData.filter(r => r._selected));
+          opts.onSelectionChange(currentRows.filter(r => r._selected));
         }
       }
     };
@@ -1195,37 +1219,47 @@
         const nextColumnDefs = toAgColumns(nextProjection.columns);
         currentColumnDefs = nextColumnDefs;
         gridApi.setGridOption('columnDefs', nextColumnDefs);
-        const nextRows = (nextProjection.rows || []).map(r => Object.assign({}, r));
+        const nextSplitRows = splitPinnedRows(nextProjection.rows || [], opts.viewState);
+        const nextRows = nextSplitRows.rowData;
+        const nextPinnedTopRows = nextSplitRows.pinnedTopRowData;
         gridApi.setGridOption('rowData', nextRows);
+        gridApi.setGridOption('pinnedTopRowData', nextPinnedTopRows);
         rowData.length = 0;
         Array.prototype.push.apply(rowData, nextRows);
+        pinnedTopRowData.length = 0;
+        Array.prototype.push.apply(pinnedTopRowData, nextPinnedTopRows);
+        currentRows = pinnedTopRowData.concat(rowData);
         syncSelectedRowsToAg(gridApi);
         container.classList.toggle('ss-grid-is-matrix', nextProjection?.mode === 'comparisonMatrix');
         schedulePillSync(gridApi);
       },
       updateItem(itemId, nextItem) {
         if (!itemId || !nextItem) return;
-        const idx = rowData.findIndex(r => String(r.id) === String(itemId));
-        if (idx < 0) return;
-        Object.assign(rowData[idx], nextItem);
-        gridApi.applyTransaction({ update: [rowData[idx]] });
+        const row = currentRows.find(r => String(r.id) === String(itemId));
+        if (!row) return;
+        Object.assign(row, nextItem);
+        gridApi.applyTransaction({ update: [row] });
         schedulePillSync(gridApi);
       },
       updateRow(itemId, nextItem) {
         if (!itemId || !nextItem) return false;
-        const idx = rowData.findIndex(r => String(r.id) === String(itemId));
-        if (idx < 0) return false;
-        Object.assign(rowData[idx], nextItem);
-        gridApi.applyTransaction({ update: [rowData[idx]] });
+        const row = currentRows.find(r => String(r.id) === String(itemId));
+        if (!row) return false;
+        Object.assign(row, nextItem);
+        gridApi.applyTransaction({ update: [row] });
         schedulePillSync(gridApi);
         return true;
       },
       deleteRow(itemId) {
         if (!itemId) return false;
-        const idx = rowData.findIndex(r => String(r.id) === String(itemId));
-        if (idx < 0) return false;
-        const removed = rowData.splice(idx, 1);
+        const rowId = String(itemId);
+        const idx = rowData.findIndex(r => String(r.id) === rowId);
+        const pinnedIdx = pinnedTopRowData.findIndex(r => String(r.id) === rowId);
+        if (idx < 0 && pinnedIdx < 0) return false;
+        const removed = idx >= 0 ? rowData.splice(idx, 1) : pinnedTopRowData.splice(pinnedIdx, 1);
+        currentRows = pinnedTopRowData.concat(rowData);
         gridApi.applyTransaction({ remove: removed });
+        if (pinnedIdx >= 0) gridApi.setGridOption('pinnedTopRowData', pinnedTopRowData.slice());
         schedulePillSync(gridApi);
         return true;
       },

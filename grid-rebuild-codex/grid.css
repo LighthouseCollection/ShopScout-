@@ -878,6 +878,10 @@ a.ss-grid-rating-link:hover .ss-grid-stars {
   min-width: min(1040px, calc(100vw - 48px));
 }
 
+.ss-grid-modal--freeze {
+  min-width: min(900px, calc(100vw - 48px));
+}
+
 .ss-grid-filter-list {
   display: grid;
 }
@@ -889,6 +893,52 @@ a.ss-grid-rating-link:hover .ss-grid-stars {
   max-height: min(64vh, 620px);
   overflow-x: hidden;
   overflow-y: auto;
+}
+
+.ss-grid-freeze-body {
+  gap: 14px;
+}
+
+.ss-grid-freeze-section {
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+}
+
+.ss-grid-freeze-section h3 {
+  margin: 0;
+  color: var(--ink, #0f1419);
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.ss-grid-freeze-list {
+  max-height: min(48vh, 440px);
+  overflow-y: auto;
+  overflow-x: hidden;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.ss-grid-freeze-option {
+  min-height: 38px;
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  min-width: 0;
+  padding: 8px 10px;
+  border: 1px solid var(--rule, #d1d5db);
+  border-radius: 6px;
+  background: var(--paper, #f8fafc);
+  color: var(--ink, #0f1419);
+}
+
+.ss-grid-freeze-label {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .ss-grid-column-help {

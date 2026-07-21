@@ -408,6 +408,8 @@
       clearFilters();
     } else if (command === 'open-columns') {
       openColumnsModal();
+    } else if (command === 'open-freeze') {
+      openFreezeModal();
     } else if (command === 'reset-columns') {
       ensureStore().dispatch({ columnVisibility: {}, columnOrder: [], pinnedColumns: [] });
       render();
@@ -426,7 +428,8 @@
         group: null,
         columnVisibility: {},
         columnOrder: [],
-        pinnedColumns: []
+        pinnedColumns: [],
+        pinnedTopProductIds: []
       });
       render();
     } else if (command === 'toggle-price-display') {
@@ -781,6 +784,154 @@
     });
   }
 
+  function freezeableColumns() {
+    return usableColumns(state.lastProjection)
+      .filter(column => column
+        && !column.required
+        && !['selection', 'image', 'actions', 'attribute', 'normalizationActions', 'userRuleActions'].includes(column.type)
+        && !['select', 'thumb', 'title', 'attribute'].includes(column.id))
+      .slice()
+      .sort((a, b) => String(a.name || a.id).localeCompare(String(b.name || b.id), undefined, {
+        numeric: true,
+        sensitivity: 'base'
+      }));
+  }
+
+  function productRowTitle(product) {
+    return product?.title || product?.name || product?.model || product?.url || product?.id || 'Untitled product';
+  }
+
+  function openFreezeModal() {
+    const ui = root.ShopScoutUI;
+    const dom = ui?.dom;
+    if (!ui?.modal || !dom) {
+      openFallbackModal('Freeze', 'The themed modal system is not available.');
+      return;
+    }
+    const body = dom.elem('div', { class: 'ss-grid-modal-body ss-grid-freeze-body' });
+    dom.append(body, dom.elem('p', {
+      class: 'ss-grid-modal-muted',
+      text: 'Freeze columns to the left or pin products to the top of the current table. This uses AG Grid native pinned columns and pinned top rows.'
+    }));
+
+    const columnList = dom.elem('div', { class: 'ss-grid-freeze-list' });
+    const rowList = dom.elem('div', { class: 'ss-grid-freeze-list' });
+    dom.append(body, dom.elem('section', {
+      class: 'ss-grid-freeze-section',
+      children: [
+        dom.elem('h3', { text: 'Frozen columns' }),
+        columnList
+      ]
+    }));
+    dom.append(body, dom.elem('section', {
+      class: 'ss-grid-freeze-section',
+      children: [
+        dom.elem('h3', { text: 'Pinned rows' }),
+        rowList
+      ]
+    }));
+
+    function renderColumns() {
+      dom.empty(columnList);
+      const current = ensureStore().getState();
+      const pinned = new Set(Array.isArray(current.pinnedColumns) ? current.pinnedColumns : []);
+      const columns = freezeableColumns();
+      if (!columns.length) {
+        dom.append(columnList, dom.elem('p', { class: 'ss-grid-modal-muted', text: 'No optional columns are available to freeze.' }));
+        return;
+      }
+      columns.forEach(column => {
+        const field = column.id;
+        const input = dom.elem('input', {
+          attrs: {
+            type: 'checkbox',
+            value: field,
+            role: 'switch',
+            'aria-label': `Freeze ${column.name || column.id}`,
+            'data-pin-column': field
+          }
+        });
+        input.checked = pinned.has(field);
+        input.addEventListener('change', () => {
+          const next = new Set(ensureStore().getState().pinnedColumns || []);
+          if (input.checked) next.add(field);
+          else next.delete(field);
+          ensureStore().dispatch({ pinnedColumns: [...next] });
+          return refreshGridData();
+        });
+        dom.append(columnList, dom.elem('label', {
+          class: 'ss-grid-freeze-option ss-grid-switch',
+          children: [
+            input,
+            dom.elem('span', {
+              class: 'ss-grid-switch-track',
+              attrs: { 'aria-hidden': 'true' },
+              children: [dom.elem('span', { class: 'ss-grid-switch-thumb' })]
+            }),
+            dom.elem('span', { class: 'ss-grid-freeze-label', text: column.name || column.id })
+          ]
+        }));
+      });
+    }
+
+    function renderRows() {
+      dom.empty(rowList);
+      const current = ensureStore().getState();
+      const pinned = new Set(Array.isArray(current.pinnedTopProductIds) ? current.pinnedTopProductIds : []);
+      const products = state.lastProducts || [];
+      if (!products.length) {
+        dom.append(rowList, dom.elem('p', { class: 'ss-grid-modal-muted', text: 'No product rows are available to pin.' }));
+        return;
+      }
+      products.forEach(product => {
+        const id = String(product.id || product._shopScout?.productId || '').trim();
+        if (!id) return;
+        const input = dom.elem('input', {
+          attrs: {
+            type: 'checkbox',
+            value: id,
+            role: 'switch',
+            'aria-label': `Pin ${productRowTitle(product)} to top`,
+            'data-pin-top-row': id
+          }
+        });
+        input.checked = pinned.has(id);
+        input.addEventListener('change', () => {
+          const next = new Set(ensureStore().getState().pinnedTopProductIds || []);
+          if (input.checked) next.add(id);
+          else next.delete(id);
+          ensureStore().dispatch({ pinnedTopProductIds: [...next] });
+          return refreshGridData();
+        });
+        dom.append(rowList, dom.elem('label', {
+          class: 'ss-grid-freeze-option ss-grid-switch',
+          children: [
+            input,
+            dom.elem('span', {
+              class: 'ss-grid-switch-track',
+              attrs: { 'aria-hidden': 'true' },
+              children: [dom.elem('span', { class: 'ss-grid-switch-thumb' })]
+            }),
+            dom.elem('span', { class: 'ss-grid-freeze-label', text: productRowTitle(product) })
+          ]
+        }));
+      });
+    }
+
+    renderColumns();
+    renderRows();
+    ui.modal.open({
+      title: 'Freeze Columns and Rows',
+      body,
+      className: 'ss-grid-modal--freeze',
+      width: 'min(900px, calc(100vw - 48px))',
+      actions: [
+        { label: 'Cancel', value: false },
+        { label: 'Done', kind: 'primary', value: true, isDefault: true }
+      ]
+    });
+  }
+
   async function commitCellEdit(edit) {
     const repo = root.SSProductRepo;
     const editing = root.ShopScoutGridCodexEditing;
@@ -1044,6 +1195,7 @@
     openCustomFiltersModalForTests: openCustomFiltersModal,
     clearFiltersForTests: clearFilters,
     openColumnsModal,
+    openFreezeModal,
     _debugAdapterForTests() {
       return state.adapter;
     },
