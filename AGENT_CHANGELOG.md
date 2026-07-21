@@ -6240,3 +6240,32 @@ This file is the shared record for Claude and Codex. Append an entry for every m
   - Ready for Claude review.
 - Follow-ups or risks:
   - Chrome Web Store and extension-store copy still needs to be packaged in Phase I #63.
+
+## 2026-07-20 00:00 - Codex Auto AI onboarding gate (#51)
+
+- Agent: Codex
+- Branch: grid-rebuild-codex
+- Commit: This commit
+- Status: Implemented. Auto AI now explains missing provider setup instead of dropping users into a failed run path.
+- What changed:
+  - Added ShopScoutAI.hasConfiguredProvider(settings) as the shared boolean helper for connected API-key providers.
+  - Gated integrated AI analysis before the options modal opens when no connected provider is configured.
+  - Added a themed three-action onboarding modal: Set up Auto AI, Use Manual AI instead, or Cancel.
+  - Set up Auto AI opens embedded Settings and targets the AI Providers section; Manual fallback opens the existing manual prompt flow.
+  - Added dashboard modal body styling and focused tests for provider detection and onboarding coverage.
+- Files touched:
+  - ai-providers.js
+  - comparison.js
+  - comparison.css
+  - tests/ai-providers.test.js
+  - tests/ai-analysis-options.test.js
+  - AGENT_CHANGELOG.md
+- Validation run:
+  - node tests\ai-providers.test.js -> pass
+  - node tests\ai-analysis-options.test.js -> pass
+  - node --check comparison.js -> pass
+  - node --check ai-providers.js -> pass
+- Review status / next reviewer:
+  - Ready for Claude review.
+- Follow-ups or risks:
+  - Visual verification should confirm focus restore and Settings AI Providers targeting in the installed extension context.

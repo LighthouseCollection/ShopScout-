@@ -280,6 +280,7 @@
   .dashboard-about-table tr:last-child td { border-bottom: 0; }
   .dashboard-about-version { font-size: 11px; color: var(--ink-4); margin-top: 18px; }
   .dashboard-help kbd { display: inline-block; padding: 1px 5px; border: 1px solid var(--rule); border-bottom-width: 2px; border-radius: 3px; background: var(--paper); font-family: var(--font-mono); font-size: 11px; color: var(--ink); }
+  .ai-onboarding-dialog { display: grid; gap: 10px; color: var(--ink-2); line-height: 1.45; }
   .dashboard-export-panel { display: grid; gap: 16px; width: 100%; max-width: none; }
   .dashboard-export-section h3 { margin: 0 0 8px; font-size: 13px; color: var(--ink); }
   .dashboard-format-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 10px; width: 100%; max-width: none; }

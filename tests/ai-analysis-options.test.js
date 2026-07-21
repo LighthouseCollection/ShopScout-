@@ -149,6 +149,11 @@ assert.ok(!/\.ai-option-list\s*\{[^}]*repeat\(2/.test(comparisonHtml), 'AI optio
 assert.ok(comparisonHtml.includes('.ai-option, .ai-option * { text-transform: none; letter-spacing: 0; }'), 'AI option labels override generic modal uppercase styling');
 assert.ok(comparisonHtml.includes('background: var(--paper);') && comparisonHtml.includes('border: 1px solid var(--rule-strong);'), 'AI options modal follows the new comparison theme tokens');
 assert.ok(comparisonJs.includes('openAiOptionsModal'), 'comparison script opens the AI options modal before running');
+assert.ok(comparisonJs.includes('openAutoAiOnboardingModal'), 'connected AI path shows onboarding when no provider is configured');
+assert.ok(comparisonJs.includes('Auto AI needs an AI account first'), 'Auto AI onboarding explains the missing account setup');
+assert.ok(comparisonJs.includes('Set up Auto AI'), 'Auto AI onboarding can open AI provider settings');
+assert.ok(comparisonJs.includes('Use Manual AI instead'), 'Auto AI onboarding can fall back to Manual AI');
+assert.ok(comparisonJs.includes('hasConnectedAiProvider(settings)'), 'integrated AI checks provider configuration before opening run options');
 assert.ok(comparisonJs.includes("setAiOptionsTab('payload')"), 'AI options modal opens on Data to Send');
 assert.ok(comparisonJs.includes('analysisOptions'), 'comparison script sends selected analysis options to the background pipeline');
 assert.ok(/function collectAiOptionsFromSectionsForProducts\([\s\S]*sellerRisk:\s*!!normalized\.riskSellerChecks/.test(comparisonJs), 'risk/seller section maps to seller risk analysis');

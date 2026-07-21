@@ -809,6 +809,10 @@
     });
   }
 
+  function hasConfiguredProvider(settings) {
+    return configuredProviders(settings).some(provider => provider.adapter !== 'manual');
+  }
+
   function resolveProviderForStage(settings, stage) {
     const merged = mergeSettings(settings);
     const roleProviderId = merged.roles?.[stage];
@@ -1278,6 +1282,7 @@
     mergeSettings,
     maskKey,
     configuredProviders,
+    hasConfiguredProvider,
     resolveProviderForStage,
     createEvidenceEvent,
     extractJsonFromText,

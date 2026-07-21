@@ -59,6 +59,10 @@ assert.strictEqual(settings.roles.comparison, 'auto', 'comparison defaults to au
 
 settings.providers.openai.enabled = true;
 settings.providers.openai.apiKey = 'sk-test';
+assert.strictEqual(AI.hasConfiguredProvider(settings), true, 'hasConfiguredProvider detects an enabled API-key provider');
+const noKeySettings = AI.createDefaultSettings();
+noKeySettings.providers.openai.enabled = true;
+assert.strictEqual(AI.hasConfiguredProvider(noKeySettings), false, 'hasConfiguredProvider requires an API key');
 assert.strictEqual(
   AI.resolveProviderForStage(settings, 'verification').id,
   'openai',

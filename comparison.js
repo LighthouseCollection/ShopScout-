@@ -1376,6 +1376,50 @@ async function openManualAiModal() {
   await openAiOptionsModal(null, 'manual', 'manual');
 }
 
+async function loadAiSettingsForOnboarding() {
+  if (!globalThis.ShopScoutAI || !chrome?.storage?.local) return null;
+  try {
+    const stored = await chrome.storage.local.get(ShopScoutAI.AI_STORAGE_KEY);
+    return ShopScoutAI.mergeSettings(stored[ShopScoutAI.AI_STORAGE_KEY]);
+  } catch {
+    return ShopScoutAI.mergeSettings(null);
+  }
+}
+
+function hasConnectedAiProvider(settings) {
+  if (!globalThis.ShopScoutAI) return false;
+  if (typeof ShopScoutAI.hasConfiguredProvider === 'function') {
+    return ShopScoutAI.hasConfiguredProvider(settings);
+  }
+  return ShopScoutAI.configuredProviders(settings)
+    .some(provider => provider.adapter !== 'manual');
+}
+
+async function openAutoAiOnboardingModal() {
+  const ui = globalThis.ShopScoutUI;
+  if (!ui?.modal?.open || !ui?.render?.html) {
+    toast.show('Auto AI needs an AI provider first. Open Settings to add one.', 'error');
+    return 'cancel';
+  }
+  return new Promise(resolve => {
+    ui.modal.open({
+      title: 'Auto AI needs an AI account first',
+      width: 'min(560px, 92vw)',
+      body: ui.render.html`
+        <div class="ai-onboarding-dialog">
+          <p>Connected Auto AI uses your own provider account and API key. Your provider may charge for usage based on its pricing.</p>
+          <p>You can set up Auto AI now, or use Manual AI to copy the prompt into ChatGPT, Claude, Gemini, Perplexity, or another assistant yourself.</p>
+        </div>`,
+      actions: [
+        { label: 'Cancel', value: 'cancel' },
+        { label: 'Use Manual AI instead', value: 'manual' },
+        { label: 'Set up Auto AI', value: 'settings', kind: 'primary', isDefault: true }
+      ],
+      onClose: value => resolve(value || 'cancel')
+    });
+  });
+}
+
 function manualAiServiceById(id) {
   return MANUAL_AI_SERVICES.find(service => service.id === id) || MANUAL_AI_SERVICES[0];
 }
@@ -2661,6 +2705,21 @@ async function openAiOptionsModal(productIndexes, providerId = 'auto', runMode =
   if (runMode === 'integrated' && aiRunInProgress) {
     toast.show('AI analysis is already running. Wait for this run to finish before starting another one.', 'error');
     return;
+  }
+  if (runMode === 'integrated') {
+    const settings = await loadAiSettingsForOnboarding();
+    if (!hasConnectedAiProvider(settings)) {
+      const action = await openAutoAiOnboardingModal();
+      if (action === 'settings') {
+        await openSettingsPage();
+        setTimeout(() => {
+          document.querySelector('[data-settings-nav="ai-providers"]')?.click();
+        }, 0);
+      } else if (action === 'manual') {
+        await openManualAiModal();
+      }
+      return;
+    }
   }
   const products = await getAiOptionsProducts(productIndexes);
   if (!products.length) { toast.show('No products selected for AI analysis', 'error'); return; }
