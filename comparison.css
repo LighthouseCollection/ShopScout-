@@ -920,12 +920,12 @@
   .section-title { margin: 22px 0 10px; font-family: var(--font-display); font-size: 17px; line-height: 1.25; font-weight: 800; color: var(--ink); }
   .section-note { color: var(--ink-2); font-size: 13px; line-height: 1.55; margin: 0 0 12px; }
   .table-scroll { overflow-x: auto; margin-bottom: 16px; }
-  .cmp-table { width: 100%; border-collapse: separate; border-spacing: 0; background: var(--card); border: 1px solid var(--rule-strong); border-radius: var(--radius-lg); overflow: hidden; font-size: 13px; }
-  .cmp-table th { background: var(--paper-2); color: var(--ink-3); padding: 11px 12px; text-align: left; font-family: var(--font-mono); font-size: 10px; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; border-bottom: 1px solid var(--rule); }
-  .cmp-table td { padding: 12px; vertical-align: top; border-bottom: 1px solid var(--rule); line-height: 1.45; }
-  .cmp-table tr:last-child td { border-bottom: 0; }
-  .cmp-table a { color: var(--primary); font-weight: 700; text-decoration: none; }
-  .cmp-table a:hover { text-decoration: underline; }
+  .ai-report-table { width: 100%; border-collapse: separate; border-spacing: 0; background: var(--card); border: 1px solid var(--rule-strong); border-radius: var(--radius-lg); overflow: hidden; font-size: 13px; }
+  .ai-report-table th { background: var(--paper-2); color: var(--ink-3); padding: 11px 12px; text-align: left; font-family: var(--font-mono); font-size: 10px; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; border-bottom: 1px solid var(--rule); }
+  .ai-report-table td { padding: 12px; vertical-align: top; border-bottom: 1px solid var(--rule); line-height: 1.45; }
+  .ai-report-table tr:last-child td { border-bottom: 0; }
+  .ai-report-table a { color: var(--primary); font-weight: 700; text-decoration: none; }
+  .ai-report-table a:hover { text-decoration: underline; }
   .notes { display: grid; gap: 8px; margin: 12px 0 4px; }
   .note, .assessment, .empty-state { padding: 11px 12px; border: 1px solid var(--rule); border-radius: var(--radius-lg); background: var(--card); color: var(--ink-2); font-size: 13px; line-height: 1.55; }
   .note strong { color: var(--ink); }
@@ -1242,28 +1242,82 @@
   .pv-why { margin-top: 0; padding-top: 8px; border-top: 1px dashed var(--rule); color: var(--ink-3); font-size: 11.5px; line-height: 1.4; }
 
   .table-scroll { overflow-x: auto; margin-bottom: 16px; }
-  .cmp-table { width: 100%; border-collapse: separate; border-spacing: 0; overflow: hidden; border: 1px solid var(--rule-strong); border-radius: var(--radius-lg); background: var(--card); font-size: 13px; }
-  .cmp-table thead th { position: relative; padding: 12px 14px; border-bottom: 1px solid var(--rule-strong); background: var(--paper-2); color: var(--ink-3); font-family: var(--font-mono); font-size: 10px; font-weight: 600; letter-spacing: 0.08em; text-align: left; text-transform: uppercase; white-space: nowrap; }
-  .cmp-table thead th.sortable { cursor: pointer; user-select: none; padding-right: 24px; }
-  .cmp-table thead th.sortable:hover { background: #e0e3e8; color: var(--ink); }
-  .cmp-table thead th.sortable .sort-arrow { position: absolute; right: 9px; top: 50%; width: 11px; height: 11px; opacity: 0.35; transform: translateY(-50%); pointer-events: none; }
-  .cmp-table thead th.sortable[data-dir="asc"] .sort-arrow,
-  .cmp-table thead th.sortable[data-dir="desc"] .sort-arrow { opacity: 1; color: var(--accent); }
-  .cmp-table thead th.sortable[data-dir="desc"] .sort-arrow { transform: translateY(-50%) rotate(180deg); }
-  .cmp-table tbody td { position: relative; padding: 14px; border-bottom: 1px solid var(--rule); color: var(--ink-2); line-height: 1.45; vertical-align: middle; }
-  .cmp-table tbody tr:last-child td { border-bottom: 0; }
-  .cmp-table th:not(:last-child)::after,
-  .cmp-table td:not(:last-child)::after { content: ""; position: absolute; right: 0; width: 1px; background: var(--rule-soft); pointer-events: none; }
-  .cmp-table th:not(:last-child)::after { top: 7px; bottom: 7px; background: var(--rule-strong); }
-  .cmp-table td:not(:last-child)::after { top: 10px; bottom: 10px; }
-  .cmp-table td.col-id { width: 30px; padding: 14px 4px; text-align: center; color: var(--ink-3); font-family: var(--font-mono); font-weight: 600; }
-  .cmp-table td.col-thumb { width: 132px; min-width: 132px; max-width: 160px; padding: 12px; text-align: center; }
-  .cmp-table td.col-product strong { display: block; margin-bottom: 1px; color: var(--ink); font-family: var(--font-display); font-size: 12.5px; font-weight: 600; line-height: 1.3; }
-  .cmp-table td.col-product .model { color: var(--ink-4); font-family: var(--font-mono); font-size: 10.5px; font-weight: 500; }
-  .cmp-table td.col-source,
-  .cmp-table td.col-price,
-  .cmp-table td.col-reviews { white-space: nowrap; }
-  .cmp-table td.col-price { color: var(--ink); font-family: var(--font-mono); font-size: 14px; font-weight: 700; }
+  .ai-results-grid-shell {
+    width: 100%;
+    margin-bottom: 16px;
+    overflow-x: auto;
+  }
+  .ai-results-ag-grid {
+    width: 100%;
+    min-height: 180px;
+  }
+  .ai-results-ag-grid .ag-root-wrapper {
+    border: 1px solid var(--rule-strong);
+    border-radius: var(--radius-lg);
+    background: var(--card);
+    overflow: hidden;
+  }
+  .ai-results-grid-product {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-width: 0;
+    padding: 6px 0;
+  }
+  .ai-results-grid-thumb {
+    width: 48px;
+    height: 48px;
+    flex: 0 0 48px;
+    object-fit: contain;
+    border: 1px solid var(--rule);
+    border-radius: var(--radius);
+    background: var(--card);
+  }
+  .ai-results-grid-product-text {
+    display: flex;
+    min-width: 0;
+    flex-direction: column;
+    gap: 2px;
+    line-height: 1.25;
+  }
+  .ai-results-grid-product-text strong {
+    color: var(--ink);
+    font-size: 12px;
+    font-weight: 600;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .ai-results-grid-product-text span {
+    color: var(--ink-4);
+    font-family: var(--font-mono);
+    font-size: 10.5px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .ai-report-table { width: 100%; border-collapse: separate; border-spacing: 0; overflow: hidden; border: 1px solid var(--rule-strong); border-radius: var(--radius-lg); background: var(--card); font-size: 13px; }
+  .ai-report-table thead th { position: relative; padding: 12px 14px; border-bottom: 1px solid var(--rule-strong); background: var(--paper-2); color: var(--ink-3); font-family: var(--font-mono); font-size: 10px; font-weight: 600; letter-spacing: 0.08em; text-align: left; text-transform: uppercase; white-space: nowrap; }
+  .ai-report-table thead th.sortable { cursor: pointer; user-select: none; padding-right: 24px; }
+  .ai-report-table thead th.sortable:hover { background: var(--paper-2); color: var(--ink); }
+  .ai-report-table thead th.sortable .sort-arrow { position: absolute; right: 9px; top: 50%; width: 11px; height: 11px; opacity: 0.35; transform: translateY(-50%); pointer-events: none; }
+  .ai-report-table thead th.sortable[data-dir="asc"] .sort-arrow,
+  .ai-report-table thead th.sortable[data-dir="desc"] .sort-arrow { opacity: 1; color: var(--accent); }
+  .ai-report-table thead th.sortable[data-dir="desc"] .sort-arrow { transform: translateY(-50%) rotate(180deg); }
+  .ai-report-table tbody td { position: relative; padding: 14px; border-bottom: 1px solid var(--rule); color: var(--ink-2); line-height: 1.45; vertical-align: middle; }
+  .ai-report-table tbody tr:last-child td { border-bottom: 0; }
+  .ai-report-table th:not(:last-child)::after,
+  .ai-report-table td:not(:last-child)::after { content: ""; position: absolute; right: 0; width: 1px; background: var(--rule-soft); pointer-events: none; }
+  .ai-report-table th:not(:last-child)::after { top: 7px; bottom: 7px; background: var(--rule-strong); }
+  .ai-report-table td:not(:last-child)::after { top: 10px; bottom: 10px; }
+  .ai-report-table td.col-id { width: 30px; padding: 14px 4px; text-align: center; color: var(--ink-3); font-family: var(--font-mono); font-weight: 600; }
+  .ai-report-table td.col-thumb { width: 132px; min-width: 132px; max-width: 160px; padding: 12px; text-align: center; }
+  .ai-report-table td.col-product strong { display: block; margin-bottom: 1px; color: var(--ink); font-family: var(--font-display); font-size: 12.5px; font-weight: 600; line-height: 1.3; }
+  .ai-report-table td.col-product .model { color: var(--ink-4); font-family: var(--font-mono); font-size: 10.5px; font-weight: 500; }
+  .ai-report-table td.col-source,
+  .ai-report-table td.col-price,
+  .ai-report-table td.col-reviews { white-space: nowrap; }
+  .ai-report-table td.col-price { color: var(--ink); font-family: var(--font-mono); font-size: 14px; font-weight: 700; }
   .src-pill, .source-pill { display: inline-flex; align-items: center; padding: 2px 7px; border: 0; border-radius: 3px; background: var(--primary-tint); color: var(--primary); font-family: var(--font-mono); font-size: 11px; font-weight: 500; letter-spacing: 0.02em; text-decoration: none; }
   .src-pill:hover, .source-pill:hover { background: var(--primary); color: #fff; text-decoration: none; }
   .empty { color: var(--ink-4); font-style: italic; font-weight: 400; }
@@ -1333,8 +1387,8 @@
   .ai-readable h1, .ai-readable h2, .ai-readable h3, .ai-readable h4 { margin: 14px 0 8px; font-family: var(--font-display); line-height: 1.25; }
   .ai-readable ul, .ai-readable ol { padding-left: 22px; margin: 8px 0 12px; }
   .ai-readable p { margin: 8px 0; line-height: 1.55; }
-  .cmp-table del { color: var(--bad); text-decoration: line-through; text-decoration-color: rgba(163,32,28,0.6); text-decoration-thickness: 1px; font-style: italic; }
-  .cmp-table ins { color: var(--ok); text-decoration: none; font-weight: 600; }
+  .ai-report-table del { color: var(--bad); text-decoration: line-through; text-decoration-color: rgba(163,32,28,0.6); text-decoration-thickness: 1px; font-style: italic; }
+  .ai-report-table ins { color: var(--ok); text-decoration: none; font-weight: 600; }
 
   /* Ribbon adaptive media queries removed — ribbon.css owns the
      ScalingPolicy engine which handles shrink via data-group-size
@@ -2222,7 +2276,7 @@
     color: var(--muted);
     font-size: 12px;
   }
-  .cmp-table .prod-thumb,
+  .ai-report-table .prod-thumb,
   .factors .prod-thumb,
   .pv-image {
     display: inline-flex;
@@ -2230,7 +2284,7 @@
     justify-content: center;
     overflow: hidden;
   }
-  .cmp-table .prod-thumb.lg {
+  .ai-report-table .prod-thumb.lg {
     width: 120px;
     height: 120px;
     max-width: 100%;
@@ -2245,7 +2299,7 @@
   }
   .table-wrap th,
   .table-wrap th .th-inner,
-  .cmp-table thead th,
+  .ai-report-table thead th,
   .ai-readable .ai-readable-table th,
   .ai-correction-table th,
   .factors-head > div {

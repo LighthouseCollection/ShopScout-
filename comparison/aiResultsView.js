@@ -801,6 +801,151 @@ function renderReportAssessment(items) {
   </div>`;
 }
 
+function aiResultsGridApi() {
+  return root.__shopScoutAiResultsGridApi || null;
+}
+
+function clearAiResultsGrid() {
+  const api = aiResultsGridApi();
+  if (api && typeof api.destroy === 'function') api.destroy();
+  root.__shopScoutAiResultsGridApi = null;
+  root.__shopScoutAiResultsGridKey = '';
+}
+
+function aiResultsGridCellText(value) {
+  const text = plainCellText(value).trim();
+  return text || '-';
+}
+
+function aiResultsProductCell(params) {
+  const row = params?.data || {};
+  const wrap = document.createElement('div');
+  wrap.className = 'ai-results-grid-product';
+  if (row.image) {
+    const img = document.createElement('img');
+    img.className = 'ai-results-grid-thumb';
+    img.src = row.image;
+    img.alt = '';
+    wrap.appendChild(img);
+  }
+  const text = document.createElement('div');
+  text.className = 'ai-results-grid-product-text';
+  const name = document.createElement('strong');
+  name.textContent = row.product || 'Untitled product';
+  text.appendChild(name);
+  if (row.model && row.model !== '-') {
+    const model = document.createElement('span');
+    model.textContent = row.model;
+    text.appendChild(model);
+  }
+  wrap.appendChild(text);
+  return wrap;
+}
+
+function aiResultsSourceCell(params) {
+  const row = params?.data || {};
+  const label = row.source || 'Source';
+  if (!row.url) return label;
+  const link = document.createElement('a');
+  link.className = 'source-pill src-pill';
+  link.href = row.url;
+  link.target = '_blank';
+  link.rel = 'noopener';
+  link.textContent = `${label} ↗`;
+  return link;
+}
+
+function buildAiResultsComparisonGridRows(vm) {
+  return (vm.reportModel?.comparisonRows || []).map(item => {
+    const { row } = item;
+    const gridRow = {
+      id: row.id,
+      rank: row.rank,
+      product: row.shortName,
+      model: row.model,
+      image: row.image,
+      price: row.price,
+      source: row.source,
+      url: row.url,
+      reviews: `${row.rating || '-'}${row.reviewCount ? ` (${row.reviewCount})` : ''}`,
+      confidence: item.confidence || 'not stated'
+    };
+    item.specs.forEach(spec => {
+      gridRow[`spec:${spec.key}`] = aiResultsGridCellText(spec.value);
+    });
+    return gridRow;
+  });
+}
+
+function buildAiResultsComparisonGridColumns(vm) {
+  const columns = [
+    { field: 'rank', headerName: '#', width: 70, pinned: 'left', sortable: true, filter: false },
+    { field: 'product', headerName: 'Product', minWidth: 260, flex: 1, pinned: 'left', sortable: true, filter: 'agTextColumnFilter', cellRenderer: aiResultsProductCell },
+    { field: 'price', headerName: 'Price', width: 120, sortable: true, filter: 'agNumberColumnFilter' },
+    { field: 'source', headerName: 'Source', width: 130, sortable: true, filter: 'agTextColumnFilter', cellRenderer: aiResultsSourceCell },
+    { field: 'reviews', headerName: 'Reviews', width: 150, sortable: true, filter: 'agTextColumnFilter' }
+  ];
+  (vm.specKeys || []).forEach(key => {
+    columns.push({
+      field: `spec:${key}`,
+      headerName: key,
+      minWidth: 150,
+      sortable: true,
+      filter: 'agTextColumnFilter',
+      wrapText: true,
+      autoHeight: true
+    });
+  });
+  columns.push({
+    field: 'confidence',
+    headerName: 'Confidence',
+    width: 150,
+    sortable: true,
+    filter: 'agTextColumnFilter'
+  });
+  return columns;
+}
+
+function renderAiResultsComparisonGrid() {
+  const vm = root.__shopScoutAiResultsVm;
+  const mount = document.getElementById('aiResultsComparisonGrid');
+  if (!mount || !vm) return;
+  const ag = root.agGrid;
+  if (!ag || typeof ag.createGrid !== 'function') {
+    mount.textContent = 'Comparison grid is unavailable.';
+    return;
+  }
+  const gridKey = String(vm.run?.id || 'latest-run');
+  if (root.__shopScoutAiResultsGridKey === gridKey && aiResultsGridApi()) return;
+  clearAiResultsGrid();
+  mount.textContent = '';
+  mount.classList.add('ag-theme-quartz');
+  const gridOptions = {
+    theme: 'legacy',
+    rowData: buildAiResultsComparisonGridRows(vm),
+    columnDefs: buildAiResultsComparisonGridColumns(vm),
+    domLayout: 'autoHeight',
+    defaultColDef: {
+      sortable: true,
+      resizable: true,
+      filter: 'agTextColumnFilter',
+      suppressHeaderMenuButton: false,
+      wrapHeaderText: true,
+      autoHeaderHeight: true,
+      minWidth: 110
+    },
+    suppressCellFocus: true,
+    enableCellTextSelection: true,
+    ensureDomOrder: true,
+    animateRows: false,
+    getRowId(params) {
+      return String(params.data?.id || params.data?.rank || params.data?.product || Math.random());
+    }
+  };
+  root.__shopScoutAiResultsGridApi = ag.createGrid(mount, gridOptions);
+  root.__shopScoutAiResultsGridKey = gridKey;
+}
+
 function renderAiVerdictTab(vm) {
   const cards = (vm.reportModel?.verdicts || []).map(({ row, tone, label, reason }) => {
     const tagIcon = tone === 'buy' ? '●' : tone === 'avoid' ? '✕' : '⚠';
@@ -826,25 +971,6 @@ function renderAiVerdictTab(vm) {
 }
 
 function renderAiCompareTab(vm) {
-  const specHeaders = vm.specKeys.map(key => sortableHeader(key, `spec:${key}`)).join('');
-  const rows = (vm.reportModel?.comparisonRows || []).map(item => {
-    const { row } = item;
-    const specCells = item.specs.map(spec => `<td>${esc(spec.value || '-')}</td>`).join('');
-    const confidence = item.confidence
-      ? `<span class="badge ${escAttr(reportBadgeClass(item.confidence))} confidence">${esc(item.confidence)}</span>`
-      : '<span class="empty">not stated</span>';
-    return `<tr data-p="${row.id}">
-      <td class="col-id">${esc(row.rank)}</td>
-      <td class="col-thumb">${renderProductThumbSize(row, 'lg')}</td>
-      <td class="col-product"><strong>${esc(row.shortName)}</strong><span class="model">${esc(row.model)}</span></td>
-      <td class="col-price">${esc(row.price)}</td>
-      <td class="col-source">${renderReportSourceLink(row.url, row.source)}</td>
-      <td class="col-reviews">${renderStars(row)}</td>
-      ${specCells}
-      <td>${confidence}</td>
-    </tr>`;
-  }).join('');
-
   return `<nav class="subtab-bar" aria-label="Overall sub-sections">
     <button class="subtab-btn active" data-sub="compare"><span class="sub-num">01</span>Comparison</button>
     <button class="subtab-btn" data-sub="factors"><span class="sub-num">02</span>Buying factors</button>
@@ -860,11 +986,8 @@ function renderAiCompareTab(vm) {
         <h2 class="section-title">Comparison table</h2>
         <p class="section-deck">Category-specific columns are selected from saved product specs first, then supplemented by AI buying factors.</p>
       </div>
-      <div class="table-scroll">
-        <table class="cmp-table">
-          <thead><tr><th class="col-id-h">#</th><th></th>${sortableHeader('Product', 'product')}${sortableHeader('Price', 'price')}${sortableHeader('Source', 'source')}${sortableHeader('Reviews', 'reviews')}${specHeaders}${sortableHeader('Confidence', 'confidence')}</tr></thead>
-          <tbody>${rows || '<tr><td colspan="6">No product rows available.</td></tr>'}</tbody>
-        </table>
+      <div class="ai-results-grid-shell">
+        <div id="aiResultsComparisonGrid" class="ai-results-ag-grid ag-theme-quartz" data-ai-results-grid="comparison"></div>
       </div>
       <div class="notes">
         <div class="note ok"><span class="note-label">Verified</span>Saved listing facts, source, price, brand, and model are displayed from captured product data.</div>
@@ -1022,7 +1145,7 @@ function claimRowsForProduct(vm, row, finding) {
 
 function renderClaimAuditTable(rows) {
   return `<div class="table-scroll">
-    <table class="cmp-table">
+    <table class="ai-report-table">
       <thead><tr>${sortableHeader('Claim', 'claim')}${sortableHeader('Status', 'status')}${sortableHeader('Evidence', 'evidence')}</tr></thead>
       <tbody>${rows.map(row => `<tr>
         <td>${esc(row.claim || 'Claim')}</td>
@@ -1155,7 +1278,7 @@ function renderAiSpecsTab(vm) {
         <p class="section-deck">Struck values are the original listing values; inserted values are corrected or verified values from the AI audit.</p>
       </div>
       <div class="table-scroll">
-        <table class="cmp-table">
+        <table class="ai-report-table">
           <thead><tr><th class="col-id-h">#</th>${sortableHeader('Spec', 'spec')}${sortableHeader('Original', 'original')}${sortableHeader('Corrected', 'corrected')}${sortableHeader('Status', 'status')}${sortableHeader('Source', 'source')}</tr></thead>
           <tbody>${correctionRows || '<tr><td colspan="6">No corrected values were found in this AI run.</td></tr>'}</tbody>
         </table>
@@ -1262,31 +1385,13 @@ function renderAiRisksTab(vm) {
         <h2 class="section-title">Store reliability</h2>
       </div>
       <div class="table-scroll">
-        <table class="cmp-table">
+        <table class="ai-report-table">
           <thead><tr><th class="col-id-h">#</th>${sortableHeader('Seller', 'seller')}${sortableHeader('Signal', 'signal')}${sortableHeader('Assessment', 'assessment')}</tr></thead>
           <tbody>${sellerRows || '<tr><td colspan="4">No seller rows available.</td></tr>'}</tbody>
         </table>
       </div>
     </section>
   </div>`;
-}
-
-function renderAiSecondOpinionTab(vm) {
-  if (!vm.stages.secondOpinion) {
-    return `<div class="empty-state">
-      <div class="es-icon">⊘</div>
-      <div class="es-title">No second opinion in this run</div>
-      <div class="es-body">This analysis run did not include a second-opinion cross-check stage. Re-run with the Second Opinion stage enabled to compare two providers side by side.</div>
-    </div>`;
-  }
-  return `<section class="section">
-    <div class="section-head">
-      <div class="section-eyebrow">Cross-check</div>
-      <h2 class="section-title">Second opinion</h2>
-      <p class="section-deck">A separate provider response used to confirm, challenge, or add to the first analysis.</p>
-    </div>
-    ${readableStageHtml(vm.stages.secondOpinion, 'The second opinion stage completed, but did not return a readable narrative.')}
-  </section>`;
 }
 
 function categoryLeafLabel(value) {
@@ -1406,12 +1511,6 @@ function renderRedesignedAiResultsPage(vm) {
         <span>Showing the ${esc(String(vm.completedStages))} completed stage${vm.completedStages === 1 ? '' : 's'} saved before the run stopped${vm.failedStages.length ? `; ${esc(String(vm.failedStages.length))} stage${vm.failedStages.length === 1 ? '' : 's'} failed` : ''}.</span>
       </div>`
     : '';
-  const secondOpinionTab = vm.stages.secondOpinion
-    ? `<button class="tab-btn" data-ai-results-tab="second" data-tab="second"><span class="tab-num">06</span>Second opinion</button>`
-    : '';
-  const secondOpinionPane = vm.stages.secondOpinion
-    ? `<div class="tab-pane" data-ai-results-pane="second" data-pane="second">${renderAiSecondOpinionTab(vm)}</div>`
-    : '';
   return `<div id="aiResultsTabs" class="page ai-results-page-inner">
     <section class="report-head">
       <div class="eyebrow"><span class="dot"></span>${esc(vm.run.listName || 'ShopScout AI analysis')}</div>
@@ -1434,14 +1533,12 @@ function renderRedesignedAiResultsPage(vm) {
       <button class="tab-btn" data-ai-results-tab="verification" data-tab="verification"><span class="tab-num">03</span>Verification</button>
       <button class="tab-btn" data-ai-results-tab="specs" data-tab="specs"><span class="tab-num">04</span>Specs &amp; corrections</button>
       <button class="tab-btn" data-ai-results-tab="risks" data-tab="risks"><span class="tab-num">05</span>Risks</button>
-      ${secondOpinionTab}
     </nav>
     <div class="tab-pane active" data-ai-results-pane="verdict" data-pane="verdict">${renderAiVerdictTab(vm)}</div>
     <div class="tab-pane" data-ai-results-pane="compare" data-pane="compare">${renderAiCompareTab(vm)}</div>
     <div class="tab-pane" data-ai-results-pane="verification" data-pane="verification">${renderAiVerificationTab(vm)}</div>
     <div class="tab-pane" data-ai-results-pane="specs" data-pane="specs">${renderAiSpecsTab(vm)}</div>
     <div class="tab-pane" data-ai-results-pane="risks" data-pane="risks">${renderAiRisksTab(vm)}</div>
-    ${secondOpinionPane}
     <footer class="report-foot">
       <div class="meta-bottom">
         <span><span class="mb-label">Completed</span>${esc(vm.completedAt)}</span>
@@ -1470,6 +1567,7 @@ function bindAiResultsTabs() {
       const target = tab.dataset.aiResultsTab || tab.dataset.tab;
       tabs.querySelectorAll('.tab-btn[data-ai-results-tab], .tab-btn[data-tab]').forEach(btn => btn.classList.toggle('active', btn === tab));
       tabs.querySelectorAll('.tab-pane[data-ai-results-pane], .tab-pane[data-pane]').forEach(pane => pane.classList.toggle('active', (pane.dataset.aiResultsPane || pane.dataset.pane) === target));
+      if (target === 'compare') renderAiResultsComparisonGrid();
       return;
     }
     const subtab = e.target.closest('.subtab-btn[data-sub]');
@@ -1477,6 +1575,7 @@ function bindAiResultsTabs() {
     const panel = subtab.closest('.tab-pane');
     subtab.closest('.subtab-bar')?.querySelectorAll('.subtab-btn').forEach(btn => btn.classList.toggle('active', btn === subtab));
     panel?.querySelectorAll('.subtab-pane[data-sub-pane]').forEach(pane => pane.classList.toggle('active', pane.dataset.subPane === subtab.dataset.sub));
+    if (subtab.dataset.sub === 'compare') renderAiResultsComparisonGrid();
   });
 }
 
@@ -1516,6 +1615,8 @@ function renderAiResultsPage(run, products = []) {
   if (!page || !body || !run) return;
   if (subtitle) subtitle.textContent = `${run.listName || 'Current list'} · ${run.completedAt ? new Date(run.completedAt).toLocaleString() : 'Latest saved AI run'}`;
   const vm = buildAiResultsViewModel(run, products);
+  root.__shopScoutAiResultsVm = vm;
+  clearAiResultsGrid();
   setTrustedHtml(body, renderRedesignedAiResultsPage(vm));
   bindAiResultsTabs();
   showAiResultsPage();

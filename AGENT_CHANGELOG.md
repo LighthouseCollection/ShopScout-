@@ -1,3 +1,29 @@
+## 2026-07-21 01:56 - Codex AI Results AG Grid comparison (#64)
+
+- Agent: Codex
+- Branch: grid-rebuild-codex
+- Commit: This commit
+- Status: Implemented. AI Results now follows the issue #64 contract for the Compare tab and removes Second Opinion from the shipped results view.
+- What changed:
+  - Replaced the Compare > Comparison subtab's rejected static comparison table with a scoped AG Grid mount backed by mapped AI result rows and dynamic spec columns.
+  - Added AG Grid column definitions, source/product renderers, row data mapping, and safe grid teardown/rebuild when a new AI run is rendered.
+  - Removed the Second Opinion tab, pane, and renderer from AI Results.
+  - Renamed remaining report-only AI tables from `cmp-table` to `ai-report-table` so the rejected reference table class is not emitted by the AI results renderer.
+  - Added scoped AI-results grid styling using existing ShopScout tokens.
+- Files touched:
+  - comparison/aiResultsView.js
+  - comparison.css
+  - tests/ai-results-page.test.js
+  - AGENT_CHANGELOG.md
+- Validation run:
+  - node tests\ai-results-page.test.js -> pass
+  - node --check comparison\aiResultsView.js -> pass
+  - rg "cmp-table" comparison\aiResultsView.js comparison.css comparison.html -> no matches
+- Review status / next reviewer:
+  - Ready for Claude review.
+- Follow-ups or risks:
+  - Visual review should confirm the AG Grid comparison mount has acceptable density inside the AI Results report shell.
+
 ## 2026-07-20 20:28 - Codex Phase D grid pill row contract
 
 - Agent: Codex
