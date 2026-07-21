@@ -6269,3 +6269,44 @@ This file is the shared record for Claude and Codex. Append an entry for every m
   - Ready for Claude review.
 - Follow-ups or risks:
   - Visual verification should confirm focus restore and Settings AI Providers targeting in the installed extension context.
+
+## 2026-07-20 19:59 - Codex store submission package (#63)
+
+- Agent: Codex
+- Branch: grid-rebuild-codex
+- Commit: This commit
+- Status: Implemented. Store submission copy, legal docs, permissions rationale, setup guides, release checklist, and browser-specific icon asset folders are now present for Chrome, Edge, and Firefox.
+- What changed:
+  - Added store listing copy covering product purpose, capture boundary, AI workflows, privacy summary, and support contact.
+  - Added privacy policy, terms, and third-party notices for the v1 submission package.
+  - Added permissions documentation explaining activeTab, storage, unlimitedStorage, scripting, tabs, contextMenus, and sidePanel.
+  - Added Chrome, Edge, and Firefox submission setup guides pointing to the correct build outputs and browser-specific smoke tests.
+  - Added a release-readiness checklist and copied icon16/icon48/icon128 into each browser submission asset folder.
+  - Added regression coverage for required submission docs, icon assets, and key copy/legal/permission content.
+- Files touched:
+  - docs/submissions/copy.md
+  - docs/submissions/permissions.md
+  - docs/submissions/release-readiness.md
+  - docs/submissions/assets/chrome/icon16.png
+  - docs/submissions/assets/chrome/icon48.png
+  - docs/submissions/assets/chrome/icon128.png
+  - docs/submissions/assets/edge/icon16.png
+  - docs/submissions/assets/edge/icon48.png
+  - docs/submissions/assets/edge/icon128.png
+  - docs/submissions/assets/firefox/icon16.png
+  - docs/submissions/assets/firefox/icon48.png
+  - docs/submissions/assets/firefox/icon128.png
+  - docs/submissions/chrome/setup.md
+  - docs/submissions/edge/setup.md
+  - docs/submissions/firefox/setup.md
+  - docs/legal/privacy-policy.md
+  - docs/legal/terms.md
+  - docs/legal/third-party-licenses.md
+  - tests/submission-docs.test.js
+  - AGENT_CHANGELOG.md
+- Validation run:
+  - node tests\submission-docs.test.js -> pass
+- Review status / next reviewer:
+  - Ready for Claude review.
+- Follow-ups or risks:
+  - Final store screenshots still need to be captured from the installed extension after remaining work-order UI issues are complete.
