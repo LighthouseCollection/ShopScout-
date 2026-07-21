@@ -3,6 +3,7 @@ const vm = require('vm');
 const { read } = require('./_helpers');
 
 const src = read('normalization/libraries/generatedPacks.js');
+const shippedVerticalsIndex = JSON.parse(read('normalization/libraries/generated/verticals-index.json'));
 
 function makeCtx(fetchImpl) {
   const meta = new Map();
@@ -107,6 +108,17 @@ const bundled = {
   });
   const P = ctx.ShopScoutGeneratedPacks;
   P.loadBundledData(bundled);
+
+  const shippedPackUrls = shippedVerticalsIndex.verticals
+    .map(vertical => vertical.packUrl)
+    .filter(Boolean);
+  assert.ok(shippedPackUrls.length > 0, 'shipped vertical index includes remote pack URLs');
+  assert.strictEqual(shippedVerticalsIndex.source.dataVersion, 'v1',
+    'shipped vertical index points at the published data-v1 release');
+  assert.strictEqual(shippedPackUrls.filter(url => url.includes('/data-dev/')).length, 0,
+    'shipped vertical index must not point at the unpublished data-dev release');
+  assert.ok(shippedPackUrls.every(url => url.includes('/data-v1/')),
+    'shipped vertical pack URLs resolve through the published data-v1 release');
 
   assert.deepStrictEqual(
     P.listVerticals().map(v => ({ id: v.id, displayName: v.displayName })),

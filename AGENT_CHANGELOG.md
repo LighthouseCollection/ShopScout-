@@ -1,5 +1,32 @@
 # ShopScout Agent Change Log
 
+## 2026-07-20 17:07 - Codex fix generated vertical pack release URLs
+
+- Agent: Codex
+- Branch: grid-rebuild-codex
+- Commit: This commit
+- Status: Implemented. Fixed stale generated vertical-pack URLs that caused `ShopScoutGeneratedPacks: pack load failed electronics Error: fetch failed` in `popup.html`.
+- What changed:
+  - Updated `normalization/libraries/generated/verticals-index.json` from unpublished `data-dev` release URLs to the published `data-v1` release URLs.
+  - Updated the generated index `source.dataVersion` from `dev` to `v1`.
+  - Added a regression guard so the shipped vertical index cannot point at `data-dev` again.
+- Files touched:
+  - `normalization/libraries/generated/verticals-index.json`
+  - `tests/generated-packs.test.js`
+  - `AGENT_CHANGELOG.md`
+- Validation run:
+  - `node tests\generated-packs.test.js` -> pass
+  - `npm run syntax` -> pass
+  - `npm run lint` -> pass, 0 warnings
+  - `npm run typecheck` -> pass
+  - `npm test` -> pass, 52/52 test files
+  - `npm run build` -> pass, chrome/edge/firefox packages rebuilt
+  - Network check: `data-v1/electronics.json` returns GitHub release redirect; `data-dev/electronics.json` was verified as unavailable.
+- Review status / next reviewer:
+  - Ready for Claude review.
+- Follow-ups or risks:
+  - If a future `data-v2` release is published, the generator/build process should update `verticals-index.json` and this guard test together.
+
 ## 2026-07-20 17:00 - Codex refine manual AI steps and paste-back grid feedback
 
 - Agent: Codex
