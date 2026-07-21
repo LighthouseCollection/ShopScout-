@@ -18,6 +18,7 @@ assert.ok(!html.includes('Step 4: Send &amp; Paste Back'), 'combined send/paste 
 assert.ok(!html.includes('data-ai-options-tab="sendBack"'), 'old combined sendBack tab id is removed');
 
 assert.ok(/\.ai-options-nav-item\s*\{[^}]*border:\s*1px solid var\(--rule\)/.test(html), 'AI left-nav items have a consistent baseline border');
+assert.ok(/\.ai-options-nav-item\.active\s*\{[^}]*box-shadow:\s*none/.test(html), 'AI left-nav active item does not add a thicker left rail');
 assert.ok(/\.ai-option--payload\s*\{[^}]*align-items:\s*flex-start/.test(html), 'payload option cards top-align radio buttons and content');
 assert.ok(/\.ai-option--payload\s*\{[^}]*min-height:\s*112px/.test(html), 'payload option cards use a consistent compact minimum height');
 assert.ok(/\.ai-option--payload > span\s*\{[^}]*justify-content:\s*flex-start/.test(html), 'payload option card text starts at the top');
@@ -29,6 +30,11 @@ assert.ok(comparisonJs.includes("[data-ai-options-tab=\"send\"]"), 'manual flow 
 assert.ok(comparisonJs.includes("[data-ai-options-tab=\"pasteBack\"]"), 'manual flow toggles the dedicated paste-back tab');
 assert.ok(comparisonJs.includes('manual-ai-service-logo-img'), 'dashboard manual AI service cards render logo images');
 assert.ok(!comparisonJs.includes('${esc(service.letter)}</span>`'), 'dashboard manual AI service cards no longer render letter avatars');
+
+assert.ok(/\.ai-option-hint\s*\{[^}]*font-size:\s*13px/.test(html), 'AI option hints use readable secondary text size');
+assert.ok(/\.ai-option span\s*\{[^}]*font-size:\s*13px/.test(html), 'AI option descriptions use readable secondary text size');
+assert.ok(/\.manual-ai-service-desc\s*\{[^}]*font-size:\s*13px/.test(html), 'provider subtitles use readable secondary text size');
+assert.ok(/\.ai-options-nav-item span\s*\{[^}]*color:\s*var\(--ink-2\)/.test(html), 'AI left-nav descriptions use readable secondary text color');
 
 assert.ok(aiSelectJs.includes('logoPath'), 'ai-select service data includes local logo paths');
 assert.ok(aiSelectJs.includes('document.createElement(\'img\')'), 'ai-select renders provider logo images');

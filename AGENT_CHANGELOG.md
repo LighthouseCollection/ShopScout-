@@ -6389,6 +6389,31 @@ This file is the shared record for Claude and Codex. Append an entry for every m
 - Follow-ups or risks:
   - Continue work-order Phase H/I/J/K/L after closing #71.
 
+## 2026-07-20 20:51 - Codex work-order Phase J Manual AI issue closure
+
+- Agent: Codex
+- Branch: grid-rebuild-codex
+- Commit: This commit
+- Status: Implemented. Manual AI modal Phase J issues #46, #52, #53, #54, and #55 are verified/fixed and ready to close.
+- What changed:
+  - Removed the inset left-rail selected state from Manual AI setup left-nav items so the active item uses a uniform 1px selected border.
+  - Raised Manual AI secondary/help/provider description text to readable 13px sizing and darker `--ink-2` color.
+  - Confirmed the five-step Manual AI flow, Compact/Full equal-height payload cards, local provider SVG logos, pipeline option, and paste-back split are already present and pinned by tests.
+- Files touched:
+  - comparison.css
+  - tests/manual-ai-flow-polish.test.js
+  - AGENT_CHANGELOG.md
+- Validation run:
+  - node tests\manual-ai-flow-polish.test.js -> pass
+  - node tests\ai-analysis-options.test.js -> pass
+  - node tests\manual-ai-engine.test.js -> pass
+  - node tests\ai-payload-options.test.js -> pass
+  - node tests\manual-ai-result-parser.test.js -> pass
+- Review status / next reviewer:
+  - Ready for Claude review.
+- Follow-ups or risks:
+  - Continue with Phase J #64 AI Results view and Phase K grid feature additions.
+
 ## 2026-07-20 00:00 - Codex Auto AI onboarding gate (#51)
 
 - Agent: Codex
