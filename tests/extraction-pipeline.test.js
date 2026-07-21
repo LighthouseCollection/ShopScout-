@@ -23,6 +23,7 @@ const docStub = {
 
 const ctx = {
   console,
+  URL,
   document: docStub,
   location: { href: 'https://example.com/p/42', hostname: 'example.com' }
 };
@@ -35,8 +36,11 @@ vm.runInContext('var SSCanonical = SSCanonical || null;', ctx);
 
 vm.runInContext(load('content/confidenceRules.js'),  ctx, { filename: 'confidenceRules.js' });
 vm.runInContext(load('content/domUtils.js'),         ctx, { filename: 'domUtils.js' });
+vm.runInContext(load('content/imageFilters.js'),     ctx, { filename: 'imageFilters.js' });
 vm.runInContext(load('content/keyCanonicalizer.js'), ctx, { filename: 'keyCanonicalizer.js' });
 vm.runInContext(load('content/productSchema.js'),    ctx, { filename: 'productSchema.js' });
+vm.runInContext(load('content/structuredSignals.js'), ctx, { filename: 'structuredSignals.js' });
+vm.runInContext(load('content/adapters/generic.js'), ctx, { filename: 'generic.js' });
 
 const NS = ctx.SSExtract;
 assert.ok(NS, 'SSExtract namespace registered');
@@ -166,5 +170,90 @@ assert.ok(!Object.prototype.hasOwnProperty.call(junkSpec.itemDetails, '2'),
   'numeric note table row key does not become an item detail column');
 assert.strictEqual(junkSpec.specs['Connectivity Technology'].value, 'Bluetooth, Wi-Fi',
   'legitimate comma-separated specs survive junk filtering');
+
+/* ---- Review image capture and filtering (#73) ---- */
+function fakeImage(attrs, size) {
+  const a = attrs || {};
+  const s = size || {};
+  return {
+    src: a.src || '',
+    currentSrc: a.currentSrc || '',
+    width: s.width || s.naturalWidth || 0,
+    height: s.height || s.naturalHeight || 0,
+    naturalWidth: s.naturalWidth || s.width || 0,
+    naturalHeight: s.naturalHeight || s.height || 0,
+    getAttribute(name) { return a[name] || ''; }
+  };
+}
+
+const shopifyReview = fakeImage({
+  src: 'https://cdn.shopify.com/s/files/1/products/review-photo-800x800.jpg'
+}, { width: 800, height: 800 });
+const shopifyThumb = fakeImage({
+  src: 'https://cdn.shopify.com/s/files/1/products/review-photo_thumb.jpg'
+}, { width: 120, height: 120 });
+const etsyReview = fakeImage({
+  src: 'https://etsy.com/reviews/img_640_640.jpg'
+}, { width: 640, height: 640 });
+const srcsetReview = fakeImage({
+  src: 'https://example.com/reviews/small.jpg',
+  srcset: 'https://example.com/reviews/photo-320.jpg 320w, https://example.com/reviews/photo-900.jpg 900w'
+}, { width: 900, height: 900 });
+
+ctx.document = {
+  querySelector: () => null,
+  querySelectorAll(selector) {
+    if (String(selector).includes('review')) return [shopifyReview, shopifyThumb, etsyReview, srcsetReview];
+    return [];
+  }
+};
+const genericReviewSpec = NS.assemble(ctx.SSAdapterGeneric.extract(), {
+  url: 'https://example-shop.test/products/keyboard',
+  marketplace: 'generic'
+});
+const genericReviewUrls = genericReviewSpec.media.userImages.map(m => m.url);
+assert.ok(genericReviewUrls.includes('https://cdn.shopify.com/s/files/1/products/review-photo-800x800.jpg'),
+  'generic adapter accepts large Shopify review photos');
+assert.ok(!genericReviewUrls.includes('https://cdn.shopify.com/s/files/1/products/review-photo_thumb.jpg'),
+  'generic adapter rejects thumbnail review photos');
+assert.ok(genericReviewUrls.includes('https://etsy.com/reviews/img_640_640.jpg'),
+  'generic adapter accepts large non-Amazon review images');
+assert.ok(genericReviewUrls.includes('https://example.com/reviews/photo-900.jpg'),
+  'generic adapter chooses the largest srcset review image candidate');
+
+const productJsonLd = {
+  '@type': 'Product',
+  name: 'Review Image Product',
+  image: 'https://example.com/product/main.jpg',
+  review: [
+    {
+      '@type': 'Review',
+      image: 'https://example.com/reviews/customer-photo.jpg',
+      associatedMedia: { contentUrl: 'https://example.com/reviews/customer-video-still.jpg' }
+    }
+  ]
+};
+ctx.document = {
+  querySelector: () => null,
+  querySelectorAll(selector) {
+    if (selector === 'script[type="application/ld+json"]') {
+      return [{ textContent: JSON.stringify(productJsonLd) }];
+    }
+    if (selector.startsWith('meta[')) return [];
+    return [];
+  }
+};
+const structured = NS.structuredSignals.harvest();
+const structuredSpec = NS.assemble(structured.observations, {
+  url: 'https://example.com/product/reviews',
+  marketplace: 'generic',
+  rawSignals: structured.raw
+});
+assert.ok(structuredSpec.media.productImages.map(m => m.url).includes('https://example.com/product/main.jpg'),
+  'JSON-LD Product.image remains a product image');
+assert.ok(structuredSpec.media.userImages.map(m => m.url).includes('https://example.com/reviews/customer-photo.jpg'),
+  'JSON-LD Review.image routes to user review images');
+assert.ok(structuredSpec.media.userImages.map(m => m.url).includes('https://example.com/reviews/customer-video-still.jpg'),
+  'JSON-LD Review.associatedMedia routes to user review images');
 
 console.log('extraction-pipeline.test.js — all assertions passed');

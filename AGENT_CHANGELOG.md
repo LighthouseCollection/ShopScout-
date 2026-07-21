@@ -1,5 +1,37 @@
 # ShopScout Agent Change Log
 
+## 2026-07-20 19:14 - Codex restore generic review-image extraction
+
+- Agent: Codex
+- Branch: grid-rebuild-codex
+- Commit: This commit
+- Status: Implemented Phase C from `docs/codex-work-order.md` for #73.
+- What changed:
+  - Added a shared `content/imageFilters.js` helper for absolute URL resolution, largest `srcset` candidate selection, SVG/UI asset rejection, thumbnail URL rejection, and minimum natural image-size checks.
+  - Loaded the image helper before structured signals and adapters in both Chrome/Edge and Firefox manifests.
+  - Routed JSON-LD `Review.image` and `Review.associatedMedia` into ProductSpec `media.userImages` while keeping `Product.image` in product images.
+  - Broadened generic review-image selectors beyond Amazon to review/testimonial/customer-review DOM scopes.
+  - Updated generic image extraction to use largest `srcset` candidates and reject thumbnails, SVGs, icons, placeholders, and tiny review images.
+  - Added regression coverage for Shopify-style review photos, thumbnail rejection, Etsy-style review images, largest `srcset` selection, and JSON-LD review media.
+- Files touched:
+  - `content/imageFilters.js`
+  - `content/structuredSignals.js`
+  - `content/adapters/generic.js`
+  - `manifest.json`
+  - `manifest.firefox.json`
+  - `tests/extraction-pipeline.test.js`
+  - `AGENT_CHANGELOG.md`
+- Validation run:
+  - `node --check content\imageFilters.js` -> pass
+  - `node --check content\structuredSignals.js` -> pass
+  - `node --check content\adapters\generic.js` -> pass
+  - `node -e "JSON.parse(...manifest files...)"` -> pass
+  - `node tests\extraction-pipeline.test.js` -> pass
+- Review status / next reviewer:
+  - Ready for Claude review.
+- Follow-ups or risks:
+  - Marketplace-specific review-photo URL rewrites should still be added only when a site proves it needs one.
+
 ## 2026-07-20 19:09 - Codex strengthen shared UI foundation tokens
 
 - Agent: Codex

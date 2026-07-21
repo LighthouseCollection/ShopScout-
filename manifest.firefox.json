@@ -38,6 +38,7 @@
         "utils.js",
         "content/confidenceRules.js",
         "content/domUtils.js",
+        "content/imageFilters.js",
         "content/keyCanonicalizer.js",
         "content/productSchema.js",
         "content/structuredSignals.js",

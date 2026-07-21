@@ -73,6 +73,7 @@
       .concat(Array.isArray(p.image) ? p.image : [])
       .concat(p.image && p.image.url ? [p.image.url] : []);
     for (const url of images) push(out, 'image', 'product', url, src);
+    emitReviewImagesFromJsonLd(p.review, out, src);
 
     /* additionalProperty[] → specs */
     if (Array.isArray(p.additionalProperty)) {
@@ -82,6 +83,40 @@
           + (pp.unitText ? ' ' + String(pp.unitText).trim() : '');
         push(out, 'spec', String(pp.name).trim(), value.trim(), src);
       }
+    }
+  }
+
+  function emitReviewImagesFromJsonLd(reviewValue, out, source) {
+    const reviews = Array.isArray(reviewValue) ? reviewValue : (reviewValue ? [reviewValue] : []);
+    for (const review of reviews) {
+      if (!review || typeof review !== 'object') continue;
+      for (const url of extractReviewImageUrls(review)) push(out, 'image', 'user', url, source);
+    }
+  }
+
+  function extractReviewImageUrls(review) {
+    const out = [];
+    collectMediaUrls(review.image, out);
+    collectMediaUrls(review.associatedMedia, out);
+    collectMediaUrls(review.reviewBody && review.reviewBody.image, out);
+    return out;
+  }
+
+  function collectMediaUrls(value, out) {
+    if (!value) return;
+    if (typeof value === 'string') {
+      out.push(value);
+      return;
+    }
+    if (Array.isArray(value)) {
+      for (const item of value) collectMediaUrls(item, out);
+      return;
+    }
+    if (typeof value === 'object') {
+      if (value.url) out.push(value.url);
+      if (value.contentUrl) out.push(value.contentUrl);
+      if (value.thumbnailUrl) out.push(value.thumbnailUrl);
+      if (value.image) collectMediaUrls(value.image, out);
     }
   }
 

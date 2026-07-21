@@ -14,6 +14,7 @@
   const obs = NS.observation;
   const C   = NS.Confidence;
   const dom = NS.dom;
+  const imageFilters = NS.imageFilters || {};
 
   /* Common spec-table containers across small/medium e-com sites. */
   const SPEC_TABLE_SELECTORS = [
@@ -51,8 +52,19 @@
   /* User-uploaded review photos. Rare on sites without an explicit reviews
      section; we still try the common patterns. */
   const USER_IMAGE_SELECTORS = [
+    '[itemprop="review"] img[itemprop="image"]',
+    '[itemtype*="Review" i] img',
+    '[class*="review" i] img',
+    '[id*="review" i] img',
+    '[class*="customer-review" i] img',
+    '[class*="user-review" i] img',
+    '[class*="testimonial" i] img',
+    '.reviews img',
+    '.review-media img',
     '.review-image img',
     '.review-photo img',
+    '.rvw-image img',
+    '.user-uploaded-image img',
     '.customer-image img'
   ];
 
@@ -114,14 +126,14 @@
     /* ---- Images ---- */
     for (const sel of PRODUCT_IMAGE_SELECTORS) {
       for (const img of document.querySelectorAll(sel)) {
-        const u = img.src || img.getAttribute('data-src');
-        if (u && /^https?:/i.test(u)) emit(out, 'image', 'product', u, 'adapter:generic');
+        const u = bestImageUrl(img);
+        if (u && /^https?:/i.test(u) && !isSvgOrUiAsset(u)) emit(out, 'image', 'product', u, 'adapter:generic');
       }
     }
     for (const sel of USER_IMAGE_SELECTORS) {
       for (const img of document.querySelectorAll(sel)) {
-        const u = img.src || img.getAttribute('data-src');
-        if (u && /^https?:/i.test(u)) emit(out, 'image', 'user', u, 'adapter:generic');
+        const u = bestImageUrl(img);
+        if (u && isReviewImageCandidate(img, u)) emit(out, 'image', 'user', u, 'adapter:generic-review');
       }
     }
 
@@ -187,6 +199,25 @@
   function emit(out, type, key, value, source) {
     if (value == null || value === '') return;
     out.push(obs({ type, key, value, source }));
+  }
+
+  function bestImageUrl(img) {
+    if (imageFilters.bestImageUrl) return imageFilters.bestImageUrl(img);
+    const raw = (img && (img.src || (img.getAttribute && img.getAttribute('data-src')))) || '';
+    try { return new URL(raw, location.href).href; }
+    catch { return raw; }
+  }
+
+  function isSvgOrUiAsset(url) {
+    return imageFilters.isSvgOrUiAsset
+      ? imageFilters.isSvgOrUiAsset(url)
+      : /\.svg$/i.test(String(url || ''));
+  }
+
+  function isReviewImageCandidate(img, url) {
+    return imageFilters.isReviewImageCandidate
+      ? imageFilters.isReviewImageCandidate(img, { url, minSize: 300 })
+      : /^https?:/i.test(String(url || ''));
   }
 
   root.SSAdapterGeneric = { name: 'generic', test, ready, extract };
