@@ -167,9 +167,31 @@ function createAdapterHarnessWithThrowingColumnMenu() {
     context: options.context
   });
   const pillCount = (html.match(/ss-grid-value-pill/g) || []).length;
-  assert.ok(pillCount >= 10, 'long comma-separated tech specs render as individual pills');
+  assert.equal(pillCount, 8, 'long comma-separated tech specs render capped visible pills');
   assert.ok(html.includes('MacBook Air 2024'), 'tech spec renderer includes individual comma-separated values');
-  assert.ok(html.includes('Samsung Tablet'), 'tech spec renderer includes the final comma-separated value');
+  assert.ok(html.includes('ss-grid-pill-overflow'), 'long pill lists expose an overflow affordance');
+  assert.ok(html.includes('+'), 'long pill lists show a remaining-count marker');
+  assert.ok(!html.includes('Samsung Tablet</span>'), 'overflowed values are hidden until the user opens the full list');
+}
+
+{
+  const manyValues = 'USB-C, USB-A, Bluetooth, Wi-Fi, HDMI, DisplayPort, Thunderbolt, Ethernet, NFC, Zigbee, Matter, Thread, Infrared, RF';
+  const harness = createAdapterHarness();
+  const { gridOptions: options } = harness.create({
+    mode: 'productsRows',
+    columns: [{ id: 'spec:connectivity', field: 'spec:connectivity', name: 'Connectivity', type: 'spec' }],
+    rows: [{ id: 'p1', 'spec:connectivity': manyValues }]
+  });
+  const html = options.columnDefs[0].cellRenderer({
+    value: manyValues,
+    data: { id: 'p1' },
+    colDef: options.columnDefs[0],
+    context: options.context
+  });
+  assert.ok(html.includes('data-pill-overflow-values='),
+    'overflow affordance keeps the full escaped pill list for the modal');
+  assert.ok(html.includes('USB-C') && html.includes('HDMI'),
+    'visible pill cap keeps representative values before the overflow marker');
 }
 
 {

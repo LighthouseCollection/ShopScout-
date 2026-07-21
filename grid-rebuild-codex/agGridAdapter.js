@@ -78,6 +78,23 @@
     if (/[,;:]\s+(and|or|but|because|with|for|to|from|that|which|when)\b/i.test(t)) return true;
     return false;
   }
+  const PILL_VISIBLE_LIMIT = 8;
+
+  function pillHtmlForPart(part, fieldStyle, field) {
+    const colorKey = typeof root.ShopScoutValues?.pillColorKey === 'function'
+      ? root.ShopScoutValues.pillColorKey(field, part)
+      : '';
+    if (colorKey) {
+      /* Semantic override on a specific value — use the fixed
+         palette hook so users still recognize red/green/amber. */
+      return `<span class="ss-grid-value-pill" data-pill-color="${escAttr(colorKey)}">${pillPartHtml(part)}</span>`;
+    }
+    const styleAttr = fieldStyle
+      ? ` style="background:${fieldStyle.bg};color:${fieldStyle.fg};border-color:${fieldStyle.border}"`
+      : '';
+    return `<span class="ss-grid-value-pill"${styleAttr}>${pillPartHtml(part)}</span>`;
+  }
+
   function pillsHtml(value, type, field) {
     if (!shouldRenderPills(type, field)) return '';
     const text = textValue(value).trim();
@@ -85,25 +102,43 @@
     const splitter = root.ShopScoutValues?.splitToPills;
     const splitParts = typeof splitter === 'function' ? splitter(text) : null;
     const parts = Array.isArray(splitParts) && splitParts.length ? splitParts : [text];
-    const keyFn = root.ShopScoutValues?.pillColorKey;
     const styleFn = root.ShopScoutValues?.pillFieldStyle;
     /* Compute a per-FIELD inline color once (all parts of a
        multi-value cell share the same column color). Semantic
        overrides (green for "in stock", red for "no", amber for
        "limited") still win at the per-value level below. */
     const fieldStyle = typeof styleFn === 'function' ? styleFn(field) : null;
-    const styleAttr = fieldStyle
-      ? ` style="background:${fieldStyle.bg};color:${fieldStyle.fg};border-color:${fieldStyle.border}"`
+    const visible = parts.slice(0, PILL_VISIBLE_LIMIT);
+    const hidden = parts.slice(PILL_VISIBLE_LIMIT);
+    const overflow = hidden.length
+      ? `<button class="ss-grid-pill-overflow" type="button" data-pill-overflow-values="${escAttr(JSON.stringify(parts))}" aria-label="Show ${hidden.length} more values">+${hidden.length} more</button>`
       : '';
-    return `<span class="ss-grid-pill-list">${parts.map(part => {
-      const colorKey = typeof keyFn === 'function' ? keyFn(field, part) : '';
-      if (colorKey) {
-        /* Semantic override on a specific value — use the fixed
-           palette hook so users still recognize red/green/amber. */
-        return `<span class="ss-grid-value-pill" data-pill-color="${escAttr(colorKey)}">${pillPartHtml(part)}</span>`;
-      }
-      return `<span class="ss-grid-value-pill"${styleAttr}>${pillPartHtml(part)}</span>`;
-    }).join('')}</span>`;
+    return `<span class="ss-grid-pill-list">${visible.map(part => pillHtmlForPart(part, fieldStyle, field)).join('')}${overflow}</span>`;
+  }
+
+  function openPillOverflowModal(encodedValues) {
+    let values = [];
+    try {
+      const parsed = JSON.parse(encodedValues || '[]');
+      values = Array.isArray(parsed) ? parsed.map(textValue).filter(Boolean) : [];
+    } catch {
+      values = [];
+    }
+    if (!values.length) return false;
+    const ui = root.ShopScoutUI;
+    if (!ui || !ui.modal || !ui.render || typeof ui.modal.open !== 'function' || typeof ui.render.html !== 'function') {
+      return false;
+    }
+    const body = `<div class="ss-grid-pill-overflow-body">${values.map(value => (
+      `<span class="ss-grid-value-pill">${pillPartHtml(value)}</span>`
+    )).join('')}</div>`;
+    ui.modal.open({
+      title: 'Cell Values',
+      body: ui.render.html`${ui.render.raw(body)}`,
+      width: 'min(720px, 92vw)',
+      actions: [{ label: 'Close', value: 'close', isDefault: true }]
+    });
+    return true;
   }
 
   /* --- Cell renderers per column type --------------------------- */
@@ -957,6 +992,13 @@
       if (filterButton && typeof opts.onOpenFiltersModal === 'function') {
         stopGridHeaderAction(event);
         opts.onOpenFiltersModal(fieldFromHeaderFilterButton(filterButton));
+        return;
+      }
+      const overflowBtn = target?.closest?.('[data-pill-overflow-values]');
+      if (overflowBtn) {
+        event.preventDefault();
+        event.stopImmediatePropagation();
+        openPillOverflowModal(overflowBtn.getAttribute('data-pill-overflow-values'));
         return;
       }
       /* My Rating star click — interactive per-star rating. The

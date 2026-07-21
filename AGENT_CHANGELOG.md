@@ -1,5 +1,33 @@
 # ShopScout Agent Change Log
 
+## 2026-07-20 19:20 - Codex stabilize grid pill rendering
+
+- Agent: Codex
+- Branch: grid-rebuild-codex
+- Commit: This commit
+- Status: Implemented Phase D from `docs/codex-work-order.md` for #66, #65, #68, and #69.
+- What changed:
+  - Added a capped AG Grid pill renderer so long comma-separated technical specs show a stable visible set instead of creating partial clipped rows.
+  - Added a `+N more` overflow affordance that opens the full cell value list in the existing `ShopScoutUI.modal` surface.
+  - Added whole-line pill CSS variables and max-height math for a three-line visual cap.
+  - Preserved comma-splitting for long technical specs and kept prose/title/notes fields out of pill rendering.
+  - Extended adapter and wiring tests to cover capped pills, overflow metadata, and the three-line CSS contract.
+- Files touched:
+  - `grid-rebuild-codex/agGridAdapter.js`
+  - `grid-rebuild-codex/grid.css`
+  - `grid-rebuild-codex/tests/adapter-display.test.js`
+  - `grid-rebuild-codex/tests/wiring.test.js`
+  - `AGENT_CHANGELOG.md`
+- Validation run:
+  - `node grid-rebuild-codex\tests\adapter-display.test.js`
+  - `node grid-rebuild-codex\tests\wiring.test.js`
+  - `node --check grid-rebuild-codex\agGridAdapter.js`
+  - `npm run lint -- --quiet`
+- Review status / next reviewer:
+  - Ready for Claude review after Codex finishes the current work-order batch.
+- Follow-ups / risks:
+  - Overflow visible count is deterministic at 8 pills; exact pixel-perfect line fitting remains dependent on AG Grid column width and browser text metrics.
+
 ## 2026-07-20 19:14 - Codex restore generic review-image extraction
 
 - Agent: Codex

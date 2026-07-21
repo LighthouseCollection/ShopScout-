@@ -522,12 +522,15 @@ a.ss-grid-rating-link:hover .ss-grid-stars {
 }
 
 .ss-grid-pill-list {
+  --ss-grid-pill-line-height: 24px;
+  --ss-grid-pill-lines: 3;
   display: inline-flex;
   align-items: center;
   gap: 4px;
   flex-wrap: wrap;
   min-width: 0;
   max-width: 100%;
+  max-height: calc(var(--ss-grid-pill-line-height) * var(--ss-grid-pill-lines) + 8px);
   overflow: hidden;
   line-height: 1.35;
 }
@@ -546,12 +549,41 @@ a.ss-grid-rating-link:hover .ss-grid-stars {
   font-size: 12px;
   font-weight: 600;
   line-height: 1.5;
+  min-height: var(--ss-grid-pill-line-height, 24px);
   /* Pills never break their content onto two lines — the column
    auto-sizes to fit the widest pill so wrapping should never be
    needed, and when it happens it looks broken. */
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+.ss-grid-pill-overflow {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--ss-grid-pill-line-height, 24px);
+  padding: 2px 6px;
+  border: 1px solid var(--rule, #d1d5db);
+  border-radius: 6px;
+  background: var(--surface, #fff);
+  color: var(--primary, #0b3d4f);
+  font: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.5;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.ss-grid-pill-overflow:hover {
+  background: var(--paper-2, #eaedf1);
+}
+
+.ss-grid-pill-overflow-body {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: flex-start;
 }
 
 /* Semantic pill palette — outline (darker) + filled interior (lighter).
