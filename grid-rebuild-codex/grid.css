@@ -103,6 +103,18 @@
   overflow: hidden;
 }
 
+.ss-grid-host.ag-theme-quartz .ag-row.ss-grid-row-ai-recommended .ag-cell {
+  background-color: color-mix(in srgb, var(--ok-tint, #ecfdf3) 70%, #fff) !important;
+}
+
+.ss-grid-host.ag-theme-quartz .ag-row.ss-grid-row-ai-caution .ag-cell {
+  background-color: color-mix(in srgb, var(--warn-tint, #fff7d6) 70%, #fff) !important;
+}
+
+.ss-grid-host.ag-theme-quartz .ag-row.ss-grid-row-ai-avoid .ag-cell {
+  background-color: color-mix(in srgb, var(--bad-tint, #fff1f2) 70%, #fff) !important;
+}
+
 /* AG Grid does not expose an out-of-the-box "short vertical gridline"
    toggle. Keep the real AG Grid cells/headers and draw scoped inset
    separators so vertical rules do not visually collide with row rules.
@@ -665,6 +677,14 @@ a.ss-grid-rating-link:hover .ss-grid-stars {
 .ss-grid-corrected {
   color: var(--used, #0f6e3d);
   font-weight: 650;
+}
+
+.ss-grid-manual-corrected {
+  display: inline-flex;
+  max-width: 100%;
+  border-radius: 999px;
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--ok-rule, #9ae6b4) 62%, transparent),
+    0 0 10px color-mix(in srgb, var(--ok-rule, #9ae6b4) 42%, transparent);
 }
 
 .ss-grid-was {

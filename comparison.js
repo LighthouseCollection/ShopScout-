@@ -74,6 +74,19 @@ const AI_CORE_FIELD_DEFINITIONS = [
   { id: 'core:description', label: 'Description' }
 ];
 
+const MANUAL_AI_SERVICES = [
+  { id: 'chatgpt', name: 'ChatGPT', url: 'https://chatgpt.com/', letter: 'G', desc: 'OpenAI — GPT-4o, GPT-4', inputSel: '#prompt-textarea, textarea[data-id="root"], #prompt-textarea p' },
+  { id: 'claude', name: 'Claude', url: 'https://claude.ai/new', letter: 'C', desc: 'Anthropic — Claude 4 Opus, Sonnet', inputSel: '[contenteditable="true"], .ProseMirror, textarea' },
+  { id: 'gemini', name: 'Gemini', url: 'https://gemini.google.com/app', letter: 'G', desc: 'Google — Gemini 2.5 Pro', inputSel: '.ql-editor, [contenteditable="true"], rich-textarea .textarea, textarea' },
+  { id: 'copilot', name: 'Copilot', url: 'https://copilot.microsoft.com/', letter: 'C', desc: 'Microsoft — GPT-4 powered', inputSel: '#searchbox, textarea, [contenteditable="true"]' },
+  { id: 'perplexity', name: 'Perplexity', url: 'https://www.perplexity.ai/', letter: 'P', desc: 'Search-powered AI with citations', inputSel: 'textarea, [contenteditable="true"]' },
+  { id: 'grok', name: 'Grok', url: 'https://grok.com/', letter: 'X', desc: 'xAI — Grok', inputSel: 'textarea, [contenteditable="true"]' },
+  { id: 'deepseek', name: 'DeepSeek', url: 'https://chat.deepseek.com/', letter: 'D', desc: 'DeepSeek — R1, V3', inputSel: 'textarea, [contenteditable="true"]' },
+  { id: 'metaai', name: 'Meta AI', url: 'https://www.meta.ai/', letter: 'M', desc: 'Meta — Llama', inputSel: 'textarea, [contenteditable="true"]' },
+  { id: 'mistral', name: 'Mistral', url: 'https://chat.mistral.ai/chat', letter: 'M', desc: 'Mistral — Large, Medium', inputSel: 'textarea, [contenteditable="true"]' },
+  { id: 'poe', name: 'Poe', url: 'https://poe.com/', letter: 'P', desc: 'Multi-model — GPT, Claude, Gemini', inputSel: 'textarea, [contenteditable="true"]' }
+];
+let selectedManualAiServiceId = 'chatgpt';
 
 function getActiveListName() {
   return document.getElementById('listSelect')?.value || '';
@@ -365,7 +378,6 @@ function bindEvents() {
   document.getElementById('settingsBtn').addEventListener('click', openSettingsPage);
   document.getElementById('rescanClose').addEventListener('click', () => document.getElementById('rescanModal').classList.remove('active'));
   document.getElementById('settingsPageClose')?.addEventListener('click', closeSettingsPage);
-  document.getElementById('manualAiClose')?.addEventListener('click', () => closeModal('manualAiModal'));
   document.getElementById('manualResultPasteClose')?.addEventListener('click', closeManualResultPasteModal);
   document.getElementById('manualResultPasteCancel')?.addEventListener('click', closeManualResultPasteModal);
   document.getElementById('manualResultPasteSave')?.addEventListener('click', saveManualResultPasteResult);
@@ -1226,12 +1238,24 @@ function closeManualResultPasteModal() {
 function applyManualAiTableUpdates(products, text, runId) {
   const parser = globalThis.ShopScoutManualAIResultParser;
   if (!parser || typeof parser.parseTableUpdates !== 'function' || typeof parser.applyTableUpdatesToProducts !== 'function') {
-    return { products, updates: [], applied: [], skipped: [] };
+    return { products, updates: [], applied: [], skipped: [], verdicts: [] };
   }
   const updates = parser.parseTableUpdates(text);
-  if (!updates.length) return { products, updates, applied: [], skipped: [] };
-  const result = parser.applyTableUpdatesToProducts(products, updates, { sourceRunId: runId });
-  return Object.assign({ updates }, result);
+  const result = updates.length
+    ? parser.applyTableUpdatesToProducts(products, updates, { sourceRunId: runId })
+    : { products: (products || []).map(product => Object.assign({}, product)), applied: [], skipped: [] };
+  const verdicts = typeof parser.inferProductVerdicts === 'function'
+    ? parser.inferProductVerdicts(result.products, text)
+    : [];
+  if (verdicts.length) {
+    for (const verdict of verdicts) {
+      const product = result.products[verdict.productIndex];
+      if (!product) continue;
+      product._manualAiVerdictTone = verdict.tone;
+      product._manualAiVerdictReason = verdict.reason;
+    }
+  }
+  return Object.assign({ updates, verdicts }, result);
 }
 
 async function saveManualResultPasteResult() {
@@ -1288,11 +1312,12 @@ async function saveManualResultPasteResult() {
       parsed: updateResult.updates.length,
       applied: updateResult.applied.length,
       skipped: updateResult.skipped.length,
+      verdicts: updateResult.verdicts.length,
       skippedProtected: updateResult.skipped.filter(item => item.reasonSkipped === 'protected-identifier').length
     },
     stages: [stage]
   };
-  if (updateResult.applied.length || updateResult.skipped.length) {
+  if (updateResult.applied.length || updateResult.skipped.length || updateResult.verdicts.length) {
     data.lists[activeList] = updateResult.products;
   }
   const runs = Array.isArray(data.aiRuns) ? data.aiRuns.filter(item => item?.id !== run.id) : [];
@@ -1305,8 +1330,11 @@ async function saveManualResultPasteResult() {
   const skippedText = updateResult.skipped.length
     ? ` (${updateResult.skipped.length} protected/skipped)`
     : '';
-  toast.show(`Manual AI result saved${appliedText}${skippedText}`);
-  if (updateResult.applied.length) restoreProductListChrome();
+  const verdictText = updateResult.verdicts.length
+    ? ` and marked ${updateResult.verdicts.length} recommendation row${updateResult.verdicts.length === 1 ? '' : 's'}`
+    : '';
+  toast.show(`Manual AI result saved${appliedText}${verdictText}${skippedText}`);
+  if (updateResult.applied.length || updateResult.verdicts.length) restoreProductListChrome();
   else renderAiResultsPage(run, buildRunProductList(data, run));
 }
 
@@ -1314,16 +1342,48 @@ async function openManualAiModal() {
   await openAiOptionsModal(null, 'manual', 'manual');
 }
 
-async function openManualAiSelectorModal(mode = 'deep', count = 0) {
-  const frame = document.getElementById('manualAiFrame');
-  if (frame) {
-    /* Re-set the src each time so the iframe re-reads storage even when
-       the modal was opened before. (Setting the same URL still triggers a
-       reload because we add a cache-busting param.) */
-    const params = new URLSearchParams({ mode, count: String(count || 0), t: String(Date.now()) });
-    frame.setAttribute('src', chrome.runtime.getURL(`ai-select.html?${params.toString()}`));
+function manualAiServiceById(id) {
+  return MANUAL_AI_SERVICES.find(service => service.id === id) || MANUAL_AI_SERVICES[0];
+}
+
+function renderManualAiServiceSelection() {
+  const grid = document.getElementById('manualAiServiceGrid');
+  if (!grid) return;
+  const last = localStorage.getItem('shopscout_last_ai');
+  if (last && MANUAL_AI_SERVICES.some(service => service.id === last)) selectedManualAiServiceId = last;
+  const html = MANUAL_AI_SERVICES.map(service => {
+    const active = service.id === selectedManualAiServiceId;
+    return `<button type="button" class="manual-ai-service-card${active ? ' active' : ''}" data-manual-ai-service="${escAttr(service.id)}" aria-pressed="${active ? 'true' : 'false'}">` +
+      `<span class="manual-ai-service-logo" aria-hidden="true">${esc(service.letter)}</span>` +
+      `<span><span class="manual-ai-service-name">${esc(service.name)}</span><span class="manual-ai-service-desc">${esc(service.desc)}</span></span>` +
+    `</button>`;
+  }).join('');
+  setTrustedHtml(grid, html);
+  grid.querySelectorAll('[data-manual-ai-service]').forEach(button => {
+    button.addEventListener('click', () => {
+      selectedManualAiServiceId = button.dataset.manualAiService || 'chatgpt';
+      localStorage.setItem('shopscout_last_ai', selectedManualAiServiceId);
+      renderManualAiServiceSelection();
+    });
+  });
+}
+
+async function openSelectedManualAiService(promptText) {
+  const service = manualAiServiceById(selectedManualAiServiceId);
+  if (!service) {
+    toast.show('Choose an AI assistant before creating the prompt', 'error');
+    return;
   }
-  showModal('manualAiModal');
+  await chrome.storage.local.set({
+    shopscout_paste_pending: {
+      serviceId: service.id,
+      inputSel: service.inputSel,
+      prompt: promptText,
+      timestamp: Date.now()
+    }
+  });
+  localStorage.setItem('shopscout_last_ai', service.id);
+  await chrome.tabs.create({ url: service.url });
 }
 
 async function openSettingsPage() {
@@ -2215,6 +2275,33 @@ function specFieldId(label) {
   return `spec:${promptFieldId(label)}`;
 }
 
+function isPromptFieldLabelAllowed(label) {
+  const text = formatManualValue(label);
+  if (!text) return false;
+  if (text.length < 2 || text.length > 64) return false;
+  if (/^[\d\s.,#:+\-–—]+$/.test(text)) return false;
+  if (/^[^\p{L}\p{N}]+$/u.test(text)) return false;
+  if (/^[✓✔✕✖+*#]/u.test(text)) return false;
+  if (/[?!]{2,}/.test(text)) return false;
+  if (!/[A-Za-z]/.test(text)) return false;
+  const normalized = text.toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
+  if (!normalized) return false;
+  const junk = new Set([
+    'note',
+    'notes',
+    'other',
+    'none',
+    'yes',
+    'no',
+    'true',
+    'false',
+    'na',
+    'n a',
+    'unknown'
+  ]);
+  return !junk.has(normalized);
+}
+
 function productSpecEntries(product) {
   const access = globalThis.ShopScoutProductSpecAccess || (typeof window !== 'undefined' ? window.ShopScoutProductSpecAccess : null);
   const specs = access && typeof access.specEntries === 'function'
@@ -2229,7 +2316,7 @@ function productSpecEntries(product) {
       key: formatManualValue(spec?.rawField || spec?.key || spec?.field),
       value: formatManualValue(spec?.display ?? spec?.value ?? spec?.raw)
     }))
-    .filter(spec => spec.key && spec.value);
+    .filter(spec => spec.key && spec.value && isPromptFieldLabelAllowed(spec.key));
 }
 
 function aiFieldInputs() {
@@ -2435,7 +2522,7 @@ async function copyPrompt(mode, analysisOptions, promptOptions) {
   const promptText = buildManualHybridPrompt(products, analysisOptions, promptOptions) + buildManualAnalysisOptionsInstructions(analysisOptions, promptOptions);
   await navigator.clipboard.writeText(promptText);
   await chrome.storage.local.set({ shopscout_last_prompt: promptText });
-  await openManualAiSelectorModal(mode, products.length);
+  await openSelectedManualAiService(promptText);
 }
 
 function aiOptionInputs() {
@@ -2545,6 +2632,7 @@ async function openAiOptionsModal(productIndexes, providerId = 'auto', runMode =
   if (!products.length) { toast.show('No products selected for AI analysis', 'error'); return; }
   pendingAiRunOptions = { productIndexes, providerId, runMode };
   renderAiFieldSelection(products);
+  renderManualAiServiceSelection();
   setAiOptionsInModal(await getRecommendedAiOptions(productIndexes));
   const title = document.querySelector('#aiOptionsModal .ai-options-title h2');
   const help = document.querySelector('#aiOptionsModal .ai-options-title p');
@@ -2556,6 +2644,8 @@ async function openAiOptionsModal(productIndexes, providerId = 'auto', runMode =
       : 'Choose what ShopScout should check before the connected AI run starts.';
   }
   if (runBtn) runBtn.textContent = runMode === 'manual' ? 'Create Prompt' : 'Run Analysis';
+  const sendTab = document.querySelector('#aiOptionsModal [data-ai-options-tab="sendBack"]');
+  if (sendTab) sendTab.hidden = runMode !== 'manual';
   updateAiOptionsStatus();
   await updatePromptPayloadEstimate();
   setAiOptionsTab('payload');

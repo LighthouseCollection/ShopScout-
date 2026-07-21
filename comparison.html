@@ -455,20 +455,6 @@
   </section>
 </div>
 
-<!-- Manual AI modal — sized to host ai-select.html without vertical scroll. -->
-<div class="modal-overlay" id="manualAiModal">
-  <div class="modal embedded-modal embedded-modal--manual-ai">
-    <div class="embedded-modal-header">
-      <div>
-        <h2>Manual AI &middot; Choose your AI assistant</h2>
-        <p>Your comparison prompt is ready &middot; click an AI to open it in a new tab with the prompt auto-pasted.</p>
-      </div>
-      <button class="close-btn" id="manualAiClose" aria-label="Close">&times;</button>
-    </div>
-    <iframe id="manualAiFrame" title="Manual AI prompt selector"></iframe>
-  </div>
-</div>
-
 <!-- Manual AI paste-back modal -->
 <div class="modal-overlay" id="manualResultPasteModal">
   <div class="modal embedded-modal embedded-modal--manual-result">
@@ -693,25 +679,25 @@
       <div class="ai-options-layout">
         <nav class="ai-options-nav" aria-label="AI prompt setup sections">
           <button type="button" class="ai-options-nav-item active" data-ai-options-tab="payload">
-            <strong>Data to Send</strong>
+            <strong>Step 1: Data to Send</strong>
             <span>Compact or full captured evidence.</span>
           </button>
           <button type="button" class="ai-options-nav-item" data-ai-options-tab="analysis">
-            <strong>What to Ask AI to Analyze</strong>
+            <strong>Step 2: What to Ask AI to Analyze</strong>
             <span>Report sections and verification scope.</span>
           </button>
           <button type="button" class="ai-options-nav-item" data-ai-options-tab="fields">
-            <strong>Product Data Included</strong>
+            <strong>Step 3: Product Data Included</strong>
             <span>Allowed product fields and specs.</span>
           </button>
-          <button type="button" class="ai-options-nav-item" data-ai-options-tab="pasteBack">
-            <strong>Paste AI Result Back</strong>
-            <span>Ask AI for table updates ShopScout can apply.</span>
+          <button type="button" class="ai-options-nav-item" data-ai-options-tab="sendBack">
+            <strong>Step 4: Send &amp; Paste Back</strong>
+            <span>Choose assistant and table-update behavior.</span>
           </button>
         </nav>
         <div class="ai-options-main">
           <section class="ai-options-pane active" data-ai-options-pane="payload">
-            <h3>Data to Send</h3>
+            <h3>Step 1: Data to Send</h3>
             <p class="ai-option-hint">This controls how much captured evidence ShopScout puts into the prompt. Product Data Included controls which fields are allowed inside that evidence.</p>
             <div class="ai-option-list ai-payload-list">
               <label class="ai-option ai-option--payload"><input type="radio" name="aiPayloadMode" data-payload-mode="compact" value="compact" checked><span><strong>Compact</strong><span>Captured facts plus product URLs. Example: name, brand, price, rating, source URL, and selected specs.</span></span></label>
@@ -720,7 +706,7 @@
             <div class="ai-payload-estimate" id="aiPayloadEstimate">Payload estimate will appear here.</div>
           </section>
           <section class="ai-options-pane" data-ai-options-pane="analysis">
-            <h3>What to Ask AI to Analyze</h3>
+            <h3>Step 2: What to Ask AI to Analyze</h3>
             <p class="ai-option-hint">Select the report sections the AI should produce.</p>
             <div class="ai-option-list ai-option-list--plain">
               <label class="ai-option"><input type="checkbox" data-ai-section="categoryBuyingFactors" checked><span><strong>Category &amp; Buying Factors</strong><span>Identify category, subcategory, product line, and comparison criteria.</span></span></label>
@@ -732,7 +718,7 @@
             </div>
           </section>
           <section class="ai-options-pane" data-ai-options-pane="fields">
-            <h3>Product Data Included</h3>
+            <h3>Step 3: Product Data Included</h3>
             <p class="ai-option-hint">Uncheck low-value fields to reduce token use before ShopScout inserts product facts.</p>
             <div class="ai-field-toolbar">
               <button type="button" class="dashboard-secondary-action dashboard-secondary-action--small" id="aiFieldsCore">Core only</button>
@@ -740,8 +726,11 @@
             </div>
             <div class="ai-field-list" id="aiFieldList" aria-live="polite"></div>
           </section>
-          <section class="ai-options-pane" data-ai-options-pane="pasteBack">
-            <h3>Paste AI Result Back</h3>
+          <section class="ai-options-pane" data-ai-options-pane="sendBack">
+            <h3>Step 4: Send &amp; Paste Back</h3>
+            <p class="ai-option-hint">Choose which AI assistant ShopScout should open after creating the prompt.</p>
+            <div class="manual-ai-service-grid" id="manualAiServiceGrid" aria-label="Manual AI assistants"></div>
+            <h4 class="ai-pane-subhead">Paste AI Result Back</h4>
             <p class="ai-option-hint">Choose whether the prompt should ask the AI to include a ShopScout Table Updates section that ShopScout can parse and apply to the main table.</p>
             <div class="ai-option-list ai-paste-back-options">
               <label class="ai-option"><input type="radio" name="aiPasteBackMode" data-ai-paste-back-option="yes" value="yes" checked><span><strong>Yes, include table-update instructions</strong><span>Example: AI returns a ShopScout Table Updates section that can correct table fields after you paste the result back.</span></span></label>

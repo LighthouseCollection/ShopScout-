@@ -255,14 +255,14 @@ assertNotIncludes('id="columnOrderModal"', 'Old columnOrderModal removed');
 assertNotIncludes('id="groupingModal"',    'Old groupingModal removed');
 
 /* Manual AI / Settings / detail flows remain intact. */
-assertIncludes('id="manualAiModal"', 'Manual AI modal shell preserved');
+assertNotIncludes('id="manualAiModal"', 'Old separate Manual AI iframe modal removed');
 assertIncludes('src="settings.js"', 'Settings module is loaded for embedded dashboard settings');
 assertNotIncludes('id="settingsFrame"', 'Settings no longer opens through an iframe');
 assertIncludes('id="productGrid"',   'Phase 2 grid mount point exists');
 
 assert.ok(js.includes('openSettingsPage'), 'comparison script opens settings inside the dashboard');
 assert.ok(js.includes('ShopScoutSettings.mount'), 'settings render inside the dashboard content area');
-assert.ok(js.includes('openManualAiModal'), 'comparison script opens manual AI in an embedded modal');
+assert.ok(js.includes('openManualAiModal'), 'comparison script opens manual AI through the shared AI options modal');
 assert.ok(js.includes("activateRibbonTab('products')"), 'open-list command routes to the Products tab');
 assert.ok(js.includes("activateRibbonTab('about')"), 'help/about commands route to the About tab');
 assert.ok(/if\s*\(\s*target\s*!==\s*['"]about['"][\s\S]{0,160}restoreProductListChrome\(\)/.test(js),

@@ -193,6 +193,44 @@ function createAdapterHarnessWithThrowingColumnMenu() {
 
 {
   const harness = createAdapterHarness();
+  const { gridOptions: options } = harness.create({
+    mode: 'productsRows',
+    columns: [{ id: 'spec:maximum pressure', field: 'spec:maximum pressure', name: 'Maximum Pressure', type: 'spec' }],
+    rows: [{
+      id: 'p1',
+      'spec:maximum pressure': '150 PSI',
+      _manualAiCorrections: [{
+        field: 'Maximum Pressure',
+        currentValue: '2,176 PSI',
+        recommendedValue: '150 PSI'
+      }]
+    }]
+  });
+  const html = options.columnDefs[0].cellRenderer({
+    value: '150 PSI',
+    data: options.rowData[0],
+    colDef: options.columnDefs[0],
+    context: options.context
+  });
+  assert.ok(html.includes('ss-grid-manual-corrected'), 'manual AI corrected cells get a glow class');
+  assert.ok(html.includes('Corrected from &quot;2,176 PSI&quot; to &quot;150 PSI&quot;'), 'manual AI corrected cells explain the original and corrected value in a tooltip');
+}
+
+{
+  const harness = createAdapterHarness();
+  const { gridOptions: options } = harness.create({
+    mode: 'productsRows',
+    columns: [{ id: 'title', field: 'title', name: 'Name', type: 'text' }],
+    rows: [{ id: 'p1', title: 'Buy', _manualAiVerdictTone: 'recommended' }, { id: 'p2', title: 'Avoid', _manualAiVerdictTone: 'avoid' }]
+  });
+  assert.equal(options.getRowClass({ data: options.rowData[0] }), 'ss-grid-row-ai-recommended',
+    'recommended pasted AI verdict maps to a green row class');
+  assert.equal(options.getRowClass({ data: options.rowData[1] }), 'ss-grid-row-ai-avoid',
+    'avoid pasted AI verdict maps to a red row class');
+}
+
+{
+  const harness = createAdapterHarness();
   const { instance } = harness.create({
     mode: 'productsRows',
     columns: [

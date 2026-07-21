@@ -315,8 +315,27 @@
       : '';
     const text = rounded || rawText;
     const pills = pillsHtml(text, type, field);
-    if (rounded) return `<span title="${escAttr(rawText)}">${pills || esc(text)}</span>`;
-    return pills || esc(text);
+    const rendered = pills || esc(text);
+    const correction = manualCorrectionFor(params.data, field);
+    if (correction) {
+      const original = correction.currentValue || correction.raw || rawText;
+      const corrected = correction.recommendedValue || text;
+      const tip = `Corrected from "${original}" to "${corrected}"`;
+      return `<span class="ss-grid-manual-corrected" title="${escAttr(tip)}">${rendered}</span>`;
+    }
+    if (rounded) return `<span title="${escAttr(rawText)}">${rendered}</span>`;
+    return rendered;
+  }
+
+  function canonicalName(value) {
+    return textValue(value).trim().toLowerCase().replace(/^spec:/, '').replace(/[^a-z0-9]+/g, ' ').trim();
+  }
+
+  function manualCorrectionFor(row, field) {
+    const corrections = Array.isArray(row?._manualAiCorrections) ? row._manualAiCorrections : [];
+    if (!corrections.length || !field) return null;
+    const wanted = canonicalName(field);
+    return corrections.find(correction => canonicalName(correction?.field) === wanted) || null;
   }
 
   /* Matrix cell — Compare view. `params.value` is a displayCell object
@@ -356,7 +375,8 @@
       : '';
     if (corrected) {
       const correctedPills = pillsHtml(corrected, 'matrixCell', value.field);
-      return `<span class="ss-grid-matrix-cell"><span class="ss-grid-corrected">${correctedPills || esc(corrected)}</span>`
+      const tip = raw ? ` title="${escAttr(`Corrected from "${raw}" to "${corrected}"`)}"` : '';
+      return `<span class="ss-grid-matrix-cell"><span class="ss-grid-corrected ss-grid-manual-corrected"${tip}>${correctedPills || esc(corrected)}</span>`
         + `${raw ? `<span class="ss-grid-was">was ${esc(raw)}</span>` : ''}${confidence}</span>`;
     }
     const shownHtml = shown
@@ -779,6 +799,13 @@
       enableCellTextSelection: true,
       ensureDomOrder: true,
       getRowId(params) { return params.data?.id ?? params.data?._id; },
+      getRowClass(params) {
+        const tone = textValue(params.data?._manualAiVerdictTone).toLowerCase();
+        if (tone === 'avoid') return 'ss-grid-row-ai-avoid';
+        if (tone === 'recommended') return 'ss-grid-row-ai-recommended';
+        if (tone === 'caution') return 'ss-grid-row-ai-caution';
+        return '';
+      },
       defaultColDef: {
         sortable: true,
         resizable: true,

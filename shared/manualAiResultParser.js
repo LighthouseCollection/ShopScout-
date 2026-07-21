@@ -45,6 +45,47 @@
     return IDENTIFIER_FIELD_RE.test(String(field || ''));
   }
 
+  function productName(product) {
+    return cleanCell(product?.name || product?.title || product?.productName || product?.listingTitle);
+  }
+
+  function significantNameTokens(value) {
+    return cleanCell(value)
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, ' ')
+      .split(/\s+/)
+      .filter(token => token.length >= 4)
+      .slice(0, 8);
+  }
+
+  function lineMentionsProduct(line, product, index) {
+    const text = cleanCell(line).toLowerCase();
+    if (!text) return false;
+    const n = index + 1;
+    if (new RegExp(`\\b(product|item)\\s*#?\\s*${n}\\b`, 'i').test(text)) return true;
+    const name = productName(product).toLowerCase();
+    if (name && text.includes(name)) return true;
+    const tokens = significantNameTokens(name);
+    return tokens.length >= 2 && tokens.slice(0, 4).filter(token => text.includes(token)).length >= 2;
+  }
+
+  function toneFromLine(line) {
+    const text = cleanCell(line).toLowerCase();
+    if (/\b(avoid|avoided|skip|skipped|do not buy|not recommended|worst|pass on)\b/.test(text)) return 'avoid';
+    if (/\b(best|recommended|recommend|winner|buy|best value|best overall|lowest risk)\b/.test(text)) return 'recommended';
+    if (/\b(caution|mixed|only if|acceptable|middle|average|trade[- ]?off|verify first)\b/.test(text)) return 'caution';
+    return '';
+  }
+
+  function inferProductVerdicts(products, reportText) {
+    const lines = String(reportText || '').split(/\r?\n/).map(cleanCell).filter(Boolean);
+    return (products || []).map((product, index) => {
+      const match = lines.find(line => lineMentionsProduct(line, product, index) && toneFromLine(line));
+      const tone = match ? toneFromLine(match) : '';
+      return tone ? { productIndex: index, tone, reason: match } : null;
+    }).filter(Boolean);
+  }
+
   function headerIndex(headers) {
     const aliases = {
       productNumber: ['product', 'productno', 'productnumber', 'product#', 'productid'],
@@ -198,5 +239,6 @@
 
   NS.parseTableUpdates = parseTableUpdates;
   NS.applyTableUpdatesToProducts = applyTableUpdatesToProducts;
+  NS.inferProductVerdicts = inferProductVerdicts;
   NS.isProtectedIdentifierField = isProtectedIdentifierField;
 })(typeof globalThis !== 'undefined' ? globalThis : window);

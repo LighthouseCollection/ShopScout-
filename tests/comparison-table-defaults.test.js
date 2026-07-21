@@ -126,7 +126,7 @@ assert.ok(cmpHtml.includes('src="settings.js"'),  'settings module is loaded for
 assert.ok(!cmpHtml.includes('id="settingsFrame"'), 'settings iframe is removed');
 assert.ok(cmpHtml.includes('id="aiResultsPage"'), 'AI results page preserved');
 assert.ok(cmpHtml.includes('id="productDetail"'), 'product detail page preserved');
-assert.ok(cmpHtml.includes('id="manualAiModal"'), 'manual AI modal preserved');
+assert.ok(!cmpHtml.includes('id="manualAiModal"'), 'old separate manual AI iframe modal is removed');
 
 void html; // pageAndStyles is consumed by the CSS-rule assertions above
 console.log('comparison-table-defaults.test.js: all assertions passed');

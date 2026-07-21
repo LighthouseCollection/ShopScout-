@@ -286,6 +286,25 @@ assert.equal(matrix.rows[2]['product:p2'].value, '90 minutes');
 assert.equal(matrix.rows[3]['product:p1'].value, '800 DPI');
 assert.equal(matrix.rows[3]['product:p2'].missing, true);
 
+const manualCorrectionMatrix = projections.buildComparisonMatrixProjection([{
+  id: 'p5',
+  title: 'Corrected Compressor',
+  rawSpecs: [{ key: 'Maximum Pressure', value: '2,176 PSI' }],
+  _manualAiCorrections: [{
+    field: 'Maximum Pressure',
+    currentValue: '2,176 PSI',
+    recommendedValue: '150 PSI'
+  }]
+}], {
+  fields: ['spec:maximum pressure']
+});
+assert.equal(manualCorrectionMatrix.rows[0]['product:p5'].raw, '2,176 PSI',
+  'manual AI corrections preserve the original raw value in matrix cells');
+assert.equal(manualCorrectionMatrix.rows[0]['product:p5'].corrected, '150 PSI',
+  'manual AI corrections flow into comparison-matrix corrected values');
+assert.equal(manualCorrectionMatrix.rows[0]['product:p5'].value, '150 PSI',
+  'manual AI corrections are the display value for corrected matrix cells');
+
 const basic = projections.buildComparisonMatrixProjection(products, {
   matrixMode: 'basic',
   visibleSpecKeys: ['battery life']

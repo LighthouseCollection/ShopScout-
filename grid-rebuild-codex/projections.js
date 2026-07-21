@@ -474,6 +474,12 @@
       const shortKey = field.slice(5);
       if (Object.prototype.hasOwnProperty.call(corrections, shortKey)) return corrections[shortKey];
     }
+    const manual = Array.isArray(product?._manualAiCorrections) ? product._manualAiCorrections : [];
+    if (manual.length) {
+      const wanted = canonicalKey(field.startsWith('spec:') ? field.slice(5) : field, root);
+      const match = manual.find(item => canonicalKey(item?.field, root) === wanted);
+      if (match) return match.recommendedValue;
+    }
     return null;
   }
 
@@ -502,12 +508,14 @@
       ? String(correctedValue)
       : null;
     let value;
-    if (entry && typeof entry === 'object' && entry.display != null && entry.display !== '') {
+    if (corrected) {
+      value = corrected;
+    } else if (entry && typeof entry === 'object' && entry.display != null && entry.display !== '') {
       value = String(entry.display);
     } else if (normalized && normalized.display != null && normalized.display !== '—') {
       value = Array.isArray(normalized.display) ? normalized.display.join(', ') : String(normalized.display);
     } else {
-      value = corrected || raw;
+      value = raw;
     }
     return {
       value,

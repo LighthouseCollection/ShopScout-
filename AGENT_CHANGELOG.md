@@ -1,5 +1,55 @@
 # ShopScout Agent Change Log
 
+## 2026-07-20 17:00 - Codex refine manual AI steps and paste-back grid feedback
+
+- Agent: Codex
+- Branch: grid-rebuild-codex
+- Commit: This commit
+- Status: Implemented. Tightened the Manual AI prompt modal, removed the obsolete separate AI selector modal, filtered noisy prompt-field labels, and made pasted AI verdicts/corrections visible in the AG Grid table.
+- What changed:
+  - Numbered the Manual AI modal navigation as Step 1 through Step 4.
+  - Embedded the manual AI assistant picker into Step 4 so creating a manual prompt no longer opens a separate selector modal.
+  - Removed the old `manualAiModal` iframe shell and its unused loader function.
+  - Gave active AI modal panes a soft bordered content surface.
+  - Made Compact/Full payload cards align to equal grid height.
+  - Filtered bad prompt field labels such as punctuation-only values, numeric-only values, checkmark-prefixed values, and junk labels from Product Data Included.
+  - Extended pasted Manual AI result handling to infer recommended / caution / avoid verdicts from readable report text and persist row tone markers.
+  - Added AG Grid row shading for recommended, caution, and avoid rows from pasted AI results.
+  - Added corrected-value glow styling and tooltips for manually corrected table cells.
+  - Routed manual AI corrections into comparison-matrix projections so Compare view can show corrected values.
+- Files touched:
+  - `comparison.html`
+  - `comparison.css`
+  - `comparison.js`
+  - `shared/manualAiResultParser.js`
+  - `grid-rebuild-codex/agGridAdapter.js`
+  - `grid-rebuild-codex/grid.css`
+  - `grid-rebuild-codex/projections.js`
+  - `grid-rebuild-codex/tests/adapter-display.test.js`
+  - `grid-rebuild-codex/tests/projections.test.js`
+  - `tests/ai-analysis-options.test.js`
+  - `tests/comparison-table-defaults.test.js`
+  - `tests/manual-ai-engine.test.js`
+  - `tests/manual-ai-result-parser.test.js`
+  - `tests/menu-layout.test.js`
+  - `AGENT_CHANGELOG.md`
+- Validation run:
+  - `node tests\ai-analysis-options.test.js` -> pass
+  - `node tests\manual-ai-result-parser.test.js` -> pass
+  - `node grid-rebuild-codex\tests\adapter-display.test.js` -> pass
+  - `node grid-rebuild-codex\tests\projections.test.js` -> pass
+  - `node tests\comparison-table-defaults.test.js` -> pass
+  - `node tests\menu-layout.test.js` -> pass
+  - `npm run syntax` -> pass
+  - `npm run lint` -> pass, 0 warnings
+  - `npm run typecheck` -> pass
+  - `npm test` -> pass, 52/52 test files
+  - `npm run build` -> pass, chrome/edge/firefox packages rebuilt at `v3.3.0.3f19be2`
+- Review status / next reviewer:
+  - Ready for Claude review after build and commit.
+- Follow-ups or risks:
+  - Verdict inference is deterministic text parsing. It shades rows only when the pasted report clearly ties a recommendation phrase to a product name or product number.
+
 ## 2026-07-20 16:45 - Codex redesign manual AI options modal with left navigation
 
 - Agent: Codex

@@ -31,7 +31,7 @@ mustInclude(comparisonJs, 'manual AI pasted result', 'paste-result-back creates 
 mustInclude(comparisonJs, 'function applyManualAiTableUpdates', 'paste-result-back has an auto-apply path for ShopScout Table Updates');
 mustInclude(comparisonJs, 'ShopScoutManualAIResultParser', 'paste-result-back delegates parsing and table updates to the parser module');
 mustInclude(comparisonJs, 'manualTableUpdates', 'saved manual AI runs record parsed/applied/skipped table update counts');
-mustInclude(comparisonJs, 'if (updateResult.applied.length) restoreProductListChrome()', 'paste-result-back refreshes the main table after applying AI updates');
+mustInclude(comparisonJs, 'if (updateResult.applied.length || updateResult.verdicts.length) restoreProductListChrome()', 'paste-result-back refreshes the main table after applying AI updates or recommendation row shading');
 mustInclude(comparisonJs, 'data.aiRuns = [run, ...runs]', 'paste-result-back writes into data.aiRuns instead of an unreachable side key');
 if (comparisonJs.includes('shopscout_manual_ai_results')) {
   throw new Error('paste-result-back must not write to the unreachable shopscout_manual_ai_results side key');

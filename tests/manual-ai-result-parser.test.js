@@ -69,4 +69,25 @@ assert.strictEqual(applied.products[2].specs.Airflow, '35 L/min', 'new spec fiel
 assert.ok(applied.products[0]._manualAiCorrections?.length, 'applied correction provenance is recorded');
 assert.strictEqual(applied.products[3].specs.ASIN, 'B000OLD', 'protected identifier value is not overwritten');
 
+assert.strictEqual(typeof parser.inferProductVerdicts, 'function', 'manual AI parser exports verdict inference');
+const verdicts = parser.inferProductVerdicts([
+  { name: 'Alpha Camera' },
+  { name: 'Beta Camera' },
+  { name: 'Gamma Camera' }
+], `
+## Final Verdict
+- Product 1 Alpha Camera is the best value and recommended.
+- Product 2 Beta Camera should be avoided.
+- Product 3 Gamma Camera is acceptable only if discounted.
+`);
+assert.deepStrictEqual(
+  verdicts.map(item => ({ productIndex: item.productIndex, tone: item.tone })),
+  [
+    { productIndex: 0, tone: 'recommended' },
+    { productIndex: 1, tone: 'avoid' },
+    { productIndex: 2, tone: 'caution' }
+  ],
+  'manual AI verdict text maps products to recommended / avoid / caution row tones'
+);
+
 console.log('manual AI result parser tests passed');
