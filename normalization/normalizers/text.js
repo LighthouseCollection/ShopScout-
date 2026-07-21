@@ -56,6 +56,58 @@
     });
   }
 
+  const TOKENIZED_UNIT_PHRASES = [
+    [/\bvolts?_of_direct_current\b/gi, 'volts of direct current'],
+    [/\bvolts?_of_alternating_current\b/gi, 'volts of alternating current'],
+    [/\bpounds?_per_square_inch\b/gi, 'pounds per square inch'],
+    [/\bdots?_per_inch\b/gi, 'DPI'],
+    [/\bpixels?_per_inch\b/gi, 'PPI'],
+  ];
+
+  function normalizeTokenizedUnitPhrases(s) {
+    let next = String(s);
+    for (const [pattern, replacement] of TOKENIZED_UNIT_PHRASES) {
+      next = next.replace(pattern, replacement);
+    }
+    return next;
+  }
+
+  function normalizeResolutionSpacing(s) {
+    return String(s).replace(/(\d)\s*[x×]\s*(\d)/gi, '$1 x $2');
+  }
+
+  function normalizeDpiPhrases(s) {
+    return String(s)
+      .replace(/\b(\d[\d,]*(?:\.\d+)?)\s*(?:dots?|dot)\s+per\s+inch\b/gi, '$1 DPI')
+      .replace(/\b(\d[\d,]*(?:\.\d+)?)\s*(?:pixels?|pixel)\s+per\s+inch\b/gi, '$1 PPI');
+  }
+
+  function normalizeLongUnitWords(s) {
+    return String(s)
+      .replace(/\b(\d[\d,]*(?:\.\d+)?)\s*inches\b/gi, '$1 in')
+      .replace(/\b(\d[\d,]*(?:\.\d+)?)\s*inch\b/gi, '$1 in')
+      .replace(/\b(\d[\d,]*(?:\.\d+)?)\s*centimeters\b/gi, '$1 cm')
+      .replace(/\b(\d[\d,]*(?:\.\d+)?)\s*centimeter\b/gi, '$1 cm')
+      .replace(/\b(\d[\d,]*(?:\.\d+)?)\s*millimeters\b/gi, '$1 mm')
+      .replace(/\b(\d[\d,]*(?:\.\d+)?)\s*millimeter\b/gi, '$1 mm')
+      .replace(/\b(\d[\d,]*(?:\.\d+)?)\s*pounds\b/gi, '$1 lb')
+      .replace(/\b(\d[\d,]*(?:\.\d+)?)\s*pound\b/gi, '$1 lb')
+      .replace(/\b(\d[\d,]*(?:\.\d+)?)\s*ounces\b/gi, '$1 oz')
+      .replace(/\b(\d[\d,]*(?:\.\d+)?)\s*ounce\b/gi, '$1 oz');
+  }
+
+  function normalizeDisplayText(s) {
+    return trimClean(normalizeLongUnitWords(
+      normalizeCompactUnitSpacing(
+        normalizeDpiPhrases(
+          normalizeResolutionSpacing(
+            normalizeTokenizedUnitPhrases(s)
+          )
+        )
+      )
+    ));
+  }
+
   function unescape(s) {
     return String(s).replace(ENTITY, (_, name) => ENTITY_MAP[name] || _);
   }
@@ -73,11 +125,11 @@
     let cleaned;
     switch (config && config.clean) {
       case 'trimUnescape':
-        cleaned = trimClean(normalizeCompactUnitSpacing(unescape(raw)));
+        cleaned = normalizeDisplayText(unescape(raw));
         break;
       case 'trim':
       default:
-        cleaned = trimClean(normalizeCompactUnitSpacing(raw));
+        cleaned = normalizeDisplayText(raw);
         break;
     }
     if (!cleaned) {
@@ -99,6 +151,7 @@
   Object.assign(NS, {
     version: 2,
     normalize: normalizeText,
-    normalizeCompactUnitSpacing
+    normalizeCompactUnitSpacing,
+    normalizeDisplayText,
   });
 })(typeof globalThis !== 'undefined' ? globalThis : this);

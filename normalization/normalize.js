@@ -40,8 +40,10 @@
       /* Unregistered field: treat as text passthrough, but flag
          so we can decide to add it to the registry. */
       const raw = rawValue == null ? null : String(rawValue);
-      const spacing = root.ShopScoutTextNormalizer?.normalizeCompactUnitSpacing;
-      const cleaned = raw == null ? null : (typeof spacing === 'function' ? spacing(raw) : raw).trim();
+      const normalizeDisplay = root.ShopScoutTextNormalizer?.normalizeDisplayText;
+      const cleaned = raw == null ? null : (
+        typeof normalizeDisplay === 'function' ? normalizeDisplay(raw) : raw.trim()
+      );
       return {
         raw,
         canonical: cleaned || null,

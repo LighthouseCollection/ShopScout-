@@ -1,10 +1,36 @@
 # ShopScout Agent Change Log
 
-## 2026-07-20 20:05 - Codex restore product detail from grid names
+## 2026-07-20 20:34 - Codex normalize display output polish
 
 - Agent: Codex
 - Branch: grid-rebuild-codex
 - Commit: Uncommitted
+- Status: Implemented Phase G from `docs/codex-work-order.md` for #71.
+- What changed:
+  - Routed unregistered metadata/spec fields through the same v2 display text normalizer used by registered text fields.
+  - Normalized tokenized unit phrases such as `volts_of_direct_current`, `dots_per_inch`, and `pixels_per_inch` for display.
+  - Standardized resolution and dimension spacing such as `1920x1080` -> `1920 x 1080` and `15.5x10.25x2 inches` -> `15.5 x 10.25 x 2 in`.
+  - Added regression coverage for DPI/PPI phrases, resolution spacing, physical dimensions, and unknown-field underscore cleanup.
+- Files touched:
+  - `normalization/normalize.js`
+  - `normalization/normalizers/text.js`
+  - `tests/normalize-v2.test.js`
+  - `AGENT_CHANGELOG.md`
+- Validation run:
+  - `node tests\normalize-v2.test.js` -> pass
+  - `node tests\product-spec-access.test.js` -> pass
+  - `node --check normalization\normalizers\text.js` -> pass
+  - `node --check normalization\normalize.js` -> pass
+- Review status / next reviewer:
+  - Ready for Claude review after Codex finishes the current work-order batch.
+- Follow-ups or risks:
+  - This is deterministic display cleanup only. Identifier fields remain protected by the ProductSpec/registry boundary and were not broadened into generic underscore rewriting.
+
+## 2026-07-20 20:05 - Codex restore product detail from grid names
+
+- Agent: Codex
+- Branch: grid-rebuild-codex
+- Commit: `3f375e3`
 - Status: Implemented Phase F from `docs/codex-work-order.md` for #72.
 - What changed:
   - Changed product-name cells from inert text into accessible text-style buttons that open the internal ShopScout product detail view.

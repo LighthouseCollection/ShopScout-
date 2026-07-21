@@ -192,6 +192,26 @@ check('Description text inserts one space between numbers and compact units',
   { canonical: r.canonical, display: r.display },
   { canonical: 'Battery 8000 mAh with 65 W charging', display: 'Battery 8000 mAh with 65 W charging' });
 
+r = N.field('Description', 'supports 1200 dots per inch scanning');
+check('Description text compacts dots-per-inch phrases',
+  { canonical: r.canonical, display: r.display },
+  { canonical: 'supports 1200 DPI scanning', display: 'supports 1200 DPI scanning' });
+
+r = N.field('Description', 'resolution 1920x1080, panel 3840×2160');
+check('Description text spaces resolution dimensions',
+  { canonical: r.canonical, display: r.display },
+  { canonical: 'resolution 1920 x 1080, panel 3840 x 2160', display: 'resolution 1920 x 1080, panel 3840 x 2160' });
+
+r = N.field('Description', 'box 15.5x10.25x2 inches');
+check('Description text spaces physical dimensions and units',
+  { canonical: r.canonical, display: r.display },
+  { canonical: 'box 15.5 x 10.25 x 2 in', display: 'box 15.5 x 10.25 x 2 in' });
+
+r = N.field('SomeUnknownField', 'volts_of_direct_current');
+check('Text fallback cleans tokenized unit phrases',
+  { canonical: r.canonical, display: r.display },
+  { canonical: 'volts of direct current', display: 'volts of direct current' });
+
 /* ---------------- Unregistered field ---------------- */
 
 r = N.field('SomeUnknownField', 'whatever');
