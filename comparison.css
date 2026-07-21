@@ -208,8 +208,8 @@
     /* background: var(--paper-2); */
   }
   .dashboard-page-head h2 { margin: 0 0 4px; font-size: 18px; font-weight: 650; color: var(--ink); }
-  .dashboard-page-head p { margin: 0; color: var(--ink-3); font-size: 13px; line-height: 1.45; }
-  .dashboard-page-body { padding: 20px; color: var(--ink-2); font-size: 14px; line-height: 1.6; margin-top: 4px; }
+  .dashboard-page-head p { margin: 0; color: var(--text-tertiary); font-size: var(--font-size-secondary); line-height: 1.45; }
+  .dashboard-page-body { padding: 20px; color: var(--text-secondary); font-size: 14px; line-height: 1.6; margin-top: 4px; }
   /* Grid variant: no card padding around the body since the grid card
      has its own; still keep a visual gap between title band and grid. */
   .dashboard-page--grid .dashboard-page-body { padding: 0; margin-top: 0; }
@@ -256,15 +256,18 @@
     background: var(--surface);
     color: var(--ink);
   }
-  .dashboard-secondary-action:hover { background: var(--paper-2); border-color: #b8c2ce; }
+  .dashboard-secondary-action:hover { background: var(--button-hover-bg); border-color: #8faac1; }
+  .dashboard-secondary-action:active { background: var(--button-active-bg); border-color: var(--button-selected-rule); }
+  .dashboard-secondary-action[aria-pressed="true"],
+  .dashboard-secondary-action.active { background: var(--button-selected-bg); border-color: var(--button-selected-rule); }
   .dashboard-primary-action:focus-visible,
   .dashboard-secondary-action:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
   .dashboard-form { display: grid; gap: 10px; }
-  .dashboard-form label { display: grid; gap: 4px; color: var(--ink-3); font-size: 12px; font-weight: 650; }
+  .dashboard-form label { display: grid; gap: 4px; color: var(--text-tertiary); font-size: var(--font-size-hint); font-weight: 650; }
   .dashboard-form input, .dashboard-form textarea { width: 100%; padding: 9px 10px; border: 1px solid var(--rule); border-radius: var(--radius-sm); background: #fff; color: var(--ink); font: inherit; }
   .dashboard-form textarea { min-height: 140px; resize: vertical; }
   /* Quiet hint next to an optional field label. */
-  .dashboard-form-optional { font-weight: 400; color: var(--ink-4); font-size: 11px; margin-left: 4px; }
+  .dashboard-form-optional { font-weight: 400; color: var(--text-tertiary); font-size: var(--font-size-hint); margin-left: 4px; }
   /* About / Help body — slightly looser line height for prose readability. */
   .dashboard-about, .dashboard-help { line-height: 1.55; font-size: 13px; color: var(--ink-2); max-width: 720px; }
   .dashboard-about h3, .dashboard-help h3 { font-size: 13px; margin-top: 16px; margin-bottom: 6px; color: var(--ink); }

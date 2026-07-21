@@ -1,5 +1,33 @@
 # ShopScout Agent Change Log
 
+## 2026-07-20 19:09 - Codex strengthen shared UI foundation tokens
+
+- Agent: Codex
+- Branch: grid-rebuild-codex
+- Commit: This commit
+- Status: Implemented Phase B from `docs/codex-work-order.md` for #58, #74, and #50.
+- What changed:
+  - Added high-contrast secondary/tertiary text tokens and minimum readable secondary/hint font-size tokens.
+  - Added shared neutral button hover, active, and selected-state tokens.
+  - Routed dashboard secondary buttons and ribbon hover/pressed states through the shared button tokens.
+  - Raised shared AG Grid value-pill font weight and pinned the semantic pill palette to explicit dark text colors.
+  - Added a design-token regression test for the shared text, button, ribbon, and pill baselines.
+- Files touched:
+  - `theme.css`
+  - `comparison.css`
+  - `ribbon/ribbon.css`
+  - `grid-rebuild-codex/grid.css`
+  - `tests/design-token-baseline.test.js`
+  - `AGENT_CHANGELOG.md`
+- Validation run:
+  - `node tests\design-token-baseline.test.js` -> pass
+  - `node tests\menu-layout.test.js` -> pass
+  - `node grid-rebuild-codex\tests\wiring.test.js` -> pass
+- Review status / next reviewer:
+  - Ready for Claude review.
+- Follow-ups or risks:
+  - This is a foundation-token pass only. Component-specific modal/grid polish remains in later work-order phases.
+
 ## 2026-07-20 17:23 - Codex block extractor junk spec columns
 
 - Agent: Codex

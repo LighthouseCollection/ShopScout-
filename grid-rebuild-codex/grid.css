@@ -310,7 +310,7 @@
   text-overflow: ellipsis;
   white-space: nowrap;
   font-size: 12px;
-  font-weight: 500;
+  font-weight: 600;
   line-height: 1.5;
 }
 
@@ -544,7 +544,7 @@ a.ss-grid-rating-link:hover .ss-grid-stars {
   background: var(--paper-2, #eaedf1);
   color: var(--ink-2, #2a3441);
   font-size: 12px;
-  font-weight: 500;
+  font-weight: 600;
   line-height: 1.5;
   /* Pills never break their content onto two lines — the column
    auto-sizes to fit the widest pill so wrapping should never be

@@ -135,9 +135,10 @@
   /* Colors — modern Office 365 light theme */
   --rbn-contextual-tint: rgba(0, 0, 0, 0.08);           /* [Fluent:Theme.Template.xaml:91] #14000000 */
   --rbn-group-sep-color: rgba(15, 23, 42, 0.08);        /* [Invented] */
-  --rbn-hover-bg: rgba(15, 23, 42, 0.06);               /* [Invented] Office 365 hover */
-  --rbn-hover-border: rgba(15, 23, 42, 0.08);           /* [Invented] */
-  --rbn-pressed-bg: rgba(15, 23, 42, 0.10);             /* [Invented] */
+  --rbn-hover-bg: var(--button-hover-bg, #e1e8ef);      /* [Invented] Office 365 hover */
+  --rbn-hover-border: #8faac1;                          /* [Invented] Office 365 blue-gray border */
+  --rbn-pressed-bg: var(--button-active-bg, #cfdae5);   /* [Invented] */
+  --rbn-selected-bg: var(--button-selected-bg, #d9eaf4);/* [Invented] */
   --rbn-focus-outline: var(--accent, #ecd496);          /* ShopScout theme accent */
   --rbn-body-bg: var(--paper-1, #fafbfc);               /* [Invented] Office 365 desktop body */
 

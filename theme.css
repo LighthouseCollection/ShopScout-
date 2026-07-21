@@ -12,8 +12,12 @@
   /* Palette — cool neutral, trust report */
   --ink:           #0f1419;        /* primary text */
   --ink-2:         #2a3441;        /* secondary text */
-  --ink-3:         #5a6470;        /* tertiary / muted */
+  --ink-3:         #3f4a57;        /* tertiary / muted — WCAG-safe on white */
   --ink-4:         #8b95a1;        /* very muted / placeholder */
+  --text-secondary:#2a3441;
+  --text-tertiary: #3f4a57;
+  --font-size-secondary: 13px;
+  --font-size-hint: 12px;
   --rule:          #d1d5db;        /* horizontal row dividers, card outlines */
   --rule-soft:     #e4e7eb;        /* vertical column dividers - softer */
   --rule-strong:   #9ca3af;        /* emphasized dividers */
@@ -54,8 +58,12 @@
   --success:        var(--ok);
   --success-light:  var(--ok-tint);
   --button-shade:        #eef2f6;
-  --button-shade-hover:  #e4e9ef;
-  --button-shade-active: #dbe3eb;
+  --button-shade-hover:  #e1e8ef;
+  --button-shade-active: #cfdae5;
+  --button-hover-bg:     #e1e8ef;
+  --button-active-bg:    #cfdae5;
+  --button-selected-bg:  #d9eaf4;
+  --button-selected-rule:#8eb2cf;
   --shadow-sm: 0 1px 2px rgba(15,20,25,0.04);
   --shadow-md: 0 4px 12px rgba(15,20,25,0.08);
 
