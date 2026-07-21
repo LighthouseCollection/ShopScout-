@@ -175,6 +175,8 @@ assertIncludes('class="toolbar-menu rb-price-menu"', 'Normalization group uses a
 assertIncludes('data-ss-price-display-option="nearest5"', 'price display menu includes nearest-$5 rounding');
 assertIncludes('class="toolbar-menu rb-measurement-menu"', 'Normalization group uses a ribbon measurement menu');
 assertIncludes('data-ss-measurement-display-option="rounded"', 'measurement display menu includes rounded option');
+assertIncludes('<span class="rb-btn-lg-label">Units</span>', 'Measurements display command is renamed to Units');
+assertNotIncludes('<span class="rb-btn-lg-label">Measurements</span>', 'old Measurements ribbon label is removed');
 assert.ok(/\.rb-office-ribbon\s+\.rb-group\[data-group-id="review"\][^{]*>\s+\.rb-group-content\s*{[\s\S]{0,220}flex-direction:\s*row;/.test(ribbonCss),
   'Normalization controls render as side-by-side icon dropdown commands');
 assert.ok(!/\.rb-office-ribbon\s+\.rb-group\[data-group-id="review"\][^{]*>\s*\.rb-group-content\s*{[\s\S]{0,220}grid-template-columns:\s*1fr\s+1fr;/.test(ribbonCss),
@@ -183,6 +185,8 @@ assert.ok(/\.rb-office-ribbon\s+\.rb-group\[data-group-id="review"\]\s+\.rb-pric
   'price menu uses the same large ribbon button height as other icon commands');
 assert.ok(/\.rb-office-ribbon\s+\.rb-group\s*{[\s\S]{0,180}flex:\s*0 0 auto;/.test(ribbonCss),
   'Office ribbon groups do not flex-shrink into internal overlap');
+assert.ok(/\.rb-office-ribbon\s+\.rb-icon-lg\s+svg,[\s\S]{0,120}\.rb-office-ribbon\s+\.rb-btn-sm-icon\s+svg\s*{[\s\S]{0,120}stroke-width:\s*1\.5;/.test(ribbonCss),
+  'Ribbon SVG icons normalize to a consistent 1.5px Office-style stroke');
 assert.ok(/\.rb-office-ribbon\s+\.rb-group\[data-group-id="list"\]\s+>\s+\.rb-group-content\s*{[\s\S]{0,400}display:\s*flex;[\s\S]{0,300}flex:\s*1;[\s\S]{0,200}align-items:\s*center;[\s\S]{0,200}justify-content:\s*center;/.test(ribbonCss),
   'List group content grows to fill the group (flex:1) and centers its children both vertically and horizontally so PRODUCT LIST + select + action buttons sit as one balanced block in the middle');
 assert.ok(/\.rb-list-actions\s*{[\s\S]{0,220}flex-direction:\s*column;/.test(ribbonCss),
@@ -197,6 +201,10 @@ assert.ok(!/\{\s*groupId:\s*'review',\s*size:\s*'(Middle|Small)'\s*\}/.test(prod
   'Review group does not use squeeze-prone Middle/Small states');
 assert.ok(!/\{\s*groupId:\s*'organize',\s*size:\s*'(Middle|Small)'\s*\}/.test(productsTabInitJs),
   'Organize group does not use squeeze-prone Middle/Small states');
+for (const paneId of ['file', 'products', 'analyze', 'search', 'about']) {
+  assert.ok(new RegExp(`RB\\.scaling\\.set\\('${paneId}'`).test(productsTabInitJs),
+    `${paneId} ribbon pane has a scaling policy`);
+}
 assertIncludes('data-ss-grid-command="mode-rows"',             'products-as-rows command exists');
 assertIncludes('data-ss-grid-command="mode-matrix"',           'compare command exists');
 assertIncludes('data-ss-grid-sort-field',                      'sort field picker exists');

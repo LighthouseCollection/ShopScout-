@@ -64,8 +64,8 @@
 
       <div class="rb-divider" aria-hidden="true"></div>
 
-      <div class="rb-group" aria-label="Open or Import">
-        <div class="rb-group-content">
+      <div class="rb-group" data-group-id="open-import" data-collapsed-label="Open" aria-label="Open or Import">
+        <div class="rb-group-content" data-collapsed-label="Open">
           <button class="rb-btn-lg" id="openBtn" title="Open a saved file (JSON / XML / CSV) as a NEW list to work with. Does not touch your current list.">
             <span class="rb-icon-lg"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2Z"/></svg></span>
             <span class="rb-btn-lg-label">Open</span>
@@ -80,8 +80,8 @@
 
       <div class="rb-divider" aria-hidden="true"></div>
 
-      <div class="rb-group" aria-label="Save">
-        <div class="rb-group-content">
+      <div class="rb-group" data-group-id="save" data-collapsed-label="Save" aria-label="Save">
+        <div class="rb-group-content" data-collapsed-label="Save">
           <button class="rb-btn-lg split-down" id="exportToggle" title="Save products as PDF, HTML, CSV, JSON, or XML">
             <span class="rb-icon-lg"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M7 10l5 5 5-5"/><path d="M12 15V3"/></svg></span>
             <span class="rb-btn-lg-label">Save As</span>
@@ -97,7 +97,7 @@
            "Products Table View" tabs. Five logical groups, L->R:
              1. List           (list picker + inline New/Rename/Delete)
              2. Product Actions (Add, Rescan smart-split, Delete split)
-             3. Normalization    (Prices, Measurements)
+             3. Normalization    (Prices, Units)
              4. View            (Products / Compare / Columns)
              5. Organize        (Sort, Filter, Group, Reset dropdown)
            Fit/Full width toggle is removed — full-page is now the
@@ -263,9 +263,9 @@
             </div>
           </details>
           <details class="toolbar-menu rb-measurement-menu">
-            <summary class="rb-btn-lg rb-measurement-menu-trigger split-down" data-menu="true" title="Choose how product measurements appear in the grid">
+            <summary class="rb-btn-lg rb-measurement-menu-trigger split-down" data-menu="true" title="Choose how product units appear in the grid">
               <span class="rb-icon-lg"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 17 17 4l3 3L7 20z"/><path d="m7 14 2 2"/><path d="m10 11 2 2"/><path d="m13 8 2 2"/><path d="m16 5 2 2"/></svg></span>
-              <span class="rb-btn-lg-label">Measurements</span>
+              <span class="rb-btn-lg-label">Units</span>
             </summary>
             <div class="toolbar-menu-panel">
               <button class="menu-item" type="button" data-ss-measurement-display-option="actual">
@@ -302,8 +302,8 @@
       <!-- AI — merged group holding both Auto AI (split-button with
            provider menu) and Manual AI (single button). Shares one
            group label "AI" at the bottom. -->
-      <div class="rb-group" data-group-id="ai" aria-label="AI">
-        <div class="rb-group-content">
+      <div class="rb-group" data-group-id="ai" data-collapsed-label="AI" aria-label="AI">
+        <div class="rb-group-content" data-collapsed-label="AI">
           <details class="toolbar-menu">
             <summary class="rb-btn-lg split-down" id="aiIntegratedTrigger" data-menu="true" title="Run integrated AI analysis">
               <span class="rb-icon-lg"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15 9 22 9.5 17 14 18.5 21 12 17 5.5 21 7 14 2 9.5 9 9"/></svg></span>
@@ -324,8 +324,8 @@
 
       <div class="rb-divider" aria-hidden="true"></div>
 
-      <div class="rb-group" aria-label="AI Results">
-        <div class="rb-group-content rb-results-grid" role="group" aria-label="AI result commands">
+      <div class="rb-group" data-group-id="ai-results" data-collapsed-label="Results" aria-label="AI Results">
+        <div class="rb-group-content rb-results-grid" data-collapsed-label="Results" role="group" aria-label="AI result commands">
           <button class="rb-btn-sm" id="aiAnalysisPageBtn" title="Open the latest AI analysis results"><span class="rb-btn-sm-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></span><span class="rb-btn-sm-label">History</span></button>
           <button class="rb-btn-sm" data-command="ai-results" title="Compare saved AI runs"><span class="rb-btn-sm-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="8" height="8" rx="1"/><rect x="13" y="3" width="8" height="8" rx="1"/><rect x="3" y="13" width="8" height="8" rx="1"/><rect x="13" y="13" width="8" height="8" rx="1"/></svg></span><span class="rb-btn-sm-label">Compare runs</span></button>
           <button class="rb-btn-sm" data-command="paste-ai-result" title="Paste manual AI results back into ShopScout"><span class="rb-btn-sm-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M5 21h14"/></svg></span><span class="rb-btn-sm-label">Paste result</span></button>
@@ -336,8 +336,8 @@
 
       <div class="rb-divider" aria-hidden="true"></div>
 
-      <div class="rb-group" aria-label="Settings">
-        <div class="rb-group-content">
+      <div class="rb-group" data-group-id="settings" data-collapsed-label="Settings" aria-label="Settings">
+        <div class="rb-group-content" data-collapsed-label="Settings">
           <button class="rb-btn-lg" data-command="settings" title="Open settings in dashboard">
             <span class="rb-icon-lg"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></span>
             <span class="rb-btn-lg-label">Settings</span>
@@ -363,8 +363,8 @@
         <div class="rb-group-label">List</div>
       </div>
       <div class="rb-divider" aria-hidden="true"></div>
-      <div class="rb-group rb-group-wide" aria-label="Search">
-        <div class="rb-group-content">
+      <div class="rb-group rb-group-wide" data-group-id="search" data-collapsed-label="Search" aria-label="Search">
+        <div class="rb-group-content" data-collapsed-label="Search">
           <!-- Row 1: search input + current-list scope side-by-side.
                Each field sits in a rb-stack with a mini-label so it bottom-aligns
                with the Product List dropdown in the mirror group to the left.
@@ -397,8 +397,8 @@
     </div>
 
     <div class="ribbon-pane" data-pane="about">
-      <div class="rb-group" aria-label="About">
-        <div class="rb-group-content">
+      <div class="rb-group" data-group-id="about-main" data-collapsed-label="About" aria-label="About">
+        <div class="rb-group-content" data-collapsed-label="About">
           <button class="rb-btn-lg" type="button" title="About ShopScout" data-command="about"><span class="rb-icon-lg"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg></span><span class="rb-btn-lg-label">About</span></button>
           <button class="rb-btn-lg" type="button" title="Help" data-command="documentation"><span class="rb-icon-lg"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2Z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7Z"/></svg></span><span class="rb-btn-lg-label">Help</span></button>
           <button class="rb-btn-lg" type="button" title="Check updates" data-command="check-updates"><span class="rb-icon-lg"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-9-9c2.39 0 4.68.94 6.36 2.64L21 8"/><path d="M21 3v5h-5"/></svg></span><span class="rb-btn-lg-label">Check<br>Updates</span></button>
@@ -408,8 +408,8 @@
 
       <div class="rb-divider" aria-hidden="true"></div>
 
-      <div class="rb-group" aria-label="Feedback">
-        <div class="rb-group-content">
+      <div class="rb-group" data-group-id="feedback" data-collapsed-label="Feedback" aria-label="Feedback">
+        <div class="rb-group-content" data-collapsed-label="Feedback">
           <button class="rb-btn-lg" data-command="report-bug"><span class="rb-icon-lg"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M8 2h8l4 4v4l-3 3-2-2-3 3-2-2-3 3-2-2-1 1V6Z"/><path d="M12 22a3 3 0 0 0 3-3v-3H9v3a3 3 0 0 0 3 3Z"/></svg></span><span class="rb-btn-lg-label">Report<br>Bug</span></button>
           <button class="rb-btn-lg" data-command="suggest-feature"><span class="rb-icon-lg"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18h6"/><path d="M10 22h4"/><path d="M15.09 14c.18-.98.65-1.74 1.41-2.5A4.65 4.65 0 0 0 18 8 6 6 0 0 0 6 8c0 1 .23 2.23 1.5 3.5A4.61 4.61 0 0 1 8.91 14"/></svg></span><span class="rb-btn-lg-label">Suggest</span></button>
           <button class="rb-btn-lg" data-command="rate-extension"><span class="rb-icon-lg"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15 8 22 9 17 14 18 21 12 18 6 21 7 14 2 9 9 8"/></svg></span><span class="rb-btn-lg-label">Rate</span></button>

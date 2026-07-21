@@ -193,12 +193,15 @@
     });
   }
 
-  /* --- ScalingPolicy for the Products pane ------------------- */
-  /* When the viewport narrows, downgrade in this order (each entry
-     is a step the engine tries in sequence). The two dense groups
-     collapse first because they contain multi-row controls and long
-     labels; shrinking them through Middle/Small creates internal
-     collisions instead of a real Office-style ribbon response:
+  /* --- ScalingPolicy registration ---------------------------- */
+  /* Every pane now has a ScalingPolicy. The Products pane still has
+     the richest policy because it carries the widest command set.
+     When its viewport narrows, downgrade in this order (each entry
+     is a step the engine tries in sequence). The two dense Products
+     groups collapse first because they contain multi-row controls
+     and long labels; shrinking them through Middle/Small creates
+     internal collisions instead of a real Office-style ribbon
+     response:
 
        1. Review     -> Popup
        2. Organize   -> Popup
@@ -209,14 +212,28 @@
        7. Actions    -> Popup
 
      The List group is left at Large throughout because the list
-     picker is the anchor of the tab — collapsing it would remove
-     the primary affordance. If the ribbon still can't fit after
-     step 11 the scaling engine sets data-ribbon-overflow=true
-     which triggers a horizontal-scroll fallback (see ribbon.css
-     section 16). Below 300px viewport the ribbon body is hidden
-     entirely per Microsoft's minimum-render-width spec. */
+     picker is the anchor of the mirrored tabs — collapsing it would
+     remove the primary affordance. If a pane still can't fit after
+     exhausting its policy, the scaling engine sets
+     data-ribbon-overflow=true, which triggers a horizontal-scroll
+     fallback (see ribbon.css section 16). Below 300px viewport the
+     ribbon body is hidden entirely per Microsoft's
+     minimum-render-width spec. */
   function registerScalingPolicy() {
     if (!RB.scaling?.set) return;
+
+    RB.scaling.set('file', {
+      idealSizes: [
+        { groupId: 'list',        size: 'Large' },
+        { groupId: 'open-import', size: 'Large' },
+        { groupId: 'save',        size: 'Large' }
+      ],
+      scales: [
+        { groupId: 'save',        size: 'Popup' },
+        { groupId: 'open-import', size: 'Popup' }
+      ]
+    });
+
     RB.scaling.set('products', {
       idealSizes: [
         { groupId: 'list',     size: 'Large' },
@@ -236,6 +253,42 @@
         /* Tier 3 — only List and Actions remain; start shrinking Actions */
         { groupId: 'actions',  size: 'Middle' },
         { groupId: 'actions',  size: 'Popup'  }
+      ]
+    });
+
+    RB.scaling.set('analyze', {
+      idealSizes: [
+        { groupId: 'list',       size: 'Large' },
+        { groupId: 'ai',         size: 'Large' },
+        { groupId: 'ai-results', size: 'Large' },
+        { groupId: 'settings',   size: 'Large' }
+      ],
+      scales: [
+        { groupId: 'settings',   size: 'Popup'  },
+        { groupId: 'ai-results', size: 'Popup'  },
+        { groupId: 'ai',         size: 'Middle' },
+        { groupId: 'ai',         size: 'Popup'  }
+      ]
+    });
+
+    RB.scaling.set('search', {
+      idealSizes: [
+        { groupId: 'list',   size: 'Large' },
+        { groupId: 'search', size: 'Large' }
+      ],
+      scales: [
+        { groupId: 'search', size: 'Popup' }
+      ]
+    });
+
+    RB.scaling.set('about', {
+      idealSizes: [
+        { groupId: 'about-main', size: 'Large' },
+        { groupId: 'feedback',   size: 'Large' }
+      ],
+      scales: [
+        { groupId: 'feedback',   size: 'Popup' },
+        { groupId: 'about-main', size: 'Popup' }
       ]
     });
   }

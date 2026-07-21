@@ -1,10 +1,41 @@
 # ShopScout Agent Change Log
 
+## 2026-07-20 21:10 - Codex ribbon polish and all-pane scaling
+
+- Agent: Codex
+- Branch: grid-rebuild-codex
+- Commit: This commit
+- Status: Implemented Phase H from `docs/codex-work-order.md` for #56, #47, #48, #49, and #60.
+- What changed:
+  - Renamed the visible Measurements ribbon command to `Units` while preserving the existing measurement-display data command contract.
+  - Added deterministic 1.5px stroke normalization for ribbon SVG icons so inline markup with mixed stroke widths renders consistently.
+  - Added missing group ids and collapsed labels for File, Analyze, Search, and About ribbon groups.
+  - Registered scaling policies for all five ribbon panes: File, Products, Analyze, Search, and About.
+  - Added regression coverage for the Units label, Office-style icon stroke, and all-pane scaling policy registration.
+- Files touched:
+  - `comparison.html`
+  - `ribbon/ribbon.css`
+  - `ribbon/products-tab-init.js`
+  - `tests/menu-layout.test.js`
+  - `AGENT_CHANGELOG.md`
+- Validation run:
+  - `node tests\menu-layout.test.js` -> pass
+  - `node --check ribbon\products-tab-init.js` -> pass
+  - `npm test` -> pass, all 54 test files
+  - `npm run syntax` -> pass
+  - `npm run lint` -> pass
+  - `npm run typecheck` -> pass
+  - `npm run build` -> pass, Chrome/Edge/Firefox packages rebuilt
+- Review status / next reviewer:
+  - Ready for Claude review after validation and commit.
+- Follow-ups or risks:
+  - Phase H changes are constrained to ribbon markup, styling, and scaling policy registration. No grid behavior or normalization data behavior changed.
+
 ## 2026-07-20 20:34 - Codex normalize display output polish
 
 - Agent: Codex
 - Branch: grid-rebuild-codex
-- Commit: Uncommitted
+- Commit: `98c4abf`
 - Status: Implemented Phase G from `docs/codex-work-order.md` for #71.
 - What changed:
   - Routed unregistered metadata/spec fields through the same v2 display text normalizer used by registered text fields.
