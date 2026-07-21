@@ -425,7 +425,16 @@ function createHarness() {
     assert.ok(letters.includes('B'), 'columns modal includes a B group for Brand');
     assert.ok(letters.includes('S'), 'columns modal includes an S group for Source');
     const brandHide = findAll(body, node => node.tagName === 'INPUT' && node.value === 'brand')[0];
-    assert.ok(brandHide, 'columns modal renders a Brand hide checkbox');
+    assert.ok(brandHide, 'columns modal renders a Brand hide toggle input');
+    assert.equal(brandHide.attrs.role, 'switch',
+      'column hide control uses switch semantics instead of plain checkbox presentation');
+    assert.equal(brandHide.dataset.columnHide, 'brand',
+      'column hide switch keeps a stable data hook for behavior and tests');
+    const brandToggle = brandHide.parentNode;
+    assert.ok(String(brandToggle.className || '').includes('ss-grid-switch'),
+      'column hide control is wrapped in the shared switch UI');
+    const track = findAll(brandToggle, node => String(node.className || '').includes('ss-grid-switch-track'))[0];
+    assert.ok(track, 'column hide switch renders a visual toggle track');
     brandHide.checked = true;
     await brandHide.dispatch('change');
     assert.equal(harness.ctx.ShopScoutGrid.getState().columnVisibility.brand, false,

@@ -874,14 +874,21 @@ a.ss-grid-rating-link:hover .ss-grid-stars {
   gap: 8px;
 }
 
+.ss-grid-modal--columns {
+  min-width: min(1040px, calc(100vw - 48px));
+}
+
 .ss-grid-filter-list {
   display: grid;
 }
 
 .ss-grid-column-list {
-  display: block;
-  column-count: 3;
-  column-gap: 12px;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-items: start;
+  max-height: min(64vh, 620px);
+  overflow-x: hidden;
+  overflow-y: auto;
 }
 
 .ss-grid-column-help {
@@ -952,10 +959,65 @@ a.ss-grid-rating-link:hover .ss-grid-stars {
 .ss-grid-column-toggle {
   display: inline-flex;
   align-items: center;
-  gap: 5px;
+  gap: 7px;
   color: var(--ink-2, #2a3441);
   font-size: 12px;
   white-space: nowrap;
+  cursor: pointer;
+}
+
+.ss-grid-switch input {
+  position: absolute;
+  inline-size: 1px;
+  block-size: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.ss-grid-switch-track {
+  position: relative;
+  display: inline-flex;
+  width: 32px;
+  height: 18px;
+  flex: 0 0 32px;
+  align-items: center;
+  border: 1px solid var(--rule-strong, #9aa5b1);
+  border-radius: 999px;
+  background: var(--paper-2, #eaedf1);
+  transition: background-color 120ms ease, border-color 120ms ease;
+}
+
+.ss-grid-switch-thumb {
+  position: absolute;
+  left: 2px;
+  width: 14px;
+  height: 14px;
+  border-radius: 999px;
+  background: var(--surface, #fff);
+  box-shadow: 0 1px 2px rgb(15 20 25 / 24%);
+  transition: transform 120ms ease;
+}
+
+.ss-grid-switch input:checked + .ss-grid-switch-track {
+  border-color: var(--primary, #0b3d4f);
+  background: var(--primary, #0b3d4f);
+}
+
+.ss-grid-switch input:checked + .ss-grid-switch-track .ss-grid-switch-thumb {
+  transform: translateX(14px);
+}
+
+.ss-grid-switch input:focus-visible + .ss-grid-switch-track {
+  outline: 2px solid var(--focus, #2563eb);
+  outline-offset: 2px;
+}
+
+.ss-grid-switch input:disabled + .ss-grid-switch-track,
+.ss-grid-switch input:disabled ~ .ss-grid-column-toggle-text {
+  opacity: 0.45;
+  cursor: not-allowed;
 }
 
 .ss-grid-column-remove {

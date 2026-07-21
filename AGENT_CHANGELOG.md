@@ -1,3 +1,32 @@
+## 2026-07-21 02:02 - Codex columns modal redesign (#25)
+
+- Agent: Codex
+- Branch: grid-rebuild-codex
+- Commit: This commit
+- Status: Implemented. The Columns selector now follows the issue #25 contract with a larger modal, two-column scrollable layout, and modern hide toggles.
+- What changed:
+  - Replaced plain hide checkbox presentation with accessible switch-style controls while preserving the immediate hide/show behavior and stable `data-column-hide` hooks.
+  - Expanded the Columns modal width and added a dedicated modal class hook.
+  - Changed the column list from three-column masonry to a stable two-column, vertically scrollable layout.
+  - Added shared modal support for caller-supplied class names.
+  - Updated regression tests to lock the switch semantics, modal size, vertical scrolling, and two-column layout.
+- Files touched:
+  - grid-rebuild-codex/shopscoutGrid.js
+  - grid-rebuild-codex/grid.css
+  - grid-rebuild-codex/tests/controls.test.js
+  - grid-rebuild-codex/tests/wiring.test.js
+  - ui/modal.js
+  - AGENT_CHANGELOG.md
+- Validation run:
+  - node grid-rebuild-codex\tests\controls.test.js -> pass
+  - node grid-rebuild-codex\tests\wiring.test.js -> pass
+  - node --check grid-rebuild-codex\shopscoutGrid.js -> pass
+  - node --check ui\modal.js -> pass
+- Review status / next reviewer:
+  - Ready for Claude review.
+- Follow-ups or risks:
+  - Visual review should confirm the 2-column column groups feel balanced with very large metadata sets.
+
 ## 2026-07-21 01:56 - Codex AI Results AG Grid comparison (#64)
 
 - Agent: Codex

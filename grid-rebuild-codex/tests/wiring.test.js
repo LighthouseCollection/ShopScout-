@@ -83,10 +83,16 @@ assert.ok(/--ag-header-column-resize-handle-display:\s*block/.test(gridCss),
   'grid resize handles use AG Grid native resize-handle variables');
 assert.ok(!/\.ag-cell,\s*[\r\n\s]*\.ss-grid-host\.ag-theme-quartz \.ag-header-cell[\s\S]{0,260}background-image/.test(gridCss),
   'custom inset cell divider is not applied to AG Grid header cells where it overlaps the resize handle');
-assert.ok(/\.ss-grid-column-list[\s\S]{0,220}column-count:\s*3/.test(gridCss),
-  'columns modal uses masonry-style columns so alphabet headers do not leave uneven top gaps');
+assert.ok(/\.ss-grid-column-list[\s\S]{0,260}grid-template-columns:\s*repeat\(2,\s*minmax\(0,\s*1fr\)\)/.test(gridCss),
+  'columns modal uses a stable two-column layout');
+assert.ok(/\.ss-grid-column-list[\s\S]{0,220}overflow-y:\s*auto/.test(gridCss),
+  'columns modal scrolls vertically inside the modal body');
+assert.ok(/\.ss-grid-modal--columns[\s\S]{0,220}min-width:\s*min\(1040px,\s*calc\(100vw - 48px\)\)/.test(gridCss),
+  'columns modal uses the larger issue #25 width contract');
 assert.ok(/\.ss-grid-column-group[\s\S]{0,220}break-inside:\s*avoid/.test(gridCss),
   'columns modal keeps each alphabet group intact inside a masonry column');
+assert.ok(/\.ss-grid-switch-track[\s\S]{0,260}border-radius:\s*999px/.test(gridCss),
+  'columns modal hide controls use a switch-style track');
 assert.ok(/\.ss-grid-column-letter[\s\S]{0,180}letter-spacing:\s*0\.08em/.test(gridCss),
   'columns modal has alphabet letter headers for grouped fields');
 assert.ok(/\.ss-grid-group-title[\s\S]{0,160}font-weight:\s*700/.test(gridCss),

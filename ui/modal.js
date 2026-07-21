@@ -49,6 +49,9 @@
         tabindex: '-1'
       }
     });
+    if (o.className) {
+      String(o.className).split(/\s+/).filter(Boolean).forEach(name => dialog.classList.add(name));
+    }
     if (o.width) dialog.style.width = o.width;
 
     const titleEl = dom.elem('div', { class: 'ssui-modal-title' });

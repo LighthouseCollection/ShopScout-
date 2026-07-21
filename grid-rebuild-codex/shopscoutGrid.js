@@ -702,7 +702,13 @@
           const hidden = !required && (localVisibility[field] === false
             || (column.defaultHidden && localVisibility[field] !== true));
           const hideInput = dom.elem('input', {
-            attrs: { type: 'checkbox', value: field }
+            attrs: {
+              type: 'checkbox',
+              value: field,
+              role: 'switch',
+              'aria-label': `Hide ${column.name || column.id}`,
+              'data-column-hide': field
+            }
           });
           hideInput.checked = hidden;
           hideInput.disabled = required;
@@ -743,8 +749,16 @@
             children: [
               dom.elem('span', { class: 'ss-grid-column-name', text: `${column.name || column.id}${required ? ' (required)' : ''}` }),
               dom.elem('label', {
-                class: 'ss-grid-column-toggle',
-                children: [hideInput, dom.elem('span', { text: 'Hide' })]
+                class: 'ss-grid-column-toggle ss-grid-switch',
+                children: [
+                  hideInput,
+                  dom.elem('span', {
+                    class: 'ss-grid-switch-track',
+                    attrs: { 'aria-hidden': 'true' },
+                    children: [dom.elem('span', { class: 'ss-grid-switch-thumb' })]
+                  }),
+                  dom.elem('span', { class: 'ss-grid-column-toggle-text', text: 'Hide' })
+                ]
               }),
               remove
             ]
@@ -758,7 +772,8 @@
     ui.modal.open({
       title: 'Columns',
       body,
-      width: 'min(760px, 94vw)',
+      className: 'ss-grid-modal--columns',
+      width: 'min(1040px, calc(100vw - 48px))',
       actions: [
         { label: 'Cancel', value: false },
         { label: 'Done', kind: 'primary', value: true, isDefault: true }
