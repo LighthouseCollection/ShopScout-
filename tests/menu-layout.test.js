@@ -279,6 +279,11 @@ assert.ok(/dashboardBack[\s\S]{0,120}restoreProductListChrome\(\)/.test(js),
   'Back to Products restores the product grid chrome');
 assert.ok(js.includes('openAboutPage'), 'About renders from the dashboard content page');
 assert.ok(js.includes('openHelpPage'), 'Help renders from the dashboard content page');
+assert.ok(js.includes('private product comparison workspace'), 'About page explains the ShopScout product premise');
+assert.ok(js.includes('Amazon, eBay, and Walmart'), 'About page documents dedicated shopping adapters');
+assert.ok(js.includes('23.6 inches, 60 cm'), 'About page shows unit-normalization examples');
+assert.ok(js.includes('Shopify product taxonomy'), 'About page names industry taxonomy sources');
+assert.ok(js.includes('not a store, ad network, or price-affiliate service'), 'About page states privacy/business boundary');
 assert.ok(!js.includes('renderMarkdownToHtml'), 'legacy markdown help/about renderer is removed');
 assert.ok(js.includes('openDashboardInfoPage'), 'ribbon informational commands open inside the main content area');
 assert.ok(js.includes('openFeedbackPage'), 'suggest feature and report bug open inside the main content area');

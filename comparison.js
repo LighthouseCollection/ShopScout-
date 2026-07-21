@@ -1096,25 +1096,59 @@ function openAboutPage() {
   const version = chrome.runtime.getManifest?.().version || 'unknown';
   openDashboardInfoPage('About ShopScout', 'What ShopScout is and why it exists.',
     `<div class="dashboard-about">
-      <p><strong>ShopScout</strong> is a browser extension that captures product
-      information from major shopping sites, organizes it into your own private
-      database, and helps you decide what to buy — either by side-by-side
-      comparison or by handing the data to an AI assistant for verification and
-      analysis.</p>
-      <p>It runs entirely in your browser. Captured products, lists, notes, and
-      saved views live in local storage on this machine. Nothing is uploaded to
-      ShopScout servers because there are no ShopScout servers — when you ask an
-      AI for a verdict, you choose the provider and your data goes directly to
-      that provider's API (or to a local LLM if you set one up in Settings).</p>
-      <h3>What it does well</h3>
+      <p><strong>ShopScout</strong> is a private product comparison workspace for
+      people who research products across multiple stores. It captures product
+      listings, normalizes messy specs into comparable fields, flags duplicates
+      and weak data, and helps you make buying decisions with side-by-side tables
+      or optional AI analysis.</p>
+      <h3>How capture works</h3>
+      <p>ShopScout runs only when you ask it to capture or rescan. It reads the
+      active product page, extracts structured data such as JSON-LD and
+      microdata, then combines that with visible specification tables, feature
+      bullets, prices, identifiers, ratings, seller data, and product media.</p>
       <ul>
-        <li>One-click capture from Amazon, eBay, Walmart, and 30+ other shopping hosts.</li>
-        <li>Layered extraction pipeline pulls structured data (JSON-LD, microdata) <em>plus</em> visible spec tables, plus a text-pattern miner for marketing-copy specs (torque, RPM, capacity, etc.).</li>
-        <li>Auto-built comparison columns: every captured spec becomes a sortable, filterable column with best-in-row highlighting and unit unification (metric → U.S. customary, minutes → hours, etc.).</li>
-        <li>A side-by-side Compare panel for 2–4 selected products.</li>
-        <li>Export to PDF, HTML, CSV, JSON, XML, or plain-text clipboard.</li>
-        <li>Optional GTIN-based enrichment from Open Food / Beauty / Pet / Products Facts.</li>
+        <li><strong>Full adapters:</strong> Amazon, eBay, and Walmart.</li>
+        <li><strong>Generic adapter:</strong> works on many other product pages when they expose usable product data.</li>
+        <li><strong>Safety:</strong> the extension avoids always-on scraping and uses on-demand capture.</li>
       </ul>
+      <h3>Normalization for comparison</h3>
+      <p>Product data is not consistent across stores. ShopScout maps aliases,
+      units, colors, connectors, identifiers, and category clues into normalized
+      fields so the table can sort, filter, compare, and highlight products more
+      reliably.</p>
+      <table class="dashboard-about-table">
+        <thead><tr><th>Messy listing data</th><th>Normalized comparison value</th></tr></thead>
+        <tbody>
+          <tr><td>9 volts_of_direct_current, 9 V</td><td>9 V</td></tr>
+          <tr><td>23.6 inches, 60 cm</td><td>60 cm or local display units</td></tr>
+          <tr><td>Black&amp;red</td><td>Black, Red</td></tr>
+          <tr><td>USB-C, usb type c, Type-C</td><td>USB-C</td></tr>
+        </tbody>
+      </table>
+      <h3>Industry vocabularies</h3>
+      <p>ShopScout uses deterministic local rules first and augments them with
+      industry vocabulary sources where appropriate:</p>
+      <ul>
+        <li><strong>Shopify product taxonomy:</strong> bundled category taxonomy for product classification.</li>
+        <li><strong>Google Product Taxonomy:</strong> category cross-reference terms.</li>
+        <li><strong>GS1 GPC subset:</strong> product classification vocabulary for commerce data.</li>
+        <li><strong>Icecat:</strong> category features and product attribute vocabulary generated into lightweight local libraries.</li>
+        <li><strong>Amazon ESCI:</strong> substitute signal data used cautiously for related-product matching, not automatic merging.</li>
+      </ul>
+      <h3>AI options</h3>
+      <ul>
+        <li><strong>Auto AI:</strong> uses a configured provider API key to run the comparison workflow inside ShopScout.</li>
+        <li><strong>Manual AI:</strong> builds a copyable prompt so you can use ChatGPT, Claude, Gemini, Perplexity, or another assistant yourself.</li>
+        <li><strong>Paste result back:</strong> lets ShopScout store and apply supported AI corrections to the active list.</li>
+      </ul>
+      <h3>Privacy and ownership</h3>
+      <p>ShopScout is not a store, ad network, or price-affiliate service. It does
+      not send your browsing history to ShopScout servers. Your saved lists stay
+      in your browser's local product database unless you export them or choose
+      to send selected product facts to an AI provider.</p>
+      <h3>Long-term reference</h3>
+      <p>You can save products into named lists, revisit old decisions, add notes,
+      export reports, and keep comparison evidence for later reference.</p>
       <p class="dashboard-about-version">Version ${esc(version)}</p>
     </div>`);
 }

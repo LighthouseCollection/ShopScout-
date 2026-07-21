@@ -6213,3 +6213,30 @@ This file is the shared record for Claude and Codex. Append an entry for every m
   - Ready for Claude review.
 - Follow-ups or risks:
   - Visual verification should confirm the dashboard icon is compact in Chrome side panel width and that clear-all confirmation is not cramped.
+
+## 2026-07-20 00:00 - Codex About product writeup placement (#62)
+
+- Agent: Codex
+- Branch: grid-rebuild-codex
+- Commit: This commit
+- Status: Implemented. About copy is placed in the dashboard and a root README now describes the product for repo/store-prep use.
+- What changed:
+  - Rewrote the dashboard About page around ShopScout's capture, normalization, AI, privacy, and saved-list value proposition.
+  - Added normalization examples for voltage, dimensions, colors, and USB-C aliases.
+  - Documented adapter coverage for Amazon, eBay, Walmart, and the generic fallback adapter.
+  - Named Shopify taxonomy, Google Product Taxonomy, GS1 GPC subset, Icecat, and ESCI as vocabulary sources.
+  - Added a root README with matching product overview, privacy boundary, AI workflow, and development commands.
+  - Added dashboard About table styling and layout assertions for the new copy.
+- Files touched:
+  - comparison.js
+  - comparison.css
+  - README.md
+  - tests/menu-layout.test.js
+  - AGENT_CHANGELOG.md
+- Validation run:
+  - node tests\menu-layout.test.js -> pass
+  - node --check comparison.js -> pass
+- Review status / next reviewer:
+  - Ready for Claude review.
+- Follow-ups or risks:
+  - Chrome Web Store and extension-store copy still needs to be packaged in Phase I #63.
