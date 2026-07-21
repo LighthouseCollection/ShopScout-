@@ -9,6 +9,9 @@
    Every registry entry chooses one type:
      enum        — finite set of allowed values, optionally multi-valued
      measurement — numeric scalar + unit, converts to a canonical unit
+     dataRate    — network/transfer scalar + rate unit abbreviation
+     dimensions  — compound L × W × H scalar list + unit
+     resolution  — pixel dimensions / display shortcut names
      text        — free-form, cleaned but preserved
 
    Adding a field is one entry here + (for enum) one enum table
@@ -113,6 +116,12 @@
     Temperature:        { type: 'measurement', kind: 'temperature',        canonicalUnit: 'tempC', precision: 0 },
     Speed:              { type: 'measurement', kind: 'angular_velocity',   canonicalUnit: 'rpm', precision: 0 },
     Frequency:          { type: 'measurement', kind: 'frequency',          canonicalUnit: 'Hz',  precision: 0 },
+    'Data Transfer Rate': { type: 'dataRate', precision: 2 },
+    'Transfer Rate':    { type: 'dataRate', precision: 2 },
+    'Network Speed':    { type: 'dataRate', precision: 2 },
+    Dimensions:         { type: 'dimensions', canonicalUnit: 'in', precision: 2 },
+    'Dimensions (package)': { type: 'dimensions', canonicalUnit: 'in', precision: 2 },
+    Resolution:         { type: 'resolution' },
 
     /* ---- text / free-form ---- */
     Model:        { type: 'text', clean: 'trim' },

@@ -6344,6 +6344,51 @@ This file is the shared record for Claude and Codex. Append an entry for every m
 - Follow-ups or risks:
   - Chrome Web Store and extension-store copy still needs to be packaged in Phase I #63.
 
+# 2026-07-20 20:44 - Codex work-order Phase E/F stale issue closure + #71 normalization polish
+
+- Agent: Codex
+- Branch: grid-rebuild-codex
+- Commit: This commit
+- Status: Implemented. Phase G #71 is complete; Phase E/F stale GitHub issues were verified and closed where already fixed.
+- What changed:
+  - Added field-specific normalization v2 normalizers for data rates, dimensions, and resolutions.
+  - Normalized tokenized transfer-rate units such as `gigabits_per_second` to compact display units such as `Gbps`.
+  - Normalized physical dimensions to consistent `L × W × H unit` formatting with compact-unit suffix support.
+  - Normalized standard resolutions such as `3840x2160` to named display labels while preserving canonical pixel dimensions.
+  - Preserved existing converted weight behavior and added coverage for abbreviated converted output such as `5 ounces` -> `142 g`.
+  - Wired the new normalizers into popup, comparison, background injection, and normalization/ProductRepo test harness load order.
+  - Verified and closed stale GitHub issues #44, #45, #59, #70, #26, and #72 with focused test evidence; #24 was not present in the repository issue tracker.
+- Files touched:
+  - normalization/registry.js
+  - normalization/normalize.js
+  - normalization/normalizers/dataRate.js
+  - normalization/normalizers/dimensions.js
+  - normalization/normalizers/resolution.js
+  - popup.html
+  - comparison.html
+  - background.js
+  - tests/normalize-v2.test.js
+  - tests/normalize-v2-wiring.test.js
+  - tests/normalize-v2-migration.test.js
+  - tests/user-rules-normalization.test.js
+  - tests/product-repo.test.js
+  - AGENT_CHANGELOG.md
+- Validation run:
+  - node tests\normalize-v2.test.js -> pass
+  - node tests\normalize-v2-wiring.test.js -> pass
+  - node tests\normalize-v2-migration.test.js -> pass
+  - node tests\product-repo.test.js -> pass
+  - node tests\user-rules-normalization.test.js -> pass
+  - npm test -> pass, 57/57 files
+  - npm run syntax -> pass
+  - npm run lint -> pass
+  - npm run typecheck -> pass
+  - npm run build -> pass, chrome/edge/firefox rebuilt
+- Review status / next reviewer:
+  - Ready for Claude review.
+- Follow-ups or risks:
+  - Continue work-order Phase H/I/J/K/L after closing #71.
+
 ## 2026-07-20 00:00 - Codex Auto AI onboarding gate (#51)
 
 - Agent: Codex

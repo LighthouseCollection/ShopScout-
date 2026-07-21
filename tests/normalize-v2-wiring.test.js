@@ -34,6 +34,9 @@ vm.runInContext(read('normalization/libraries/enums.js'),          ctx, { filena
 vm.runInContext(read('normalization/normalizers/text.js'),         ctx, { filename: 'text.js' });
 vm.runInContext(read('normalization/normalizers/enum.js'),         ctx, { filename: 'enum.js' });
 vm.runInContext(read('normalization/normalizers/measurement.js'),  ctx, { filename: 'measurement.js' });
+vm.runInContext(read('normalization/normalizers/dataRate.js'),     ctx, { filename: 'dataRate.js' });
+vm.runInContext(read('normalization/normalizers/dimensions.js'),   ctx, { filename: 'dimensions.js' });
+vm.runInContext(read('normalization/normalizers/resolution.js'),   ctx, { filename: 'resolution.js' });
 vm.runInContext(read('normalization/normalize.js'),                ctx, { filename: 'normalize.js' });
 vm.runInContext(read('content/confidenceRules.js'),                ctx, { filename: 'confidenceRules.js' });
 vm.runInContext(read('content/domUtils.js'),                       ctx, { filename: 'domUtils.js' });

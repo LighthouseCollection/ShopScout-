@@ -10,6 +10,9 @@ const enumLibSrc = fs.readFileSync(path.join(__dirname, '..', 'normalization', '
 const textNormalizerSrc = fs.readFileSync(path.join(__dirname, '..', 'normalization', 'normalizers', 'text.js'), 'utf8');
 const enumNormalizerSrc = fs.readFileSync(path.join(__dirname, '..', 'normalization', 'normalizers', 'enum.js'), 'utf8');
 const measurementNormalizerSrc = fs.readFileSync(path.join(__dirname, '..', 'normalization', 'normalizers', 'measurement.js'), 'utf8');
+const dataRateNormalizerSrc = fs.readFileSync(path.join(__dirname, '..', 'normalization', 'normalizers', 'dataRate.js'), 'utf8');
+const dimensionsNormalizerSrc = fs.readFileSync(path.join(__dirname, '..', 'normalization', 'normalizers', 'dimensions.js'), 'utf8');
+const resolutionNormalizerSrc = fs.readFileSync(path.join(__dirname, '..', 'normalization', 'normalizers', 'resolution.js'), 'utf8');
 const normalizeSrc = fs.readFileSync(path.join(__dirname, '..', 'normalization', 'normalize.js'), 'utf8');
 const productSpecAccessSrc = fs.readFileSync(path.join(__dirname, '..', 'shared', 'productSpecAccess.js'), 'utf8');
 const reviewSrc = fs.readFileSync(path.join(__dirname, '..', 'normalization', 'review.js'), 'utf8');
@@ -24,6 +27,9 @@ vm.runInContext(enumLibSrc, ctx, { filename: 'normalization/libraries/enums.js' 
 vm.runInContext(textNormalizerSrc, ctx, { filename: 'normalization/normalizers/text.js' });
 vm.runInContext(enumNormalizerSrc, ctx, { filename: 'normalization/normalizers/enum.js' });
 vm.runInContext(measurementNormalizerSrc, ctx, { filename: 'normalization/normalizers/measurement.js' });
+vm.runInContext(dataRateNormalizerSrc, ctx, { filename: 'normalization/normalizers/dataRate.js' });
+vm.runInContext(dimensionsNormalizerSrc, ctx, { filename: 'normalization/normalizers/dimensions.js' });
+vm.runInContext(resolutionNormalizerSrc, ctx, { filename: 'normalization/normalizers/resolution.js' });
 vm.runInContext(normalizeSrc, ctx, { filename: 'normalization/normalize.js' });
 vm.runInContext(productSpecAccessSrc, ctx, { filename: 'shared/productSpecAccess.js' });
 

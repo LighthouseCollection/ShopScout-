@@ -13,7 +13,8 @@
      4. normalization/normalizers/text.js
      5. normalization/normalizers/enum.js
      6. normalization/normalizers/measurement.js
-     7. normalization/normalize.js             (this file — exposes ShopScoutNormalize.field)
+     7. field-specific normalizers (dataRate, dimensions, resolution)
+     8. normalization/normalize.js             (this file — exposes ShopScoutNormalize.field)
    ============================================================= */
 (function initShopScoutNormalize(root) {
   const NS = (root.ShopScoutNormalize = root.ShopScoutNormalize || {});
@@ -21,6 +22,9 @@
   function normalizerFor(type) {
     if (type === 'enum') return root.ShopScoutEnumNormalizer;
     if (type === 'measurement') return root.ShopScoutMeasurementNormalizer;
+    if (type === 'dataRate') return root.ShopScoutDataRateNormalizer;
+    if (type === 'dimensions') return root.ShopScoutDimensionsNormalizer;
+    if (type === 'resolution') return root.ShopScoutResolutionNormalizer;
     if (type === 'text') return root.ShopScoutTextNormalizer;
     return null;
   }

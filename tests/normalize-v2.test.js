@@ -29,6 +29,9 @@ vm.runInContext(read('normalization/libraries/enums.js'),    ctx, { filename: 'e
 vm.runInContext(read('normalization/normalizers/text.js'),   ctx, { filename: 'text.js' });
 vm.runInContext(read('normalization/normalizers/enum.js'),   ctx, { filename: 'enum.js' });
 vm.runInContext(read('normalization/normalizers/measurement.js'), ctx, { filename: 'measurement.js' });
+vm.runInContext(read('normalization/normalizers/dataRate.js'), ctx, { filename: 'dataRate.js' });
+vm.runInContext(read('normalization/normalizers/dimensions.js'), ctx, { filename: 'dimensions.js' });
+vm.runInContext(read('normalization/normalizers/resolution.js'), ctx, { filename: 'resolution.js' });
 vm.runInContext(read('normalization/normalize.js'),          ctx, { filename: 'normalize.js' });
 
 const N = ctx.ShopScoutNormalize;
@@ -155,8 +158,40 @@ check('Weight "2 lb" -> 907 g',
 
 r = N.field('Weight', '1 kg');
 check('Weight "1 kg" -> 1000 g',
-  { canonical: r.canonical, unit: r.unit },
-  { canonical: 1000, unit: 'g' });
+  { canonical: r.canonical, unit: r.unit, display: r.display },
+  { canonical: 1000, unit: 'g', display: '1000 g' });
+
+r = N.field('Weight', '5 ounces');
+check('Weight "5 ounces" uses abbreviated converted display',
+  { canonical: r.canonical, unit: r.unit, display: r.display },
+  { canonical: 142, unit: 'g', display: '142 g' });
+
+/* ---------------- Data rate / Dimensions / Resolution ---------------- */
+
+r = N.field('Data Transfer Rate', '18 gigabits_per_second');
+check('Data Transfer Rate tokenized "gigabits_per_second" -> Gbps',
+  { canonical: r.canonical, unit: r.unit, display: r.display },
+  { canonical: 18, unit: 'Gbps', display: '18 Gbps' });
+
+r = N.field('Dimensions', '1.96 x 0.87 x 0.5inches');
+check('Dimensions normalize to consistent spaced triple',
+  { canonical: r.canonical, unit: r.unit, display: r.display },
+  { canonical: [1.96, 0.87, 0.5], unit: 'in', display: '1.96 × 0.87 × 0.5 in' });
+
+r = N.field('Dimensions', '6.0"L x 17.0"W x 1.5"H');
+check('Dimensions strip axis labels and normalize delimiter',
+  { canonical: r.canonical, unit: r.unit, display: r.display },
+  { canonical: [6, 17, 1.5], unit: 'in', display: '6 × 17 × 1.5 in' });
+
+r = N.field('Resolution', '3840x2160');
+check('Resolution maps standard pixel dimensions to named shortcut',
+  { canonical: r.canonical, display: r.display },
+  { canonical: '3840 × 2160', display: '4K UHD' });
+
+r = N.field('Resolution', '1600x1200');
+check('Resolution keeps non-standard dimensions but normalizes delimiter',
+  { canonical: r.canonical, display: r.display },
+  { canonical: '1600 × 1200', display: '1600 × 1200' });
 
 /* ---------------- Battery Capacity ---------------- */
 
