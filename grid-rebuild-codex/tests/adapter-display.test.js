@@ -180,11 +180,11 @@ function createAdapterHarnessWithThrowingColumnMenu() {
     context: options.context
   });
   const pillCount = (html.match(/ss-grid-value-pill/g) || []).length;
-  assert.equal(pillCount, 8, 'long comma-separated tech specs render capped visible pills');
+  assert.ok(pillCount >= 12, 'long comma-separated tech specs preserve every pill value for measured overflow');
   assert.ok(html.includes('MacBook Air 2024'), 'tech spec renderer includes individual comma-separated values');
   assert.ok(html.includes('ss-grid-pill-overflow'), 'long pill lists expose an overflow affordance');
-  assert.ok(html.includes('+'), 'long pill lists show a remaining-count marker');
-  assert.ok(!html.includes('Samsung Tablet</span>'), 'overflowed values are hidden until the user opens the full list');
+  assert.ok(html.includes('data-pill-index='), 'pill values are index-marked so measured overflow can hide only complete rows');
+  assert.ok(html.includes('Samsung Tablet</span>'), 'overflowed values stay in the DOM for the full-list modal');
 }
 
 {

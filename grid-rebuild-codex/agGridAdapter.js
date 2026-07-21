@@ -78,7 +78,10 @@
     if (/[,;:]\s+(and|or|but|because|with|for|to|from|that|which|when)\b/i.test(t)) return true;
     return false;
   }
-  const PILL_VISIBLE_LIMIT = 8;
+  const PILL_ROW_LIMIT = 3;
+  const PILL_LINE_HEIGHT = 24;
+  const PILL_ROW_GAP = 4;
+  const PILL_ROW_VERTICAL_PADDING = 36;
 
   function pillHtmlForPart(part, fieldStyle, field) {
     const colorKey = typeof root.ShopScoutValues?.pillColorKey === 'function'
@@ -108,12 +111,80 @@
        overrides (green for "in stock", red for "no", amber for
        "limited") still win at the per-value level below. */
     const fieldStyle = typeof styleFn === 'function' ? styleFn(field) : null;
-    const visible = parts.slice(0, PILL_VISIBLE_LIMIT);
-    const hidden = parts.slice(PILL_VISIBLE_LIMIT);
-    const overflow = hidden.length
-      ? `<button class="ss-grid-pill-overflow" type="button" data-pill-overflow-values="${escAttr(JSON.stringify(parts))}" aria-label="Show ${hidden.length} more values">+${hidden.length} more</button>`
-      : '';
-    return `<span class="ss-grid-pill-list">${visible.map(part => pillHtmlForPart(part, fieldStyle, field)).join('')}${overflow}</span>`;
+    const encoded = escAttr(JSON.stringify(parts));
+    const pills = parts.map((part, index) => {
+      const html = pillHtmlForPart(part, fieldStyle, field);
+      return html.replace('class="ss-grid-value-pill"', `class="ss-grid-value-pill" data-pill-index="${index}"`);
+    }).join('');
+    const overflow = `<button class="ss-grid-pill-overflow" type="button" data-pill-overflow-values="${encoded}" aria-label="Show more values" hidden>+0 more</button>`;
+    return `<span class="ss-grid-pill-list" data-pill-count="${parts.length}">${pills}${overflow}</span>`;
+  }
+
+  function pillSafeRowHeight(mode, row) {
+    if (mode === 'normalizationReview') return 64;
+    if (mode === 'userRules') return 60;
+    if (mode === 'comparisonMatrix') return 44;
+    const values = row && typeof row === 'object' ? Object.values(row) : [];
+    const hasListValue = values.some(value => {
+      const text = textValue(value).trim();
+      if (!text || sentenceLike(text)) return false;
+      const splitter = root.ShopScoutValues?.splitToPills;
+      const splitParts = typeof splitter === 'function' ? splitter(text) : null;
+      return Array.isArray(splitParts) && splitParts.length > 1;
+    });
+    if (!hasListValue) return 110;
+    return Math.max(110, (PILL_ROW_LIMIT * PILL_LINE_HEIGHT) + ((PILL_ROW_LIMIT - 1) * PILL_ROW_GAP) + PILL_ROW_VERTICAL_PADDING);
+  }
+
+  function syncPillOverflow(container, api) {
+    const lists = Array.from(container?.querySelectorAll?.('.ss-grid-pill-list') || []);
+    for (const list of lists) {
+      const pills = Array.from(list.querySelectorAll('.ss-grid-value-pill[data-pill-index]'));
+      const overflow = list.querySelector('.ss-grid-pill-overflow');
+      if (!pills.length || !overflow) continue;
+      for (const pill of pills) {
+        pill.removeAttribute('data-pill-hidden');
+      }
+      overflow.hidden = true;
+      overflow.textContent = '+0 more';
+      overflow.setAttribute('aria-label', 'Show more values');
+
+      const rows = [];
+      for (const pill of pills) {
+        const top = pill.offsetTop || 0;
+        if (!rows.some(rowTop => Math.abs(rowTop - top) <= 2)) rows.push(top);
+      }
+      rows.sort((a, b) => a - b);
+      if (rows.length <= PILL_ROW_LIMIT) continue;
+
+      const maxTop = rows[PILL_ROW_LIMIT - 1];
+      let hidden = 0;
+      for (const pill of pills) {
+        if ((pill.offsetTop || 0) > maxTop + 2) {
+          pill.setAttribute('data-pill-hidden', 'true');
+          hidden += 1;
+        }
+      }
+      if (!hidden) continue;
+      overflow.hidden = false;
+      overflow.textContent = `+${hidden} more`;
+      overflow.setAttribute('aria-label', `Show ${hidden} more values`);
+
+      let guard = 0;
+      while (!overflow.hidden && (overflow.offsetTop || 0) > maxTop + 2 && guard < pills.length) {
+        const visible = pills.filter(pill => pill.getAttribute('data-pill-hidden') !== 'true');
+        const lastVisible = visible[visible.length - 1];
+        if (!lastVisible) break;
+        lastVisible.setAttribute('data-pill-hidden', 'true');
+        hidden += 1;
+        overflow.textContent = `+${hidden} more`;
+        overflow.setAttribute('aria-label', `Show ${hidden} more values`);
+        guard += 1;
+      }
+    }
+    try {
+      if (api && typeof api.resetRowHeights === 'function') api.resetRowHeights();
+    } catch { /* visual recalculation only */ }
   }
 
   function openPillOverflowModal(encodedValues) {
@@ -808,12 +879,24 @@
 
     const rowData = (projection.rows || []).map(row => Object.assign({}, row));
     let currentColumnDefs = toAgColumns(projection.columns);
+    let gridApi = null;
+    let resizeObserver = null;
+    let pillSyncTimer = 0;
     function syncSelectedRowsToAg(api) {
       if (!api || typeof api.forEachNode !== 'function') return;
       api.forEachNode(node => {
         if (!node || typeof node.setSelected !== 'function') return;
         node.setSelected(!!node.data?._selected);
       });
+    }
+    function schedulePillSync(api) {
+      const nextApi = api || gridApi;
+      if (pillSyncTimer) root.clearTimeout?.(pillSyncTimer);
+      pillSyncTimer = root.setTimeout?.(() => {
+        pillSyncTimer = 0;
+        syncPillOverflow(container, nextApi);
+        fitShellToContent(container);
+      }, 0) || 0;
     }
 
     const gridOptions = {
@@ -830,10 +913,7 @@
          'legacy' is the correct switch. */
       theme: 'legacy',
       domLayout: 'autoHeight',
-      rowHeight: projection?.mode === 'normalizationReview' ? 64
-        : projection?.mode === 'userRules' ? 60
-        : projection?.mode === 'comparisonMatrix' ? 44
-        : 110,
+      getRowHeight(params) { return pillSafeRowHeight(projection?.mode, params.data); },
       headerHeight: projection?.mode === 'comparisonMatrix' ? 180 : 42,
       suppressCellFocus: true,
       suppressRowClickSelection: true,
@@ -874,6 +954,7 @@
         setTimeout(() => {
           autoSizeEverything(evt.api, container);
           fitShellToContent(container);
+          schedulePillSync(evt.api);
         }, 0);
       },
       onFirstDataRendered(evt) {
@@ -881,13 +962,18 @@
         setTimeout(() => {
           autoSizeEverything(evt.api, container);
           fitShellToContent(container);
+          schedulePillSync(evt.api);
         }, 0);
       },
-      onColumnResized() { fitShellToContent(container); },
+      onColumnResized() {
+        fitShellToContent(container);
+        schedulePillSync(gridApi);
+      },
       onColumnVisible() {
         setTimeout(() => {
           autoSizeEverything(gridApi, container);
           fitShellToContent(container);
+          schedulePillSync(gridApi);
         }, 0);
       },
       onSortChanged(evt) {
@@ -920,7 +1006,12 @@
       }
     };
 
-    const gridApi = ag.createGrid(container, gridOptions);
+    gridApi = ag.createGrid(container, gridOptions);
+    if (typeof root.ResizeObserver === 'function') {
+      resizeObserver = new root.ResizeObserver(() => schedulePillSync(gridApi));
+      resizeObserver.observe(container);
+    }
+    root.document?.fonts?.ready?.then?.(() => schedulePillSync(gridApi)).catch?.(() => {});
 
     function firstNativeFilterColumn(preferredField) {
       const preferred = preferredField && currentColumnDefs.find(col => {
@@ -1110,6 +1201,7 @@
         Array.prototype.push.apply(rowData, nextRows);
         syncSelectedRowsToAg(gridApi);
         container.classList.toggle('ss-grid-is-matrix', nextProjection?.mode === 'comparisonMatrix');
+        schedulePillSync(gridApi);
       },
       updateItem(itemId, nextItem) {
         if (!itemId || !nextItem) return;
@@ -1117,6 +1209,7 @@
         if (idx < 0) return;
         Object.assign(rowData[idx], nextItem);
         gridApi.applyTransaction({ update: [rowData[idx]] });
+        schedulePillSync(gridApi);
       },
       updateRow(itemId, nextItem) {
         if (!itemId || !nextItem) return false;
@@ -1124,6 +1217,7 @@
         if (idx < 0) return false;
         Object.assign(rowData[idx], nextItem);
         gridApi.applyTransaction({ update: [rowData[idx]] });
+        schedulePillSync(gridApi);
         return true;
       },
       deleteRow(itemId) {
@@ -1132,6 +1226,7 @@
         if (idx < 0) return false;
         const removed = rowData.splice(idx, 1);
         gridApi.applyTransaction({ remove: removed });
+        schedulePillSync(gridApi);
         return true;
       },
       openNativeColumnMenu,
@@ -1144,6 +1239,8 @@
         gridApi.flashCells?.({ rowNodes: [node], columns: [field] });
       },
       destroy() {
+        if (pillSyncTimer) root.clearTimeout?.(pillSyncTimer);
+        resizeObserver?.disconnect?.();
         container.removeEventListener('click', containerClick);
         gridApi.destroy?.();
       }

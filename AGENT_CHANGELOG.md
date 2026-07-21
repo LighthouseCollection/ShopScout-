@@ -1,3 +1,40 @@
+## 2026-07-20 20:28 - Codex Phase D grid pill row contract
+
+- Agent: Codex
+- Branch: grid-rebuild-codex
+- Commit: This commit
+- Status: Implemented Phase D grid pill-layer fixes for #66, #65, #68, and #69. Also verified and closed already-satisfied Phase A/C issues #57, #67, and #73 in GitHub.
+- What changed:
+  - Converted AG Grid pill overflow from a fixed 8-value cap to a measured three-row visual contract.
+  - Preserved all pill values in the DOM for the overflow modal while hiding only overflowed complete rows after layout measurement.
+  - Added lifecycle resync after first render, column resize, column visibility changes, data updates, host resize, and font readiness.
+  - Switched product rows to an AG Grid `getRowHeight` contract that reserves enough height for three complete pill rows.
+  - Fixed natural numeric sorting for comma/semicolon pill values such as `USB 1`, `USB 2`, `USB 10`.
+  - Narrowed the dimensions guard so model-family values like `HP Envy 13 x360` do not block compatibility-list pill splitting.
+  - Consolidated pill typography in one shared CSS rule with explicit font family, size, weight, line-height, and letter spacing.
+  - Added regression coverage for the long compatible-device string, mixed comma/semicolon model ranges, row-height contract, resize sync, font-ready sync, and shared pill typography.
+- Files touched:
+  - grid-rebuild-codex/agGridAdapter.js
+  - grid-rebuild-codex/grid.css
+  - grid-rebuild-codex/tests/adapter-display.test.js
+  - grid-rebuild-codex/tests/wiring.test.js
+  - shared/values/cellValues.js
+  - tests/cleanup-helpers.test.js
+  - tests/grid-pill-layer.test.js
+  - AGENT_CHANGELOG.md
+- Validation run:
+  - node tests\cleanup-helpers.test.js -> pass
+  - node tests\grid-pill-layer.test.js -> pass
+  - npm test -> 57/57 test files pass
+  - npm run syntax -> pass
+  - npm run lint -> pass
+  - npm run typecheck -> pass
+  - npm run build -> pass
+- Review status / next reviewer:
+  - Ready for Claude review.
+- Follow-ups or risks:
+  - Visual browser verification should confirm `+N more` appears at the correct measured row boundary across narrow columns and full-width dashboard layouts.
+
 ## 2026-07-20 22:05 - Codex Phase B shared readability tokens
 
 - Agent: Codex

@@ -107,6 +107,11 @@ assert.strictEqual(
   'sort is stable regardless of source order'
 );
 assert.strictEqual(
+  JSON.stringify(V.splitToPills('USB 2, USB 10, USB 1')),
+  JSON.stringify(['USB 1', 'USB 2', 'USB 10']),
+  'multi-value pill sorting uses natural numeric order'
+);
+assert.strictEqual(
   JSON.stringify(V.splitToPills('Cordless Tire Inflator × 1, Quick Connector× 1, USB Charging Cord× 1, Extension Hose Coupling*1')),
   JSON.stringify(['Cordless Tire Inflator (×1)', 'Extension Hose Coupling (×1)', 'Quick Connector (×1)', 'USB Charging Cord (×1)']),
   'quantity-bearing included items are normalized and sorted as one pill per item'
@@ -119,6 +124,14 @@ assert.strictEqual(
   assert.ok(pills.includes('HP Chromebook x360'), 'long tech spec split keeps later comma-separated values');
   assert.ok(pills.includes('Surface Book 3/2'), 'long tech spec split keeps slash-containing values as one pill');
   assert.ok(pills.length >= 10, 'long tech spec split creates one pill per comma-separated item');
+}
+{
+  const longValue = 'Acer, Dell Latitude 7373/7280/7480/5570/5490/5400 (2019), XPS 13 / 15 / 17; HP: Envy 13 x360 2019/2018';
+  const pills = V.splitToPills(longValue);
+  assert.ok(Array.isArray(pills), 'semicolon and comma mixed compatibility specs split into pills');
+  assert.ok(pills.includes('Dell Latitude 7373/7280/7480/5570/5490/5400 (2019)'), 'long model-family token is preserved');
+  assert.ok(pills.includes('HP: Envy 13 x360 2019/2018'), 'semicolon-delimited token is preserved');
+  assert.ok(pills.includes('XPS 13 / 15 / 17'), 'slash-delimited model range stays in one pill');
 }
 assert.strictEqual(V.splitToPills('Lithium Ion'), null, 'single value → no split');
 assert.strictEqual(V.splitToPills('15.5 x 10.25 x 2 inches'), null, 'dimensions never split');

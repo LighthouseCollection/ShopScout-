@@ -73,9 +73,9 @@ assert.ok(/\.ss-grid-title-text[\s\S]{0,260}-webkit-line-clamp:\s*2/.test(gridCs
   'product-name text uses a dedicated two-line title wrapper instead of being clipped by the cell');
 assert.ok(/\.ss-grid-pill-list[\s\S]{0,260}--ss-grid-pill-lines:\s*3/.test(gridCss),
   'pill lists cap at three complete visual rows');
-assert.ok(/\.ss-grid-pill-list[\s\S]{0,360}max-height:\s*calc\(var\(--ss-grid-pill-line-height\) \* var\(--ss-grid-pill-lines\)/.test(gridCss),
+assert.ok(/\.ss-grid-pill-list[\s\S]{0,460}max-height:\s*calc\(\(var\(--ss-grid-pill-line-height\) \* var\(--ss-grid-pill-lines\)\)/.test(gridCss),
   'pill lists use a whole-line max-height instead of clipping partial pill rows');
-assert.ok(/\.ss-grid-pill-overflow[\s\S]{0,420}cursor:\s*pointer/.test(gridCss),
+assert.ok(/\.ss-grid-pill-overflow[\s\S]{0,620}cursor:\s*pointer/.test(gridCss),
   'pill overflow marker is a clickable affordance');
 assert.ok(/--ag-header-column-separator-display:\s*block/.test(gridCss),
   'grid header separators use AG Grid native separator variables');

@@ -557,16 +557,18 @@ a.ss-grid-rating-link:hover .ss-grid-stars {
 
 .ss-grid-pill-list {
   --ss-grid-pill-line-height: 24px;
+  --ss-grid-pill-gap: 4px;
   --ss-grid-pill-lines: 3;
   display: inline-flex;
-  align-items: center;
-  gap: 4px;
+  align-items: flex-start;
+  align-content: flex-start;
+  gap: var(--ss-grid-pill-gap);
   flex-wrap: wrap;
   min-width: 0;
   max-width: 100%;
-  max-height: calc(var(--ss-grid-pill-line-height) * var(--ss-grid-pill-lines) + 8px);
+  max-height: calc((var(--ss-grid-pill-line-height) * var(--ss-grid-pill-lines)) + (var(--ss-grid-pill-gap) * (var(--ss-grid-pill-lines) - 1)));
   overflow: hidden;
-  line-height: 1.35;
+  line-height: var(--ss-grid-pill-line-height);
 }
 
 .ss-grid-value-pill {
@@ -575,14 +577,17 @@ a.ss-grid-rating-link:hover .ss-grid-stars {
   gap: 3px;
   min-width: 0;
   max-width: 100%;
-  padding: 2px;
+  box-sizing: border-box;
+  padding: 2px 6px;
   border: 1px solid var(--rule-soft, #d1d5db);
   border-radius: 6px;
   background: var(--paper-2, #eaedf1);
   color: var(--ink-2, #2a3441);
+  font-family: var(--font-sans, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif);
   font-size: 12px;
   font-weight: 600;
-  line-height: 1.5;
+  line-height: 18px;
+  letter-spacing: 0;
   min-height: var(--ss-grid-pill-line-height, 24px);
   /* Pills never break their content onto two lines — the column
    auto-sizes to fit the widest pill so wrapping should never be
@@ -592,19 +597,25 @@ a.ss-grid-rating-link:hover .ss-grid-stars {
   text-overflow: ellipsis;
 }
 
+.ss-grid-value-pill[data-pill-hidden="true"] {
+  display: none !important;
+}
+
 .ss-grid-pill-overflow {
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   min-height: var(--ss-grid-pill-line-height, 24px);
   padding: 2px 6px;
   border: 1px solid var(--rule, #d1d5db);
   border-radius: 6px;
   background: var(--surface, #fff);
   color: var(--primary, #0b3d4f);
-  font: inherit;
+  font-family: var(--font-sans, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif);
   font-size: 12px;
   font-weight: 600;
-  line-height: 1.5;
+  line-height: 18px;
+  letter-spacing: 0;
   white-space: nowrap;
   cursor: pointer;
 }

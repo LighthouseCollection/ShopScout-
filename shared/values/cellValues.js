@@ -185,7 +185,7 @@
     if (text == null) return null;
     const s = String(text).trim();
     if (!s) return null;
-    if (/\d\s*(x|×)\s*\d/i.test(s)) return null;
+    if (/^\s*\d+(?:\.\d+)?\s*(x|×)\s*\d+(?:\.\d+)?(?:\s*(x|×)\s*\d+(?:\.\d+)?)*(?:\s*[a-z"]+)?\s*$/i.test(s)) return null;
     if (/^[-+]?\d+(?:[.,]\d+)?\s*[a-z%°"]+/i.test(s)) return null;
     if (s.length > 2000) return null;
     const parts = s.split(/\s*(?:,|·|•|;)\s*/).map(normalizePillPart).filter(Boolean);
@@ -194,7 +194,7 @@
       if (p.length === 0 || p.length > 120) return null;
       if (/\.\S/.test(p)) return null;
     }
-    parts.sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base' }));
+    parts.sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base', numeric: true }));
     return parts;
   }
 
