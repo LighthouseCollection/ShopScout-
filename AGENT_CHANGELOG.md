@@ -1,3 +1,28 @@
+## 2026-07-20 22:05 - Codex Phase B shared readability tokens
+
+- Agent: Codex
+- Branch: grid-rebuild-codex
+- Commit: This commit
+- Status: Implemented Phase B work-order foundation items #58, #74, and #50.
+- What changed:
+  - Added canonical secondary/tertiary text tokens and secondary text weight token to the global theme.
+  - Added canonical button hover/active/selected background and border tokens, with ribbon inheritance.
+  - Added a shared WCAG contrast guard for generated field-pill colors.
+  - Added high-contrast media handling for grid value pills.
+  - Strengthened design-token regression tests for the new tokens and pill contrast floor.
+- Files touched:
+  - theme.css
+  - ribbon/ribbon.css
+  - shared/values/cellValues.js
+  - grid-rebuild-codex/grid.css
+  - tests/design-token-baseline.test.js
+  - AGENT_CHANGELOG.md
+- Validation run:
+  - node tests\design-token-baseline.test.js -> pass
+- Review status / next reviewer:
+  - Ready for Claude review.
+- Follow-ups or risks:
+  - Broader visual sweep can still tune individual legacy secondary-text callsites, but shared tokens and pill contrast floor are now in place.
 # ShopScout Agent Change Log
 
 ## 2026-07-20 21:35 - Codex manual AI send/paste workflow polish
@@ -6351,3 +6376,4 @@ This file is the shared record for Claude and Codex. Append an entry for every m
   - Ready for Claude review.
 - Follow-ups or risks:
   - Final store screenshots still need to be captured from the installed extension after remaining work-order UI issues are complete.
+

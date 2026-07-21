@@ -71,11 +71,50 @@
     const t = String(text || '').trim();
     if (!t) return null;
     const hue = (hashString(t.toLowerCase()) * 137) % 360;
-    return {
+    return ensureReadableStyle({
       bg: `hsl(${hue} 65% 93%)`,
       fg: `hsl(${hue} 60% 28%)`,
       border: `hsl(${hue} 50% 70%)`
-    };
+    });
+  }
+
+  function hslToRgb(color) {
+    const m = String(color || '').match(/^hsl\(([-\d.]+)\s+([-\d.]+)%\s+([-\d.]+)%\)$/);
+    if (!m) return null;
+    let h = Number(m[1]) % 360;
+    if (h < 0) h += 360;
+    const s = Number(m[2]) / 100;
+    const l = Number(m[3]) / 100;
+    const c = (1 - Math.abs(2 * l - 1)) * s;
+    const x = c * (1 - Math.abs((h / 60) % 2 - 1));
+    const z = l - c / 2;
+    let r = 0, g = 0, b = 0;
+    if (h < 60) [r, g, b] = [c, x, 0];
+    else if (h < 120) [r, g, b] = [x, c, 0];
+    else if (h < 180) [r, g, b] = [0, c, x];
+    else if (h < 240) [r, g, b] = [0, x, c];
+    else if (h < 300) [r, g, b] = [x, 0, c];
+    else [r, g, b] = [c, 0, x];
+    return [r + z, g + z, b + z].map(v => Math.round(v * 255));
+  }
+
+  function relativeLuminance(rgb) {
+    return rgb.map(v => {
+      const c = v / 255;
+      return c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4);
+    }).reduce((sum, c, i) => sum + c * [0.2126, 0.7152, 0.0722][i], 0);
+  }
+
+  function contrastRatio(a, b) {
+    const [l1, l2] = [relativeLuminance(a), relativeLuminance(b)].sort((x, y) => y - x);
+    return (l1 + 0.05) / (l2 + 0.05);
+  }
+
+  function ensureReadableStyle(style) {
+    const bg = hslToRgb(style && style.bg);
+    const fg = hslToRgb(style && style.fg);
+    if (!bg || !fg || contrastRatio(bg, fg) >= 4.5) return style;
+    return Object.assign({}, style, { fg: 'hsl(210 35% 18%)' });
   }
 
   /* ---- Pill color palette + semantic assignment ---------------

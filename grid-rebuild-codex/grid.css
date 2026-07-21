@@ -662,6 +662,13 @@ a.ss-grid-rating-link:hover .ss-grid-stars {
   color: hsl(215 20% 32%);
 }
 
+@media (prefers-contrast: more) {
+  .ss-grid-value-pill {
+    border-color: var(--ink-2, #2a3441);
+    color: var(--ink, #0f1419);
+  }
+}
+
 .ss-grid-pill-qty {
   color: var(--ink-3, #5a6470);
   font-size: 10px;

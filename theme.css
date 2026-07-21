@@ -16,7 +16,10 @@
   --ink-4:         #8b95a1;        /* very muted / placeholder */
   --text-secondary:#2a3441;
   --text-tertiary: #3f4a57;
+  --color-text-secondary: #4a5568;
+  --color-text-tertiary:  #6b7280;
   --font-size-secondary: 13px;
+  --font-weight-secondary: 400;
   --font-size-hint: 12px;
   --rule:          #d1d5db;        /* horizontal row dividers, card outlines */
   --rule-soft:     #e4e7eb;        /* vertical column dividers - softer */
@@ -60,6 +63,12 @@
   --button-shade:        #eef2f6;
   --button-shade-hover:  #e1e8ef;
   --button-shade-active: #cfdae5;
+  --btn-hover-bg:        #e1e8ef;
+  --btn-active-bg:       #cfdae5;
+  --btn-selected-bg:     #d9eaf4;
+  --btn-hover-border:    #8faac1;
+  --btn-active-border:   #6f8fa6;
+  --btn-selected-border: #8eb2cf;
   --button-hover-bg:     #e1e8ef;
   --button-active-bg:    #cfdae5;
   --button-selected-bg:  #d9eaf4;
