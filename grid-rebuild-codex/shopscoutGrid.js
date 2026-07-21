@@ -898,6 +898,14 @@
     return false;
   }
 
+  async function openInternalProductDetail(row) {
+    if (!row || typeof root.openProductDetailById !== 'function') return false;
+    const id = row._shopScout?.productId || row.id || row._id;
+    if (!id) return false;
+    await root.openProductDetailById(id);
+    return true;
+  }
+
   async function handleAction(action, row) {
     if (!row) return;
     const id = row._shopScout?.productId || row.id;
@@ -974,6 +982,7 @@
           if (typeof root.setSelectedProductsFromIds === 'function') root.setSelectedProductsFromIds(rows);
         },
         onCellCommit: commitCellEdit,
+        onProductDetail: openInternalProductDetail,
         onAction: handleAction
       });
       const count = projection.productRowCount ?? products.length;

@@ -377,4 +377,37 @@ function createAdapterHarnessWithThrowingColumnMenu() {
     'selection change callback still receives selected product rows');
 }
 
+{
+  const harness = createAdapterHarness();
+  let detailRow = null;
+  const { gridOptions: options } = harness.create({
+    mode: 'productsRows',
+    columns: [{ id: 'title', field: 'title', name: 'Name', type: 'text' }],
+    rows: [{ id: 'p1', title: 'Pocket Camera', _shopScout: { productId: 'p1' } }]
+  }, {
+    onProductDetail(row) { detailRow = row; }
+  });
+  const html = options.columnDefs[0].cellRenderer({
+    value: 'Pocket Camera',
+    data: options.rowData[0],
+    colDef: options.columnDefs[0],
+    context: options.context
+  });
+  assert.ok(html.includes('data-ss-grid-detail="p1"'),
+    'product name cell renders an internal-detail trigger');
+  assert.ok(html.includes('ss-grid-title-button'),
+    'product name trigger uses the title button class, not a row-action button');
+  const titleButton = {
+    dataset: { ssGridDetail: 'p1' },
+    closest(selector) {
+      return String(selector).includes('[data-ss-grid-detail]') ? this : null;
+    }
+  };
+  const event = harness.dispatchContainerClick(titleButton);
+  assert.equal(event.defaultPrevented, true,
+    'product detail trigger prevents default grid click handling');
+  assert.equal(detailRow.id, 'p1',
+    'product detail trigger passes the matching grid row');
+}
+
 console.log('adapter-display.test.js: all assertions passed');

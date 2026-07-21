@@ -1,5 +1,33 @@
 # ShopScout Agent Change Log
 
+## 2026-07-20 20:05 - Codex restore product detail from grid names
+
+- Agent: Codex
+- Branch: grid-rebuild-codex
+- Commit: Uncommitted
+- Status: Implemented Phase F from `docs/codex-work-order.md` for #72.
+- What changed:
+  - Changed product-name cells from inert text into accessible text-style buttons that open the internal ShopScout product detail view.
+  - Kept row Open actions separate: row action buttons still open the retailer product URL in a new tab/window.
+  - Added an explicit adapter `onProductDetail` callback and routed it through `ShopScoutGrid` to `openProductDetailById`.
+  - Added focused tests for the title-cell detail trigger and the orchestrator callback routing.
+- Files touched:
+  - `grid-rebuild-codex/agGridAdapter.js`
+  - `grid-rebuild-codex/grid.css`
+  - `grid-rebuild-codex/shopscoutGrid.js`
+  - `grid-rebuild-codex/tests/actions.test.js`
+  - `grid-rebuild-codex/tests/adapter-display.test.js`
+  - `AGENT_CHANGELOG.md`
+- Validation run:
+  - `node grid-rebuild-codex\tests\adapter-display.test.js` -> pass
+  - `node grid-rebuild-codex\tests\actions.test.js` -> pass
+  - `node --check grid-rebuild-codex\agGridAdapter.js` -> pass
+  - `node --check grid-rebuild-codex\shopscoutGrid.js` -> pass
+- Review status / next reviewer:
+  - Ready for Claude review after validation and commit.
+- Follow-ups or risks:
+  - The product detail view itself remains the existing `comparison/productDetailView.js` implementation; this phase only restores the lost grid-entry path.
+
 ## 2026-07-20 19:20 - Codex stabilize grid pill rendering
 
 - Agent: Codex

@@ -330,7 +330,8 @@
   function renderTitle(params) {
     const text = textValue(params.value).trim();
     if (!text) return '<span class="ss-grid-empty">-</span>';
-    return `<span class="ss-grid-title-text" title="${escAttr(text)}">${esc(text)}</span>`;
+    const id = params.data?._shopScout?.productId || params.data?.id || params.data?._id || '';
+    return `<button class="ss-grid-title-text ss-grid-title-button" type="button" data-ss-grid-detail="${escAttr(id)}" title="${escAttr(text)}">${esc(text)}</button>`;
   }
 
   function renderPlain(params) {
@@ -994,8 +995,8 @@
         || '';
     }
 
-    /* Click delegation for [data-ss-grid-action], [data-my-rating-star],
-       and .ss-grid-select inside the grid. AG Grid's onCellClicked
+    /* Click delegation for [data-ss-grid-detail], [data-ss-grid-action],
+       [data-my-rating-star], and .ss-grid-select inside the grid. AG Grid's onCellClicked
        would work but this preserves the exact contract
        shopscoutGrid.js expects. */
     const containerClick = event => {
@@ -1011,6 +1012,17 @@
         event.preventDefault();
         event.stopImmediatePropagation();
         openPillOverflowModal(overflowBtn.getAttribute('data-pill-overflow-values'));
+        return;
+      }
+      const detailBtn = target?.closest?.('[data-ss-grid-detail]');
+      if (detailBtn) {
+        event.preventDefault();
+        event.stopImmediatePropagation();
+        const productId = detailBtn.dataset.ssGridDetail;
+        const row = rowData.find(r => String(r.id ?? r._id) === String(productId));
+        if (typeof opts.onProductDetail === 'function') {
+          opts.onProductDetail(row || { id: productId, _shopScout: { productId } });
+        }
         return;
       }
       /* My Rating star click — interactive per-star rating. The

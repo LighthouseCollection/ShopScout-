@@ -161,6 +161,20 @@ async function renderAndDelete() {
     features: 'noopener'
   }], 'row open action opens the product URL in a new tab/window');
 
+  await openOptions.onProductDetail({
+    id: 'p1',
+    title: 'Pocket camera',
+    url: 'https://example.test/p1',
+    _shopScout: {
+      productId: 'p1',
+      url: 'https://example.test/p1'
+    }
+  });
+  assert.equal(opened.getDetailCalls(), 1,
+    'product name callback opens the internal product detail view');
+  assert.equal(opened.ctx.lastOpenedDetailItem, 'p1',
+    'product name callback routes by product id');
+
   const deleted = await renderAndDelete();
   assert.equal(deleted.getDeleteCalls(), 1,
     'row delete calls the app delete callback without confirmation');
