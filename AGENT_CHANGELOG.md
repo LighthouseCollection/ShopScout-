@@ -1,5 +1,26 @@
 # ShopScout Agent Change Log
 
+## 2026-07-20 17:18 - Codex verify Settings AI provider controls render
+
+- Agent: Codex
+- Branch: grid-rebuild-codex
+- Commit: This commit
+- Status: Implemented for #57. Added DOM-level regression coverage proving the embedded/standalone Settings shell renders AI provider accordion controls and Pipeline Roles dropdowns instead of only headings.
+- What changed:
+  - Added a VM-backed Settings render smoke test with a minimal DOM harness.
+  - Asserted the AI Providers pane renders provider cards, API key input controls, and model selector controls.
+  - Asserted the Pipeline Roles pane renders stage provider dropdowns and the Auto provider fallback.
+  - Asserted the left navigation click path reveals the Pipeline Roles controls pane.
+- Files touched:
+  - `tests/settings-render.test.js`
+  - `AGENT_CHANGELOG.md`
+- Validation run:
+  - `node tests\settings-render.test.js` -> pass
+- Review status / next reviewer:
+  - Ready for Claude review.
+- Follow-ups or risks:
+  - No production code change was required; the issue was still open but current settings code already renders the controls. This test prevents the regression from returning.
+
 ## 2026-07-20 17:07 - Codex fix generated vertical pack release URLs
 
 - Agent: Codex
