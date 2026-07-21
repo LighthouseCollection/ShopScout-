@@ -42,6 +42,7 @@ function createAdapterHarness() {
     agGrid: {
       createGrid(_container, options) {
         gridOptions = options;
+        const selected = new Set((options.rowData || []).filter(row => row._selected).map(row => String(row.id ?? row._id)));
         return {
           setGridOption() {},
           getColumnState() { return []; },
@@ -52,7 +53,19 @@ function createAdapterHarness() {
           setFilterModel(model) {
             if (model == null) clearedNativeFilters += 1;
           },
-          onFilterChanged() { nativeFilterChanged += 1; }
+          onFilterChanged() { nativeFilterChanged += 1; },
+          forEachNode(callback) {
+            (options.rowData || []).forEach(row => callback({
+              data: row,
+              setSelected(value) {
+                if (value) selected.add(String(row.id ?? row._id));
+                else selected.delete(String(row.id ?? row._id));
+              }
+            }));
+          },
+          getSelectedRows() {
+            return (options.rowData || []).filter(row => selected.has(String(row.id ?? row._id)));
+          }
         };
       }
     },
@@ -333,6 +346,35 @@ function createAdapterHarnessWithThrowingColumnMenu() {
     'ShopScout filter modal routing prevents the native header icon action');
   assert.equal(event.immediateStopped, true,
     'ShopScout filter modal routing stops AG Grid from also opening its native popup');
+}
+
+{
+  const harness = createAdapterHarness();
+  let selectedRows = null;
+  const { gridOptions: options } = harness.create({
+    mode: 'productsRows',
+    columns: [
+      { id: 'select', field: '_selected', name: '', type: 'selection' },
+      { id: 'title', field: 'title', name: 'Name', type: 'text' }
+    ],
+    rows: [{ id: 'p1', title: 'One', _selected: true }, { id: 'p2', title: 'Two', _selected: false }]
+  }, {
+    onSelectionChange(rows) { selectedRows = rows; }
+  });
+  const selectColumn = options.columnDefs.find(column => column.colId === 'select');
+  assert.equal(selectColumn.checkboxSelection, true,
+    'selection column uses AG Grid native row checkboxes');
+  assert.equal(selectColumn.headerCheckboxSelection, true,
+    'selection column uses AG Grid native header check-all checkbox');
+  assert.equal(selectColumn.cellRenderer, undefined,
+    'selection column does not render the old custom checkbox cell');
+  assert.equal(options.rowSelection, 'multiple',
+    'native checkbox selection remains multi-select');
+  options.onSelectionChanged({ api: options.api || {
+    getSelectedRows() { return [{ id: 'p2', title: 'Two' }]; }
+  } });
+  assert.deepEqual(selectedRows, [{ id: 'p2', title: 'Two' }],
+    'selection change callback still receives selected product rows');
 }
 
 console.log('adapter-display.test.js: all assertions passed');

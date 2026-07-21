@@ -889,13 +889,13 @@
       if (created && typeof created.then === 'function') await created;
       return true;
     }
-    const opener = typeof root.open === 'function'
-      ? root.open
-      : root.window && typeof root.window.open === 'function'
-        ? root.window.open.bind(root.window)
-        : null;
-    if (!opener) return false;
-    return Boolean(opener(url, '_blank', 'noopener'));
+    if (typeof root.open === 'function') {
+      return Boolean(root.open.call(root, url, '_blank', 'noopener'));
+    }
+    if (root.window && typeof root.window.open === 'function') {
+      return Boolean(root.window.open(url, '_blank', 'noopener'));
+    }
+    return false;
   }
 
   async function handleAction(action, row) {

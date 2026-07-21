@@ -90,6 +90,10 @@ function createContext() {
     },
     ShopScoutUI: {},
     open(url, target, features) {
+      'use strict';
+      if (!this || this.__shopScoutOpenReceiver !== true) {
+        throw new Error('root.open fallback was called without its global receiver');
+      }
       openedUrls.push({ url, target, features });
       return { closed: false };
     },
@@ -103,6 +107,7 @@ function createContext() {
     }
   };
   ctx.globalThis = ctx;
+  ctx.__shopScoutOpenReceiver = true;
   vm.createContext(ctx);
   vm.runInContext(
     fs.readFileSync(path.join(rootDir, 'grid-rebuild-codex', 'shopscoutGrid.js'), 'utf8'),

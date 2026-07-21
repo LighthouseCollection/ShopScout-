@@ -1550,6 +1550,46 @@ This file is the shared record for Claude and Codex. Append an entry for every m
 - Follow-ups or risks:
   - Paste-back stores and displays the raw human-readable manual report. Applying field-level corrections from pasted reports remains a separate review/parser workflow.
 
+## 2026-07-20 19:30 - Codex Phase E grid headers and row actions
+
+- Agent: Codex
+- Branch: grid-rebuild-codex
+- Commit: Uncommitted
+- Status: Implemented Phase E from `docs/codex-work-order.md` for grid headers, rating/review collapse, row open fallback, and master selection.
+- What changed:
+  - Fixed rating/review duplicate spec collapse so Title Case keys such as `Customer Reviews` are filtered case-insensitively without a test-only `SSCanonical.canonicalKey` monkey patch.
+  - Added fallback field canonicalization for common aliases (`Colour`, `Dots per inch`, `Volts`) at the grid projection boundary while preserving ProductSpec review display casing.
+  - Stripped leading decorative symbols such as `+`, `#`, and checkmarks from dynamic spec column header labels.
+  - Replaced the custom selection checkbox renderer with AG Grid native row checkboxes plus the native header check-all checkbox.
+  - Removed the custom inset separator from AG Grid header cells and enabled AG Grid's native header separator and resize-handle variables so the resize handle no longer collides with a custom line.
+  - Fixed the row Open fallback so `root.open` is called with its global receiver.
+  - Verified `#24` from the work order is not resolvable in GitHub; the row open-link behavior was covered through issue `#45` and the existing row-action path.
+- Files touched:
+  - `grid-rebuild-codex/agGridAdapter.js`
+  - `grid-rebuild-codex/grid.css`
+  - `grid-rebuild-codex/projections.js`
+  - `grid-rebuild-codex/shopscoutGrid.js`
+  - `grid-rebuild-codex/tests/actions.test.js`
+  - `grid-rebuild-codex/tests/adapter-display.test.js`
+  - `grid-rebuild-codex/tests/projections.test.js`
+  - `grid-rebuild-codex/tests/wiring.test.js`
+  - `shared/productSpecAccess.js`
+  - `AGENT_CHANGELOG.md`
+- Validation run:
+  - `node grid-rebuild-codex\tests\projections.test.js` -> pass
+  - `node grid-rebuild-codex\tests\adapter-display.test.js` -> pass
+  - `node grid-rebuild-codex\tests\wiring.test.js` -> pass
+  - `node grid-rebuild-codex\tests\actions.test.js` -> pass
+  - `npm test` -> 54/54 test files pass
+  - `npm run lint` -> pass, 0 errors, 0 warnings
+  - `npm run typecheck` -> pass
+  - `npm run syntax` -> pass
+  - `npm run build` -> Chrome / Edge / Firefox rebuilt
+- Review status / next reviewer:
+  - Ready for Claude review.
+- Follow-ups or risks:
+  - `npm run build` ran before this commit existed, so the generated dist version string still reflects the previous commit hash until the next build.
+
 ## 2026-07-12 07:56 - Codex manual AI accordion cleanup
 
 - Agent: Codex

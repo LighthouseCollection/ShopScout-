@@ -77,6 +77,12 @@ assert.ok(/\.ss-grid-pill-list[\s\S]{0,360}max-height:\s*calc\(var\(--ss-grid-pi
   'pill lists use a whole-line max-height instead of clipping partial pill rows');
 assert.ok(/\.ss-grid-pill-overflow[\s\S]{0,420}cursor:\s*pointer/.test(gridCss),
   'pill overflow marker is a clickable affordance');
+assert.ok(/--ag-header-column-separator-display:\s*block/.test(gridCss),
+  'grid header separators use AG Grid native separator variables');
+assert.ok(/--ag-header-column-resize-handle-display:\s*block/.test(gridCss),
+  'grid resize handles use AG Grid native resize-handle variables');
+assert.ok(!/\.ag-cell,\s*[\r\n\s]*\.ss-grid-host\.ag-theme-quartz \.ag-header-cell[\s\S]{0,260}background-image/.test(gridCss),
+  'custom inset cell divider is not applied to AG Grid header cells where it overlaps the resize handle');
 assert.ok(/\.ss-grid-column-list[\s\S]{0,220}column-count:\s*3/.test(gridCss),
   'columns modal uses masonry-style columns so alphabet headers do not leave uneven top gaps');
 assert.ok(/\.ss-grid-column-group[\s\S]{0,220}break-inside:\s*avoid/.test(gridCss),

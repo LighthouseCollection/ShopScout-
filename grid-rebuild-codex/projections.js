@@ -84,7 +84,21 @@
   function canonicalKey(value, scope) {
     const canon = scope?.SSCanonical || root.SSCanonical;
     if (canon && typeof canon.canonicalKey === 'function') return canon.canonicalKey(value);
-    return String(value || '').trim().toLowerCase().replace(/\s+/g, ' ');
+    return String(value || '')
+      .trim()
+      .toLowerCase()
+      .replace(/\bcolour\b/g, 'color')
+      .replace(/\bdots per inch\b/g, 'dpi')
+      .replace(/\bdpi\b/g, 'dpi')
+      .replace(/\bvolts?\b/g, 'v')
+      .replace(/\s+/g, ' ');
+  }
+
+  function cleanDynamicHeaderText(value) {
+    return String(value || '')
+      .replace(/^[\s+#*•·\-–—✓✔☑]+/u, '')
+      .replace(/\s+/g, ' ')
+      .trim();
   }
 
   function canonicalField(field, scope) {
@@ -108,8 +122,13 @@
 
   function fieldLabel(field) {
     if (FIELD_LABELS[field]) return FIELD_LABELS[field];
-    if (field.startsWith('spec:')) return titleCase(field.slice(5));
-    return titleCase(field);
+    if (field.startsWith('spec:')) return titleCase(cleanDynamicHeaderText(field.slice(5)));
+    return titleCase(cleanDynamicHeaderText(field));
+  }
+
+  function isRatingReviewSpecField(field) {
+    const key = String(field || '').startsWith('spec:') ? String(field).slice(5) : String(field || '');
+    return RATING_REVIEW_SPEC_KEYS.has(canonicalKey(key));
   }
 
   /* True when a cell has some kind of real content the grid can display.
@@ -191,6 +210,17 @@
       return projector.flattenSpecs(products, { root: options?.root || root });
     }
     return (Array.isArray(products) ? products : []).map(product => Object.assign({}, product));
+  }
+
+  function canonicalizeFlattenedSpecs(flattened, scope) {
+    const next = Object.assign({}, flattened || {});
+    for (const key of Object.keys(flattened || {})) {
+      if (!key.startsWith('spec:')) continue;
+      const canonical = canonicalField(key, scope);
+      if (!canonical || canonical === key || next[canonical] != null) continue;
+      next[canonical] = flattened[key];
+    }
+    return next;
   }
 
   function discoverSpecFields(rows) {
@@ -344,10 +374,10 @@
   function normalizeVisibleSpecFields(visibleSpecKeys, rows, scope) {
     if (Array.isArray(visibleSpecKeys) && visibleSpecKeys.length) {
       return [...new Set(visibleSpecKeys.map(key => canonicalField(key, scope)).filter(Boolean))]
-        .filter(key => key.startsWith('spec:') && !RATING_REVIEW_SPEC_KEYS.has(key.slice(5)));
+        .filter(key => key.startsWith('spec:') && !isRatingReviewSpecField(key));
     }
     return discoverSpecFields(rows)
-      .filter(key => !RATING_REVIEW_SPEC_KEYS.has(key.slice(5)));
+      .filter(key => !isRatingReviewSpecField(key));
   }
 
   function makeRow(product, flattened, idx) {
@@ -371,7 +401,7 @@
     const viewState = opts.viewState || {};
     const scope = opts.root || root;
     const input = Array.isArray(products) ? products : [];
-    const flattened = flattenProducts(input, opts);
+    const flattened = flattenProducts(input, opts).map(item => canonicalizeFlattenedSpecs(item, scope));
     const rows = input.map((product, idx) => makeRow(product, flattened[idx] || product, idx));
     const removed = removedColumnSet(viewState);
     const specFields = normalizeVisibleSpecFields(opts.visibleSpecKeys, rows, scope)

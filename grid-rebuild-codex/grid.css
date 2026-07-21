@@ -67,6 +67,14 @@
   --ag-selected-row-background-color: color-mix(in srgb, var(--accent, #ecd496) 20%, transparent);
   --ag-row-hover-color: color-mix(in srgb, var(--primary, #0b3d4f) 4%, #fff);
   --ag-header-height: 42px;
+  --ag-header-column-separator-display: block;
+  --ag-header-column-separator-height: 50%;
+  --ag-header-column-separator-width: 1px;
+  --ag-header-column-separator-color: var(--rule, #d1d5db);
+  --ag-header-column-resize-handle-display: block;
+  --ag-header-column-resize-handle-height: 34%;
+  --ag-header-column-resize-handle-width: 2px;
+  --ag-header-column-resize-handle-color: var(--rule-strong, #9ca3af);
 }
 
 /* Kill AG Grid's own outer border + straight corners so the shell
@@ -120,8 +128,7 @@
    separators so vertical rules do not visually collide with row rules.
    Do not change .ag-cell positioning: AG Grid owns cell layout and
    overriding position can make rendered cells disappear or stack. */
-.ss-grid-host.ag-theme-quartz .ag-cell,
-.ss-grid-host.ag-theme-quartz .ag-header-cell {
+.ss-grid-host.ag-theme-quartz .ag-cell {
   border-right-color: transparent;
   background-image: linear-gradient(var(--rule, #d1d5db), var(--rule, #d1d5db));
   background-repeat: no-repeat;
@@ -130,6 +137,10 @@
 }
 .ss-grid-host.ag-theme-quartz .ag-cell-last-left-pinned,
 .ss-grid-host.ag-theme-quartz .ag-header-cell.ag-header-cell-last-left-pinned {
+  background-image: none;
+}
+.ss-grid-host.ag-theme-quartz .ag-header-cell {
+  border-right-color: transparent;
   background-image: none;
 }
 

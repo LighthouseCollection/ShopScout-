@@ -142,12 +142,6 @@
   }
 
   /* --- Cell renderers per column type --------------------------- */
-  function renderSelection(params) {
-    const id = escAttr(params.data?.id || '');
-    const checked = params.data?._selected ? ' checked' : '';
-    return `<input class="ss-grid-select" type="checkbox" data-row-id="${id}"${checked} aria-label="Select product">`;
-  }
-
   function renderActionsBar() {
     return `<div class="ss-grid-action-bar" role="toolbar" aria-label="Product actions">
       <button class="ss-grid-action-btn" type="button" data-ss-grid-action="open" aria-label="Open product" title="Open"><span aria-hidden="true">&#8599;</span></button>
@@ -571,7 +565,6 @@
 
   /* --- Column definition builder -------------------------------- */
   function columnTypeRenderer(column) {
-    if (column.type === 'selection') return renderSelection;
     if (column.type === 'image') return renderImage;
     if (column.type === 'brand') return renderBrand;
     if (column.type === 'source') return renderSource;
@@ -672,6 +665,13 @@
         pinned: isPinnedLeft ? 'left' : undefined,
         lockPinned: isPinnedLeft || undefined
       };
+      if (column.type === 'selection') {
+        colDef.checkboxSelection = true;
+        colDef.headerCheckboxSelection = true;
+        colDef.headerCheckboxSelectionFilteredOnly = false;
+        colDef.cellRenderer = undefined;
+        colDef.cellRendererParams = undefined;
+      }
       /* Matrix product columns get a real header component so the
          thumb + title + action bar render as DOM (not HTML string). */
       if (isMatrixCell) {
@@ -807,6 +807,13 @@
 
     const rowData = (projection.rows || []).map(row => Object.assign({}, row));
     let currentColumnDefs = toAgColumns(projection.columns);
+    function syncSelectedRowsToAg(api) {
+      if (!api || typeof api.forEachNode !== 'function') return;
+      api.forEachNode(node => {
+        if (!node || typeof node.setSelected !== 'function') return;
+        node.setSelected(!!node.data?._selected);
+      });
+    }
 
     const gridOptions = {
       columnDefs: currentColumnDefs,
@@ -862,12 +869,14 @@
          is stock AG Grid. */
       suppressDragLeaveHidesColumns: true,
       onGridReady(evt) {
+        syncSelectedRowsToAg(evt.api);
         setTimeout(() => {
           autoSizeEverything(evt.api, container);
           fitShellToContent(container);
         }, 0);
       },
       onFirstDataRendered(evt) {
+        syncSelectedRowsToAg(evt.api);
         setTimeout(() => {
           autoSizeEverything(evt.api, container);
           fitShellToContent(container);
@@ -902,8 +911,11 @@
         });
       },
       onSelectionChanged(evt) {
+        const selected = typeof evt.api?.getSelectedRows === 'function' ? evt.api.getSelectedRows() : [];
+        const selectedIds = new Set(selected.map(row => String(row?.id ?? row?._id)));
+        for (const row of rowData) row._selected = selectedIds.has(String(row?.id ?? row?._id));
         if (typeof opts.onSelectionChange !== 'function') return;
-        opts.onSelectionChange(evt.api.getSelectedRows());
+        opts.onSelectionChange(selected);
       }
     };
 
@@ -1084,6 +1096,7 @@
         gridApi.setGridOption('rowData', nextRows);
         rowData.length = 0;
         Array.prototype.push.apply(rowData, nextRows);
+        syncSelectedRowsToAg(gridApi);
         container.classList.toggle('ss-grid-is-matrix', nextProjection?.mode === 'comparisonMatrix');
       },
       updateItem(itemId, nextItem) {

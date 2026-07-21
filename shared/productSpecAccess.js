@@ -17,7 +17,11 @@
     const env = scope || root;
     const canon = env.SSCanonical || root.SSCanonical;
     if (canon && typeof canon.canonicalKey === 'function') return canon.canonicalKey(value);
-    return text(value).replace(/\s+/g, ' ');
+    return text(value)
+      .replace(/\bcolour\b/gi, 'Color')
+      .replace(/\bdots per inch\b/gi, 'dpi')
+      .replace(/\bvolts?\b/gi, 'v')
+      .replace(/\s+/g, ' ');
   }
 
   function normalizedLookup(product, scope) {

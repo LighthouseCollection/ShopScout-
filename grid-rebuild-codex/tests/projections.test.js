@@ -14,17 +14,6 @@ function createContext() {
   const ctx = {
     console,
     globalThis: null,
-    SSCanonical: {
-      canonicalKey(value) {
-        return String(value || '')
-          .trim()
-          .toLowerCase()
-          .replace(/\bcolour\b/g, 'color')
-          .replace(/\bdots per inch\b/g, 'dpi')
-          .replace(/\bvolts?\b/g, 'v')
-          .replace(/\s+/g, ' ');
-      }
-    },
     SSSpecHeuristic: {
       specListOf(product) {
         return Array.isArray(product.rawSpecs) ? product.rawSpecs : [];
@@ -163,6 +152,10 @@ assert.ok(!rowsProjection.columns.some(column => column.id === 'spec:customer re
   'Customer Reviews is not emitted as a duplicate spec column because Rating owns rating + review-count display');
 assert.ok(!rowsProjection.allColumns.some(column => column.id === 'spec:customer reviews'),
   'Customer Reviews is also removed from allColumns so it cannot reappear through column visibility controls');
+assert.ok(!rowsProjection.columns.some(column => column.id === 'spec:Customer Reviews'),
+  'Title-case Customer Reviews is filtered without relying on a test-only canonicalKey monkey patch');
+assert.ok(!rowsProjection.allColumns.some(column => column.name === 'Customer Reviews'),
+  'Customer Reviews cannot reappear through the columns chooser under its original Title Case spelling');
 assert.ok(
   !rowsProjection.columns.some(column => column.id === 'actions'),
   'standalone actions column has been removed — actions render under the thumbnail in the image cell'
@@ -198,6 +191,26 @@ assert.equal(identityProjection.rows[0].title, 'Microsoft | ANB-00001',
   'name field uses one maker/brand/manufacturer value plus model number without duplicate maker text');
 assert.equal(identityProjection.rows[1].title, 'Generic fallback title with no structured identity',
   'name field falls back to captured title when structured maker/model fields are unavailable');
+
+const decoratedHeaderProjection = projections.buildProductsRowsProjection([{
+  id: 'p5',
+  title: 'Decorated spec names',
+  rawSpecs: [
+    { key: '+ Samsung', value: 'yes' },
+    { key: '✔ Apple', value: 'yes' },
+    { key: '# Ports', value: '2' }
+  ]
+}], {
+  visibleSpecKeys: ['+ Samsung', '✔ Apple', '# Ports']
+});
+assert.deepEqual(
+  decoratedHeaderProjection.columns
+    .filter(column => String(column.id).startsWith('spec:'))
+    .map(column => column.name)
+    .sort(),
+  ['Apple', 'Ports', 'Samsung'],
+  'dynamic spec column headers strip leading decorative symbols instead of showing icon-like prefixes'
+);
 
 const filteredProjection = projections.buildProductsRowsProjection(products, {
   visibleSpecKeys: ['battery life'],
