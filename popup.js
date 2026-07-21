@@ -50,7 +50,10 @@ async function switchList(name) {
 async function renderProducts() {
   const data = await getData();
   let products = data.lists[data.activeList] || [];
-  document.getElementById('count').textContent = products.length;
+  const totalCount = products.length;
+  document.getElementById('count').textContent = `${totalCount} ${totalCount === 1 ? 'product' : 'products'} in this list`;
+  const clearBtn = document.getElementById('clearProductsBtn');
+  if (clearBtn) clearBtn.disabled = totalCount === 0;
 
   const sources = [...new Set(products.map(p => p.source).filter(Boolean))];
   const filterSel = document.getElementById('filterSource');
@@ -105,6 +108,7 @@ function bindEvents() {
   document.getElementById('newListBtn').addEventListener('click', () => openListModal('new'));
   document.getElementById('renameListBtn').addEventListener('click', () => openListModal('rename'));
   document.getElementById('deleteListBtn').addEventListener('click', deleteList);
+  document.getElementById('clearProductsBtn').addEventListener('click', clearProducts);
   document.getElementById('dashboardBtn').addEventListener('click', () => chrome.tabs.create({ url: chrome.runtime.getURL('comparison.html') }));
 
   document.getElementById('addBtn').addEventListener('click', addFromTab);
@@ -281,6 +285,27 @@ async function removeProduct(idx) {
   } else {
     progress.done();
   }
+}
+
+async function clearProducts() {
+  const products = await getProducts();
+  if (!products.length) {
+    toast.show('No products to clear', 'error');
+    return;
+  }
+  const ok = await ShopScoutUI.confirm(
+    `Clear all ${products.length} ${products.length === 1 ? 'product' : 'products'} from this list?`,
+    { title: 'Clear products', okLabel: 'Clear all', kind: 'danger' }
+  );
+  if (!ok) return;
+  const progress = startProgress('Clearing products');
+  progress.setTask(1, 3, 'Removing products...');
+  progress.setTask(2, 3, 'Saving list...');
+  await saveProducts([]);
+  progress.setTask(3, 3, 'Refreshing list...');
+  await renderProducts();
+  progress.done();
+  toast.show('Products cleared');
 }
 
 // --- Edit modal ---

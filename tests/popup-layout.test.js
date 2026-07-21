@@ -46,15 +46,21 @@ assert.ok(html.indexOf('src="ui/toast.js"') < html.indexOf('src="ui/progressOver
 assert.ok(html.indexOf('src="ui/progressOverlay.js"') < html.indexOf('src="utils.js"'),
   'popup loads progress overlay before utils and popup actions');
 assert.ok(html.includes('id="dashboardBtn"'), 'popup includes the dashboard shortcut');
-assert.ok(html.includes('Open Comparison Dashboard'), 'dashboard shortcut is labeled Open Comparison Dashboard');
-assert.ok(html.includes('class="header-action-bar"'),
-  'labeled dashboard button lives in a dedicated action bar below the header');
+assert.ok(html.includes('aria-label="Open Comparison Dashboard"'), 'dashboard shortcut has an accessible label');
+assert.ok(html.includes('class="dashboard-icon-btn"'),
+  'dashboard shortcut is a compact header icon button');
+assert.ok(!html.includes('class="header-action-bar"'),
+  'popup no longer renders a full-width dashboard action bar below the header');
+assert.ok(!html.includes('class="badge" id="count"'), 'popup no longer renders a yellow count badge in the header');
+assert.ok(!html.includes('data-build-tag'), 'popup no longer exposes development build text in the header');
+assert.ok(html.includes('class="product-count-row"'), 'popup shows product count in a row above the product list');
+assert.ok(html.includes('id="clearProductsBtn"'), 'popup includes a clear-all products command beside the count');
 assert.ok(!html.includes('id="settingsBtn"'), 'popup side panel does not include the Settings gear');
 assert.ok(!html.includes('title="Settings"'), 'popup side panel does not include a Settings command');
 assert.ok(!js.includes("getElementById('settingsBtn')"), 'popup side panel does not bind a Settings command');
 assert.ok(!js.includes("chrome.runtime.getURL('settings.html')"), 'popup side panel does not open standalone settings');
-assert.ok(html.indexOf('class="dashboard-open-btn"') > html.indexOf('</header>'),
-  'dashboard action bar renders immediately below the header');
+assert.ok(html.indexOf('id="dashboardBtn"') < html.indexOf('</header>'),
+  'dashboard shortcut renders inside the header');
 assert.ok(!html.includes('AI Analyze'), 'popup gatherer does not render AI analysis controls');
 assert.ok(!html.includes('Auto AI'), 'popup gatherer does not render Auto AI');
 assert.ok(!html.includes('Manual AI'), 'popup gatherer does not render Manual AI');
@@ -104,6 +110,10 @@ assert.ok(!js.includes("action: 'runAIAnalysis'"), 'popup no longer starts the b
 assert.ok(!js.includes('openDashboardResults'), 'popup no longer opens AI dashboard results');
 assert.ok(js.includes("getElementById('dashboardBtn')"), 'popup binds the dashboard header shortcut');
 assert.ok(js.includes("chrome.runtime.getURL('comparison.html')"), 'dashboard shortcut opens comparison.html');
+assert.ok(js.includes("getElementById('clearProductsBtn')"), 'popup binds the clear-all products command');
+assert.ok(js.includes('async function clearProducts'), 'popup clear-all products flow exists');
+assert.ok(js.includes('Clear all') && js.includes('ShopScoutUI.confirm'), 'clear-all products asks for confirmation');
+assert.ok(js.includes('await saveProducts([])'), 'clear-all products saves an empty active list');
 assert.ok(js.includes('ShopScoutUI.progress.start'), 'popup actions use the centered progress overlay for long operations');
 assert.ok(!js.includes('buildManualHybridPrompt'), 'popup no longer builds manual AI prompts');
 assert.ok(!js.includes("quickCompare"), 'popup no longer binds the old Quick compare button');

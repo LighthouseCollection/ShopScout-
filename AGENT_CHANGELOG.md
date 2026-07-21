@@ -6188,3 +6188,28 @@ This file is the shared record for Claude and Codex. Append an entry for every m
 
 
 
+
+## 2026-07-20 00:00 - Codex popup v1 release cleanup (#61)
+
+- Agent: Codex
+- Branch: grid-rebuild-codex
+- Commit: This commit
+- Status: Implemented. Popup header and product-count controls now match the v1 gather-only side-panel requirements.
+- What changed:
+  - Removed the development build tag and yellow product-count badge from the popup header.
+  - Replaced the full-width Open Comparison Dashboard button with a compact accessible header icon button.
+  - Added a product-count row above the product list with a clear-all products command.
+  - Wired clear-all to a themed danger confirmation, empty-list save, refresh, progress overlay, and toast.
+  - Updated popup layout regression coverage for the new header/count/clear-all behavior.
+- Files touched:
+  - popup.html
+  - popup.css
+  - popup.js
+  - tests/popup-layout.test.js
+  - AGENT_CHANGELOG.md
+- Validation run:
+  - node tests\popup-layout.test.js -> pass
+- Review status / next reviewer:
+  - Ready for Claude review.
+- Follow-ups or risks:
+  - Visual verification should confirm the dashboard icon is compact in Chrome side panel width and that clear-all confirmation is not cramped.

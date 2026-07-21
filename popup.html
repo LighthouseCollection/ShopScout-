@@ -12,21 +12,16 @@
 </head>
 <body>
   <header>
-    <h1>ShopScout<span class="build-tag" data-build-tag>dev</span></h1>
-    <span class="badge" id="count">0</span>
-  </header>
-
-  <div class="header-action-bar">
-    <button class="dashboard-open-btn" id="dashboardBtn" type="button" title="Open Comparison Dashboard">
+    <h1>ShopScout</h1>
+    <button class="dashboard-icon-btn" id="dashboardBtn" type="button" title="Open Comparison Dashboard" aria-label="Open Comparison Dashboard">
       <svg viewBox="0 0 24 24" aria-hidden="true">
         <rect x="4" y="4" width="6" height="6" rx="1.2"></rect>
         <rect x="14" y="4" width="6" height="6" rx="1.2"></rect>
         <rect x="4" y="14" width="6" height="6" rx="1.2"></rect>
         <rect x="14" y="14" width="6" height="6" rx="1.2"></rect>
       </svg>
-      <span>Open Comparison Dashboard</span>
     </button>
-  </div>
+  </header>
 
   <div class="list-bar">
     <select id="listSelect"></select>
@@ -62,6 +57,18 @@
       <option value="rating">Best Rating</option>
       <option value="source">Source</option>
     </select>
+  </div>
+
+  <div class="product-count-row">
+    <span id="count">0 products in this list</span>
+    <button id="clearProductsBtn" type="button" title="Clear all products" aria-label="Clear all products">
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M4 7h16"></path>
+        <path d="M10 11v6M14 11v6"></path>
+        <path d="M6 7l1 13h10l1-13"></path>
+        <path d="M9 7V4h6v3"></path>
+      </svg>
+    </button>
   </div>
 
   <div class="product-list" id="productList"></div>
