@@ -107,11 +107,15 @@ assert.ok(comparisonHtml.includes('class="ai-options-layout"'), 'AI options moda
 assert.ok(comparisonHtml.includes('Step 1: Data to Send'), 'AI options modal numbers the Data to Send step');
 assert.ok(comparisonHtml.includes('Step 2: What to Ask AI to Analyze'), 'AI options modal numbers the analysis step');
 assert.ok(comparisonHtml.includes('Step 3: Product Data Included'), 'AI options modal numbers the product data step');
-assert.ok(comparisonHtml.includes('Step 4: Send &amp; Paste Back'), 'AI options modal numbers the final send/paste-back step');
+assert.ok(comparisonHtml.includes('Step 4: Send Prompt'), 'AI options modal numbers the send-prompt step');
+assert.ok(comparisonHtml.includes('Step 5: Paste Result Back'), 'AI options modal numbers the paste-result-back step');
 assert.ok(comparisonHtml.includes('data-ai-options-tab="payload"'), 'AI options modal includes Data to Send left-nav item');
 assert.ok(comparisonHtml.includes('data-ai-options-tab="analysis"'), 'AI options modal includes What to Ask AI to Analyze left-nav item');
 assert.ok(comparisonHtml.includes('data-ai-options-tab="fields"'), 'AI options modal includes Product Data Included left-nav item');
-assert.ok(comparisonHtml.includes('data-ai-options-tab="sendBack"'), 'AI options modal includes Send & Paste Back left-nav item');
+assert.ok(comparisonHtml.includes('data-ai-options-tab="send"'), 'AI options modal includes Send Prompt left-nav item');
+assert.ok(comparisonHtml.includes('data-ai-options-tab="pasteBack"'), 'AI options modal includes Paste Result Back left-nav item');
+assert.ok(comparisonHtml.includes('data-manual-send-mode="assistant"'), 'manual AI send step can open a selected assistant');
+assert.ok(comparisonHtml.includes('data-manual-send-mode="pipeline"'), 'manual AI send step can reuse the connected AI pipeline');
 assert.ok(comparisonHtml.includes('Example: name, brand, price'), 'compact data option includes an example');
 assert.ok(comparisonHtml.includes('Example: full captured description'), 'full data option includes an example');
 assert.ok(!comparisonHtml.includes('data-payload-mode="estimate"'), 'Data to Send no longer exposes compact+estimate as a payload choice');
@@ -133,7 +137,7 @@ assert.ok(/\.ai-options-pane\.active\s*\{[^}]*display:\s*block/.test(comparisonH
 assert.ok(/\.ai-options-pane\.active\s*\{[^}]*border:\s*1px solid var\(--rule\)/.test(comparisonHtml), 'active AI options pane has a soft bordered content surface');
 assert.ok(/\.ai-payload-list\s*\{[^}]*grid-template-columns:\s*repeat\(2, minmax\(0, 1fr\)\)/.test(comparisonHtml), 'data-to-send options render as two equal choices');
 assert.ok(/\.ai-payload-list\s*\{[^}]*grid-auto-rows:\s*1fr/.test(comparisonHtml), 'data-to-send cards use equal-height grid rows');
-assert.ok(/\.ai-option--payload\s*\{[^}]*min-height:\s*118px/.test(comparisonHtml), 'data-to-send option cards use equal height');
+assert.ok(/\.ai-option--payload\s*\{[^}]*min-height:\s*112px/.test(comparisonHtml), 'data-to-send option cards use equal compact height');
 assert.ok(/\.ai-option-list\s*\{[^}]*grid-template-columns:\s*1fr/.test(comparisonHtml), 'AI options are single column by default');
 assert.ok(/\.ai-option-list--plain \.ai-option\s*\{[^}]*border:\s*0/.test(comparisonHtml), 'report section rows are not boxed cards');
 assert.ok(/\.ai-option-list--plain \.ai-option\s*\{[^}]*display:\s*flex/.test(comparisonHtml), 'report section rows place the checkbox on the same line as the item title');

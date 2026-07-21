@@ -87,11 +87,16 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  font-family: var(--font-display);
-  font-size: 14px;
-  font-weight: 700;
-  color: #fff;
+  background: var(--card);
+  border: 1px solid var(--rule);
   flex-shrink: 0;
+  overflow: hidden;
+}
+.ai-logo img {
+  width: 24px;
+  height: 24px;
+  display: block;
+  object-fit: contain;
 }
 .ai-info { display: flex; flex-direction: column; min-width: 0; gap: 1px; }
 .ai-name {

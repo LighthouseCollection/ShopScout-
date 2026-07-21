@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96" role="img" aria-label="Gemini">
+  <rect width="96" height="96" rx="20" fill="#4285f4"/>
+  <path d="M48 14c5 19 15 29 34 34-19 5-29 15-34 34-5-19-15-29-34-34 19-5 29-15 34-34z" fill="#fff"/>
+  <path d="M64 16c2 7 6 11 16 14-10 3-14 7-16 14-2-7-6-11-16-14 10-3 14-7 16-14z" fill="#d2e3fc"/>
+</svg>

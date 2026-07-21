@@ -1,16 +1,16 @@
 var chrome = globalThis.browser || globalThis.chrome;
 
 const AI_SERVICES = [
-  { id: 'chatgpt',    name: 'ChatGPT',          url: 'https://chatgpt.com/',              logo: 'logo-chatgpt',    letter: 'G', desc: 'OpenAI — GPT-4o, GPT-4',             inputSel: '#prompt-textarea, textarea[data-id="root"], #prompt-textarea p' },
-  { id: 'claude',     name: 'Claude',            url: 'https://claude.ai/new',             logo: 'logo-claude',     letter: 'C', desc: 'Anthropic — Claude 4 Opus, Sonnet',   inputSel: '[contenteditable="true"], .ProseMirror, textarea' },
-  { id: 'gemini',     name: 'Gemini',            url: 'https://gemini.google.com/app',     logo: 'logo-gemini',     letter: 'G', desc: 'Google — Gemini 2.5 Pro',             inputSel: '.ql-editor, [contenteditable="true"], rich-textarea .textarea, textarea' },
-  { id: 'copilot',    name: 'Copilot',           url: 'https://copilot.microsoft.com/',    logo: 'logo-copilot',    letter: 'C', desc: 'Microsoft — GPT-4 powered',           inputSel: '#searchbox, textarea, [contenteditable="true"]' },
-  { id: 'perplexity', name: 'Perplexity',        url: 'https://www.perplexity.ai/',        logo: 'logo-perplexity', letter: 'P', desc: 'Search-powered AI with citations',    inputSel: 'textarea, [contenteditable="true"]' },
-  { id: 'grok',       name: 'Grok',              url: 'https://grok.com/',                 logo: 'logo-grok',       letter: 'X', desc: 'xAI — Grok 3',                       inputSel: 'textarea, [contenteditable="true"]' },
-  { id: 'deepseek',   name: 'DeepSeek',          url: 'https://chat.deepseek.com/',        logo: 'logo-deepseek',   letter: 'D', desc: 'DeepSeek — R1, V3',                   inputSel: 'textarea, [contenteditable="true"]' },
-  { id: 'metaai',     name: 'Meta AI',           url: 'https://www.meta.ai/',              logo: 'logo-metaai',     letter: 'M', desc: 'Meta — Llama',                        inputSel: 'textarea, [contenteditable="true"]' },
-  { id: 'mistral',    name: 'Mistral',           url: 'https://chat.mistral.ai/chat',      logo: 'logo-mistral',    letter: 'M', desc: 'Mistral — Large, Medium',             inputSel: 'textarea, [contenteditable="true"]' },
-  { id: 'poe',        name: 'Poe',               url: 'https://poe.com/',                  logo: 'logo-poe',        letter: 'P', desc: 'Multi-model — GPT, Claude, Gemini',   inputSel: 'textarea, [contenteditable="true"]' },
+  { id: 'chatgpt',    name: 'ChatGPT',          url: 'https://chatgpt.com/',              logoPath: 'icons/ai/chatgpt.svg',    desc: 'OpenAI — GPT-4o, GPT-4',             inputSel: '#prompt-textarea, textarea[data-id="root"], #prompt-textarea p' },
+  { id: 'claude',     name: 'Claude',            url: 'https://claude.ai/new',             logoPath: 'icons/ai/claude.svg',     desc: 'Anthropic — Claude 4 Opus, Sonnet',   inputSel: '[contenteditable="true"], .ProseMirror, textarea' },
+  { id: 'gemini',     name: 'Gemini',            url: 'https://gemini.google.com/app',     logoPath: 'icons/ai/gemini.svg',     desc: 'Google — Gemini 2.5 Pro',             inputSel: '.ql-editor, [contenteditable="true"], rich-textarea .textarea, textarea' },
+  { id: 'copilot',    name: 'Copilot',           url: 'https://copilot.microsoft.com/',    logoPath: 'icons/ai/copilot.svg',    desc: 'Microsoft — GPT-4 powered',           inputSel: '#searchbox, textarea, [contenteditable="true"]' },
+  { id: 'perplexity', name: 'Perplexity',        url: 'https://www.perplexity.ai/',        logoPath: 'icons/ai/perplexity.svg', desc: 'Search-powered AI with citations',    inputSel: 'textarea, [contenteditable="true"]' },
+  { id: 'grok',       name: 'Grok',              url: 'https://grok.com/',                 logoPath: 'icons/ai/grok.svg',       desc: 'xAI — Grok 3',                       inputSel: 'textarea, [contenteditable="true"]' },
+  { id: 'deepseek',   name: 'DeepSeek',          url: 'https://chat.deepseek.com/',        logoPath: 'icons/ai/deepseek.svg',   desc: 'DeepSeek — R1, V3',                   inputSel: 'textarea, [contenteditable="true"]' },
+  { id: 'metaai',     name: 'Meta AI',           url: 'https://www.meta.ai/',              logoPath: 'icons/ai/metaai.svg',     desc: 'Meta — Llama',                        inputSel: 'textarea, [contenteditable="true"]' },
+  { id: 'mistral',    name: 'Mistral',           url: 'https://chat.mistral.ai/chat',      logoPath: 'icons/ai/mistral.svg',    desc: 'Mistral — Large, Medium',             inputSel: 'textarea, [contenteditable="true"]' },
+  { id: 'poe',        name: 'Poe',               url: 'https://poe.com/',                  logoPath: 'icons/ai/poe.svg',        desc: 'Multi-model — GPT, Claude, Gemini',   inputSel: 'textarea, [contenteditable="true"]' },
 ];
 
 const MODE_INFO = {
@@ -85,8 +85,15 @@ function init() {
 
     var isLast = svc.id === lastAi;
     var logo = document.createElement('div');
-    logo.className = 'ai-logo ' + svc.logo;
-    logo.textContent = svc.letter;
+    logo.className = 'ai-logo';
+    var logoImg = document.createElement('img');
+    logoImg.src = svc.logoPath;
+    logoImg.alt = '';
+    logoImg.loading = 'lazy';
+    logoImg.addEventListener('error', function() {
+      logo.textContent = svc.name.slice(0, 1);
+    });
+    logo.appendChild(logoImg);
 
     var infoWrap = document.createElement('div');
     infoWrap.className = 'ai-info';

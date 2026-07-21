@@ -1,5 +1,46 @@
 # ShopScout Agent Change Log
 
+## 2026-07-20 21:35 - Codex manual AI send/paste workflow polish
+
+- Agent: Codex
+- Branch: grid-rebuild-codex
+- Commit: This commit
+- Status: Implemented Phase J manual AI workflow refinements from `docs/codex-work-order.md`.
+- What changed:
+  - Split the manual AI modal's combined send/paste step into separate `Step 4: Send Prompt` and `Step 5: Paste Result Back` panes.
+  - Added a manual send-mode choice so users can either open a selected assistant or reuse the connected AI pipeline with the same prompt options.
+  - Replaced manual AI provider letter avatars with local SVG provider icons in both the dashboard modal and `ai-select.html`.
+  - Tightened payload option card alignment and kept the compact/full payload layout consistent.
+  - Added regression coverage for the split modal flow, provider icons, and manual connected-pipeline path.
+- Files touched:
+  - `comparison.html`
+  - `comparison.css`
+  - `comparison.js`
+  - `ai-select.js`
+  - `ai-select.css`
+  - `icons/ai/chatgpt.svg`
+  - `icons/ai/claude.svg`
+  - `icons/ai/gemini.svg`
+  - `icons/ai/copilot.svg`
+  - `icons/ai/perplexity.svg`
+  - `icons/ai/grok.svg`
+  - `icons/ai/deepseek.svg`
+  - `icons/ai/metaai.svg`
+  - `icons/ai/mistral.svg`
+  - `icons/ai/poe.svg`
+  - `tests/ai-analysis-options.test.js`
+  - `tests/manual-ai-flow-polish.test.js`
+  - `AGENT_CHANGELOG.md`
+- Validation run:
+  - `node tests\manual-ai-flow-polish.test.js` -> pass
+  - `node tests\ai-analysis-options.test.js` -> pass
+  - `node --check comparison.js` -> pass
+  - `node --check ai-select.js` -> pass
+- Review status / next reviewer:
+  - Ready for Claude review after Codex finishes the current work-order batch.
+- Follow-ups or risks:
+  - This slice does not change AI result rendering logic; remaining Phase J results-page work continues separately.
+
 ## 2026-07-20 21:10 - Codex ribbon polish and all-pane scaling
 
 - Agent: Codex

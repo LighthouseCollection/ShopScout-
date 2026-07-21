@@ -690,9 +690,13 @@
             <strong>Step 3: Product Data Included</strong>
             <span>Allowed product fields and specs.</span>
           </button>
-          <button type="button" class="ai-options-nav-item" data-ai-options-tab="sendBack">
-            <strong>Step 4: Send &amp; Paste Back</strong>
-            <span>Choose assistant and table-update behavior.</span>
+          <button type="button" class="ai-options-nav-item" data-ai-options-tab="send">
+            <strong>Step 4: Send Prompt</strong>
+            <span>Choose assistant handoff or connected pipeline.</span>
+          </button>
+          <button type="button" class="ai-options-nav-item" data-ai-options-tab="pasteBack">
+            <strong>Step 5: Paste Result Back</strong>
+            <span>Decide whether ShopScout should ask for table updates.</span>
           </button>
         </nav>
         <div class="ai-options-main">
@@ -726,10 +730,18 @@
             </div>
             <div class="ai-field-list" id="aiFieldList" aria-live="polite"></div>
           </section>
-          <section class="ai-options-pane" data-ai-options-pane="sendBack">
-            <h3>Step 4: Send &amp; Paste Back</h3>
-            <p class="ai-option-hint">Choose which AI assistant ShopScout should open after creating the prompt.</p>
+          <section class="ai-options-pane" data-ai-options-pane="send">
+            <h3>Step 4: Send Prompt</h3>
+            <p class="ai-option-hint">Choose whether ShopScout should open a manual assistant page or run the same prompt through your connected AI pipeline.</p>
+            <div class="ai-option-list ai-send-mode-options">
+              <label class="ai-option"><input type="radio" name="manualSendMode" data-manual-send-mode="assistant" value="assistant" checked><span><strong>Open selected assistant</strong><span>Example: copy the prompt, open ChatGPT or Claude, and auto-paste when the site allows it.</span></span></label>
+              <label class="ai-option"><input type="radio" name="manualSendMode" data-manual-send-mode="pipeline" value="pipeline"><span><strong>Use connected AI pipeline</strong><span>Example: keep the manual prompt choices but run them through your saved API provider inside ShopScout.</span></span></label>
+            </div>
+            <h4 class="ai-pane-subhead">Choose your assistant</h4>
             <div class="manual-ai-service-grid" id="manualAiServiceGrid" aria-label="Manual AI assistants"></div>
+          </section>
+          <section class="ai-options-pane" data-ai-options-pane="pasteBack">
+            <h3>Step 5: Paste Result Back</h3>
             <h4 class="ai-pane-subhead">Paste AI Result Back</h4>
             <p class="ai-option-hint">Choose whether the prompt should ask the AI to include a ShopScout Table Updates section that ShopScout can parse and apply to the main table.</p>
             <div class="ai-option-list ai-paste-back-options">

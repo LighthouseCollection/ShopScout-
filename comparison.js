@@ -75,16 +75,16 @@ const AI_CORE_FIELD_DEFINITIONS = [
 ];
 
 const MANUAL_AI_SERVICES = [
-  { id: 'chatgpt', name: 'ChatGPT', url: 'https://chatgpt.com/', letter: 'G', desc: 'OpenAI — GPT-4o, GPT-4', inputSel: '#prompt-textarea, textarea[data-id="root"], #prompt-textarea p' },
-  { id: 'claude', name: 'Claude', url: 'https://claude.ai/new', letter: 'C', desc: 'Anthropic — Claude 4 Opus, Sonnet', inputSel: '[contenteditable="true"], .ProseMirror, textarea' },
-  { id: 'gemini', name: 'Gemini', url: 'https://gemini.google.com/app', letter: 'G', desc: 'Google — Gemini 2.5 Pro', inputSel: '.ql-editor, [contenteditable="true"], rich-textarea .textarea, textarea' },
-  { id: 'copilot', name: 'Copilot', url: 'https://copilot.microsoft.com/', letter: 'C', desc: 'Microsoft — GPT-4 powered', inputSel: '#searchbox, textarea, [contenteditable="true"]' },
-  { id: 'perplexity', name: 'Perplexity', url: 'https://www.perplexity.ai/', letter: 'P', desc: 'Search-powered AI with citations', inputSel: 'textarea, [contenteditable="true"]' },
-  { id: 'grok', name: 'Grok', url: 'https://grok.com/', letter: 'X', desc: 'xAI — Grok', inputSel: 'textarea, [contenteditable="true"]' },
-  { id: 'deepseek', name: 'DeepSeek', url: 'https://chat.deepseek.com/', letter: 'D', desc: 'DeepSeek — R1, V3', inputSel: 'textarea, [contenteditable="true"]' },
-  { id: 'metaai', name: 'Meta AI', url: 'https://www.meta.ai/', letter: 'M', desc: 'Meta — Llama', inputSel: 'textarea, [contenteditable="true"]' },
-  { id: 'mistral', name: 'Mistral', url: 'https://chat.mistral.ai/chat', letter: 'M', desc: 'Mistral — Large, Medium', inputSel: 'textarea, [contenteditable="true"]' },
-  { id: 'poe', name: 'Poe', url: 'https://poe.com/', letter: 'P', desc: 'Multi-model — GPT, Claude, Gemini', inputSel: 'textarea, [contenteditable="true"]' }
+  { id: 'chatgpt', name: 'ChatGPT', url: 'https://chatgpt.com/', logoPath: 'icons/ai/chatgpt.svg', desc: 'OpenAI — GPT-4o, GPT-4', inputSel: '#prompt-textarea, textarea[data-id="root"], #prompt-textarea p' },
+  { id: 'claude', name: 'Claude', url: 'https://claude.ai/new', logoPath: 'icons/ai/claude.svg', desc: 'Anthropic — Claude 4 Opus, Sonnet', inputSel: '[contenteditable="true"], .ProseMirror, textarea' },
+  { id: 'gemini', name: 'Gemini', url: 'https://gemini.google.com/app', logoPath: 'icons/ai/gemini.svg', desc: 'Google — Gemini 2.5 Pro', inputSel: '.ql-editor, [contenteditable="true"], rich-textarea .textarea, textarea' },
+  { id: 'copilot', name: 'Copilot', url: 'https://copilot.microsoft.com/', logoPath: 'icons/ai/copilot.svg', desc: 'Microsoft — GPT-4 powered', inputSel: '#searchbox, textarea, [contenteditable="true"]' },
+  { id: 'perplexity', name: 'Perplexity', url: 'https://www.perplexity.ai/', logoPath: 'icons/ai/perplexity.svg', desc: 'Search-powered AI with citations', inputSel: 'textarea, [contenteditable="true"]' },
+  { id: 'grok', name: 'Grok', url: 'https://grok.com/', logoPath: 'icons/ai/grok.svg', desc: 'xAI — Grok', inputSel: 'textarea, [contenteditable="true"]' },
+  { id: 'deepseek', name: 'DeepSeek', url: 'https://chat.deepseek.com/', logoPath: 'icons/ai/deepseek.svg', desc: 'DeepSeek — R1, V3', inputSel: 'textarea, [contenteditable="true"]' },
+  { id: 'metaai', name: 'Meta AI', url: 'https://www.meta.ai/', logoPath: 'icons/ai/metaai.svg', desc: 'Meta — Llama', inputSel: 'textarea, [contenteditable="true"]' },
+  { id: 'mistral', name: 'Mistral', url: 'https://chat.mistral.ai/chat', logoPath: 'icons/ai/mistral.svg', desc: 'Mistral — Large, Medium', inputSel: 'textarea, [contenteditable="true"]' },
+  { id: 'poe', name: 'Poe', url: 'https://poe.com/', logoPath: 'icons/ai/poe.svg', desc: 'Multi-model — GPT, Claude, Gemini', inputSel: 'textarea, [contenteditable="true"]' }
 ];
 let selectedManualAiServiceId = 'chatgpt';
 
@@ -1432,7 +1432,7 @@ function renderManualAiServiceSelection() {
   const html = MANUAL_AI_SERVICES.map(service => {
     const active = service.id === selectedManualAiServiceId;
     return `<button type="button" class="manual-ai-service-card${active ? ' active' : ''}" data-manual-ai-service="${escAttr(service.id)}" aria-pressed="${active ? 'true' : 'false'}">` +
-      `<span class="manual-ai-service-logo" aria-hidden="true">${esc(service.letter)}</span>` +
+      `<span class="manual-ai-service-logo" aria-hidden="true"><img class="manual-ai-service-logo-img" src="${escAttr(service.logoPath)}" alt="" loading="lazy"></span>` +
       `<span><span class="manual-ai-service-name">${esc(service.name)}</span><span class="manual-ai-service-desc">${esc(service.desc)}</span></span>` +
     `</button>`;
   }).join('');
@@ -2615,9 +2615,18 @@ function pasteBackModeInputs() {
   return [...document.querySelectorAll('#aiOptionsModal [data-ai-paste-back-option]')];
 }
 
+function manualSendModeInputs() {
+  return [...document.querySelectorAll('#aiOptionsModal [data-manual-send-mode]')];
+}
+
 function wantsPasteBackInstructionsFromModal() {
   const selected = pasteBackModeInputs().find(input => input.checked);
   return (selected?.value || selected?.dataset.aiPasteBackOption || 'yes') !== 'no';
+}
+
+function selectedManualSendModeFromModal() {
+  const selected = manualSendModeInputs().find(input => input.checked);
+  return selected?.value || selected?.dataset.manualSendMode || 'assistant';
 }
 
 function collectPromptPayloadOptionsFromModal() {
@@ -2625,9 +2634,10 @@ function collectPromptPayloadOptionsFromModal() {
   const payloadMode = selected?.value || selected?.dataset.payloadMode || 'compact';
   const includedFields = collectAiFieldSelectionFromModal();
   const reportSections = collectAiSectionsFromModal();
-  return globalThis.ShopScoutAI?.normalizePromptOptions
+  const normalized = globalThis.ShopScoutAI?.normalizePromptOptions
     ? ShopScoutAI.normalizePromptOptions({ payloadMode, includedFields, reportSections, pasteBackInstructions: wantsPasteBackInstructionsFromModal() })
     : { payloadMode, includedFields, reportSections, pasteBackInstructions: wantsPasteBackInstructionsFromModal() };
+  return { ...normalized, sendMode: selectedManualSendModeFromModal() };
 }
 
 function collectAiOptionsFromModal(products = []) {
@@ -2737,8 +2747,10 @@ async function openAiOptionsModal(productIndexes, providerId = 'auto', runMode =
       : 'Choose what ShopScout should check before the connected AI run starts.';
   }
   if (runBtn) runBtn.textContent = runMode === 'manual' ? 'Create Prompt' : 'Run Analysis';
-  const sendTab = document.querySelector('#aiOptionsModal [data-ai-options-tab="sendBack"]');
+  const sendTab = document.querySelector('#aiOptionsModal [data-ai-options-tab="send"]');
+  const pasteBackTab = document.querySelector('#aiOptionsModal [data-ai-options-tab="pasteBack"]');
   if (sendTab) sendTab.hidden = runMode !== 'manual';
+  if (pasteBackTab) pasteBackTab.hidden = runMode !== 'manual';
   updateAiOptionsStatus();
   await updatePromptPayloadEstimate();
   setAiOptionsTab('payload');
@@ -2780,6 +2792,7 @@ function bindAiOptionsEvents() {
     updatePromptPayloadEstimate();
   }));
   payloadModeInputs().forEach(input => input.addEventListener('change', updatePromptPayloadEstimate));
+  manualSendModeInputs().forEach(input => input.addEventListener('change', updatePromptPayloadEstimate));
   pasteBackModeInputs().forEach(input => input.addEventListener('change', () => {
     updateInlinePasteBackVisibility();
     updatePromptPayloadEstimate();
@@ -2819,7 +2832,11 @@ function bindAiOptionsEvents() {
     pendingAiRunOptions = null;
     try {
       if (run.runMode === 'manual') {
-        await copyPrompt('deep', options, promptOptions);
+        if (promptOptions.sendMode === 'pipeline') {
+          await runConnectedAI(run.productIndexes, run.providerId || 'auto', options, promptOptions);
+        } else {
+          await copyPrompt('deep', options, promptOptions);
+        }
         return;
       }
       await runConnectedAI(run.productIndexes, run.providerId || 'auto', options, promptOptions);
