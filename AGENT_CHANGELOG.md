@@ -1,5 +1,28 @@
 # ShopScout Agent Change Log
 
+## 2026-07-20 17:23 - Codex block extractor junk spec columns
+
+- Agent: Codex
+- Branch: grid-rebuild-codex
+- Commit: This commit
+- Status: Implemented for #67. Added final ProductSpec assembler guards so Amazon/generic/spec-miner observations cannot create junk grid columns from note tables or connective-only values.
+- What changed:
+  - Added conservative spec key guards for numeric row indexes, punctuation-only keys, and note/warning/caution section-title keys.
+  - Added spec value guards for single connective/stopword values such as `and`, `or`, `with`, `for`, and similar tokens.
+  - Added prose-note rejection for very long sentence-like spec values from note/compatibility tables.
+  - Kept legitimate comma-separated specs such as `Bluetooth, Wi-Fi` intact.
+  - Added regression tests for `!!Note!!`, `1`, `-`, `Wi-Fi: and`, and numeric `item_detail` junk rows.
+- Files touched:
+  - `content/productSchema.js`
+  - `tests/extraction-pipeline.test.js`
+  - `AGENT_CHANGELOG.md`
+- Validation run:
+  - `node tests\extraction-pipeline.test.js` -> pass
+- Review status / next reviewer:
+  - Ready for Claude review.
+- Follow-ups or risks:
+  - This is a final safety gate. Site adapters may still be tightened later, but all spec/item_detail observations now pass through this guard before persistence.
+
 ## 2026-07-20 17:18 - Codex verify Settings AI provider controls render
 
 - Agent: Codex

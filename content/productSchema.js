@@ -296,6 +296,41 @@
     return cursor;
   }
 
+  const JUNK_SPEC_KEYS = new Set([
+    'note', 'notes', 'important', 'warning', 'warnings', 'caution', 'cautions',
+    'notice', 'notices', 'tips', 'tip', 'remark', 'remarks'
+  ]);
+  const CONNECTIVE_VALUES = new Set([
+    'and', 'or', 'with', 'for', 'the', 'a', 'an', 'to', 'of', 'in', 'on', 'at', 'by'
+  ]);
+
+  function plainToken(value) {
+    return String(value || '')
+      .replace(/[!¡¿?()[\]{}"'`*_~:;,.|/\\]+/g, ' ')
+      .replace(/\s+/g, ' ')
+      .trim()
+      .toLowerCase();
+  }
+
+  function isJunkSpecKey(rawKey, canonKey) {
+    const raw = String(rawKey || '').trim();
+    const canon = String(canonKey || '').trim();
+    if (!raw || !canon) return true;
+    if (/^\d+$/.test(raw) || /^\d+$/.test(canon)) return true;
+    if (/^[\s\-–—_*•·.]+$/.test(raw) || /^[\s\-–—_*•·.]+$/.test(canon)) return true;
+    const rawToken = plainToken(raw);
+    const canonToken = plainToken(canon);
+    return JUNK_SPEC_KEYS.has(rawToken) || JUNK_SPEC_KEYS.has(canonToken);
+  }
+
+  function isJunkSpecValue(rawValue) {
+    const value = String(rawValue || '').trim();
+    if (!value) return true;
+    const token = plainToken(value);
+    if (CONNECTIVE_VALUES.has(token)) return true;
+    return value.length > 120 && /[.!?]\s+\S/.test(value);
+  }
+
   /* ---- Apply one observation to a ProductSpec ---- */
   function applyObservation(spec, obs) {
     if (!spec || !obs) return spec;
@@ -331,6 +366,7 @@
       const rawValue = obs.value;
       if (!rawKey || rawValue == null || rawValue === '') return spec;
       const canonKey = NS.keyCanonicalizer ? NS.keyCanonicalizer.normalizeKey(rawKey) : String(rawKey).trim();
+      if (isJunkSpecKey(rawKey, canonKey) || isJunkSpecValue(rawValue)) return spec;
       /* Redirect identifier-equivalent spec rows to their proper home so
          we don't end up with both `flat.asin = 'B01M...'` AND
          `flat.specs.ASIN = 'B01M...'` (the latter polluting the

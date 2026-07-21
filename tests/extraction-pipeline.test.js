@@ -138,4 +138,33 @@ assert.strictEqual(Object.prototype.hasOwnProperty.call(legacy, 'rawSpecs'), fal
 assert.ok(legacy._spec && legacy._spec.specs, 'ProductSpec is preserved for spec consumers');
 assert.ok(Object.keys(legacy._spec.specs).some(k => /weight/i.test(k)), 'ProductSpec specs include weight');
 
+/* ---- junk spec guards: note tables and connective-only values ---- */
+const junkSpec = NS.assemble([
+  NS.observation({ type: 'spec', key: '!!Note!!', value: 'Only support USB-C to HDMI cable. To avoid signal degradation, use a short cable.',
+                   source: 'adapter:amazon-specs' }),
+  NS.observation({ type: 'spec', key: '1', value: 'For Mac: Settings → System Preferences → Sound.',
+                   source: 'adapter:amazon-specs' }),
+  NS.observation({ type: 'spec', key: '-', value: 'Apple M1 & M2 based device.',
+                   source: 'adapter:amazon-specs' }),
+  NS.observation({ type: 'spec', key: 'Wi-Fi', value: 'and',
+                   source: 'adapter:amazon-specs' }),
+  NS.observation({ type: 'item_detail', key: '2', value: 'Not compatible with devices that do not support video output.',
+                   source: 'adapter:amazon-details' }),
+  NS.observation({ type: 'spec', key: 'Connectivity Technology', value: 'Bluetooth, Wi-Fi',
+                   source: 'adapter:amazon-specs' })
+], { url: 'https://example.com/junk', marketplace: 'amazon' });
+
+assert.ok(!Object.keys(junkSpec.specs).some(k => /note/i.test(k)),
+  'note table heading does not become a spec column');
+assert.ok(!Object.prototype.hasOwnProperty.call(junkSpec.specs, '1'),
+  'numeric note table row key does not become a spec column');
+assert.ok(!Object.prototype.hasOwnProperty.call(junkSpec.specs, '-'),
+  'punctuation note table row key does not become a spec column');
+assert.ok(!Object.prototype.hasOwnProperty.call(junkSpec.specs, 'Wi-Fi'),
+  'connective-only values such as Wi-Fi: and are dropped');
+assert.ok(!Object.prototype.hasOwnProperty.call(junkSpec.itemDetails, '2'),
+  'numeric note table row key does not become an item detail column');
+assert.strictEqual(junkSpec.specs['Connectivity Technology'].value, 'Bluetooth, Wi-Fi',
+  'legitimate comma-separated specs survive junk filtering');
+
 console.log('extraction-pipeline.test.js — all assertions passed');
