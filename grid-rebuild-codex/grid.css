@@ -728,6 +728,40 @@ a.ss-grid-rating-link:hover .ss-grid-stars {
 }
 
 
+.ss-grid-group-row {
+  width: 100%;
+  min-height: 42px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 14px;
+  border: 0;
+  border-bottom: 1px solid var(--rule, #d1d5db);
+  background: var(--paper-2, #eef2f6);
+  color: var(--ink, #111827);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.ss-grid-group-row:hover {
+  background: var(--bad-rule, #e5eef3);
+}
+
+.ss-grid-group-chevron {
+  width: 18px;
+  height: 18px;
+  display: inline-grid;
+  place-items: center;
+  flex: 0 0 18px;
+  border: 1px solid var(--rule-strong, #9ca3af);
+  border-radius: 999px;
+  background: var(--surface, #fff);
+  color: var(--ink-2, #2a3441);
+  font-size: 10px;
+  line-height: 1;
+}
+
 .ss-grid-group-title {
   font-weight: 700;
   min-width: 0;
@@ -749,6 +783,13 @@ a.ss-grid-rating-link:hover .ss-grid-stars {
   font-weight: 700;
   line-height: 1.4;
   text-transform: uppercase;
+}
+
+.ss-grid-group-count {
+  color: var(--ink-3, #5a6470);
+  font-size: 12px;
+  font-weight: 650;
+  white-space: nowrap;
 }
 
 .ss-grid-matrix-cell {

@@ -39,11 +39,6 @@ function aiStageLabel(stageId) {
   return globalThis.ShopScoutAI?.STAGES?.find(stage => stage.id === stageId)?.label || stageId || 'Stage';
 }
 
-function renderAiOutputHtml(text) {
-  if (globalThis.ShopScoutAIUI) return ShopScoutAIUI.renderRichText(text || '');
-  return `<div class="ai-text">${esc(text || 'No readable AI output returned.')}</div>`;
-}
-
 function stageParsedJson(stage) {
   if (stage?.parsedJson && typeof stage.parsedJson === 'object') return stage.parsedJson;
   if (stage?.responseText && globalThis.ShopScoutAI?.extractJsonFromText) {
@@ -762,17 +757,6 @@ function buildAiTemplateReportModel(ctx) {
     riskAxes: templateRiskAxes(ctx),
     sellerReliability: templateSellerReliability(ctx)
   };
-}
-
-function readableStageHtml(stage, emptyMessage = 'No readable AI output is available for this section.') {
-  if (!stage) return `<div class="empty-state">${esc(emptyMessage)}</div>`;
-  if (stage.status === 'failed' || stage.status === 'skipped') {
-    return `<div class="empty-state">${esc(stage.error || 'This stage did not return output.')}</div>`;
-  }
-  let text = String(stage.responseText || '').trim();
-  if (globalThis.ShopScoutAIUI?.stripStructuredJson) text = ShopScoutAIUI.stripStructuredJson(text);
-  if (!text || /^[{[]/.test(text.trim())) return `<div class="empty-state">${esc(emptyMessage)}</div>`;
-  return `<div class="ai-readable">${renderAiOutputHtml(text)}</div>`;
 }
 
 function renderProductThumbSize(row, size = 'md') {

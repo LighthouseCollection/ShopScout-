@@ -372,6 +372,73 @@ function createAdapterHarnessWithThrowingColumnMenu() {
 
 {
   const harness = createAdapterHarness();
+  let toggled = null;
+  const { gridOptions: options } = harness.create({
+    mode: 'productsRows',
+    grouping: { field: 'source', label: 'Source' },
+    columns: [
+      { id: 'title', field: 'title', name: 'Name', type: 'text' },
+      { id: 'source', field: 'source', name: 'Source', type: 'source' }
+    ],
+    rows: [
+      { id: 'p1', title: 'One', source: 'Amazon' },
+      { id: 'p2', title: 'Two', source: 'Amazon' },
+      { id: 'p3', title: 'Three', source: 'Newegg' }
+    ]
+  }, {
+    viewState: { group: 'source', collapsedGroups: [] },
+    onGroupToggle(key) { toggled = key; }
+  });
+  assert.equal(options.rowGroupPanelShow, undefined,
+    'Community adapter does not enable Enterprise RowGroupingPanel');
+  assert.equal(options.groupDisplayType, undefined,
+    'Community adapter does not enable Enterprise row grouping display modes');
+  assert.equal(typeof options.isFullWidthRow, 'function',
+    'Community grouping uses AG Grid full-width rows');
+  assert.equal(typeof options.fullWidthCellRenderer, 'function',
+    'Community grouping renders group rows through AG Grid full-width renderer');
+  assert.deepEqual(options.rowData.map(row => row._ssGridRowKind || row.id), ['group', 'p1', 'p2', 'group', 'p3'],
+    'grouped rowData includes AG Grid full-width group rows before each product group');
+  const groupHtml = options.fullWidthCellRenderer({ data: options.rowData[0] });
+  assert.ok(groupHtml.includes('Group'), 'group renderer includes an explicit Group label');
+  assert.ok(groupHtml.includes('Source: Amazon'), 'group renderer names the grouped field and value');
+  assert.ok(groupHtml.includes('(2)'), 'group renderer includes the product count');
+  const groupButton = {
+    dataset: { ssGridGroupToggle: options.rowData[0].id },
+    closest(selector) {
+      return String(selector).includes('[data-ss-grid-group-toggle]') ? this : null;
+    }
+  };
+  const event = harness.dispatchContainerClick(groupButton);
+  assert.equal(toggled, options.rowData[0].id,
+    'clicking a group row toggle delegates through onGroupToggle');
+  assert.equal(event.immediateStopped, true,
+    'group toggle stops AG Grid from also selecting the row');
+}
+
+{
+  const harness = createAdapterHarness();
+  const { gridOptions: options } = harness.create({
+    mode: 'productsRows',
+    grouping: { field: 'source', label: 'Source' },
+    columns: [
+      { id: 'title', field: 'title', name: 'Name', type: 'text' },
+      { id: 'source', field: 'source', name: 'Source', type: 'source' }
+    ],
+    rows: [
+      { id: 'p1', title: 'One', source: 'Amazon' },
+      { id: 'p2', title: 'Two', source: 'Amazon' },
+      { id: 'p3', title: 'Three', source: 'Newegg' }
+    ]
+  }, {
+    viewState: { group: 'source', collapsedGroups: ['group:source:Amazon'] }
+  });
+  assert.deepEqual(options.rowData.map(row => row._ssGridRowKind || row.id), ['group', 'group', 'p3'],
+    'collapsed Community group rows hide their child products');
+}
+
+{
+  const harness = createAdapterHarness();
   let selectedRows = null;
   const { gridOptions: options } = harness.create({
     mode: 'productsRows',

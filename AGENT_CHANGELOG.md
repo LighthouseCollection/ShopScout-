@@ -6504,6 +6504,43 @@ This file is the shared record for Claude and Codex. Append an entry for every m
 - Follow-ups or risks:
   - Continue with Phase J #64 AI Results view and Phase K grid feature additions.
 
+## 2026-07-22 13:31 - Codex grid grouping completion (#27)
+
+- Agent: Codex
+- Branch: grid-rebuild-codex
+- Commit: This commit
+- Status: Implemented. Product-grid grouping now uses AG Grid Community-safe full-width group rows with collapse/expand state.
+- What changed:
+  - Added grouped row projection in the AG Grid adapter without enabling Enterprise-only row grouping modules.
+  - Added full-width group row rendering, product counts, circular collapse/expand controls, and stable group-row height.
+  - Added collapsed group state to the grid store so groups can be toggled and restored through render cycles.
+  - Wired group toggle events through the ShopScout grid controller.
+  - Added regression tests confirming Enterprise row grouping options are not enabled, group rows render through AG Grid full-width rows, group toggles dispatch correctly, and collapsed groups hide child products.
+  - Removed one stale AI-results helper left behind from an older render path so lint is now fully clean.
+- Files touched:
+  - comparison/aiResultsView.js
+  - grid-rebuild-codex/agGridAdapter.js
+  - grid-rebuild-codex/grid.css
+  - grid-rebuild-codex/shopscoutGrid.js
+  - grid-rebuild-codex/state.js
+  - grid-rebuild-codex/tests/adapter-display.test.js
+  - grid-rebuild-codex/tests/state.test.js
+  - grid-rebuild-codex/tests/wiring.test.js
+  - AGENT_CHANGELOG.md
+- Validation run:
+  - node grid-rebuild-codex\tests\adapter-display.test.js -> pass
+  - node grid-rebuild-codex\tests\state.test.js -> pass
+  - node grid-rebuild-codex\tests\wiring.test.js -> pass
+  - npm test -> pass, 57/57 test files
+  - npm run syntax -> pass
+  - npm run lint -> pass, 0 warnings
+  - npm run typecheck -> pass
+  - npm run build -> pass, Chrome/Edge/Firefox rebuilt
+- Review status / next reviewer:
+  - Ready for Claude review.
+- Follow-ups or risks:
+  - This is the AG Grid Community-compatible implementation. It intentionally does not enable AG Grid Enterprise RowGroupingPanel or module-gated row grouping APIs because those produce runtime module errors in the bundled Community build.
+
 ## 2026-07-20 00:00 - Codex Auto AI onboarding gate (#51)
 
 - Agent: Codex

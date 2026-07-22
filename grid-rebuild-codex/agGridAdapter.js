@@ -783,6 +783,79 @@
     return { rowData, pinnedTopRowData };
   }
 
+  function isGroupRow(row) {
+    return row && row._ssGridRowKind === 'group';
+  }
+
+  function normalizeGroupSegment(value) {
+    return String(value ?? '')
+      .trim()
+      .replace(/\s+/g, ' ')
+      .replace(/[^\w.-]+/g, '-')
+      .replace(/^-+|-+$/g, '') || 'blank';
+  }
+
+  function groupValueFor(row, grouping) {
+    if (!grouping?.field) return 'Ungrouped';
+    const raw = row?.[grouping.field];
+    const value = raw && typeof raw === 'object'
+      ? (raw.display ?? raw.value ?? raw.raw ?? raw.corrected)
+      : raw;
+    const text = textValue(value).trim();
+    return text || 'Blank';
+  }
+
+  function groupRowId(grouping, value) {
+    return `group:${normalizeGroupSegment(grouping?.field)}:${normalizeGroupSegment(value)}`;
+  }
+
+  function buildGroupedRows(rows, grouping, viewState) {
+    if (!grouping?.field) return (rows || []).slice();
+    const collapsed = new Set((Array.isArray(viewState?.collapsedGroups) ? viewState.collapsedGroups : []).map(String));
+    const groups = new Map();
+    for (const row of rows || []) {
+      const value = groupValueFor(row, grouping);
+      const id = groupRowId(grouping, value);
+      if (!groups.has(id)) {
+        groups.set(id, { id, value, rows: [] });
+      }
+      groups.get(id).rows.push(row);
+    }
+    const output = [];
+    for (const group of groups.values()) {
+      const isCollapsed = collapsed.has(group.id);
+      output.push({
+        id: group.id,
+        _id: group.id,
+        _ssGridRowKind: 'group',
+        _groupField: grouping.field,
+        _groupLabel: grouping.label || grouping.field,
+        _groupValue: group.value,
+        _groupCount: group.rows.length,
+        _groupCollapsed: isCollapsed
+      });
+      if (!isCollapsed) output.push(...group.rows);
+    }
+    return output;
+  }
+
+  function renderGroupRow(params) {
+    const row = params?.data || {};
+    const label = esc(row._groupLabel || 'Group');
+    const value = esc(row._groupValue || 'Blank');
+    const count = Number(row._groupCount) || 0;
+    const collapsed = !!row._groupCollapsed;
+    const icon = collapsed ? '&#9656;' : '&#9662;';
+    return `
+      <button class="ss-grid-group-row" type="button" data-ss-grid-group-toggle="${escAttr(row.id || '')}" aria-expanded="${collapsed ? 'false' : 'true'}">
+        <span class="ss-grid-group-chevron" aria-hidden="true">${icon}</span>
+        <span class="ss-grid-group-label">Group</span>
+        <span class="ss-grid-group-title">${label}: ${value}</span>
+        <span class="ss-grid-group-count">(${count})</span>
+      </button>
+    `;
+  }
+
   /* Auto-size every column to fit MAX(header text, widest cell content).
      v33 API is autoSizeAllColumns(skipHeader); pass false so header
      width is honored — a column whose header is wider than its values
@@ -900,6 +973,8 @@
     const splitRows = splitPinnedRows(projection.rows || [], displayState());
     const rowData = splitRows.rowData;
     const pinnedTopRowData = splitRows.pinnedTopRowData;
+    let currentGrouping = projection?.grouping || null;
+    let currentGridRows = buildGroupedRows(rowData, currentGrouping, displayState());
     let currentRows = pinnedTopRowData.concat(rowData);
     let currentColumnDefs = toAgColumns(projection.columns);
     let gridApi = null;
@@ -924,7 +999,7 @@
 
     const gridOptions = {
       columnDefs: currentColumnDefs,
-      rowData,
+      rowData: currentGridRows,
       pinnedTopRowData,
       context: { viewState: displayState() },
       /* AG Grid v33+ ships two theming systems in parallel: the
@@ -937,11 +1012,17 @@
          'legacy' is the correct switch. */
       theme: 'legacy',
       domLayout: 'autoHeight',
-      getRowHeight(params) { return pillSafeRowHeight(projection?.mode, params.data); },
+      getRowHeight(params) {
+        if (isGroupRow(params.data)) return 42;
+        return pillSafeRowHeight(projection?.mode, params.data);
+      },
+      isFullWidthRow(params) { return isGroupRow(params?.rowNode?.data || params?.data); },
+      fullWidthCellRenderer: renderGroupRow,
       headerHeight: projection?.mode === 'comparisonMatrix' ? 180 : 42,
       suppressCellFocus: true,
       suppressRowClickSelection: true,
       rowSelection: 'multiple',
+      isRowSelectable(params) { return !isGroupRow(params?.data); },
       animateRows: false,
       enableCellTextSelection: true,
       ensureDomOrder: true,
@@ -1116,6 +1197,13 @@
        shopscoutGrid.js expects. */
     const containerClick = event => {
       const target = event.target;
+      const groupToggle = target?.closest?.('[data-ss-grid-group-toggle]');
+      if (groupToggle) {
+        event.preventDefault();
+        event.stopImmediatePropagation();
+        if (typeof opts.onGroupToggle === 'function') opts.onGroupToggle(groupToggle.dataset.ssGridGroupToggle || '');
+        return;
+      }
       const filterButton = target?.closest?.('.ag-header-cell-filter-button, [data-ref="eFilterButton"], [ref="eFilterButton"]');
       if (filterButton && typeof opts.onOpenFiltersModal === 'function') {
         stopGridHeaderAction(event);
@@ -1222,7 +1310,9 @@
         const nextSplitRows = splitPinnedRows(nextProjection.rows || [], opts.viewState);
         const nextRows = nextSplitRows.rowData;
         const nextPinnedTopRows = nextSplitRows.pinnedTopRowData;
-        gridApi.setGridOption('rowData', nextRows);
+        currentGrouping = nextProjection?.grouping || null;
+        currentGridRows = buildGroupedRows(nextRows, currentGrouping, opts.viewState);
+        gridApi.setGridOption('rowData', currentGridRows);
         gridApi.setGridOption('pinnedTopRowData', nextPinnedTopRows);
         rowData.length = 0;
         Array.prototype.push.apply(rowData, nextRows);
@@ -1238,7 +1328,12 @@
         const row = currentRows.find(r => String(r.id) === String(itemId));
         if (!row) return;
         Object.assign(row, nextItem);
-        gridApi.applyTransaction({ update: [row] });
+        if (isGroupRow(row)) return;
+        currentGridRows = buildGroupedRows(rowData, currentGrouping, opts.viewState);
+        gridApi.setGridOption('rowData', currentGridRows);
+        if (pinnedTopRowData.some(r => String(r.id) === String(itemId))) {
+          gridApi.setGridOption('pinnedTopRowData', pinnedTopRowData.slice());
+        }
         schedulePillSync(gridApi);
       },
       updateRow(itemId, nextItem) {
@@ -1246,7 +1341,11 @@
         const row = currentRows.find(r => String(r.id) === String(itemId));
         if (!row) return false;
         Object.assign(row, nextItem);
-        gridApi.applyTransaction({ update: [row] });
+        currentGridRows = buildGroupedRows(rowData, currentGrouping, opts.viewState);
+        gridApi.setGridOption('rowData', currentGridRows);
+        if (pinnedTopRowData.some(r => String(r.id) === String(itemId))) {
+          gridApi.setGridOption('pinnedTopRowData', pinnedTopRowData.slice());
+        }
         schedulePillSync(gridApi);
         return true;
       },
@@ -1258,7 +1357,9 @@
         if (idx < 0 && pinnedIdx < 0) return false;
         const removed = idx >= 0 ? rowData.splice(idx, 1) : pinnedTopRowData.splice(pinnedIdx, 1);
         currentRows = pinnedTopRowData.concat(rowData);
-        gridApi.applyTransaction({ remove: removed });
+        currentGridRows = buildGroupedRows(rowData, currentGrouping, opts.viewState);
+        if (idx >= 0) gridApi.setGridOption('rowData', currentGridRows);
+        else gridApi.applyTransaction({ remove: removed });
         if (pinnedIdx >= 0) gridApi.setGridOption('pinnedTopRowData', pinnedTopRowData.slice());
         schedulePillSync(gridApi);
         return true;

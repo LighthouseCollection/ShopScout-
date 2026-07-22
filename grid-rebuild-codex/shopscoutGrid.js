@@ -1086,6 +1086,17 @@
     }
   }
 
+  function toggleGroup(groupKey) {
+    const key = String(groupKey || '').trim();
+    if (!key) return;
+    const viewState = ensureStore().getState();
+    const collapsed = new Set((Array.isArray(viewState.collapsedGroups) ? viewState.collapsedGroups : []).map(String));
+    if (collapsed.has(key)) collapsed.delete(key);
+    else collapsed.add(key);
+    ensureStore().dispatch({ collapsedGroups: [...collapsed] });
+    render();
+  }
+
   async function render() {
     const mount = getMount();
     const host = getHost();
@@ -1149,6 +1160,7 @@
         },
         onCellCommit: commitCellEdit,
         onProductDetail: openInternalProductDetail,
+        onGroupToggle: toggleGroup,
         onAction: handleAction
       });
       const count = projection.productRowCount ?? products.length;

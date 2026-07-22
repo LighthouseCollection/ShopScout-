@@ -103,6 +103,10 @@ assert.ok(/\.ss-grid-group-title[\s\S]{0,160}font-weight:\s*700/.test(gridCss),
   'native grouping titles are bold');
 assert.ok(gridCss.includes('.ss-grid-group-label'),
   'native grouping title includes an explicit Group label element');
+assert.ok(/\.ss-grid-group-row[\s\S]{0,220}display:\s*inline-flex/.test(gridCss),
+  'Community grouping renders styled AG Grid full-width group rows');
+assert.ok(/\.ss-grid-group-chevron[\s\S]{0,220}border-radius:\s*999px/.test(gridCss),
+  'Community group rows use a circular expand/collapse affordance');
 assert.ok(/\.ss-grid-action-btn[\s\S]{0,360}user-select:\s*none/.test(gridCss),
   'icon action buttons opt out of text selection while data cells remain selectable');
 
