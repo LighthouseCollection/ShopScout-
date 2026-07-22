@@ -217,6 +217,7 @@
     return `<div class="ss-grid-action-bar" role="toolbar" aria-label="Product actions">
       <button class="ss-grid-action-btn" type="button" data-ss-grid-action="open" aria-label="Open product" title="Open"><span aria-hidden="true">&#8599;</span></button>
       <button class="ss-grid-action-btn" type="button" data-ss-grid-action="rescan" aria-label="Rescan product" title="Rescan"><span aria-hidden="true">&#8635;</span></button>
+      <button class="ss-grid-action-btn" type="button" data-ss-grid-action="edit" aria-label="Edit product" title="Edit"><span aria-hidden="true">&#9998;</span></button>
       <button class="ss-grid-action-btn ss-grid-action-danger" type="button" data-ss-grid-action="delete" aria-label="Delete product" title="Delete"><span aria-hidden="true">&times;</span></button>
     </div>`;
   }
@@ -633,6 +634,7 @@
           bar.innerHTML = `
             <button class="ss-grid-action-btn" type="button" data-matrix-action="open" data-matrix-product-id="${escAttr(column.productId)}" aria-label="Open product" title="Open"><span aria-hidden="true">&#8599;</span></button>
             <button class="ss-grid-action-btn" type="button" data-matrix-action="rescan" data-matrix-product-id="${escAttr(column.productId)}" aria-label="Rescan product" title="Rescan"><span aria-hidden="true">&#8635;</span></button>
+            <button class="ss-grid-action-btn" type="button" data-matrix-action="edit" data-matrix-product-id="${escAttr(column.productId)}" aria-label="Edit product" title="Edit"><span aria-hidden="true">&#9998;</span></button>
             <button class="ss-grid-action-btn ss-grid-action-danger" type="button" data-matrix-action="delete" data-matrix-product-id="${escAttr(column.productId)}" aria-label="Delete product" title="Delete"><span aria-hidden="true">&times;</span></button>
           `;
           this.eGui.appendChild(bar);

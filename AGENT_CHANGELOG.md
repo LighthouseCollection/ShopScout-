@@ -6576,6 +6576,39 @@ This file is the shared record for Claude and Codex. Append an entry for every m
 - Follow-ups or risks:
   - This is the AG Grid Community-compatible implementation. It intentionally does not enable AG Grid Enterprise RowGroupingPanel or module-gated row grouping APIs because those produce runtime module errors in the bundled Community build.
 
+## 2026-07-22 13:43 - Codex grid composite edit action (#29)
+
+- Agent: Codex
+- Branch: grid-rebuild-codex
+- Commit: This commit
+- Status: Implemented. AG Grid product rows and compare headers now expose an Edit action that opens the existing full product edit modal instead of adding a second editor surface.
+- What changed:
+  - Added an Edit icon to the product thumbnail action bar and compare-matrix product header action bar.
+  - Routed the Edit action through the existing ProductSpec-aware `openEditModal(index)` flow.
+  - Resolved edit targets by product id / URL against the active list so broad search scopes do not open the wrong current-list row.
+  - Increased fixed action column/thumb sizing to fit the four-icon action row without wrapping.
+  - Added tests for the row edit callback and edit action rendering.
+- Files touched:
+  - grid-rebuild-codex/agGridAdapter.js
+  - grid-rebuild-codex/shopscoutGrid.js
+  - grid-rebuild-codex/projections.js
+  - grid-rebuild-codex/tests/actions.test.js
+  - grid-rebuild-codex/tests/adapter-display.test.js
+  - AGENT_CHANGELOG.md
+- Validation run:
+  - node grid-rebuild-codex\tests\actions.test.js -> pass
+  - node grid-rebuild-codex\tests\adapter-display.test.js -> pass
+  - node grid-rebuild-codex\tests\projections.test.js -> pass
+  - npm test -> pass, 57/57 test files
+  - npm run syntax -> pass
+  - npm run lint -> pass, 0 warnings
+  - npm run typecheck -> pass
+  - npm run build -> pass, Chrome/Edge/Firefox rebuilt
+- Review status / next reviewer:
+  - Ready for Claude review.
+- Follow-ups or risks:
+  - This reuses the existing composite edit modal. No separate AG Grid popup editor was introduced.
+
 ## 2026-07-20 00:00 - Codex Auto AI onboarding gate (#51)
 
 - Agent: Codex

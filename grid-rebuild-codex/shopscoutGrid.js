@@ -109,6 +109,12 @@
     return loadFromLegacy(scope);
   }
 
+  async function loadCurrentListProducts() {
+    const repo = root.SSProductRepo;
+    if (isRepoReady(repo)) return loadFromRepo('current');
+    return loadFromLegacy('current');
+  }
+
   function searchableText(product) {
     const access = root.ShopScoutProductSpecAccess;
     const specs = access && typeof access.specEntries === 'function'
@@ -1072,6 +1078,22 @@
     return true;
   }
 
+  async function openProductEditor(row) {
+    if (!row || typeof root.openEditModal !== 'function') return false;
+    const id = String(row._shopScout?.productId || row.id || row._id || '').trim();
+    const url = String(row._shopScout?.url || row.url || '').trim();
+    if (!id && !url) return false;
+    const products = await loadCurrentListProducts();
+    const index = products.findIndex(product => {
+      const productId = String(product?.id || product?._id || '').trim();
+      const productUrl = String(product?.url || '').trim();
+      return (id && productId === id) || (url && productUrl === url);
+    });
+    if (index < 0) return false;
+    await root.openEditModal(index);
+    return true;
+  }
+
   async function handleAction(action, row) {
     if (!row) return;
     const id = row._shopScout?.productId || row.id;
@@ -1083,6 +1105,9 @@
     }
     if (action === 'delete' && typeof root.deleteProductById === 'function') {
       await root.deleteProductById({ id, url: row._shopScout?.url || row.url });
+    }
+    if (action === 'edit') {
+      await openProductEditor(row);
     }
   }
 

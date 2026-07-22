@@ -481,6 +481,25 @@ function createAdapterHarnessWithThrowingColumnMenu() {
 
 {
   const harness = createAdapterHarness();
+  const { gridOptions: options } = harness.create({
+    mode: 'productsRows',
+    columns: [
+      { id: 'thumb', field: 'image', name: '', type: 'image' }
+    ],
+    rows: [{ id: 'p1', title: 'Keyboard One', image: 'https://example.test/k.png' }]
+  });
+  const thumbHtml = options.columnDefs[0].cellRenderer({
+    value: 'https://example.test/k.png',
+    data: options.rowData[0],
+    colDef: options.columnDefs[0],
+    context: options.context
+  });
+  assert.ok(thumbHtml.includes('data-ss-grid-action="edit"'),
+    'thumbnail action bar includes the composite edit action');
+}
+
+{
+  const harness = createAdapterHarness();
   let selectedRows = null;
   const { gridOptions: options } = harness.create({
     mode: 'productsRows',

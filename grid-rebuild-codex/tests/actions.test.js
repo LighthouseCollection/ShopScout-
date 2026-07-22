@@ -30,6 +30,7 @@ function createContext() {
   let capturedOptions = null;
   let deleteCalls = 0;
   let detailCalls = 0;
+  let editCalls = 0;
   const openedUrls = [];
   const ctx = {
     console,
@@ -101,6 +102,10 @@ function createContext() {
       detailCalls += 1;
       ctx.lastOpenedDetailItem = item;
     },
+    async openEditModal(index) {
+      editCalls += 1;
+      ctx.lastEditedIndex = index;
+    },
     async deleteProductById(item) {
       deleteCalls += 1;
       ctx.lastDeletedItem = item;
@@ -119,6 +124,7 @@ function createContext() {
     getOptions: () => capturedOptions,
     getDeleteCalls: () => deleteCalls,
     getDetailCalls: () => detailCalls,
+    getEditCalls: () => editCalls,
     getOpenedUrls: () => openedUrls.slice()
   };
 }
@@ -174,6 +180,20 @@ async function renderAndDelete() {
     'product name callback opens the internal product detail view');
   assert.equal(opened.ctx.lastOpenedDetailItem, 'p1',
     'product name callback routes by product id');
+
+  await openOptions.onAction('edit', {
+    id: 'p1',
+    title: 'Pocket camera',
+    url: 'https://example.test/p1',
+    _shopScout: {
+      productId: 'p1',
+      url: 'https://example.test/p1'
+    }
+  });
+  assert.equal(opened.getEditCalls(), 1,
+    'row edit action opens the existing composite edit modal');
+  assert.equal(opened.ctx.lastEditedIndex, 0,
+    'row edit action resolves the product id to the current-list product index');
 
   const deleted = await renderAndDelete();
   assert.equal(deleted.getDeleteCalls(), 1,

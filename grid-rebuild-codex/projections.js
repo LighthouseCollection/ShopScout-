@@ -16,10 +16,10 @@
      that and force columns wider than their content needs. */
   const BASE_COLUMNS = [
     { id: 'select', field: '_selected', name: '', type: 'selection', width: 40, minWidth: 40, maxWidth: 40, required: true },
-    /* Thumbnail column also carries the row actions (Open/Rescan/Delete)
+    /* Thumbnail column also carries row actions (Open/Rescan/Edit/Delete)
        stacked under the image, so it needs to be wide enough for a
-       3-icon row at 30px each + gaps + padding. */
-    { id: 'thumb', field: 'image', name: '', type: 'image', width: 108, required: true },
+       4-icon row at 30px each + gaps + padding. */
+    { id: 'thumb', field: 'image', name: '', type: 'image', width: 132, required: true },
     { id: 'title', field: 'title', name: 'Name', type: 'text', editable: true, required: true },
     /* Fixed default-visible row after the frozen 3 (see FIXED_ORDER_IDS
        below). Order: Price / Source / Rating / User Rating / Notes. */
@@ -40,7 +40,7 @@
   const FROZEN_COLUMN_IDS = new Set(['select', 'thumb', 'title']);
   const FIXED_ORDER_IDS = ['newPrice', 'source', 'rating', 'myRating', 'notes'];
 
-  const ACTIONS_COLUMN = { id: 'actions', field: '_actions', name: '', type: 'actions', width: 92, required: true };
+  const ACTIONS_COLUMN = { id: 'actions', field: '_actions', name: '', type: 'actions', width: 124, required: true };
 
   const FIELD_LABELS = {
     title: 'Name',
