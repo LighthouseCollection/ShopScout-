@@ -439,6 +439,48 @@ function createAdapterHarnessWithThrowingColumnMenu() {
 
 {
   const harness = createAdapterHarness();
+  let toggled = null;
+  const { gridOptions: options } = harness.create({
+    mode: 'productsRows',
+    columns: [
+      { id: 'title', field: 'title', name: 'Name', type: 'text' },
+      { id: 'brand', field: 'brand', name: 'Brand', type: 'brand' }
+    ],
+    rows: [
+      { id: 'p1', title: 'Keyboard One', brand: 'Logitech', image: 'https://example.test/k.png', 'spec:color': 'Graphite' },
+      { id: 'p2', title: 'Keyboard Two', brand: 'Microsoft' }
+    ]
+  }, {
+    viewState: { expandedDetailRows: ['p1'] },
+    onRowDetailToggle(key) { toggled = key; }
+  });
+  assert.deepEqual(options.rowData.map(row => row._ssGridRowKind || row.id), ['p1', 'detail', 'p2'],
+    'expanded product rows insert an AG Grid full-width detail row after the product');
+  assert.equal(options.isFullWidthRow({ data: options.rowData[1] }), true,
+    'detail rows are AG Grid full-width rows');
+  assert.equal(options.getRowHeight({ data: options.rowData[1] }), 178,
+    'detail rows use stable detail height');
+  const html = options.fullWidthCellRenderer({ data: options.rowData[1] });
+  assert.ok(html.includes('Keyboard One'), 'detail row includes the product title');
+  assert.ok(html.includes('Graphite'), 'detail row includes captured specification values');
+
+  const titleHtml = options.columnDefs[0].cellRenderer({ value: 'Keyboard One', data: options.rowData[0], colDef: options.columnDefs[0], context: options.context });
+  assert.ok(titleHtml.includes('data-ss-grid-row-detail-toggle="p1"'),
+    'product title cells include an inline row-detail expander');
+  const detailButton = {
+    dataset: { ssGridRowDetailToggle: 'p1' },
+    closest(selector) {
+      return String(selector).includes('[data-ss-grid-row-detail-toggle]') ? this : null;
+    }
+  };
+  const event = harness.dispatchContainerClick(detailButton);
+  assert.equal(toggled, 'p1', 'row detail toggle delegates through onRowDetailToggle');
+  assert.equal(event.immediateStopped, true,
+    'row detail toggle stops AG Grid from also selecting/opening the row');
+}
+
+{
+  const harness = createAdapterHarness();
   let selectedRows = null;
   const { gridOptions: options } = harness.create({
     mode: 'productsRows',

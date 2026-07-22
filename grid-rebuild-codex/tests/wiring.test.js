@@ -107,6 +107,10 @@ assert.ok(/\.ss-grid-group-row[\s\S]{0,220}display:\s*inline-flex/.test(gridCss)
   'Community grouping renders styled AG Grid full-width group rows');
 assert.ok(/\.ss-grid-group-chevron[\s\S]{0,220}border-radius:\s*999px/.test(gridCss),
   'Community group rows use a circular expand/collapse affordance');
+assert.ok(gridCss.includes('.ss-grid-detail-row'),
+  'row detail view has a dedicated AG Grid full-width detail-row style');
+assert.ok(/\.ss-grid-row-detail-toggle[\s\S]{0,260}border-radius:\s*999px/.test(gridCss),
+  'row detail expander uses the same circular affordance pattern');
 assert.ok(/\.ss-grid-action-btn[\s\S]{0,360}user-select:\s*none/.test(gridCss),
   'icon action buttons opt out of text selection while data cells remain selectable');
 

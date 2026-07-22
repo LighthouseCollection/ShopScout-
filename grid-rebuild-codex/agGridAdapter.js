@@ -221,6 +221,15 @@
     </div>`;
   }
 
+  function renderDetailToggle(params) {
+    const id = params.data?._shopScout?.productId || params.data?.id || params.data?._id || '';
+    if (!id) return '';
+    const expanded = !!params.data?._detailExpanded;
+    const icon = expanded ? '&#8722;' : '+';
+    const label = expanded ? 'Collapse row details' : 'Expand row details';
+    return `<button class="ss-grid-row-detail-toggle" type="button" data-ss-grid-row-detail-toggle="${escAttr(id)}" aria-label="${escAttr(label)}" title="${escAttr(label)}" aria-expanded="${expanded ? 'true' : 'false'}">${icon}</button>`;
+  }
+
   function renderImage(params) {
     const src = safeUrl(params.value);
     const label = params.data?.title || 'Product image';
@@ -402,7 +411,7 @@
     const text = textValue(params.value).trim();
     if (!text) return '<span class="ss-grid-empty">-</span>';
     const id = params.data?._shopScout?.productId || params.data?.id || params.data?._id || '';
-    return `<button class="ss-grid-title-text ss-grid-title-button" type="button" data-ss-grid-detail="${escAttr(id)}" title="${escAttr(text)}">${esc(text)}</button>`;
+    return `<span class="ss-grid-title-wrap">${renderDetailToggle(params)}<button class="ss-grid-title-text ss-grid-title-button" type="button" data-ss-grid-detail="${escAttr(id)}" title="${escAttr(text)}">${esc(text)}</button></span>`;
   }
 
   function renderPlain(params) {
@@ -787,6 +796,14 @@
     return row && row._ssGridRowKind === 'group';
   }
 
+  function isDetailRow(row) {
+    return row && row._ssGridRowKind === 'detail';
+  }
+
+  function productRowId(row) {
+    return String(row?._shopScout?.productId || row?.id || row?._id || '').trim();
+  }
+
   function normalizeGroupSegment(value) {
     return String(value ?? '')
       .trim()
@@ -810,7 +827,26 @@
   }
 
   function buildGroupedRows(rows, grouping, viewState) {
-    if (!grouping?.field) return (rows || []).slice();
+    const detailExpanded = new Set((Array.isArray(viewState?.expandedDetailRows) ? viewState.expandedDetailRows : []).map(String));
+    const withDetailRows = sourceRows => {
+      const out = [];
+      for (const row of sourceRows || []) {
+        const id = productRowId(row);
+        const product = Object.assign({}, row, { _detailExpanded: id ? detailExpanded.has(id) : false });
+        out.push(product);
+        if (id && detailExpanded.has(id)) {
+          out.push({
+            id: `detail:${id}`,
+            _id: `detail:${id}`,
+            _ssGridRowKind: 'detail',
+            _detailProductId: id,
+            _detailProduct: product
+          });
+        }
+      }
+      return out;
+    };
+    if (!grouping?.field) return withDetailRows(rows || []);
     const collapsed = new Set((Array.isArray(viewState?.collapsedGroups) ? viewState.collapsedGroups : []).map(String));
     const groups = new Map();
     for (const row of rows || []) {
@@ -834,7 +870,7 @@
         _groupCount: group.rows.length,
         _groupCollapsed: isCollapsed
       });
-      if (!isCollapsed) output.push(...group.rows);
+      if (!isCollapsed) output.push(...withDetailRows(group.rows));
     }
     return output;
   }
@@ -854,6 +890,52 @@
         <span class="ss-grid-group-count">(${count})</span>
       </button>
     `;
+  }
+
+  function detailSpecItems(row) {
+    const items = [];
+    for (const key of Object.keys(row || {})) {
+      if (!key.startsWith('spec:')) continue;
+      const value = textValue(row[key]).trim();
+      if (!value || value === '-') continue;
+      const label = key.slice(5).replace(/\b\w/g, char => char.toUpperCase());
+      items.push({ label, value });
+      if (items.length >= 8) break;
+    }
+    return items;
+  }
+
+  function detailMetaItem(label, value, type = 'text') {
+    const text = textValue(value).trim();
+    if (!text || text === '-') return '';
+    const rendered = pillsHtml(text, type, label) || esc(text);
+    return `<div class="ss-grid-detail-meta-item"><span class="ss-grid-detail-meta-label">${esc(label)}</span><span class="ss-grid-detail-meta-value">${rendered}</span></div>`;
+  }
+
+  function renderDetailRow(params) {
+    const row = params?.data?._detailProduct || {};
+    const title = textValue(row.title).trim() || 'Product details';
+    const image = safeUrl(row.image);
+    const specs = detailSpecItems(row);
+    const meta = [
+      detailMetaItem('Brand', row.brand, 'brand'),
+      detailMetaItem('Model', row.modelName || row.modelNumber),
+      detailMetaItem('Price', row.newPrice, 'price'),
+      detailMetaItem('Source', row.source, 'source'),
+      detailMetaItem('Rating', row.rating, 'rating'),
+      detailMetaItem('Notes', row.notes, 'notes')
+    ].filter(Boolean).join('');
+    const specsHtml = specs.length
+      ? specs.map(item => detailMetaItem(item.label, item.value, `spec:${item.label}`)).join('')
+      : '<span class="ss-grid-empty">No captured specs for this product.</span>';
+    return `<section class="ss-grid-detail-row" aria-label="${escAttr(title)} details">
+      <div class="ss-grid-detail-media">${image ? `<img src="${escAttr(image)}" alt="">` : '<span class="ss-grid-no-thumb"></span>'}</div>
+      <div class="ss-grid-detail-content">
+        <div class="ss-grid-detail-heading">${esc(title)}</div>
+        <div class="ss-grid-detail-meta">${meta || '<span class="ss-grid-empty">No summary fields captured.</span>'}</div>
+        <div class="ss-grid-detail-specs">${specsHtml}</div>
+      </div>
+    </section>`;
   }
 
   /* Auto-size every column to fit MAX(header text, widest cell content).
@@ -1014,15 +1096,22 @@
       domLayout: 'autoHeight',
       getRowHeight(params) {
         if (isGroupRow(params.data)) return 42;
+        if (isDetailRow(params.data)) return 178;
         return pillSafeRowHeight(projection?.mode, params.data);
       },
-      isFullWidthRow(params) { return isGroupRow(params?.rowNode?.data || params?.data); },
-      fullWidthCellRenderer: renderGroupRow,
+      isFullWidthRow(params) {
+        const row = params?.rowNode?.data || params?.data;
+        return isGroupRow(row) || isDetailRow(row);
+      },
+      fullWidthCellRenderer(params) {
+        if (isDetailRow(params?.data)) return renderDetailRow(params);
+        return renderGroupRow(params);
+      },
       headerHeight: projection?.mode === 'comparisonMatrix' ? 180 : 42,
       suppressCellFocus: true,
       suppressRowClickSelection: true,
       rowSelection: 'multiple',
-      isRowSelectable(params) { return !isGroupRow(params?.data); },
+      isRowSelectable(params) { return !isGroupRow(params?.data) && !isDetailRow(params?.data); },
       animateRows: false,
       enableCellTextSelection: true,
       ensureDomOrder: true,
@@ -1202,6 +1291,13 @@
         event.preventDefault();
         event.stopImmediatePropagation();
         if (typeof opts.onGroupToggle === 'function') opts.onGroupToggle(groupToggle.dataset.ssGridGroupToggle || '');
+        return;
+      }
+      const rowDetailToggle = target?.closest?.('[data-ss-grid-row-detail-toggle]');
+      if (rowDetailToggle) {
+        event.preventDefault();
+        event.stopImmediatePropagation();
+        if (typeof opts.onRowDetailToggle === 'function') opts.onRowDetailToggle(rowDetailToggle.dataset.ssGridRowDetailToggle || '');
         return;
       }
       const filterButton = target?.closest?.('.ag-header-cell-filter-button, [data-ref="eFilterButton"], [ref="eFilterButton"]');

@@ -33,6 +33,7 @@ store.dispatch({
   sort: [{ field: 'newPrice', dir: 'desc' }],
   columnOrder: ['title', 'newPrice'],
   collapsedGroups: new Set(['group:source:Amazon']),
+  expandedDetailRows: new Set(['p1']),
   selectedProductIds: new Set(['p1', 'p2'])
 });
 unsubscribe();
@@ -44,6 +45,7 @@ assert.deepEqual(store.getState().selectedProductIds, ['p1', 'p2'],
 const wire = state.serialize(store.getState());
 assert.deepEqual(wire.columnOrder, ['title', 'newPrice']);
 assert.deepEqual(wire.collapsedGroups, ['group:source:Amazon']);
+assert.deepEqual(wire.expandedDetailRows, ['p1']);
 assert.equal(wire.columnWidths, undefined,
   'columnWidths is not persisted — every load auto-sizes from content');
 assert.deepEqual(wire.selectedProductIds, ['p1', 'p2']);
@@ -54,6 +56,7 @@ const restored = state.deserialize({
   sort: [{ field: 'rating', dir: 'up' }],
   columnVisibility: { source: false },
   collapsedGroups: new Set(['group:brand:Logitech']),
+  expandedDetailRows: new Set(['p3']),
   pinnedColumns: ['title'],
   pinnedTopProductIds: new Set(['p1', 'p2'])
 });
@@ -63,6 +66,7 @@ assert.equal(restored.matrixMode, 'basic', 'invalid matrix mode falls back safel
 assert.equal(restored.sort[0].dir, 'asc', 'invalid sort direction normalizes');
 assert.equal(restored.columnVisibility.source, false);
 assert.deepEqual(restored.collapsedGroups, ['group:brand:Logitech']);
+assert.deepEqual(restored.expandedDetailRows, ['p3']);
 assert.deepEqual(restored.pinnedColumns, ['title']);
 assert.deepEqual(restored.pinnedTopProductIds, ['p1', 'p2']);
 

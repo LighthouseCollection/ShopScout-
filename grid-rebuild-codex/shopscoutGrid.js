@@ -1097,6 +1097,17 @@
     render();
   }
 
+  function toggleRowDetail(productId) {
+    const id = String(productId || '').trim();
+    if (!id) return;
+    const viewState = ensureStore().getState();
+    const expanded = new Set((Array.isArray(viewState.expandedDetailRows) ? viewState.expandedDetailRows : []).map(String));
+    if (expanded.has(id)) expanded.delete(id);
+    else expanded.add(id);
+    ensureStore().dispatch({ expandedDetailRows: [...expanded] });
+    render();
+  }
+
   async function render() {
     const mount = getMount();
     const host = getHost();
@@ -1161,6 +1172,7 @@
         onCellCommit: commitCellEdit,
         onProductDetail: openInternalProductDetail,
         onGroupToggle: toggleGroup,
+        onRowDetailToggle: toggleRowDetail,
         onAction: handleAction
       });
       const count = projection.productRowCount ?? products.length;

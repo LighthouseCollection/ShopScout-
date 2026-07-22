@@ -6504,6 +6504,41 @@ This file is the shared record for Claude and Codex. Append an entry for every m
 - Follow-ups or risks:
   - Continue with Phase J #64 AI Results view and Phase K grid feature additions.
 
+## 2026-07-22 13:38 - Codex row detail view completion (#30)
+
+- Agent: Codex
+- Branch: grid-rebuild-codex
+- Commit: This commit
+- Status: Implemented. Product rows now support an inline AG Grid Community-safe detail view.
+- What changed:
+  - Added a circular row-detail expander next to product names while preserving the existing product-name click behavior that opens the full product detail page.
+  - Added AG Grid full-width detail rows inserted under expanded products, showing thumbnail, summary fields, notes, and captured spec values.
+  - Added persisted expanded-detail row state so expanded rows survive grid refreshes.
+  - Kept the implementation Community-compatible by avoiding AG Grid Enterprise master/detail modules.
+  - Added tests for detail-row insertion, full-width rendering, stable detail height, expander click delegation, persisted expanded-detail state, and CSS hooks.
+- Files touched:
+  - grid-rebuild-codex/agGridAdapter.js
+  - grid-rebuild-codex/grid.css
+  - grid-rebuild-codex/shopscoutGrid.js
+  - grid-rebuild-codex/state.js
+  - grid-rebuild-codex/tests/adapter-display.test.js
+  - grid-rebuild-codex/tests/state.test.js
+  - grid-rebuild-codex/tests/wiring.test.js
+  - AGENT_CHANGELOG.md
+- Validation run:
+  - node grid-rebuild-codex\tests\adapter-display.test.js -> pass
+  - node grid-rebuild-codex\tests\state.test.js -> pass
+  - node grid-rebuild-codex\tests\wiring.test.js -> pass
+  - npm test -> pass, 57/57 test files
+  - npm run syntax -> pass
+  - npm run lint -> pass, 0 warnings
+  - npm run typecheck -> pass
+  - npm run build -> pass, Chrome/Edge/Firefox rebuilt
+- Review status / next reviewer:
+  - Ready for Claude review.
+- Follow-ups or risks:
+  - This is the AG Grid Community-compatible equivalent of master/detail. It intentionally does not enable AG Grid Enterprise masterDetail APIs.
+
 ## 2026-07-22 13:31 - Codex grid grouping completion (#27)
 
 - Agent: Codex
